@@ -32,5 +32,5 @@ status: in-progress
 
 ## Phase 4: Reveal & export
 - [x] T017 [artifacts: datamodel, ui] Build the Reveal view: render each `Book`'s full ordered chain of entries once `Room.status == 'reveal'`.
-- [ ] T018 [artifacts: infrastructure] Implement the client-side PNG export pipeline: replay a book's stroke-data drawing entries onto an off-screen canvas, composite with rendered text captions, flatten to a single PNG, test-first against a fixture book with known entries.
+- [x] T018 [artifacts: infrastructure] Implement the client-side PNG export pipeline: replay a book's stroke-data drawing entries onto an off-screen canvas, composite with rendered text captions, flatten to a single PNG, test-first against a fixture book with known entries.
 - [ ] T019 [artifacts: ui] [parallel] Add the per-book save control in the Reveal view wired to the export pipeline.
