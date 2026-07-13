@@ -9,6 +9,7 @@ import {
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
+import type { Logger } from '../observability/logger.js';
 
 /**
  * Dispatch surface decomposed by concern (constitution Principle VIII):
@@ -30,6 +31,7 @@ export function onCreateRoom(
   socket: Socket,
   store: RoomStore,
   sessionStore: SessionTokenStore,
+  logger: Logger,
   input: CreateRoomInput,
   ack: (response: CreateRoomAck) => void,
 ): void {
@@ -39,6 +41,12 @@ export function onCreateRoom(
   socket.data.playerId = hostPlayer.id;
   socket.data.roomId = room.id;
   socket.join(room.id);
+  logger.log({
+    event: 'room_created',
+    outcome: 'success',
+    roomId: room.id,
+    playerId: hostPlayer.id,
+  });
   ack({ room, player: hostPlayer });
 }
 
@@ -57,11 +65,18 @@ export function onJoinRoom(
   socket: Socket,
   store: RoomStore,
   sessionStore: SessionTokenStore,
+  logger: Logger,
   input: JoinRoomInput,
   ack: (response: JoinRoomAck) => void,
 ): void {
   const player = joinRoom(store, { roomId: input.roomId, playerName: input.playerName });
   if (!player) {
+    logger.log({
+      event: 'player_joined',
+      outcome: 'failure',
+      roomId: input.roomId,
+      reason: 'room-not-found',
+    });
     ack({ error: 'room-not-found' });
     return;
   }
@@ -71,6 +86,12 @@ export function onJoinRoom(
 
   socket.join(input.roomId);
   const room = store.getRoom(input.roomId);
+  logger.log({
+    event: 'player_joined',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: player.id,
+  });
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room, player });
 }
@@ -171,6 +192,7 @@ export interface SubmitEntryAck {
 export function onSubmitEntry(
   socket: Socket,
   store: RoomStore,
+  logger: Logger,
   input: SubmitEntryInput,
   ack: (response: SubmitEntryAck) => void,
 ): void {
@@ -192,6 +214,14 @@ export function onSubmitEntry(
     return;
   }
   if (next.authorId !== input.playerId) {
+    logger.log({
+      event: 'turn_advanced',
+      outcome: 'failure',
+      roomId: input.roomId,
+      playerId: input.playerId,
+      bookId: input.bookId,
+      reason: 'not-your-turn',
+    });
     ack({ error: 'not-your-turn' });
     return;
   }
@@ -205,9 +235,19 @@ export function onSubmitEntry(
     content: input.content,
   };
   book.entries.push(entry);
+  logger.log({
+    event: 'turn_advanced',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: input.playerId,
+    bookId: input.bookId,
+    entryId: entry.id,
+    position: entry.position,
+  });
 
   if (computeNextEntries(room).length === 0) {
     room.status = 'reveal';
+    logger.log({ event: 'game_completed', outcome: 'success', roomId: input.roomId });
   }
 
   socket.to(input.roomId).emit('roomUpdated', { room });
@@ -235,27 +275,50 @@ export function onRejoin(
   socket: Socket,
   store: RoomStore,
   sessionStore: SessionTokenStore,
+  logger: Logger,
   input: RejoinInput,
   ack: (response: RejoinAck) => void,
 ): void {
   const resolved = sessionStore.resolve(input.token);
   if (!resolved) {
+    logger.log({ event: 'player_reconnected', outcome: 'failure', reason: 'invalid-token' });
     ack({ error: 'invalid-token' });
     return;
   }
 
   const room = store.getRoom(resolved.roomId);
   if (!room) {
+    logger.log({
+      event: 'player_reconnected',
+      outcome: 'failure',
+      roomId: resolved.roomId,
+      playerId: resolved.playerId,
+      reason: 'room-not-found',
+    });
     ack({ error: 'room-not-found' });
     return;
   }
   if (room.status === 'ended') {
+    logger.log({
+      event: 'player_reconnected',
+      outcome: 'failure',
+      roomId: resolved.roomId,
+      playerId: resolved.playerId,
+      reason: 'game-ended',
+    });
     ack({ error: 'game-ended' });
     return;
   }
 
   const player = room.players.find((p) => p.id === resolved.playerId);
   if (!player) {
+    logger.log({
+      event: 'player_reconnected',
+      outcome: 'failure',
+      roomId: resolved.roomId,
+      playerId: resolved.playerId,
+      reason: 'player-not-found',
+    });
     ack({ error: 'player-not-found' });
     return;
   }
@@ -264,6 +327,12 @@ export function onRejoin(
   socket.data.playerId = player.id;
   socket.data.roomId = room.id;
   socket.join(room.id);
+  logger.log({
+    event: 'player_reconnected',
+    outcome: 'success',
+    roomId: room.id,
+    playerId: player.id,
+  });
   socket.to(room.id).emit('roomUpdated', { room });
   ack({ room, player });
 }
@@ -272,7 +341,7 @@ export function onRejoin(
  * A dropped connection keeps its seat (marked disconnected, not
  * removed) for the session-token TTL, so `onRejoin` can restore it.
  */
-export function onDisconnect(socket: Socket, store: RoomStore): void {
+export function onDisconnect(socket: Socket, store: RoomStore, logger: Logger): void {
   const { playerId, roomId } = socket.data as { playerId?: string; roomId?: string };
   if (!playerId || !roomId) {
     return;
@@ -286,5 +355,6 @@ export function onDisconnect(socket: Socket, store: RoomStore): void {
     return;
   }
   player.connected = false;
+  logger.log({ event: 'player_left', outcome: 'success', roomId, playerId });
   socket.to(roomId).emit('roomUpdated', { room });
 }

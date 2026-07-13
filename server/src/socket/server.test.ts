@@ -3,6 +3,7 @@ import type { AddressInfo } from 'node:net';
 import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
+import { createLogger } from '../observability/logger.js';
 import { createSocketServer } from './server.js';
 import type {
   CreateRoomAck,
@@ -408,5 +409,156 @@ describe('rejoin-after-room-ended rejection', () => {
     expect(rejoinAck.error).toBe('game-ended');
     expect(rejoinAck.room).toBeUndefined();
     expect(rejoinAck.player).toBeUndefined();
+  });
+});
+
+describe('observability (structured log events)', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let clientB: ClientSocket;
+  let port: number;
+  let lines: string[];
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    lines = [];
+    const logger = createLogger((line) => lines.push(line));
+    httpServer = createServer();
+    createSocketServer(httpServer, store, undefined, logger);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    clientB?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  function parsedEvents(): Array<Record<string, unknown>> {
+    return lines.map((line) => JSON.parse(line));
+  }
+
+  it('logs room creation, join, turn advance, and game completion with outcome and identifiers', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const roomId = createAck.room!.id;
+    const adaId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
+      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
+    });
+    const graceId = joinAck.player!.id;
+
+    const startAck = await new Promise<StartGameAck>((resolve) => {
+      clientA.emit('startGame', { roomId, playerId: adaId }, resolve);
+    });
+    const adaBook = startAck.room!.books.find((b) => b.originAuthorId === adaId)!;
+    const graceBook = startAck.room!.books.find((b) => b.originAuthorId === graceId)!;
+
+    await new Promise((resolve) => {
+      clientA.emit(
+        'submitEntry',
+        { roomId, playerId: adaId, bookId: adaBook.id, content: 'phrase one' },
+        resolve,
+      );
+    });
+    await new Promise((resolve) => {
+      clientB.emit(
+        'submitEntry',
+        { roomId, playerId: graceId, bookId: graceBook.id, content: 'phrase two' },
+        resolve,
+      );
+    });
+    await new Promise((resolve) => {
+      clientB.emit(
+        'submitEntry',
+        { roomId, playerId: graceId, bookId: adaBook.id, content: 'stroke-1' },
+        resolve,
+      );
+    });
+    await new Promise((resolve) => {
+      clientA.emit(
+        'submitEntry',
+        { roomId, playerId: adaId, bookId: graceBook.id, content: 'stroke-2' },
+        resolve,
+      );
+    });
+
+    const events = parsedEvents();
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: 'room_created', outcome: 'success', roomId }),
+    );
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'player_joined',
+        outcome: 'success',
+        roomId,
+        playerId: graceId,
+      }),
+    );
+    expect(
+      events.filter((e) => e.event === 'turn_advanced' && e.outcome === 'success'),
+    ).toHaveLength(4);
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: 'game_completed', outcome: 'success', roomId }),
+    );
+  });
+
+  it('logs a failed reconnect with the failure reason', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+
+    await new Promise((resolve) => {
+      clientA.emit('rejoin', { token: 'never-issued' }, resolve);
+    });
+
+    const events = parsedEvents();
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'player_reconnected',
+        outcome: 'failure',
+        reason: 'invalid-token',
+      }),
+    );
+  });
+
+  it('logs a successful reconnect and a player leaving (disconnect)', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const token = createAck.player!.sessionToken;
+    const roomId = createAck.room!.id;
+    const playerId = createAck.player!.id;
+
+    clientA.close();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await new Promise((resolve) => {
+      clientA.emit('rejoin', { token }, resolve);
+    });
+
+    const events = parsedEvents();
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'player_reconnected',
+        outcome: 'success',
+        roomId,
+        playerId,
+      }),
+    );
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: 'player_left', outcome: 'success', roomId, playerId }),
+    );
   });
 });

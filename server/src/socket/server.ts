@@ -2,6 +2,7 @@ import type { Server as HttpServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
 import type { RoomStore } from '../domain/roomStore.js';
 import { createSessionTokenStore, type SessionTokenStore } from '../domain/sessionTokenStore.js';
+import { createLogger, type Logger } from '../observability/logger.js';
 import {
   onCreateRoom,
   onDisconnect,
@@ -35,16 +36,17 @@ export function createSocketServer(
   httpServer: HttpServer,
   store: RoomStore,
   sessionStore: SessionTokenStore = createSessionTokenStore(),
+  logger: Logger = createLogger(),
 ): SocketIOServer {
   const io = new SocketIOServer(httpServer);
 
   io.on('connection', (socket) => {
     socket.on('createRoom', (input: CreateRoomInput, ack: (response: CreateRoomAck) => void) => {
-      onCreateRoom(socket, store, sessionStore, input, ack);
+      onCreateRoom(socket, store, sessionStore, logger, input, ack);
     });
 
     socket.on('joinRoom', (input: JoinRoomInput, ack: (response: JoinRoomAck) => void) => {
-      onJoinRoom(socket, store, sessionStore, input, ack);
+      onJoinRoom(socket, store, sessionStore, logger, input, ack);
     });
 
     socket.on('startGame', (input: StartGameInput, ack: (response: StartGameAck) => void) => {
@@ -56,15 +58,15 @@ export function createSocketServer(
     });
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
-      onSubmitEntry(socket, store, input, ack);
+      onSubmitEntry(socket, store, logger, input, ack);
     });
 
     socket.on('rejoin', (input: RejoinInput, ack: (response: RejoinAck) => void) => {
-      onRejoin(socket, store, sessionStore, input, ack);
+      onRejoin(socket, store, sessionStore, logger, input, ack);
     });
 
     socket.on('disconnect', () => {
-      onDisconnect(socket, store);
+      onDisconnect(socket, store, logger);
     });
   });
 
