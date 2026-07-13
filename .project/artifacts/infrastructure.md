@@ -17,11 +17,13 @@ render_hint: |
 ## Overview
 
 A single Node/TypeScript server process hosts both the Socket.IO realtime
-layer and serves the Svelte client build. There is no database — game
-state lives in server memory (see [[datamodel]]), and a short-lived
-session store supports reconnect-tolerance. This matches Principle I
-([[constitution]]) — no premature scaling infrastructure before it's
-needed.
+layer and serves the Svelte client build: the server serves the client's
+built static `dist/` output directly (no separate static-hosting
+service), so the whole app runs as one process behind one port. There is
+no database — game state lives in server memory (see [[datamodel]]), and
+a short-lived session store supports reconnect-tolerance. This matches
+Principle I ([[constitution]]) — no premature scaling infrastructure
+before it's needed.
 
 ## Realtime Sync (Socket.IO)
 
@@ -71,6 +73,18 @@ rendered text captions, then flattened to a single PNG — avoiding a
 server-side rendering dependency. HTML/SVG/PDF export formats are
 explicitly deferred past v1; PNG only for now.
 
+## Deployment (Fly.io)
+
+The app deploys as a single Fly.io app running one process/container —
+matching Principle I (no premature scaling): one Dockerfile, one
+`fly.toml`. The Docker build is multi-stage: install and build
+`shared`/`server`/`client` via pnpm workspaces, then a slim runtime
+image running only the compiled server (which serves the client's
+static build, per the Overview above). The server reads its listen port
+from the `PORT` environment variable (already supported by
+`server/src/config.ts`); Fly injects `PORT` into the container at
+runtime.
+
 ## Production Annotations
 
 - **Single server process, no horizontal scaling**: All room state lives
@@ -81,3 +95,7 @@ explicitly deferred past v1; PNG only for now.
   in-progress and completed-but-unsaved games — in production, finished
   books worth preserving would be written to a real datastore before
   the room is torn down.
+- **No zero-downtime deploys**: A Fly deploy restarts the single
+  process, dropping all in-progress in-memory games — in production,
+  this would need either a durable store to resume from (see above) or
+  a maintenance-window/drain strategy before deploying.
