@@ -8,8 +8,8 @@ import WritingDrawing from './WritingDrawing.svelte';
 
 afterEach(() => cleanup());
 
-function makeFakeSession(initial: SessionState): SessionStore {
-  const store = writable<SessionState>(initial);
+function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore {
+  const store = writable<SessionState>({ reconnecting: false, ...initial });
   return {
     subscribe: store.subscribe,
     createRoom: vi.fn(async () => {}),

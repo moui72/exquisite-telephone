@@ -6,6 +6,11 @@ export interface SessionState {
   room: Room | null;
   player: Player | null;
   error: string | null;
+  /**
+   * True while an automatic rejoin (using a persisted session token) is
+   * in flight — distinct from a hard error state (ui.md States).
+   */
+  reconnecting: boolean;
 }
 
 interface RoomAck {
@@ -47,7 +52,12 @@ export interface SessionStore extends Readable<SessionState> {
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
-  const store = writable<SessionState>({ room: null, player: null, error: null });
+  const store = writable<SessionState>({
+    room: null,
+    player: null,
+    error: null,
+    reconnecting: false,
+  });
   const { subscribe, update } = store;
 
   socket.on('roomUpdated', (payload) => {
@@ -55,9 +65,9 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     update((state) => ({ ...state, room, error: null }));
   });
 
-  function applyAck(ack: RoomAck) {
+  function applyAck(ack: RoomAck, { reconnecting = false } = {}) {
     if (ack.error) {
-      update((state) => ({ ...state, error: ack.error! }));
+      update((state) => ({ ...state, error: ack.error!, reconnecting }));
       return;
     }
     if (ack.player) {
@@ -67,6 +77,7 @@ export function createSessionStore(socket: GameSocket): SessionStore {
       room: ack.room ?? state.room,
       player: ack.player ?? state.player,
       error: null,
+      reconnecting,
     }));
   }
 
@@ -81,10 +92,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
 
   // Reconnect tolerance (infrastructure.md Session Store): if a session
   // token from a previous connection is still around, try to resume that
-  // seat instead of starting at the lobby.
+  // seat instead of starting at the lobby. "reconnecting" is a distinct,
+  // non-error state (ui.md States) shown until the attempt settles.
   const storedToken = readStoredToken();
   if (storedToken) {
-    emitWithAck('rejoin', { token: storedToken });
+    update((state) => ({ ...state, reconnecting: true }));
+    socket.emit('rejoin', { token: storedToken }, (response) => {
+      applyAck(response as RoomAck, { reconnecting: false });
+    });
   }
 
   return {

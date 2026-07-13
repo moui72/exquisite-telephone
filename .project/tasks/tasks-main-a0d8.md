@@ -27,7 +27,7 @@ status: in-progress
 ## Phase 3: Reconnect tolerance
 - [x] T013 [artifacts: infrastructure] Implement the session-token store: issue a token on join, map token -> player/room, TTL of a few minutes, test-first for "valid token within TTL resumes same seat" and "expired token is treated as a new join."
 - [x] T014 [artifacts: infrastructure, datamodel] Implement rejoin-after-room-ended rejection: a valid token against an ended room returns a clear "game has ended" response rather than silently no-oping, test-first.
-- [ ] T015 [artifacts: ui] [parallel] Add "reconnecting..." UI state (distinct from a hard error) and "this game has ended" state, per ui.md States.
+- [x] T015 [artifacts: ui] [parallel] Add "reconnecting..." UI state (distinct from a hard error) and "this game has ended" state, per ui.md States.
 - [ ] T016 [artifacts: infrastructure, constitution] Add structured log events for room creation, join/leave/reconnect, turn advance, and game completion (Observability), including outcome and reproducible identifiers.
 
 ## Phase 4: Reveal & export

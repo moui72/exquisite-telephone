@@ -53,7 +53,12 @@ describe('session store (client single source of state)', () => {
     const { socket } = makeFakeSocket();
     const session = createSessionStore(socket);
 
-    expect(get(session)).toEqual({ room: null, player: null, error: null });
+    expect(get(session)).toEqual({
+      room: null,
+      player: null,
+      error: null,
+      reconnecting: false,
+    });
   });
 
   it('createRoom emits createRoom and stores the returned room/player on success', async () => {
@@ -114,6 +119,39 @@ describe('session store (client single source of state)', () => {
     createSessionStore(fake.socket);
 
     expect(fake.getLastEmit()).toEqual({ event: 'rejoin', payload: { token: 'saved-token' } });
+  });
+
+  it('is reconnecting while the automatic rejoin is in flight, then not', () => {
+    localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, 'saved-token');
+    const handlers = new Map<string, Set<(payload: unknown) => void>>();
+    let ackFn: ((response: unknown) => void) | null = null;
+    const socket: GameSocket = {
+      emit(_event, _payload, ack) {
+        ackFn = ack;
+      },
+      on(event, handler) {
+        if (!handlers.has(event)) handlers.set(event, new Set());
+        handlers.get(event)!.add(handler);
+      },
+      off() {},
+    };
+
+    const session = createSessionStore(socket);
+    expect(get(session).reconnecting).toBe(true);
+
+    ackFn!({ room: sampleRoom, player: sampleRoom.players[0] });
+    expect(get(session).reconnecting).toBe(false);
+  });
+
+  it('surfaces a distinct game-ended error from a rejected rejoin', () => {
+    localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, 'saved-token');
+    const fake = makeFakeSocket();
+    fake.setNextAck({ error: 'game-ended' });
+
+    const session = createSessionStore(fake.socket);
+
+    expect(get(session).error).toBe('game-ended');
+    expect(get(session).reconnecting).toBe(false);
   });
 
   it('does not attempt a rejoin on init when no token is persisted', () => {
