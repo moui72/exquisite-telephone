@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-13. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -34,8 +34,15 @@ isn't a functional bug, just an artifact/code naming mismatch.
 
 ## Feature Backlog
 
-No feature register yet (`.project/features/`) — nothing backlogged.
-Two gaps surfaced during implementation are candidates for
+1 backlogged · 0 planned · 0 tasked · 0 implemented — see
+`.project/features/`. Target with `/ardd-plan fly-io-deployment`.
+
+- `fly-io-deployment` (backlogged) — Dockerfile + fly.toml so the
+  Node/Socket.IO server (serving the built Svelte client) can be built
+  and run as a Fly app; chosen for v1 hosting since Fly supports
+  long-lived WebSocket connections and persistent processes.
+
+Two more gaps surfaced during implementation are candidates for
 `/ardd-backlog`: a host-facing "end game" control (server support exists
 via `onEndGame`, no UI wired to it yet), and observability logging for
 the start-game/end-game transitions (currently unlogged; Principle IX
@@ -57,10 +64,15 @@ now implement the complete v1 game loop: room create/join, lobby,
 round-robin write/draw turn loop, reconnect-tolerant sessions, reveal
 view, and client-side PNG export.
 
+Package manager converted from npm to pnpm (`pnpm-workspace.yaml`,
+`workspace:*` internal deps, CI and pre-commit hook updated) — verified
+lint/typecheck/76 tests/build all pass under pnpm.
+
 ## Recommended Next Step
 
-Run `/ardd-defects` to formally log the `Room.status` drawing-phase
-mismatch noted above, then `/ardd-backlog` for the end-game-control and
-start/end-game-logging gaps. After that, `/ardd-diagram` on datamodel,
-infrastructure, and ui would give this stable v1 design a visual
-reference.
+Run `/ardd-plan fly-io-deployment` to design and task the Fly.io
+deployment feature. Separately: `/ardd-defects` to formally log the
+`Room.status` drawing-phase mismatch, then `/ardd-backlog` for the
+end-game-control and start/end-game-logging gaps. `/ardd-diagram` on
+datamodel, infrastructure, and ui would also give this stable v1 design
+a visual reference.
