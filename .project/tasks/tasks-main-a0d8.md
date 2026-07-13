@@ -9,7 +9,7 @@ status: in-progress
 ## Phase 0: Scaffolding
 - [x] T001 [artifacts: constitution] Initialize the Node/TypeScript project: `package.json`, `tsconfig.json`, ESLint + Prettier config, a test runner (e.g. Vitest). Manifest scripts must match what's actually runnable (Manifest/Script Hygiene).
 - [x] T002 [artifacts: constitution] [parallel] Scaffold the Svelte + Tailwind client app (Vite + svelte-check). No page content yet beyond a placeholder route.
-- [ ] T003 [artifacts: constitution] Add a pre-commit hook running lint, type-check, and tests in that order (Pre-commit Enforcement), and a CI workflow running the same checks on push/PR, gating merge (CI Enforcement).
+- [x] T003 [artifacts: constitution] Add a pre-commit hook running lint, type-check, and tests in that order (Pre-commit Enforcement), and a CI workflow running the same checks on push/PR, gating merge (CI Enforcement).
 
 ## Phase 1: Core data model & room lifecycle
 - [ ] T004 [artifacts: datamodel] Write a failing test asserting the shape and required fields of `Room`, `Player`, `Book`, `Entry` as defined in datamodel.md, then define them as named, exported TypeScript types (Principle VII) to make it pass (Test-First Development).
