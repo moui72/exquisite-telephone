@@ -12,7 +12,7 @@ status: in-progress
 - [x] T003 [artifacts: constitution] Add a pre-commit hook running lint, type-check, and tests in that order (Pre-commit Enforcement), and a CI workflow running the same checks on push/PR, gating merge (CI Enforcement).
 
 ## Phase 1: Core data model & room lifecycle
-- [ ] T004 [artifacts: datamodel] Write a failing test asserting the shape and required fields of `Room`, `Player`, `Book`, `Entry` as defined in datamodel.md, then define them as named, exported TypeScript types (Principle VII) to make it pass (Test-First Development).
+- [x] T004 [artifacts: datamodel] Write a failing test asserting the shape and required fields of `Room`, `Player`, `Book`, `Entry` as defined in datamodel.md, then define them as named, exported TypeScript types (Principle VII) to make it pass (Test-First Development).
 - [ ] T005 [artifacts: infrastructure, datamodel] Implement the server-side in-memory room store (create room with a short unambiguous code, add/remove player, look up by `Room.id`), test-first: a failing test for "create room returns a valid unique code" and "player join adds to room.players", then the implementation.
 - [ ] T006 [artifacts: infrastructure] Bootstrap the Socket.IO server bound to the room store, with `onJoinRoom`/`onCreateRoom` as independently named handlers (Dispatch Surfaces Decomposed by Concern), test-first via a Socket.IO client-side test harness.
 - [ ] T007 [artifacts: infrastructure, constitution] Entry point (`server/index.ts`) only reads config, constructs the room store and Socket.IO server, and starts listening — no game logic inline (Bootstrap/Entry Files Wire Dependencies Only).
