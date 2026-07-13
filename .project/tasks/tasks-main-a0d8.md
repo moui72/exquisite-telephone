@@ -1,7 +1,7 @@
 ---
 plan: plan-main-2026-07-13-4bd4.md
 generated: 2026-07-13
-status: ready
+status: in-progress
 ---
 
 # Tasks
