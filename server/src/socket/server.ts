@@ -5,12 +5,15 @@ import {
   onCreateRoom,
   onJoinRoom,
   onStartGame,
+  onSubmitEntry,
   type CreateRoomAck,
   type CreateRoomInput,
   type JoinRoomAck,
   type JoinRoomInput,
   type StartGameAck,
   type StartGameInput,
+  type SubmitEntryAck,
+  type SubmitEntryInput,
 } from './handlers.js';
 
 /**
@@ -33,6 +36,10 @@ export function createSocketServer(httpServer: HttpServer, store: RoomStore): So
 
     socket.on('startGame', (input: StartGameInput, ack: (response: StartGameAck) => void) => {
       onStartGame(socket, store, input, ack);
+    });
+
+    socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
+      onSubmitEntry(socket, store, input, ack);
     });
   });
 

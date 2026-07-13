@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Player, Room } from '@exquisite-telephone/shared';
+import type { Book, Player, Room } from '@exquisite-telephone/shared';
 import { generateRoomCode } from './roomCode.js';
 
 /**
@@ -96,4 +96,18 @@ export function removePlayer(store: RoomStore, roomId: string, playerId: string)
     return;
   }
   room.players = room.players.filter((p) => p.id !== playerId);
+}
+
+/**
+ * Creates one empty Book per player (datamodel.md: "One per player's
+ * original prompt") when the host starts the game. Each player writes
+ * their own book's starting phrase as its first Entry.
+ */
+export function createBooksForRoom(room: Room): Book[] {
+  return room.players.map((player) => ({
+    id: randomUUID(),
+    roomId: room.id,
+    originAuthorId: player.id,
+    entries: [],
+  }));
 }
