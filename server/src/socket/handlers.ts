@@ -111,6 +111,42 @@ export function onStartGame(
   ack({ room });
 }
 
+export interface EndGameInput {
+  roomId: string;
+  playerId: string;
+}
+
+export interface EndGameAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only transition to `ended`. The room is kept in the store (not
+ * deleted) so a still-valid session token can be told clearly "this game
+ * has ended" (see onRejoin) rather than "room not found".
+ */
+export function onEndGame(
+  socket: Socket,
+  store: RoomStore,
+  input: EndGameInput,
+  ack: (response: EndGameAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+
+  room.status = 'ended';
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface SubmitEntryInput {
   roomId: string;
   playerId: string;
@@ -211,6 +247,10 @@ export function onRejoin(
   const room = store.getRoom(resolved.roomId);
   if (!room) {
     ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status === 'ended') {
+    ack({ error: 'game-ended' });
     return;
   }
 

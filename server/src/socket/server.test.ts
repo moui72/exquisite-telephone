@@ -6,6 +6,7 @@ import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
 import { createSocketServer } from './server.js';
 import type {
   CreateRoomAck,
+  EndGameAck,
   JoinRoomAck,
   RejoinAck,
   StartGameAck,
@@ -338,5 +339,74 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
     const room = store.getRoom(roomId);
     expect(room?.players).toHaveLength(1);
     expect(room?.players.find((p) => p.id === playerId)?.connected).toBe(false);
+  });
+});
+
+describe('rejoin-after-room-ended rejection', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let port: number;
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    httpServer = createServer();
+    createSocketServer(httpServer, store);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  it('onEndGame lets the host mark the room ended', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+
+    const ack = await new Promise<EndGameAck>((resolve) => {
+      clientA.emit(
+        'endGame',
+        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
+        resolve,
+      );
+    });
+
+    expect(ack.error).toBeUndefined();
+    expect(ack.room?.status).toBe('ended');
+  });
+
+  it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const token = createAck.player!.sessionToken;
+
+    await new Promise<EndGameAck>((resolve) => {
+      clientA.emit(
+        'endGame',
+        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
+        resolve,
+      );
+    });
+
+    clientA.close();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+
+    const rejoinAck = await new Promise<RejoinAck>((resolve) => {
+      clientA.emit('rejoin', { token }, resolve);
+    });
+
+    expect(rejoinAck.error).toBe('game-ended');
+    expect(rejoinAck.room).toBeUndefined();
+    expect(rejoinAck.player).toBeUndefined();
   });
 });

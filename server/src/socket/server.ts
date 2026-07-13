@@ -5,12 +5,15 @@ import { createSessionTokenStore, type SessionTokenStore } from '../domain/sessi
 import {
   onCreateRoom,
   onDisconnect,
+  onEndGame,
   onJoinRoom,
   onRejoin,
   onStartGame,
   onSubmitEntry,
   type CreateRoomAck,
   type CreateRoomInput,
+  type EndGameAck,
+  type EndGameInput,
   type JoinRoomAck,
   type JoinRoomInput,
   type RejoinAck,
@@ -46,6 +49,10 @@ export function createSocketServer(
 
     socket.on('startGame', (input: StartGameInput, ack: (response: StartGameAck) => void) => {
       onStartGame(socket, store, input, ack);
+    });
+
+    socket.on('endGame', (input: EndGameInput, ack: (response: EndGameAck) => void) => {
+      onEndGame(socket, store, input, ack);
     });
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
