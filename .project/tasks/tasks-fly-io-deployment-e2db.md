@@ -7,8 +7,8 @@ status: in-progress
 # Tasks
 
 ## Phase 1: Server serves the client's static build
-- [ ] T001 [artifacts: infrastructure] [feature: fly-io-deployment] Write a failing test asserting the server responds to a static asset request (e.g. `GET /` returns the client's `index.html`) when a static root directory is configured, then implement static-file serving in the server (e.g. `serve-static` or Node's built-in static-serving via a minimal middleware) wired in `server/src/index.ts` per Principle X (entry point only wires dependencies — the static-serving logic itself lives in its own module, not inlined).
-- [ ] T002 [artifacts: infrastructure] [feature: fly-io-deployment] Update `server/src/config.ts` to read the static root directory path from an environment variable (e.g. `CLIENT_DIST_PATH`) with a sensible default relative path, test-first for the default-vs-override resolution logic.
+- [x] T001 [artifacts: infrastructure] [feature: fly-io-deployment] Write a failing test asserting the server responds to a static asset request (e.g. `GET /` returns the client's `index.html`) when a static root directory is configured, then implement static-file serving in the server (e.g. `serve-static` or Node's built-in static-serving via a minimal middleware) wired in `server/src/index.ts` per Principle X (entry point only wires dependencies — the static-serving logic itself lives in its own module, not inlined).
+- [x] T002 [artifacts: infrastructure] [feature: fly-io-deployment] Update `server/src/config.ts` to read the static root directory path from an environment variable (e.g. `CLIENT_DIST_PATH`) with a sensible default relative path, test-first for the default-vs-override resolution logic.
 
 ## Phase 2: Docker image
 - [ ] T003 [artifacts: infrastructure] [feature: fly-io-deployment] Write a multi-stage `Dockerfile`: a build stage that installs dependencies with pnpm and runs `pnpm run build` (building `shared`, `server`, `client` per the existing root script), then a slim runtime stage copying only the compiled `server/dist`, `shared/dist`, `client/dist`, and production `node_modules` needed to run the server.
