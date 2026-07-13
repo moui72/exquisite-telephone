@@ -3,10 +3,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"],
-    "paths": {
-      "@exquisite-telephone/shared": ["../shared/src/index.ts"]
-    }
+    "types": ["node"]
   },
   "include": ["src"]
 }
