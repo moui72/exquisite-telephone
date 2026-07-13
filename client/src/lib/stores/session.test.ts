@@ -1,8 +1,8 @@
 import { get } from 'svelte/store';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import type { Room } from '@exquisite-telephone/shared';
 import type { GameSocket } from '../socket/types.js';
-import { createSessionStore } from './session.js';
+import { createSessionStore, SESSION_TOKEN_STORAGE_KEY } from './session.js';
 
 function makeFakeSocket() {
   const handlers = new Map<string, Set<(payload: unknown) => void>>();
@@ -45,6 +45,10 @@ const sampleRoom: Room = {
 };
 
 describe('session store (client single source of state)', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   it('starts with no room and no player', () => {
     const { socket } = makeFakeSocket();
     const session = createSessionStore(socket);
@@ -100,5 +104,33 @@ describe('session store (client single source of state)', () => {
       payload: { roomId: 'ABCDE', playerId: 'p1', bookId: 'book-1', content: 'a phrase' },
     });
     expect(get(session).room?.status).toBe('reveal');
+  });
+
+  it('attempts an automatic rejoin on init when a token is already persisted', () => {
+    localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, 'saved-token');
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+
+    createSessionStore(fake.socket);
+
+    expect(fake.getLastEmit()).toEqual({ event: 'rejoin', payload: { token: 'saved-token' } });
+  });
+
+  it('does not attempt a rejoin on init when no token is persisted', () => {
+    const fake = makeFakeSocket();
+
+    createSessionStore(fake.socket);
+
+    expect(fake.getLastEmit()).toBeNull();
+  });
+
+  it('saves the returned session token to localStorage on a successful createRoom', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+
+    await session.createRoom('Ada');
+
+    expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('tok');
   });
 });

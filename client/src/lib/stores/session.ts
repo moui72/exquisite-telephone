@@ -14,6 +14,26 @@ interface RoomAck {
   error?: string;
 }
 
+/** localStorage key for the session token used to resume a dropped connection. */
+export const SESSION_TOKEN_STORAGE_KEY = 'exquisite-telephone:sessionToken';
+
+function readStoredToken(): string | null {
+  try {
+    return localStorage.getItem(SESSION_TOKEN_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeToken(token: string): void {
+  try {
+    localStorage.setItem(SESSION_TOKEN_STORAGE_KEY, token);
+  } catch {
+    // localStorage unavailable (e.g. private browsing) — reconnect just
+    // won't be able to resume the seat, which degrades to a fresh join.
+  }
+}
+
 /**
  * The client's single source of state (constitution Principle VI): the
  * client holds no authoritative game state of its own, only whatever the
@@ -40,6 +60,9 @@ export function createSessionStore(socket: GameSocket): SessionStore {
       update((state) => ({ ...state, error: ack.error! }));
       return;
     }
+    if (ack.player) {
+      storeToken(ack.player.sessionToken);
+    }
     update((state) => ({
       room: ack.room ?? state.room,
       player: ack.player ?? state.player,
@@ -54,6 +77,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         resolve();
       });
     });
+  }
+
+  // Reconnect tolerance (infrastructure.md Session Store): if a session
+  // token from a previous connection is still around, try to resume that
+  // seat instead of starting at the lobby.
+  const storedToken = readStoredToken();
+  if (storedToken) {
+    emitWithAck('rejoin', { token: storedToken });
   }
 
   return {

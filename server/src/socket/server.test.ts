@@ -4,7 +4,13 @@ import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
 import { createSocketServer } from './server.js';
-import type { CreateRoomAck, JoinRoomAck, StartGameAck, SubmitEntryAck } from './handlers.js';
+import type {
+  CreateRoomAck,
+  JoinRoomAck,
+  RejoinAck,
+  StartGameAck,
+  SubmitEntryAck,
+} from './handlers.js';
 
 describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   let httpServer: HttpServer;
@@ -259,5 +265,78 @@ describe('onSubmitEntry', () => {
     });
 
     expect(finalAck.room?.status).toBe('reveal');
+  });
+});
+
+describe('reconnect tolerance (onRejoin / disconnect)', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let port: number;
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    httpServer = createServer();
+    createSocketServer(httpServer, store);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  it('a dropped connection can resume the same seat with its session token', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const token = createAck.player!.sessionToken;
+
+    // Simulate a dropped connection: close and reconnect with a new socket.
+    clientA.close();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const rejoinAck = await new Promise<RejoinAck>((resolve) => {
+      clientA.emit('rejoin', { token }, resolve);
+    });
+
+    expect(rejoinAck.error).toBeUndefined();
+    expect(rejoinAck.player?.id).toBe(createAck.player!.id);
+    expect(rejoinAck.room?.id).toBe(createAck.room!.id);
+    expect(rejoinAck.player?.connected).toBe(true);
+  });
+
+  it('rejects an unknown or expired token as a new join (distinct error)', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+
+    const ack = await new Promise<RejoinAck>((resolve) => {
+      clientA.emit('rejoin', { token: 'never-issued' }, resolve);
+    });
+
+    expect(ack.error).toBe('invalid-token');
+    expect(ack.room).toBeUndefined();
+  });
+
+  it('marks a disconnected player as not connected without removing their seat', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const roomId = createAck.room!.id;
+    const playerId = createAck.player!.id;
+
+    clientA.close();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const room = store.getRoom(roomId);
+    expect(room?.players).toHaveLength(1);
+    expect(room?.players.find((p) => p.id === playerId)?.connected).toBe(false);
   });
 });

@@ -8,6 +8,7 @@ import {
 } from '@exquisite-telephone/shared';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
+import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
 
 /**
  * Dispatch surface decomposed by concern (constitution Principle VIII):
@@ -28,11 +29,15 @@ export interface CreateRoomAck {
 export function onCreateRoom(
   socket: Socket,
   store: RoomStore,
+  sessionStore: SessionTokenStore,
   input: CreateRoomInput,
   ack: (response: CreateRoomAck) => void,
 ): void {
   const room = createRoom(store, { hostName: input.hostName });
-  const hostPlayer = room.players[0];
+  const hostPlayer = room.players[0]!;
+  hostPlayer.sessionToken = sessionStore.issue(hostPlayer.id, room.id);
+  socket.data.playerId = hostPlayer.id;
+  socket.data.roomId = room.id;
   socket.join(room.id);
   ack({ room, player: hostPlayer });
 }
@@ -51,6 +56,7 @@ export interface JoinRoomAck {
 export function onJoinRoom(
   socket: Socket,
   store: RoomStore,
+  sessionStore: SessionTokenStore,
   input: JoinRoomInput,
   ack: (response: JoinRoomAck) => void,
 ): void {
@@ -59,6 +65,9 @@ export function onJoinRoom(
     ack({ error: 'room-not-found' });
     return;
   }
+  player.sessionToken = sessionStore.issue(player.id, input.roomId);
+  socket.data.playerId = player.id;
+  socket.data.roomId = input.roomId;
 
   socket.join(input.roomId);
   const room = store.getRoom(input.roomId);
@@ -167,4 +176,75 @@ export function onSubmitEntry(
 
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room, entry });
+}
+
+export interface RejoinInput {
+  token: string;
+}
+
+export interface RejoinAck {
+  room?: Room;
+  player?: Player;
+  error?: string;
+}
+
+/**
+ * Resumes a dropped connection's same seat via its session token
+ * (infrastructure.md Session Store), rather than treating every
+ * reconnect as a brand-new join. An unknown/expired token or a room that
+ * no longer exists is reported as a distinct error, not silently turned
+ * into a fresh join.
+ */
+export function onRejoin(
+  socket: Socket,
+  store: RoomStore,
+  sessionStore: SessionTokenStore,
+  input: RejoinInput,
+  ack: (response: RejoinAck) => void,
+): void {
+  const resolved = sessionStore.resolve(input.token);
+  if (!resolved) {
+    ack({ error: 'invalid-token' });
+    return;
+  }
+
+  const room = store.getRoom(resolved.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+
+  const player = room.players.find((p) => p.id === resolved.playerId);
+  if (!player) {
+    ack({ error: 'player-not-found' });
+    return;
+  }
+
+  player.connected = true;
+  socket.data.playerId = player.id;
+  socket.data.roomId = room.id;
+  socket.join(room.id);
+  socket.to(room.id).emit('roomUpdated', { room });
+  ack({ room, player });
+}
+
+/**
+ * A dropped connection keeps its seat (marked disconnected, not
+ * removed) for the session-token TTL, so `onRejoin` can restore it.
+ */
+export function onDisconnect(socket: Socket, store: RoomStore): void {
+  const { playerId, roomId } = socket.data as { playerId?: string; roomId?: string };
+  if (!playerId || !roomId) {
+    return;
+  }
+  const room = store.getRoom(roomId);
+  if (!room) {
+    return;
+  }
+  const player = room.players.find((p) => p.id === playerId);
+  if (!player) {
+    return;
+  }
+  player.connected = false;
+  socket.to(roomId).emit('roomUpdated', { room });
 }
