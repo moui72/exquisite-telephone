@@ -2,11 +2,11 @@ import { createServer } from 'node:http';
 import { loadConfig } from './config.js';
 import { createRoomStore } from './domain/roomStore.js';
 import { createSocketServer } from './socket/server.js';
-import { createStaticRequestHandler } from './staticServer.js';
+import { createHttpRequestHandler } from './httpRequestHandler.js';
 
 const config = loadConfig(process.env);
-const staticRequestHandler = createStaticRequestHandler(config.clientDistPath);
-const httpServer = createServer(staticRequestHandler);
+const httpRequestHandler = createHttpRequestHandler(config.clientDistPath);
+const httpServer = createServer(httpRequestHandler);
 const store = createRoomStore();
 
 createSocketServer(httpServer, store);
