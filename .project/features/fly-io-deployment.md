@@ -1,6 +1,6 @@
 ---
 slug: fly-io-deployment
-status: tasked
+status: implemented
 logged: 2026-07-13
 plan: plan-fly-io-deployment-2026-07-13-20ad.md
 tasks: tasks-fly-io-deployment-e2db.md

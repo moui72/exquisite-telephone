@@ -21,6 +21,16 @@ primary_region = "iad"
   min_machines_running = 1
   processes = ["app"]
 
+  # IMPORTANT: a first `fly deploy`/`fly launch` against a fresh app
+  # provisions 2 machines by default (for HA), but this app's in-memory
+  # room state (Principle VI — single source of state, no shared
+  # adapter across processes) makes that a correctness bug, not just an
+  # HA nicety: Socket.IO requests round-robin between machines, so a
+  # room created on machine A 404s ("room-not-found") when a join lands
+  # on machine B. After the first deploy, run `fly scale count 1` once
+  # to bring it down to a single machine — subsequent deploys update
+  # that machine in place rather than re-provisioning a second one.
+
   [[http_service.checks]]
     grace_period = "10s"
     interval = "15s"
