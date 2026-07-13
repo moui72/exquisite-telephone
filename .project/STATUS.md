@@ -34,13 +34,14 @@ isn't a functional bug, just an artifact/code naming mismatch.
 
 ## Feature Backlog
 
-2 backlogged · 0 planned · 0 tasked · 0 implemented — see
-`.project/features/`. Target with `/ardd-plan <slug>`.
+1 backlogged · 0 planned · 1 tasked · 0 implemented — see
+`.project/features/`. Target the backlogged one with
+`/ardd-plan asynchronous-play-turn-timer`.
 
-- `fly-io-deployment` (backlogged) — Dockerfile + fly.toml so the
+- `fly-io-deployment` (tasked) — Dockerfile + fly.toml so the
   Node/Socket.IO server (serving the built Svelte client) can be built
-  and run as a Fly app; chosen for v1 hosting since Fly supports
-  long-lived WebSocket connections and persistent processes.
+  and run as a Fly app. Plan: `plan-fly-io-deployment-2026-07-13-20ad.md`.
+  Tasks: `tasks-fly-io-deployment-e2db.md` (ready, 0/7).
 - `asynchronous-play-turn-timer` (backlogged) — host-configurable
   per-turn timer (15m/30m/1hr/4hr/12hr); round advances once everyone
   submits or all remaining timers expire. Lets groups play across time
@@ -54,8 +55,11 @@ covers room creation/join/leave/reconnect/turn-advance/completion only).
 
 ## In Flight
 
-_(none — plan-main-2026-07-13-4bd4.md's only tasks file, tasks-main-a0d8.md,
-merged to `main` and its worktree was reaped)_
+- `tasks-fly-io-deployment-e2db.md` — `ready`, 0/7 complete, bound to
+  `plan-fly-io-deployment-2026-07-13-20ad.md` (approved). Not yet
+  started. Note: T007 (the `fly launch`/`fly deploy` verification task)
+  needs an authenticated Fly.io CLI session — likely to need direct user
+  involvement when reached.
 
 ## v1 Implementation Status
 
@@ -74,9 +78,9 @@ lint/typecheck/76 tests/build all pass under pnpm.
 
 ## Recommended Next Step
 
-Run `/ardd-plan fly-io-deployment` to design and task the Fly.io
-deployment feature. Separately: `/ardd-defects` to formally log the
-`Room.status` drawing-phase mismatch, then `/ardd-backlog` for the
-end-game-control and start/end-game-logging gaps. `/ardd-diagram` on
-datamodel, infrastructure, and ui would also give this stable v1 design
-a visual reference.
+Run `/ardd-implement` to execute `tasks-fly-io-deployment-e2db.md`.
+Separately: `/ardd-defects` to formally log the `Room.status`
+drawing-phase mismatch, then `/ardd-backlog` for the end-game-control
+and start/end-game-logging gaps. `/ardd-diagram` on datamodel,
+infrastructure, and ui would also give this stable v1 design a visual
+reference.
