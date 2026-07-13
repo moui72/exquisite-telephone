@@ -1,5 +1,5 @@
-import { cleanup, render, screen } from '@testing-library/svelte';
-import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { serializeStrokes } from '@exquisite-telephone/shared';
 import Reveal from './Reveal.svelte';
@@ -100,5 +100,56 @@ describe('Reveal view', () => {
 
     expect(screen.getByText('phrase A')).toBeInTheDocument();
     expect(screen.getByText('phrase B')).toBeInTheDocument();
+  });
+
+  it('has a save control per book that calls the export pipeline with that book', async () => {
+    const bookA: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'ea',
+          bookId: 'book-a',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase A',
+        },
+      ],
+    };
+    const bookB: Book = {
+      id: 'book-b',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        {
+          id: 'eb',
+          bookId: 'book-b',
+          authorId: grace.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase B',
+        },
+      ],
+    };
+    const room: Room = {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [bookA, bookB],
+      createdAt: Date.now(),
+    };
+    const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
+
+    render(Reveal, { props: { room, exportFn } });
+
+    const saveButtons = screen.getAllByRole('button', { name: /save/i });
+    expect(saveButtons).toHaveLength(2);
+
+    await fireEvent.click(saveButtons[0]!);
+
+    expect(exportFn).toHaveBeenCalledWith(bookA, room.players);
   });
 });
