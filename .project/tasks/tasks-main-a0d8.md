@@ -22,7 +22,7 @@ status: in-progress
 - [x] T009 [artifacts: datamodel, infrastructure] Implement turn advancement logic server-side: given a `Room`, compute the next `Entry` (author, type, position) per player per book, test-first against a multi-player round-robin scenario.
 - [x] T010 [artifacts: infrastructure] Add `onSubmitEntry` handler (text or drawing-stroke payload), validating `Entry.position` sequencing (datamodel Normalization Rules), broadcasting updated room state.
 - [x] T011 [artifacts: ui] [parallel] Build the Writing/Drawing view: text-entry prompt or canvas depending on current `Entry.type`, pointer-event-based drawing captured as stroke data (not raster), with listeners registered/torn down across Svelte lifecycle hooks (touch cleanup quality standard). State performance budget for stroke-sync latency.
-- [ ] T012 [artifacts: ui] Turn-status indicator showing who's still working without revealing content.
+- [x] T012 [artifacts: ui] Turn-status indicator showing who's still working without revealing content.
 
 ## Phase 3: Reconnect tolerance
 - [ ] T013 [artifacts: infrastructure] Implement the session-token store: issue a token on join, map token -> player/room, TTL of a few minutes, test-first for "valid token within TTL resumes same seat" and "expired token is treated as a new join."

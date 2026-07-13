@@ -4,6 +4,7 @@
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
+  import TurnStatus from '../components/TurnStatus.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -41,6 +42,10 @@
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
+  {#if state.room}
+    <TurnStatus room={state.room} />
+  {/if}
+
   {#if !myTurn}
     <p class="text-lg text-slate-600">Waiting for your next turn…</p>
   {:else}
