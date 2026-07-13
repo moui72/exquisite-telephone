@@ -1,7 +1,7 @@
 ---
 plan: plan-fly-io-deployment-2026-07-13-20ad.md
 generated: 2026-07-13
-status: ready
+status: in-progress
 ---
 
 # Tasks
