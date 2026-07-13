@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-14. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-13. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -34,13 +34,17 @@ isn't a functional bug, just an artifact/code naming mismatch.
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 0 tasked · 0 implemented — see
-`.project/features/`. Target with `/ardd-plan fly-io-deployment`.
+2 backlogged · 0 planned · 0 tasked · 0 implemented — see
+`.project/features/`. Target with `/ardd-plan <slug>`.
 
 - `fly-io-deployment` (backlogged) — Dockerfile + fly.toml so the
   Node/Socket.IO server (serving the built Svelte client) can be built
   and run as a Fly app; chosen for v1 hosting since Fly supports
   long-lived WebSocket connections and persistent processes.
+- `asynchronous-play-turn-timer` (backlogged) — host-configurable
+  per-turn timer (15m/30m/1hr/4hr/12hr); round advances once everyone
+  submits or all remaining timers expire. Lets groups play across time
+  zones/schedules instead of requiring a fully synchronous session.
 
 Two more gaps surfaced during implementation are candidates for
 `/ardd-backlog`: a host-facing "end game" control (server support exists
