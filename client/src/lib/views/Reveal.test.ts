@@ -1,0 +1,104 @@
+import { cleanup, render, screen } from '@testing-library/svelte';
+import { afterEach, describe, expect, it } from 'vitest';
+import type { Book, Room } from '@exquisite-telephone/shared';
+import { serializeStrokes } from '@exquisite-telephone/shared';
+import Reveal from './Reveal.svelte';
+
+afterEach(() => cleanup());
+
+const roomId = 'ABCDE';
+const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
+const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2' };
+
+describe('Reveal view', () => {
+  it("renders each book's full ordered chain of entries", () => {
+    const strokes = serializeStrokes([
+      [
+        { x: 0, y: 0 },
+        { x: 5, y: 5 },
+      ],
+    ]);
+    const book: Book = {
+      id: 'book-1',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-1',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+        {
+          id: 'e1',
+          bookId: 'book-1',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: strokes,
+        },
+      ],
+    };
+    const room: Room = {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [book],
+      createdAt: Date.now(),
+    };
+
+    render(Reveal, { props: { room } });
+
+    expect(screen.getByText('a spoonful of sugar')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /drawing preview/i })).toBeInTheDocument();
+  });
+
+  it('renders one section per book, in order', () => {
+    const bookA: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'ea',
+          bookId: 'book-a',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase A',
+        },
+      ],
+    };
+    const bookB: Book = {
+      id: 'book-b',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        {
+          id: 'eb',
+          bookId: 'book-b',
+          authorId: grace.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase B',
+        },
+      ],
+    };
+    const room: Room = {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [bookA, bookB],
+      createdAt: Date.now(),
+    };
+
+    render(Reveal, { props: { room } });
+
+    expect(screen.getByText('phrase A')).toBeInTheDocument();
+    expect(screen.getByText('phrase B')).toBeInTheDocument();
+  });
+});

@@ -1,9 +1,9 @@
 <script lang="ts">
   import Lobby from './lib/views/Lobby.svelte';
   import WritingDrawing from './lib/views/WritingDrawing.svelte';
+  import Reveal from './lib/views/Reveal.svelte';
   import { session as defaultSession } from './lib/stores/index.js';
   import type { SessionStore } from './lib/stores/session.js';
-  // Reveal (T017) is added later and swapped in based on Room.status.
 
   export let session: SessionStore = defaultSession;
 
@@ -22,4 +22,6 @@
   <Lobby {session} />
 {:else if state.room.status === 'writing' || state.room.status === 'drawing'}
   <WritingDrawing {session} />
+{:else if state.room.status === 'reveal'}
+  <Reveal room={state.room} />
 {/if}
