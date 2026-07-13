@@ -22,6 +22,10 @@ export default tseslint.config(
   {
     rules: {
       '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      // TypeScript (with the DOM lib) already catches undefined globals
+      // more accurately than ESLint can without duplicating tsconfig's
+      // "lib" settings here.
+      'no-undef': 'off',
     },
   },
   {

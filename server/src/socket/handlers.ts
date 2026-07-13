@@ -1,8 +1,13 @@
 import { randomUUID } from 'node:crypto';
-import type { Entry, Player, Room } from '@exquisite-telephone/shared';
+import {
+  computeNextEntries,
+  computeNextEntry,
+  type Entry,
+  type Player,
+  type Room,
+} from '@exquisite-telephone/shared';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
-import { computeNextEntries, computeNextEntry } from '../domain/turnAdvancement.js';
 
 /**
  * Dispatch surface decomposed by concern (constitution Principle VIII):

@@ -1,7 +1,14 @@
 <script lang="ts">
   import Lobby from './lib/views/Lobby.svelte';
-  // Writing/Drawing (T011) and Reveal (T017) views are added later and
-  // swapped in based on Room.status.
+  import WritingDrawing from './lib/views/WritingDrawing.svelte';
+  import { session } from './lib/stores/index.js';
+  // Reveal (T017) is added later and swapped in based on Room.status.
+
+  $: state = $session;
 </script>
 
-<Lobby />
+{#if !state.room || state.room.status === 'lobby'}
+  <Lobby />
+{:else if state.room.status === 'writing' || state.room.status === 'drawing'}
+  <WritingDrawing />
+{/if}

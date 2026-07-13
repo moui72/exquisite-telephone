@@ -85,4 +85,20 @@ describe('session store (client single source of state)', () => {
 
     expect(get(session).room).toEqual(updatedRoom);
   });
+
+  it('submitEntry emits submitEntry with the current room/player and the given book/content', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, status: 'reveal' } });
+    await session.submitEntry('book-1', 'a phrase');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'submitEntry',
+      payload: { roomId: 'ABCDE', playerId: 'p1', bookId: 'book-1', content: 'a phrase' },
+    });
+    expect(get(session).room?.status).toBe('reveal');
+  });
 });

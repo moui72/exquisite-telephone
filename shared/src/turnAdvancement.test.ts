@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Book, Entry, Player, Room } from '@exquisite-telephone/shared';
+import type { Book, Entry, Player, Room } from './types.js';
 import { computeNextEntry, computeNextEntries } from './turnAdvancement.js';
 
 function makePlayer(id: string, roomId: string): Player {

@@ -1,5 +1,5 @@
 import type { Player, Room } from '@exquisite-telephone/shared';
-import { writable, type Readable } from 'svelte/store';
+import { get, writable, type Readable } from 'svelte/store';
 import type { GameSocket } from '../socket/types.js';
 
 export interface SessionState {
@@ -23,10 +23,12 @@ export interface SessionStore extends Readable<SessionState> {
   createRoom(hostName: string): Promise<void>;
   joinRoom(roomId: string, playerName: string): Promise<void>;
   startGame(): Promise<void>;
+  submitEntry(bookId: string, content: string): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
-  const { subscribe, update } = writable<SessionState>({ room: null, player: null, error: null });
+  const store = writable<SessionState>({ room: null, player: null, error: null });
+  const { subscribe, update } = store;
 
   socket.on('roomUpdated', (payload) => {
     const { room } = payload as { room: Room };
@@ -45,42 +47,34 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     }));
   }
 
+  function emitWithAck(event: string, payload: unknown): Promise<void> {
+    return new Promise<void>((resolve) => {
+      socket.emit(event, payload, (response) => {
+        applyAck(response as RoomAck);
+        resolve();
+      });
+    });
+  }
+
   return {
     subscribe,
     createRoom(hostName: string) {
-      return new Promise<void>((resolve) => {
-        socket.emit('createRoom', { hostName }, (response) => {
-          applyAck(response as RoomAck);
-          resolve();
-        });
-      });
+      return emitWithAck('createRoom', { hostName });
     },
     joinRoom(roomId: string, playerName: string) {
-      return new Promise<void>((resolve) => {
-        socket.emit('joinRoom', { roomId, playerName }, (response) => {
-          applyAck(response as RoomAck);
-          resolve();
-        });
-      });
+      return emitWithAck('joinRoom', { roomId, playerName });
     },
     startGame() {
-      return new Promise<void>((resolve) => {
-        let currentRoomId: string | undefined;
-        let currentPlayerId: string | undefined;
-        const unsubscribe = subscribe((state) => {
-          currentRoomId = state.room?.id;
-          currentPlayerId = state.player?.id;
-        });
-        unsubscribe();
-
-        socket.emit(
-          'startGame',
-          { roomId: currentRoomId, playerId: currentPlayerId },
-          (response) => {
-            applyAck(response as RoomAck);
-            resolve();
-          },
-        );
+      const state = get(store);
+      return emitWithAck('startGame', { roomId: state.room?.id, playerId: state.player?.id });
+    },
+    submitEntry(bookId: string, content: string) {
+      const state = get(store);
+      return emitWithAck('submitEntry', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        bookId,
+        content,
       });
     },
   };

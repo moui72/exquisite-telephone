@@ -1,9 +1,11 @@
-import type { Book, EntryType, Room } from '@exquisite-telephone/shared';
+import type { Book, EntryType, Room } from './types.js';
 
 /**
  * The next Entry a Book needs, computed from Room.players order and the
  * book's originAuthorId (the "pass the folded paper" round-robin
- * mechanic — see ui.md Writing/Drawing View).
+ * mechanic — see ui.md Writing/Drawing View). Shared between server
+ * (authoritative validation) and client (knowing whose turn it is)
+ * so the round-robin rule has a single source of truth.
  */
 export interface NextEntry {
   authorId: string;
