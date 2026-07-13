@@ -18,3 +18,13 @@ status: in-progress
 ## Phase 3: Fly app configuration and deploy
 - [x] T006 [artifacts: infrastructure] [feature: fly-io-deployment] Write `fly.toml`: single app, single process group, internal port matching the server's `PORT` config, and a health check hitting a lightweight endpoint (add a minimal `GET /healthz` route returning 200 if none exists yet — test-first for the route itself).
 - [ ] T007 [feature: fly-io-deployment] Run `fly launch`/`fly deploy` (or equivalent) against a real Fly app and verify end-to-end: the deployed URL serves the client, a room can be created and joined from two browser sessions, and Socket.IO reconnect works across a network blip — this is the plan's demonstrable increment, not a unit test. Record the app name/URL for the user's reference. This task requires an authenticated Fly.io account/CLI session and is likely to need direct user involvement (login, org/app selection, billing) — stop and surface this as a blocker rather than guessing at account specifics if the environment has no Fly credentials available.
+
+**Blocked (2026-07-13):** the `fly`/`flyctl` CLI is not installed in this
+worktree/sandbox (`fly version` / `flyctl version` both resolve to
+"command not found"), so there is no way to check authentication, pick
+an org, or run `fly launch`/`fly deploy`. T001–T006 are complete and
+verified locally (Docker build + run + real socket.io-client round trip
+against the container); only this task's actual deploy-and-verify step
+remains, and it needs the user to install the Fly CLI, log in
+(`fly auth login`), and either point at an existing app/org or approve
+creating a new one before this can proceed.
