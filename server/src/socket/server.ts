@@ -4,10 +4,13 @@ import type { RoomStore } from '../domain/roomStore.js';
 import {
   onCreateRoom,
   onJoinRoom,
+  onStartGame,
   type CreateRoomAck,
   type CreateRoomInput,
   type JoinRoomAck,
   type JoinRoomInput,
+  type StartGameAck,
+  type StartGameInput,
 } from './handlers.js';
 
 /**
@@ -26,6 +29,10 @@ export function createSocketServer(httpServer: HttpServer, store: RoomStore): So
 
     socket.on('joinRoom', (input: JoinRoomInput, ack: (response: JoinRoomAck) => void) => {
       onJoinRoom(socket, store, input, ack);
+    });
+
+    socket.on('startGame', (input: StartGameInput, ack: (response: StartGameAck) => void) => {
+      onStartGame(socket, store, input, ack);
     });
   });
 

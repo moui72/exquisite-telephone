@@ -16,7 +16,7 @@ status: in-progress
 - [x] T005 [artifacts: infrastructure, datamodel] Implement the server-side in-memory room store (create room with a short unambiguous code, add/remove player, look up by `Room.id`), test-first: a failing test for "create room returns a valid unique code" and "player join adds to room.players", then the implementation.
 - [x] T006 [artifacts: infrastructure] Bootstrap the Socket.IO server bound to the room store, with `onJoinRoom`/`onCreateRoom` as independently named handlers (Dispatch Surfaces Decomposed by Concern), test-first via a Socket.IO client-side test harness.
 - [x] T007 [artifacts: infrastructure, constitution] Entry point (`server/index.ts`) only reads config, constructs the room store and Socket.IO server, and starts listening — no game logic inline (Bootstrap/Entry Files Wire Dependencies Only).
-- [ ] T008 [artifacts: ui] [parallel] Build the Lobby view: create/join by code, host-only "start game" control, live player list bound to server state via a single Svelte store (Principle VI). Mobile-friendly layout (Principle II), baseline accessibility (labeled inputs, tab order).
+- [x] T008 [artifacts: ui] [parallel] Build the Lobby view: create/join by code, host-only "start game" control, live player list bound to server state via a single Svelte store (Principle VI). Mobile-friendly layout (Principle II), baseline accessibility (labeled inputs, tab order).
 
 ## Phase 2: Game loop
 - [ ] T009 [artifacts: datamodel, infrastructure] Implement turn advancement logic server-side: given a `Room`, compute the next `Entry` (author, type, position) per player per book, test-first against a multi-player round-robin scenario.
