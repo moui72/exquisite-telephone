@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-13
+last_updated: 2026-07-14
 diagram_status: unrendered
 diagram_type: graph TD
 render_section: Infrastructure
@@ -61,6 +61,24 @@ server's room/game state broadcasts and sends user actions (join, submit
 entry, draw stroke) as Socket.IO events. This keeps a single source of
 truth on the server (Principle VI) and avoids client/server state drift
 during reconnects.
+
+## Turn Timer Sweep
+
+When a room's host enables a per-turn timer (`Room.turnTimerMinutes`,
+see [[datamodel]]), rounds must still be able to advance even when no
+player is actively connected to trigger a check (e.g. everyone
+remaining is offline overnight — the whole point of the feature). A
+single server-wide `setInterval` (period: 30s) sweeps all in-progress
+rooms with a timer set: for each, if every still-short player's
+deadline has passed and no `pendingTimeoutVote` is already open, it
+opens one and broadcasts the updated room state. The same sweep also
+resolves any already-open vote whose `voteDeadline` has passed with
+fewer than all eligible votes cast (per [[datamodel]] Normalization
+Rules: plurality of votes cast, or `force-empty` if none). No
+persistent timer/queue infrastructure (e.g. Redis-backed job scheduler)
+is introduced — a single in-process interval is sufficient at this
+app's scale (Principle I), consistent with everything else here living
+in one process's memory.
 
 ## Export Pipeline (PNG)
 
