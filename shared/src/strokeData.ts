@@ -4,28 +4,50 @@ export interface Point {
   y: number;
 }
 
-/** One continuous pointer-down-to-pointer-up stroke. */
-export type Stroke = Point[];
+/**
+ * One continuous pointer-down-to-pointer-up freehand stroke, carrying its
+ * own color and line width (datamodel.md Entry.content).
+ */
+export interface StrokeOp {
+  type: 'stroke';
+  points: Point[];
+  color: string;
+  width: number;
+}
+
+/**
+ * A flood-fill seeded at `point`, replayed by re-running the fill algorithm
+ * against the canvas as rendered up to this op in the sequence (see
+ * ui.md Writing/Drawing View).
+ */
+export interface FillOp {
+  type: 'fill';
+  point: Point;
+  color: string;
+}
+
+/** A single drawing operation, replayed strictly in array order. */
+export type DrawOp = StrokeOp | FillOp;
 
 /**
  * A drawing Entry's vector representation (datamodel.md Entry.content):
- * "an ordered array of strokes, each a list of points" — replayed onto a
- * canvas at reveal/export time rather than stored as raster.
+ * an ordered array of draw ops — replayed onto a canvas at reveal/export
+ * time rather than stored as raster.
  */
-export type StrokeData = Stroke[];
+export type DrawOps = DrawOp[];
 
-export function serializeStrokes(strokes: StrokeData): string {
-  return JSON.stringify(strokes);
+export function serializeDrawOps(ops: DrawOps): string {
+  return JSON.stringify(ops);
 }
 
-/** Parses stroke data, tolerating empty/malformed content as "no strokes". */
-export function parseStrokes(content: string): StrokeData {
+/** Parses draw ops, tolerating empty/malformed content as "no ops". */
+export function parseDrawOps(content: string): DrawOps {
   if (!content) {
     return [];
   }
   try {
     const parsed: unknown = JSON.parse(content);
-    return Array.isArray(parsed) ? (parsed as StrokeData) : [];
+    return Array.isArray(parsed) ? (parsed as DrawOps) : [];
   } catch {
     return [];
   }

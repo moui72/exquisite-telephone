@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { computeNextEntries, parseStrokes, serializeStrokes } from '@exquisite-telephone/shared';
-  import type { StrokeData } from '@exquisite-telephone/shared';
+  import { computeNextEntries, parseDrawOps, serializeDrawOps } from '@exquisite-telephone/shared';
+  import type { DrawOps } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
@@ -9,7 +9,7 @@
   export let session: SessionStore = defaultSession;
 
   let textValue = '';
-  let drawnStrokes: StrokeData = [];
+  let drawnOps: DrawOps = [];
 
   $: state = $session;
   $: myTurn =
@@ -23,7 +23,7 @@
   // Reset local draft state whenever the assigned turn changes.
   $: if (myTurn) {
     textValue = '';
-    drawnStrokes = [];
+    drawnOps = [];
   }
 
   async function handleSubmitText() {
@@ -32,12 +32,12 @@
   }
 
   async function handleSubmitDrawing() {
-    if (!myTurn || drawnStrokes.length === 0) return;
-    await session.submitEntry(myTurn.bookId, serializeStrokes(drawnStrokes));
+    if (!myTurn || drawnOps.length === 0) return;
+    await session.submitEntry(myTurn.bookId, serializeDrawOps(drawnOps));
   }
 
-  function handleStrokeComplete(strokes: StrokeData) {
-    drawnStrokes = strokes;
+  function handleOpsChange(ops: DrawOps) {
+    drawnOps = ops;
   }
 </script>
 
@@ -55,7 +55,7 @@
         {#if previousEntry.type === 'text'}
           <p class="text-xl font-medium text-slate-900">{previousEntry.content}</p>
         {:else}
-          <DrawingCanvas strokes={parseStrokes(previousEntry.content)} readOnly />
+          <DrawingCanvas ops={parseDrawOps(previousEntry.content)} readOnly />
         {/if}
       </div>
     {/if}
@@ -78,7 +78,7 @@
       </form>
     {:else}
       <div class="flex flex-col gap-4">
-        <DrawingCanvas strokes={drawnStrokes} onStrokeComplete={handleStrokeComplete} />
+        <DrawingCanvas ops={drawnOps} onOpsChange={handleOpsChange} />
         <button
           type="button"
           class="rounded-md bg-slate-800 px-4 py-2 text-base text-white"

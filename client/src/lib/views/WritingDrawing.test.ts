@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
-import { serializeStrokes } from '@exquisite-telephone/shared';
+import { serializeDrawOps } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
 import WritingDrawing from './WritingDrawing.svelte';
 
@@ -73,11 +73,16 @@ describe('Writing/Drawing view', () => {
   });
 
   it('shows the previous drawing as reference when writing a guess', () => {
-    const strokes = serializeStrokes([
-      [
-        { x: 0, y: 0 },
-        { x: 1, y: 1 },
-      ],
+    const strokes = serializeDrawOps([
+      {
+        type: 'stroke',
+        points: [
+          { x: 0, y: 0 },
+          { x: 1, y: 1 },
+        ],
+        color: '#1e293b',
+        width: 3,
+      },
     ]);
     const adaBook: Book = {
       id: 'book-ada',

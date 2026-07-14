@@ -1,4 +1,4 @@
-import { parseStrokes } from '@exquisite-telephone/shared';
+import { parseDrawOps } from '@exquisite-telephone/shared';
 import type { Book, Player } from '@exquisite-telephone/shared';
 
 /**
@@ -68,14 +68,14 @@ export function renderBookOntoContext(
       ctx.fillText(entry.content, 12, y + TEXT_ROW_HEIGHT / 2 + 8);
       y += TEXT_ROW_HEIGHT;
     } else {
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 3;
       ctx.lineCap = 'round';
-      for (const stroke of parseStrokes(entry.content)) {
-        if (stroke.length === 0) continue;
+      for (const op of parseDrawOps(entry.content)) {
+        if (op.type !== 'stroke' || op.points.length === 0) continue;
+        ctx.strokeStyle = op.color;
+        ctx.lineWidth = op.width;
         ctx.beginPath();
-        ctx.moveTo(stroke[0]!.x, stroke[0]!.y + y);
-        for (const point of stroke.slice(1)) {
+        ctx.moveTo(op.points[0]!.x, op.points[0]!.y + y);
+        for (const point of op.points.slice(1)) {
           ctx.lineTo(point.x, point.y + y);
         }
         ctx.stroke();

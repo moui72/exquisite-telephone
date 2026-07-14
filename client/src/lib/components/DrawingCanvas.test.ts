@@ -12,7 +12,7 @@ function firePointer(canvas: Element, type: string, x: number, y: number) {
 
 describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
   it('renders a canvas that is not read-only by default', () => {
-    const { container } = render(DrawingCanvas, { props: { strokes: [] } });
+    const { container } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas');
 
     expect(canvas).not.toBeNull();
@@ -20,31 +20,32 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
   });
 
   it('marks the canvas read-only for replay/preview use', () => {
-    const { container } = render(DrawingCanvas, { props: { strokes: [], readOnly: true } });
+    const { container } = render(DrawingCanvas, { props: { ops: [], readOnly: true } });
     const canvas = container.querySelector('canvas');
 
     expect(canvas?.getAttribute('aria-label')).toBe('Drawing preview');
   });
 
-  it('calls onStrokeComplete with the captured points on pointer up', async () => {
-    const onStrokeComplete = vi.fn();
-    const { container } = render(DrawingCanvas, { props: { strokes: [], onStrokeComplete } });
+  it('calls onOpsChange with a StrokeOp appended on pointer up', async () => {
+    const onOpsChange = vi.fn();
+    const { container } = render(DrawingCanvas, { props: { ops: [], onOpsChange } });
     const canvas = container.querySelector('canvas')!;
 
     firePointer(canvas, 'pointerdown', 0, 0);
     firePointer(canvas, 'pointermove', 10, 10);
     firePointer(canvas, 'pointerup', 10, 10);
 
-    expect(onStrokeComplete).toHaveBeenCalledTimes(1);
-    const strokes = onStrokeComplete.mock.calls[0][0];
-    expect(strokes).toHaveLength(1);
-    expect(strokes[0].length).toBeGreaterThanOrEqual(2);
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops).toHaveLength(1);
+    expect(ops[0].type).toBe('stroke');
+    expect(ops[0].points.length).toBeGreaterThanOrEqual(2);
   });
 
   it('does not capture strokes when readOnly', async () => {
-    const onStrokeComplete = vi.fn();
+    const onOpsChange = vi.fn();
     const { container } = render(DrawingCanvas, {
-      props: { strokes: [], readOnly: true, onStrokeComplete },
+      props: { ops: [], readOnly: true, onOpsChange },
     });
     const canvas = container.querySelector('canvas')!;
 
@@ -52,12 +53,12 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     firePointer(canvas, 'pointermove', 10, 10);
     firePointer(canvas, 'pointerup', 10, 10);
 
-    expect(onStrokeComplete).not.toHaveBeenCalled();
+    expect(onOpsChange).not.toHaveBeenCalled();
   });
 
   it('scales pointer coordinates from CSS-rendered size to bitmap resolution', async () => {
-    const onStrokeComplete = vi.fn();
-    const { container } = render(DrawingCanvas, { props: { strokes: [], onStrokeComplete } });
+    const onOpsChange = vi.fn();
+    const { container } = render(DrawingCanvas, { props: { ops: [], onOpsChange } });
     const canvas = container.querySelector('canvas')!;
 
     // Canvas bitmap is 320x240 (its width/height attrs), but CSS-rendered
@@ -80,14 +81,14 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     firePointer(canvas, 'pointermove', 60, 45);
     firePointer(canvas, 'pointerup', 60, 45);
 
-    expect(onStrokeComplete).toHaveBeenCalledTimes(1);
-    const strokes = onStrokeComplete.mock.calls[0][0];
-    expect(strokes[0][0]).toEqual({ x: 80, y: 60 });
-    expect(strokes[0][1]).toEqual({ x: 120, y: 90 });
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].points[0]).toEqual({ x: 80, y: 60 });
+    expect(ops[0].points[1]).toEqual({ x: 120, y: 90 });
   });
 
   it('removes its pointer listeners on unmount without throwing', () => {
-    const { container, unmount } = render(DrawingCanvas, { props: { strokes: [] } });
+    const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;
     const removeSpy = vi.spyOn(canvas, 'removeEventListener');
 

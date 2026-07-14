@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Book, Player } from '@exquisite-telephone/shared';
-import { serializeStrokes } from '@exquisite-telephone/shared';
+import { serializeDrawOps } from '@exquisite-telephone/shared';
 import {
   computeCanvasSize,
   exportBookToPng,
@@ -17,12 +17,17 @@ const grace: Player = { id: 'grace', roomId, name: 'Grace', connected: true, ses
 const players = [ada, grace];
 
 function makeFixtureBook(): Book {
-  const strokes = serializeStrokes([
-    [
-      { x: 1, y: 2 },
-      { x: 3, y: 4 },
-      { x: 5, y: 6 },
-    ],
+  const strokes = serializeDrawOps([
+    {
+      type: 'stroke',
+      points: [
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+        { x: 5, y: 6 },
+      ],
+      color: '#1e293b',
+      width: 3,
+    },
   ]);
   return {
     id: 'book-1',

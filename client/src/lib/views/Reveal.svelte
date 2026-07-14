@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { parseStrokes } from '@exquisite-telephone/shared';
+  import { parseDrawOps } from '@exquisite-telephone/shared';
   import type { Room } from '@exquisite-telephone/shared';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
@@ -47,7 +47,7 @@
           {#if entry.type === 'text'}
             <p class="text-lg text-slate-900">{entry.content}</p>
           {:else}
-            <DrawingCanvas strokes={parseStrokes(entry.content)} readOnly />
+            <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
           {/if}
         </div>
       {/each}

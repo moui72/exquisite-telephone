@@ -1,19 +1,22 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import type { Point, StrokeData } from '@exquisite-telephone/shared';
+  import type { DrawOps, Point } from '@exquisite-telephone/shared';
+
+  const DEFAULT_COLOR = '#1e293b';
+  const DEFAULT_WIDTH = 3;
 
   /**
    * Mobile-friendly, pointer-event-based drawing canvas (constitution
-   * Principle II). Captures strokes as vector point data (datamodel.md
+   * Principle II). Captures strokes as vector draw ops (datamodel.md
    * Entry.content), not raster. Used both to draw (readOnly=false) and
    * to replay an existing drawing for reference/reveal (readOnly=true).
    *
    * Pointer listeners are registered in onMount and torn down in
    * onDestroy (constitution touch-cleanup quality standard).
    */
-  export let strokes: StrokeData = [];
+  export let ops: DrawOps = [];
   export let readOnly = false;
-  export let onStrokeComplete: (strokes: StrokeData) => void = () => {};
+  export let onOpsChange: (ops: DrawOps) => void = () => {};
 
   let canvasEl: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
@@ -40,9 +43,12 @@
   function redrawAll() {
     if (!ctx || !canvasEl) return;
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-    for (const stroke of strokes) {
-      for (let i = 1; i < stroke.length; i += 1) {
-        drawSegment(stroke[i - 1]!, stroke[i]!);
+    for (const op of ops) {
+      if (op.type !== 'stroke') continue;
+      ctx.strokeStyle = op.color;
+      ctx.lineWidth = op.width;
+      for (let i = 1; i < op.points.length; i += 1) {
+        drawSegment(op.points[i - 1]!, op.points[i]!);
       }
     }
   }
@@ -64,7 +70,10 @@
   function handlePointerUp() {
     if (readOnly || !currentStroke) return;
     if (currentStroke.length >= 2) {
-      onStrokeComplete([...strokes, currentStroke]);
+      onOpsChange([
+        ...ops,
+        { type: 'stroke', points: currentStroke, color: DEFAULT_COLOR, width: DEFAULT_WIDTH },
+      ]);
     }
     currentStroke = null;
   }
@@ -78,9 +87,9 @@
       ctx = null;
     }
     if (ctx) {
-      ctx.lineWidth = 3;
+      ctx.lineWidth = DEFAULT_WIDTH;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = '#1e293b';
+      ctx.strokeStyle = DEFAULT_COLOR;
     }
     redrawAll();
 
@@ -100,7 +109,7 @@
   });
 
   $: if (ctx) {
-    void strokes;
+    void ops;
     redrawAll();
   }
 </script>

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
-import { serializeStrokes } from '@exquisite-telephone/shared';
+import { serializeDrawOps } from '@exquisite-telephone/shared';
 import Reveal from './Reveal.svelte';
 
 afterEach(() => cleanup());
@@ -12,11 +12,16 @@ const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToke
 
 describe('Reveal view', () => {
   it("renders each book's full ordered chain of entries", () => {
-    const strokes = serializeStrokes([
-      [
-        { x: 0, y: 0 },
-        { x: 5, y: 5 },
-      ],
+    const strokes = serializeDrawOps([
+      {
+        type: 'stroke',
+        points: [
+          { x: 0, y: 0 },
+          { x: 5, y: 5 },
+        ],
+        color: '#1e293b',
+        width: 3,
+      },
     ]);
     const book: Book = {
       id: 'book-1',
