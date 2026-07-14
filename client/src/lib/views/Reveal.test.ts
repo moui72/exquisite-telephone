@@ -53,6 +53,7 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [book],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
 
     render(Reveal, { props: { room } });
@@ -99,6 +100,7 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
 
     render(Reveal, { props: { room } });
@@ -145,6 +147,7 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 

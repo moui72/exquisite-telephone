@@ -42,6 +42,7 @@ const sampleRoom: Room = {
   status: 'lobby',
   books: [],
   createdAt: Date.now(),
+  monochromeOnly: false,
 };
 
 describe('session store (client single source of state)', () => {

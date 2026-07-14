@@ -20,6 +20,12 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
     expect(roomA.books).toEqual([]);
   });
 
+  it('create room defaults monochromeOnly to false', () => {
+    const room = createRoom(store, { hostName: 'Ada' });
+
+    expect(room.monochromeOnly).toBe(false);
+  });
+
   it('player join adds to room.players', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 

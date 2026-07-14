@@ -29,6 +29,7 @@ function makeRoom(status: Room['status']): Room {
     status,
     books: [],
     createdAt: Date.now(),
+    monochromeOnly: false,
   };
 }
 

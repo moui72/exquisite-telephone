@@ -20,6 +20,7 @@ describe('TurnStatus (who is still working, no content revealed)', () => {
       status: 'writing',
       books: [adaBook],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
 
     render(TurnStatus, { props: { room } });
@@ -53,6 +54,7 @@ describe('TurnStatus (who is still working, no content revealed)', () => {
       status: 'writing',
       books: [adaBook],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
 
     render(TurnStatus, { props: { room } });

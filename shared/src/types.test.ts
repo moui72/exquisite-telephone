@@ -63,6 +63,7 @@ describe('datamodel types (datamodel.md)', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];

@@ -58,4 +58,10 @@ export interface Room {
   books: Book[];
   /** Epoch milliseconds. */
   createdAt: number;
+  /**
+   * Host-configurable, set before `status` leaves `lobby`; defaults
+   * `false`. When `true`, the drawing tool's color palette is hidden and
+   * all strokes render in the default ink color.
+   */
+  monochromeOnly: boolean;
 }

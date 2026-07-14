@@ -32,6 +32,7 @@ describe('turn advancement (round-robin per book)', () => {
       status: 'writing',
       books,
       createdAt: Date.now(),
+      monochromeOnly: false,
     };
   }
 

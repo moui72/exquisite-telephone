@@ -52,6 +52,7 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     status: 'lobby',
     books: [],
     createdAt: Date.now(),
+    monochromeOnly: false,
   };
 
   store.rooms.set(room.id, room);
