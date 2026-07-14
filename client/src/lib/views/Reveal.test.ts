@@ -48,6 +48,10 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [book],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     render(Reveal, { props: { room } });
@@ -94,6 +98,10 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     render(Reveal, { props: { room } });
@@ -140,6 +148,10 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 

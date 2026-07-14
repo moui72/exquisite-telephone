@@ -20,6 +20,10 @@ describe('TurnStatus (who is still working, no content revealed)', () => {
       status: 'writing',
       books: [adaBook],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     render(TurnStatus, { props: { room } });
@@ -53,6 +57,10 @@ describe('TurnStatus (who is still working, no content revealed)', () => {
       status: 'writing',
       books: [adaBook],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     render(TurnStatus, { props: { room } });

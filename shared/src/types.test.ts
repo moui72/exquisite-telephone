@@ -63,6 +63,10 @@ describe('datamodel types (datamodel.md)', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];

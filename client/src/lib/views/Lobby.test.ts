@@ -23,6 +23,10 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           status: 'lobby',
           books: [],
           createdAt: Date.now(),
+          turnTimerMinutes: null,
+          roundStartedAt: null,
+          timerExtensions: {},
+          pendingTimeoutVote: null,
         },
         player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't' },
         error: null,
@@ -59,6 +63,10 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     const hostSession = makeFakeSession({

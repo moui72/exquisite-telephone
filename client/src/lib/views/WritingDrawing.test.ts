@@ -32,6 +32,10 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     status: 'writing',
     books,
     createdAt: Date.now(),
+    turnTimerMinutes: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
   };
 }
 

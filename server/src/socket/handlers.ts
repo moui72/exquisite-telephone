@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import {
   computeNextEntries,
   computeNextEntry,
+  currentRoundFor,
   type Entry,
   type Player,
   type Room,
@@ -129,6 +130,9 @@ export function onStartGame(
 
   room.status = 'writing';
   room.books = createBooksForRoom(room);
+  room.roundStartedAt = Date.now();
+  room.timerExtensions = {};
+  room.pendingTimeoutVote = null;
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }
@@ -232,6 +236,8 @@ export function onSubmitEntry(
     return;
   }
 
+  const roundBeforeSubmit = currentRoundFor(room);
+
   const entry: Entry = {
     id: randomUUID(),
     bookId: book.id,
@@ -241,6 +247,13 @@ export function onSubmitEntry(
     content: input.content,
   };
   book.entries.push(entry);
+
+  if (currentRoundFor(room) > roundBeforeSubmit) {
+    room.roundStartedAt = Date.now();
+    room.timerExtensions = {};
+    room.pendingTimeoutVote = null;
+  }
+
   logger.log({
     event: 'turn_advanced',
     outcome: 'success',

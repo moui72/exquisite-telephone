@@ -32,6 +32,10 @@ describe('turn advancement (round-robin per book)', () => {
       status: 'writing',
       books,
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
   }
 
@@ -141,6 +145,10 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
       status: 'writing',
       books,
       createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
   }
 

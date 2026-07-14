@@ -29,6 +29,10 @@ function makeRoom(status: Room['status']): Room {
     status,
     books: [],
     createdAt: Date.now(),
+    turnTimerMinutes: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
   };
 }
 
