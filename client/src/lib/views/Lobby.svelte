@@ -23,6 +23,11 @@
   async function handleStartGame() {
     await session.startGame();
   }
+
+  async function handleToggleMonochrome(event: Event) {
+    const checked = (event.currentTarget as HTMLInputElement).checked;
+    await session.setMonochrome(checked);
+  }
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
@@ -107,6 +112,15 @@
       </ul>
 
       {#if isHost}
+        <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+          <input
+            type="checkbox"
+            checked={state.room.monochromeOnly}
+            on:change={handleToggleMonochrome}
+          />
+          Force monochrome
+        </label>
+
         <button
           type="button"
           class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white"

@@ -49,6 +49,7 @@ export interface SessionStore extends Readable<SessionState> {
   joinRoom(roomId: string, playerName: string): Promise<void>;
   startGame(): Promise<void>;
   submitEntry(bookId: string, content: string): Promise<void>;
+  setMonochrome(monochromeOnly: boolean): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -121,6 +122,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         playerId: state.player?.id,
         bookId,
         content,
+      });
+    },
+    setMonochrome(monochromeOnly: boolean) {
+      const state = get(store);
+      return emitWithAck('set_monochrome', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        monochromeOnly,
       });
     },
   };

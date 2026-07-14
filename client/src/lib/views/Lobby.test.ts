@@ -33,6 +33,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     joinRoom: vi.fn(async () => {}),
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
+    setMonochrome: vi.fn(async () => {}),
   };
 }
 
@@ -90,5 +91,49 @@ describe('Lobby view', () => {
     await fireEvent.click(screen.getByRole('button', { name: /join room/i }));
 
     expect(session.joinRoom).toHaveBeenCalledWith('ABCDE', 'Grace');
+  });
+
+  it('shows the force-monochrome toggle only to the host, reflecting Room.monochromeOnly', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: true,
+    };
+
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session: hostSession } });
+    const toggle = screen.getByRole('checkbox', { name: /force monochrome/i });
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toBeChecked();
+
+    const guestSession = makeFakeSession({ room, player: room.players[1]!, error: null });
+    render(Lobby, { props: { session: guestSession } });
+    expect(screen.queryAllByRole('checkbox', { name: /force monochrome/i })).toHaveLength(1); // still just the host's
+  });
+
+  it('emits set_monochrome with the new value when the host toggles it', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' }],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+    };
+
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByRole('checkbox', { name: /force monochrome/i }));
+
+    expect(session.setMonochrome).toHaveBeenCalledWith(true);
   });
 });
