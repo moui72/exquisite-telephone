@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-14 (night). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (late night). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -23,11 +23,24 @@ _(none)_
 
 ## Code-vs-Artifact Defects
 
-0 defects — see `.project/DEFECTS.md`, last checked 2026-07-14. The dead
-`'drawing'` value in `RoomStatus` (`shared/src/types.ts`) and the
-corresponding dead branch in `client/src/App.svelte` found by this run's
-fresh survey are now fixed and re-verified; all 4 defects from yesterday's
-pass remain fixed too.
+3 defects — see `.project/DEFECTS.md`, last checked 2026-07-14 (a fresh
+pass run after this session's two feature merges). `datamodel.md` and
+`ui.md` are fully clean (every field, the draw-op format, and all three
+Normalization Rules — round-gating, minimum player count, turn
+timer/timeout-vote — verified exactly against the merged code).
+- **drift** (`constitution.md`, Principle IX): `onEndGame` transitions
+  a room to `ended` without logging a `game_completed` event — the
+  natural-completion path does log it, this host-triggered path
+  doesn't. Pre-existing, not introduced this session.
+- **drift** (`constitution.md`, Quality Standards): no artifact states
+  a performance budget for any real-time operation, despite the
+  principle naming three examples (stroke sync, turn-passing,
+  reconnect time) that require one — now also missing for the two new
+  real-time operations added this session (timer countdown, timeout
+  vote resolution).
+- **cosmetic** (`infrastructure.md`): the Realtime Sync section's
+  handler-list example names a nonexistent `onDrawStroke` — drawing
+  syncs only once, in full, via `onSubmitEntry`.
 
 ## Feedback
 
@@ -93,12 +106,11 @@ pass remain fixed too.
   after the phase grouping below was agreed; closest in spirit to
   Phase 1's turn/room engine but not discussed at grouping time).
 
-One gap surfaced during v1 implementation is still a candidate for
-`/ardd-backlog`: observability logging for the start-game/end-game
-transitions (currently unlogged; Principle IX covers room
-creation/join/leave/reconnect/turn-advance/completion only). Note the
+The `onEndGame`-not-logged gap noted during v1 implementation is now
+formally recorded as a defect (see Code-vs-Artifact Defects above) —
+`/ardd-plan defects` would surface it as a fixable item. The
 turn-room-engine plan above does add timeout-vote-specific logging
-(T015), but that doesn't cover plain start-game/end-game.
+(T015), but that's a distinct code path from plain start-game/end-game.
 
 ## Phase Plan
 
@@ -163,24 +175,22 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-0 defects open (not re-verified against this session's two feature
-merges yet — see Recommended Next Step). 0 open feedback files. No
-cross-artifact conflicts or constitution violations. Phases 1 and 2 of
-the phase plan (turn/room engine, drawing tools) are both implemented
-and merged to `main` — working tree clean, no worktrees in flight.
-Safe to /plan: yes.
+3 defects open, freshly verified 2026-07-14 after this session's two
+feature merges (see Code-vs-Artifact Defects above) — 2 drift, 1
+cosmetic, none blocking. 0 open feedback files. No cross-artifact
+conflicts or constitution violations. Phases 1 and 2 of the phase plan
+(turn/room engine, drawing tools) are both implemented and merged to
+`main` — working tree clean, no worktrees in flight. Safe to /plan:
+yes.
 
 ## Recommended Next Step
 
-A fresh `/ardd-defects` pass is worth running now — last verified
-2026-07-14, before this session's two substantial feature merges
-(round-gated turns, min player count, turn timer, drawing color/width/
-fill/monochrome). Phase 3 (Reveal page — `/ardd-plan
+The 3 open defects are small and independent — `/ardd-plan defects`
+would surface them for a quick fix-up plan whenever convenient (not
+urgent). Otherwise, Phase 3 (Reveal page — `/ardd-plan
 play-again-control-on-reveal-p animated-interactive-reveal-bo`) is
 ready to plan whenever. `host-game-moderation-controls` still needs a
-phase assignment before or when it's planned. `/ardd-backlog` for the
-one remaining gap noted during v1 implementation (start/end-game
-observability logging) is still outstanding. `/ardd-diagram` on
+phase assignment before or when it's planned. `/ardd-diagram` on
 datamodel, infrastructure, and ui would also give this stable design a
 visual reference. Also worth a manual smoke test of the merged app
 (`/run`) given how much surface area landed in one session.
