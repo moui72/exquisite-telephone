@@ -1,5 +1,6 @@
 import { parseDrawOps } from '@exquisite-telephone/shared';
 import type { Book, Player } from '@exquisite-telephone/shared';
+import { floodFill } from '../drawing/floodFill.js';
 
 /**
  * Client-side PNG export pipeline (infrastructure.md Export Pipeline):
@@ -26,6 +27,8 @@ export interface MinimalCanvasContext {
   moveTo(x: number, y: number): void;
   lineTo(x: number, y: number): void;
   stroke(): void;
+  getImageData(x: number, y: number, w: number, h: number): ImageData;
+  putImageData(imageData: ImageData, x: number, y: number): void;
 }
 
 export interface ExportCanvas {
@@ -70,15 +73,21 @@ export function renderBookOntoContext(
     } else {
       ctx.lineCap = 'round';
       for (const op of parseDrawOps(entry.content)) {
-        if (op.type !== 'stroke' || op.points.length === 0) continue;
-        ctx.strokeStyle = op.color;
-        ctx.lineWidth = op.width;
-        ctx.beginPath();
-        ctx.moveTo(op.points[0]!.x, op.points[0]!.y + y);
-        for (const point of op.points.slice(1)) {
-          ctx.lineTo(point.x, point.y + y);
+        if (op.type === 'stroke') {
+          if (op.points.length === 0) continue;
+          ctx.strokeStyle = op.color;
+          ctx.lineWidth = op.width;
+          ctx.beginPath();
+          ctx.moveTo(op.points[0]!.x, op.points[0]!.y + y);
+          for (const point of op.points.slice(1)) {
+            ctx.lineTo(point.x, point.y + y);
+          }
+          ctx.stroke();
+        } else {
+          const imageData = ctx.getImageData(0, 0, width, height);
+          floodFill(imageData, { x: op.point.x, y: op.point.y + y }, op.color);
+          ctx.putImageData(imageData, 0, 0);
         }
-        ctx.stroke();
       }
       y += DRAWING_ROW_HEIGHT;
     }

@@ -62,8 +62,12 @@ function makeFixtureBook(): Book {
   };
 }
 
-function makeFakeContext(): MinimalCanvasContext & { calls: string[] } {
+function makeFakeContext(
+  width = CANVAS_WIDTH,
+  height = TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT,
+): MinimalCanvasContext & { calls: string[] } {
   const calls: string[] = [];
+  const pixels = new Uint8ClampedArray(width * height * 4).fill(255);
   return {
     calls,
     fillStyle: '',
@@ -88,6 +92,14 @@ function makeFakeContext(): MinimalCanvasContext & { calls: string[] } {
     },
     stroke() {
       calls.push('stroke()');
+    },
+    getImageData(x, y, w, h) {
+      calls.push(`getImageData(${x},${y},${w},${h})`);
+      return { width: w, height: h, data: pixels } as unknown as ImageData;
+    },
+    putImageData(imageData, x, y) {
+      calls.push(`putImageData(${x},${y})`);
+      void imageData;
     },
   };
 }
@@ -127,6 +139,31 @@ describe('renderBookOntoContext (composite drawings + text captions)', () => {
     expect(ctx.calls).toContain(`lineTo(3,${4 + TEXT_ROW_HEIGHT})`);
     expect(ctx.calls).toContain(`lineTo(5,${6 + TEXT_ROW_HEIGHT})`);
     expect(ctx.calls.filter((c) => c === 'stroke()')).toHaveLength(1);
+  });
+
+  it('replays a FillOp via the shared floodFill algorithm', () => {
+    const fillOps = serializeDrawOps([{ type: 'fill', point: { x: 7, y: 9 }, color: '#22c55e' }]);
+    const book: Book = {
+      id: 'book-2',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-2',
+          authorId: grace.id,
+          position: 0,
+          type: 'drawing',
+          content: fillOps,
+        },
+      ],
+    };
+    const ctx = makeFakeContext(CANVAS_WIDTH, DRAWING_ROW_HEIGHT);
+
+    renderBookOntoContext(ctx, book, players);
+
+    expect(ctx.calls).toContain(`getImageData(0,0,${CANVAS_WIDTH},${DRAWING_ROW_HEIGHT})`);
+    expect(ctx.calls).toContain('putImageData(0,0)');
   });
 });
 
