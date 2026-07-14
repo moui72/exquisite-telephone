@@ -6,6 +6,7 @@ import {
   type TimeoutVote,
   type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
+import type { Logger } from '../observability/logger.js';
 import type { RoomStore } from './roomStore.js';
 
 /** Fixed window an opened timeout vote stays open before resolving on its own. */
@@ -75,7 +76,7 @@ function extensionMsFor(choice: 'full' | 'half' | '15m', room: Room): number {
  * players only; `force-empty` auto-submits an empty `Entry` for each
  * stalled player's currently-due book/position.
  */
-export function resolveTimeoutVote(room: Room, _now: number): void {
+export function resolveTimeoutVote(room: Room, _now: number, logger?: Logger): void {
   const vote = room.pendingTimeoutVote;
   if (!vote) {
     return;
@@ -104,6 +105,16 @@ export function resolveTimeoutVote(room: Room, _now: number): void {
         emptyByTimeout: true,
       };
       book.entries.push(entry);
+      logger?.log({
+        event: 'turn_advanced',
+        outcome: 'success',
+        roomId: room.id,
+        playerId,
+        bookId: book.id,
+        entryId: entry.id,
+        position: entry.position,
+        reason: 'timeout-forced-empty',
+      });
     }
   } else {
     const extensionMs = extensionMsFor(choice, room);
@@ -111,6 +122,13 @@ export function resolveTimeoutVote(room: Room, _now: number): void {
       room.timerExtensions[playerId] = (room.timerExtensions[playerId] ?? 0) + extensionMs;
     }
   }
+
+  logger?.log({
+    event: 'timeout_vote_resolved',
+    outcome: 'success',
+    roomId: room.id,
+    choice,
+  });
 
   room.pendingTimeoutVote = null;
 }
@@ -130,14 +148,14 @@ function deadlineFor(room: Room, playerId: string): number {
  * already-open vote whose `voteDeadline` has passed. No-ops for a room
  * with no timer set.
  */
-export function sweepRoom(room: Room, now: number): void {
+export function sweepRoom(room: Room, now: number, logger?: Logger): void {
   if (room.turnTimerMinutes == null) {
     return;
   }
 
   if (room.pendingTimeoutVote) {
     if (now >= room.pendingTimeoutVote.voteDeadline) {
-      resolveTimeoutVote(room, now);
+      resolveTimeoutVote(room, now, logger);
     }
     return;
   }
@@ -168,6 +186,13 @@ export function sweepRoom(room: Room, now: number): void {
     voteDeadline: now + VOTE_WINDOW_MS,
   };
   room.pendingTimeoutVote = vote;
+  logger?.log({
+    event: 'timeout_vote_opened',
+    outcome: 'success',
+    roomId: room.id,
+    stalledPlayerIds,
+    eligibleVoterIds,
+  });
 }
 
 /**
@@ -191,6 +216,7 @@ export function startTimerSweep(
   store: RoomStore,
   io: BroadcastServer,
   intervalMs = SWEEP_INTERVAL_MS,
+  logger?: Logger,
 ): { stop(): void } {
   const interval = setInterval(() => {
     const now = Date.now();
@@ -199,7 +225,7 @@ export function startTimerSweep(
         continue;
       }
       const before = JSON.stringify(room);
-      sweepRoom(room, now);
+      sweepRoom(room, now, logger);
       if (JSON.stringify(room) !== before) {
         io.to(room.id).emit('roomUpdated', { room });
       }

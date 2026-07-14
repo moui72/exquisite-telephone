@@ -380,12 +380,7 @@ export function onCastTimeoutVote(
 
   const everyoneVoted = vote.eligibleVoterIds.every((voterId) => voterId in vote.votes);
   if (everyoneVoted) {
-    resolveTimeoutVote(room, Date.now());
-    logger.log({
-      event: 'timeout_vote_resolved',
-      outcome: 'success',
-      roomId: input.roomId,
-    });
+    resolveTimeoutVote(room, Date.now(), logger);
   }
 
   socket.to(input.roomId).emit('roomUpdated', { room });

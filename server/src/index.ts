@@ -15,7 +15,7 @@ const sessionStore = createSessionTokenStore();
 const logger = createLogger();
 
 const io = createSocketServer(httpServer, store, sessionStore, logger);
-startTimerSweep(store, io);
+startTimerSweep(store, io, undefined, logger);
 
 httpServer.listen(config.port, () => {
   console.log(`[server] listening on port ${config.port}`);

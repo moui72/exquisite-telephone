@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Book, Player, Room, TimeoutVote } from '@exquisite-telephone/shared';
+import { createLogger } from '../observability/logger.js';
 import { resolveTimeoutVote, sweepRoom } from './timerSweep.js';
 
 function makePlayer(id: string, roomId: string): Player {
@@ -267,5 +268,91 @@ describe('sweepRoom', () => {
     sweepRoom(room, Date.now());
 
     expect(room.pendingTimeoutVote).not.toBeNull();
+  });
+});
+
+describe('observability (structured log events, constitution Principle IX)', () => {
+  function collectLines() {
+    const lines: string[] = [];
+    const logger = createLogger((line) => lines.push(line));
+    return { logger, events: () => lines.map((l) => JSON.parse(l) as Record<string, unknown>) };
+  }
+
+  it('sweepRoom logs timeout_vote_opened when it opens a vote', () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        { id: 'b0', bookId: 'bookB', authorId: grace.id, position: 0, type: 'text', content: 'p' },
+      ],
+    };
+    const room = makeRoom({ books: [bookA, bookB, bookC] });
+    const { logger, events } = collectLines();
+
+    sweepRoom(room, Date.now(), logger);
+
+    expect(events()).toContainEqual(
+      expect.objectContaining({ event: 'timeout_vote_opened', outcome: 'success', roomId: room.id }),
+    );
+  });
+
+  it('resolveTimeoutVote logs timeout_vote_resolved with the winning choice', () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const pendingTimeoutVote: TimeoutVote = {
+      stalledPlayerIds: [ada.id],
+      eligibleVoterIds: [grace.id, lin.id],
+      votes: { [grace.id]: 'full', [lin.id]: 'full' },
+      voteDeadline: Date.now() + 60_000,
+    };
+    const room = makeRoom({ books: [bookA], pendingTimeoutVote });
+    const { logger, events } = collectLines();
+
+    resolveTimeoutVote(room, Date.now(), logger);
+
+    expect(events()).toContainEqual(
+      expect.objectContaining({
+        event: 'timeout_vote_resolved',
+        outcome: 'success',
+        roomId: room.id,
+        choice: 'full',
+      }),
+    );
+  });
+
+  it("resolveTimeoutVote's force-empty path logs turn_advanced with reason timeout-forced-empty for each auto-submitted entry", () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        { id: 'b0', bookId: 'bookB', authorId: grace.id, position: 0, type: 'text', content: 'p' },
+      ],
+    };
+    const pendingTimeoutVote: TimeoutVote = {
+      stalledPlayerIds: [ada.id, lin.id],
+      eligibleVoterIds: [grace.id],
+      votes: { [grace.id]: 'force-empty' },
+      voteDeadline: Date.now() + 60_000,
+    };
+    const room = makeRoom({ books: [bookA, bookB, bookC], pendingTimeoutVote });
+    const { logger, events } = collectLines();
+
+    resolveTimeoutVote(room, Date.now(), logger);
+
+    const forcedEvents = events().filter(
+      (e) => e.event === 'turn_advanced' && e.reason === 'timeout-forced-empty',
+    );
+    expect(forcedEvents).toHaveLength(2);
+    expect(forcedEvents).toContainEqual(
+      expect.objectContaining({ outcome: 'success', roomId: room.id, playerId: ada.id }),
+    );
+    expect(forcedEvents).toContainEqual(
+      expect.objectContaining({ outcome: 'success', roomId: room.id, playerId: lin.id }),
+    );
   });
 });
