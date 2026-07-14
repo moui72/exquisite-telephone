@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, createRoomStore, joinRoom } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
-import { onSetTurnTimer, onStartGame, onSubmitEntry } from './handlers.js';
+import { onCastTimeoutVote, onSetTurnTimer, onStartGame, onSubmitEntry } from './handlers.js';
 
 /**
  * A minimal fake of the Socket.IO `Socket` surface the handlers touch
@@ -276,5 +276,108 @@ describe('onSetTurnTimer', () => {
 
     expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
     expect(room.turnTimerMinutes).toBeNull();
+  });
+});
+
+describe('onCastTimeoutVote', () => {
+  function setUpRoomWithPendingVote() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const [adaId, graceId, linId] = room.players.map((p) => p.id) as [string, string, string];
+    room.turnTimerMinutes = 30;
+    room.roundStartedAt = Date.now() - 60_000;
+    room.pendingTimeoutVote = {
+      stalledPlayerIds: [adaId],
+      eligibleVoterIds: [graceId, linId],
+      votes: {},
+      voteDeadline: Date.now() + 120_000,
+    };
+    return { store, room, adaId, graceId, linId };
+  }
+
+  it('records a cast vote into Room.pendingTimeoutVote.votes', () => {
+    const { store, room, graceId } = setUpRoomWithPendingVote();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onCastTimeoutVote(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: graceId, choice: 'full' },
+      ack,
+    );
+
+    expect(room.pendingTimeoutVote?.votes[graceId]).toBe('full');
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('rejects a vote when no vote is pending', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onCastTimeoutVote(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, choice: 'full' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'no-vote-pending' });
+  });
+
+  it('rejects a vote from a player who is not an eligible voter', () => {
+    const { store, room, adaId } = setUpRoomWithPendingVote();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    // ada is the stalled player, not an eligible voter.
+    onCastTimeoutVote(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, choice: 'full' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-eligible' });
+    expect(room.pendingTimeoutVote?.votes[adaId]).toBeUndefined();
+  });
+
+  it('resolves the vote immediately once every eligible voter has voted, without waiting for the sweep', () => {
+    const { store, room, graceId, linId, adaId } = setUpRoomWithPendingVote();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    onCastTimeoutVote(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: graceId, choice: 'full' },
+      vi.fn(),
+    );
+    expect(room.pendingTimeoutVote).not.toBeNull();
+
+    onCastTimeoutVote(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: linId, choice: 'full' },
+      vi.fn(),
+    );
+
+    expect(room.pendingTimeoutVote).toBeNull();
+    expect(room.timerExtensions[adaId]).toBe(30 * 60_000);
   });
 });

@@ -6,10 +6,12 @@ import {
   type Entry,
   type Player,
   type Room,
+  type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
+import { resolveTimeoutVote } from '../domain/timerSweep.js';
 import type { Logger } from '../observability/logger.js';
 
 /**
@@ -325,6 +327,69 @@ export function onSubmitEntry(
 
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room, entry });
+}
+
+export interface CastTimeoutVoteInput {
+  roomId: string;
+  playerId: string;
+  choice: TimeoutVoteChoice;
+}
+
+export interface CastTimeoutVoteAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Records one eligible voter's choice on an open `Room.pendingTimeoutVote`
+ * (datamodel.md Normalization Rules — Turn timer). Once every eligible
+ * voter has cast a vote, resolves it immediately rather than waiting for
+ * the next background sweep (infrastructure.md Turn Timer Sweep).
+ */
+export function onCastTimeoutVote(
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: CastTimeoutVoteInput,
+  ack: (response: CastTimeoutVoteAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+
+  const vote = room.pendingTimeoutVote;
+  if (!vote) {
+    ack({ error: 'no-vote-pending' });
+    return;
+  }
+  if (!vote.eligibleVoterIds.includes(input.playerId)) {
+    ack({ error: 'not-eligible' });
+    return;
+  }
+
+  vote.votes[input.playerId] = input.choice;
+  logger.log({
+    event: 'timeout_vote_cast',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: input.playerId,
+    choice: input.choice,
+  });
+
+  const everyoneVoted = vote.eligibleVoterIds.every((voterId) => voterId in vote.votes);
+  if (everyoneVoted) {
+    resolveTimeoutVote(room, Date.now());
+    logger.log({
+      event: 'timeout_vote_resolved',
+      outcome: 'success',
+      roomId: input.roomId,
+    });
+  }
+
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
 }
 
 export interface RejoinInput {
