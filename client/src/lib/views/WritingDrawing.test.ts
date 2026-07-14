@@ -125,6 +125,60 @@ describe('Writing/Drawing view', () => {
     expect(screen.getByText(/waiting/i)).toBeInTheDocument();
   });
 
+  it('shows a distinct "waiting for the round to finish" message when the player finished their part of the round but has an incomplete book of their own elsewhere', () => {
+    // Round-robin, 3 players: bookA/B/C origin ada/grace/lin respectively.
+    // Round 0 is complete on all books (each origin author wrote their
+    // own prompt). Round 1: bookA -> grace, bookB -> lin, bookC -> ada.
+    // Grace has already submitted her round-1 entry on bookA, but her
+    // own book (bookB) is still incomplete (only its round-0 entry) —
+    // she's done for this round but the round itself hasn't finished.
+    const bookA: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        { id: 'a0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'p1' },
+        {
+          id: 'a1',
+          bookId: 'book-ada',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: 'strokes',
+        },
+      ],
+    };
+    const bookB: Book = {
+      id: 'book-grace',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        {
+          id: 'b0',
+          bookId: 'book-grace',
+          authorId: grace.id,
+          position: 0,
+          type: 'text',
+          content: 'p2',
+        },
+      ],
+    };
+    const bookC: Book = {
+      id: 'book-lin',
+      roomId,
+      originAuthorId: lin.id,
+      entries: [
+        { id: 'c0', bookId: 'book-lin', authorId: lin.id, position: 0, type: 'text', content: 'p3' },
+      ],
+    };
+    const room = makeRoom([bookA, bookB, bookC], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/waiting for the round to finish/i)).toBeInTheDocument();
+  });
+
   it('submits the written phrase to the session store', async () => {
     const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
     const room = makeRoom([adaBook]);

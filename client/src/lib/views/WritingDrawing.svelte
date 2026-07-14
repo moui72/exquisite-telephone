@@ -19,6 +19,17 @@
   $: myBook = state.room && myTurn ? state.room.books.find((b) => b.id === myTurn!.bookId) : null;
   $: previousEntry =
     myBook && myTurn && myTurn.position > 0 ? myBook.entries[myTurn.position - 1] : null;
+  // Distinguishes "finished my part of this round, waiting on others" from
+  // a generic wait state (ui.md Writing/Drawing View): true when the
+  // player has no entry offered this round, but still has an incomplete
+  // book of their own elsewhere in the room.
+  $: waitingForRoundToFinish =
+    !myTurn &&
+    state.room &&
+    state.player &&
+    state.room.books.some(
+      (b) => b.originAuthorId === state.player!.id && b.entries.length < state.room!.players.length,
+    );
 
   // Reset local draft state whenever the assigned turn changes.
   $: if (myTurn) {
@@ -47,7 +58,11 @@
   {/if}
 
   {#if !myTurn}
-    <p class="text-lg text-slate-600">Waiting for your next turn…</p>
+    {#if waitingForRoundToFinish}
+      <p class="text-lg text-slate-600">Waiting for the round to finish…</p>
+    {:else}
+      <p class="text-lg text-slate-600">Waiting for your next turn…</p>
+    {/if}
   {:else}
     {#if previousEntry}
       <div class="flex flex-col gap-2">
