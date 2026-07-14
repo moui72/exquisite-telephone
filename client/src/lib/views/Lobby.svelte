@@ -7,10 +7,15 @@
   let mode: 'create' | 'join' = 'create';
   let displayName = '';
   let roomCodeInput = '';
+  let acknowledgeSmallGame = false;
+
+  /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
+  const MINIMUM_RECOMMENDED_PLAYERS = 3;
 
   $: state = $session;
   $: isHost =
     state.room !== null && state.player !== null && state.player.id === state.room.hostPlayerId;
+  $: belowMinimumPlayers = (state.room?.players.length ?? 0) < MINIMUM_RECOMMENDED_PLAYERS;
 
   async function handleSubmit() {
     if (mode === 'create') {
@@ -21,7 +26,7 @@
   }
 
   async function handleStartGame() {
-    await session.startGame();
+    await session.startGame(belowMinimumPlayers ? acknowledgeSmallGame : undefined);
   }
 </script>
 
@@ -107,9 +112,21 @@
       </ul>
 
       {#if isHost}
+        <p class="text-xs text-slate-500">
+          Player count: recommend 4+ players, minimum 3.
+        </p>
+
+        {#if belowMinimumPlayers}
+          <label class="flex items-start gap-2 text-sm text-slate-700">
+            <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
+            I know this won't really work but I want to test something
+          </label>
+        {/if}
+
         <button
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white"
+          class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={belowMinimumPlayers && !acknowledgeSmallGame}
           on:click={handleStartGame}
         >
           Start game

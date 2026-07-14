@@ -47,7 +47,7 @@ function storeToken(token: string): void {
 export interface SessionStore extends Readable<SessionState> {
   createRoom(hostName: string): Promise<void>;
   joinRoom(roomId: string, playerName: string): Promise<void>;
-  startGame(): Promise<void>;
+  startGame(acknowledgeSmallGame?: boolean): Promise<void>;
   submitEntry(bookId: string, content: string): Promise<void>;
 }
 
@@ -110,9 +110,13 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     joinRoom(roomId: string, playerName: string) {
       return emitWithAck('joinRoom', { roomId, playerName });
     },
-    startGame() {
+    startGame(acknowledgeSmallGame?: boolean) {
       const state = get(store);
-      return emitWithAck('startGame', { roomId: state.room?.id, playerId: state.player?.id });
+      return emitWithAck('startGame', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        acknowledgeSmallGame,
+      });
     },
     submitEntry(bookId: string, content: string) {
       const state = get(store);

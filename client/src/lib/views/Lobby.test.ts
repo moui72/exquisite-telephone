@@ -86,6 +86,87 @@ describe('Lobby view', () => {
     expect(screen.queryAllByRole('button', { name: /start game/i })).toHaveLength(1); // still just the host's
   });
 
+  it('always shows player-count guidance to the host', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    expect(screen.getByText(/recommend 4\+.*minimum 3/i)).toBeInTheDocument();
+  });
+
+  it('below 3 players shows the small-game acknowledgment checkbox and disables start until checked', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' }],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i know this won.t really work but i want to test something/i,
+    });
+    const startButton = screen.getByRole('button', { name: /start game/i });
+    expect(startButton).toBeDisabled();
+
+    await fireEvent.click(checkbox);
+    expect(startButton).not.toBeDisabled();
+
+    await fireEvent.click(startButton);
+    expect(hostSession.startGame).toHaveBeenCalledWith(true);
+  });
+
+  it('at 3+ players the checkbox is absent and start game is enabled as today', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    expect(
+      screen.queryByRole('checkbox', { name: /i know this won.t really work/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start game/i })).not.toBeDisabled();
+  });
+
   it('lets a guest join a room by code', async () => {
     const session = makeFakeSession({ room: null, player: null, error: null });
     render(Lobby, { props: { session } });
