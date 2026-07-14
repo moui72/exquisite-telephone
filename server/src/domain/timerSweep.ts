@@ -1,5 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { computeNextEntries, type Entry, type Room, type TimeoutVoteChoice } from '@exquisite-telephone/shared';
+import {
+  computeNextEntries,
+  type Entry,
+  type Room,
+  type TimeoutVote,
+  type TimeoutVoteChoice,
+} from '@exquisite-telephone/shared';
+
+/** Fixed window an opened timeout vote stays open before resolving on its own. */
+const VOTE_WINDOW_MS = 2 * 60_000;
 
 /**
  * Pure turn-timer sweep logic (infrastructure.md Turn Timer Sweep,
@@ -100,4 +109,59 @@ export function resolveTimeoutVote(room: Room, _now: number): void {
   }
 
   room.pendingTimeoutVote = null;
+}
+
+function deadlineFor(room: Room, playerId: string): number {
+  // roundStartedAt is only null in `lobby`; sweepRoom's caller only ever
+  // invokes this on `writing` rooms with a timer set (infrastructure.md
+  // Turn Timer Sweep), so this is always a real timestamp in practice.
+  const roundStartedAt = room.roundStartedAt ?? 0;
+  return roundStartedAt + (room.timerExtensions[playerId] ?? FULL_TURN_MS(room));
+}
+
+/**
+ * Periodically-invoked (infrastructure.md Turn Timer Sweep) pure check:
+ * opens a `Room.pendingTimeoutVote` once every player currently due a
+ * turn this round has passed their individual deadline, or resolves an
+ * already-open vote whose `voteDeadline` has passed. No-ops for a room
+ * with no timer set.
+ */
+export function sweepRoom(room: Room, now: number): void {
+  if (room.turnTimerMinutes == null) {
+    return;
+  }
+
+  if (room.pendingTimeoutVote) {
+    if (now >= room.pendingTimeoutVote.voteDeadline) {
+      resolveTimeoutVote(room, now);
+    }
+    return;
+  }
+
+  const nextEntries = computeNextEntries(room);
+  if (nextEntries.length === 0) {
+    return;
+  }
+
+  const stalledPlayerIds = [...new Set(nextEntries.map((e) => e.authorId))];
+  const allStalledPastDeadline = stalledPlayerIds.every(
+    (playerId) => now >= deadlineFor(room, playerId),
+  );
+  if (!allStalledPastDeadline) {
+    return;
+  }
+
+  const stalledSet = new Set(stalledPlayerIds);
+  const submittedPlayerIds = room.players.map((p) => p.id).filter((id) => !stalledSet.has(id));
+  const eligibleVoterIds = submittedPlayerIds.length > 0
+    ? submittedPlayerIds
+    : room.players.map((p) => p.id);
+
+  const vote: TimeoutVote = {
+    stalledPlayerIds,
+    eligibleVoterIds,
+    votes: {},
+    voteDeadline: now + VOTE_WINDOW_MS,
+  };
+  room.pendingTimeoutVote = vote;
 }

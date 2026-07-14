@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Book, Player, Room, TimeoutVote } from '@exquisite-telephone/shared';
-import { resolveTimeoutVote } from './timerSweep.js';
+import { resolveTimeoutVote, sweepRoom } from './timerSweep.js';
 
 function makePlayer(id: string, roomId: string): Player {
   return { id, roomId, name: id, connected: true, sessionToken: `${id}-token` };
@@ -178,5 +178,94 @@ describe('resolveTimeoutVote', () => {
     resolveTimeoutVote(room, Date.now());
 
     expect(room.timerExtensions[ada.id]).toBe(15 * 60_000);
+  });
+});
+
+describe('sweepRoom', () => {
+  it('opens a pendingTimeoutVote when every still-due player has passed their deadline and no vote is open', () => {
+    // Round 0: bookA needs ada (text, position0), bookC needs lin (text,
+    // position0). Both are past their 30-minute deadline (round started
+    // 40 minutes ago). Grace already submitted bookB's round-0 entry.
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        {
+          id: 'b0',
+          bookId: 'bookB',
+          authorId: grace.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase',
+        },
+      ],
+    };
+    const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };
+    const room = makeRoom({ books: [bookA, bookB, bookC] });
+    const now = Date.now();
+
+    sweepRoom(room, now);
+
+    expect(room.pendingTimeoutVote).not.toBeNull();
+    expect(room.pendingTimeoutVote!.stalledPlayerIds.sort()).toEqual([ada.id, lin.id].sort());
+    expect(room.pendingTimeoutVote!.eligibleVoterIds).toEqual([grace.id]);
+    expect(room.pendingTimeoutVote!.voteDeadline).toBeGreaterThan(now);
+    expect(room.pendingTimeoutVote!.voteDeadline).toBeLessThanOrEqual(now + 2 * 60_000 + 1000);
+  });
+
+  it('does not open a vote while at least one still-due player has not yet passed their deadline', () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };
+    const room = makeRoom({ books: [bookA, bookC], roundStartedAt: Date.now() - 5 * 60_000 });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).toBeNull();
+  });
+
+  it('when no eligible voters have submitted yet, everyone in the room is an eligible voter', () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookB: Book = { id: 'bookB', roomId, originAuthorId: grace.id, entries: [] };
+    const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };
+    const room = makeRoom({ books: [bookA, bookB, bookC] });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote!.eligibleVoterIds.sort()).toEqual(
+      [ada.id, grace.id, lin.id].sort(),
+    );
+  });
+
+  it("resolves an open vote once its voteDeadline has passed", () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const pendingTimeoutVote: TimeoutVote = {
+      stalledPlayerIds: [ada.id],
+      eligibleVoterIds: [grace.id, lin.id],
+      votes: { [grace.id]: 'full', [lin.id]: 'full' },
+      voteDeadline: Date.now() - 1,
+    };
+    const room = makeRoom({ books: [bookA], pendingTimeoutVote });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).toBeNull();
+    expect(room.timerExtensions[ada.id]).toBe(30 * 60_000);
+  });
+
+  it('leaves an open vote alone while its voteDeadline has not yet passed', () => {
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const pendingTimeoutVote: TimeoutVote = {
+      stalledPlayerIds: [ada.id],
+      eligibleVoterIds: [grace.id, lin.id],
+      votes: {},
+      voteDeadline: Date.now() + 60_000,
+    };
+    const room = makeRoom({ books: [bookA], pendingTimeoutVote });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).not.toBeNull();
   });
 });
