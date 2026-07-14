@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-14 (later evening). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (night). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -39,7 +39,7 @@ pass remain fixed too.
 
 ## Feature Backlog
 
-3 backlogged · 0 planned · 1 tasked · 2 implemented — see
+3 backlogged · 0 planned · 0 tasked · 3 implemented — see
 `.project/features/`. Target a backlogged slug with `/ardd-plan
 <slug>`.
 
@@ -55,20 +55,26 @@ pass remain fixed too.
   `plan-drawing-color-and-line-width-t-2026-07-14-6006.md`. Tasks:
   `tasks-drawing-color-and-line-width-t-c7de.md` (**completed**,
   10/10) — delegated to a worktree subagent, merged to `main` clean
-  (fast-forward, no conflicts), worktree reaped. Verified: typecheck 0
-  errors, full test suite passing (shared 14, server 42, client 45),
-  lint clean.
+  (fast-forward, no conflicts), worktree reaped.
 - `minimum-player-count-enforceme` + `asynchronous-play-turn-timer`
-  (**tasked, implementation in progress**) — planned together as Phase
-  1 (turn/room engine), since the timer feature depends on
-  round-gating. Also folds in the round-gated-turns bug fix (feedback
-  F001, `feedback-main-4af4.md`, `planned`). Plan:
-  `plan-turn-room-engine-2026-07-14-9249.md`. Tasks:
-  `tasks-turn-room-engine-1d61.md` (**in-progress**, 13/15) — running
-  in a delegated worktree subagent; see In Flight below. 4 phases:
-  round-gating (T001–T004), minimum player count (T005–T006), turn
-  timer control/countdown (T007–T009), timeout vote + background
-  sweep (T010–T015).
+  (**implemented**) — planned together as Phase 1 (turn/room engine),
+  since the timer feature depends on round-gating. Also folded in the
+  round-gated-turns bug fix (feedback F001, `feedback-main-4af4.md`,
+  `planned`). Plan: `plan-turn-room-engine-2026-07-14-9249.md`. Tasks:
+  `tasks-turn-room-engine-1d61.md` (**completed**, 15/15) — delegated
+  to a worktree subagent. 4 phases: round-gating (T001–T004), minimum
+  player count (T005–T006), turn timer control/countdown (T007–T009),
+  timeout vote + background sweep (T010–T015). **Merge required manual
+  conflict resolution** (not a clean apply, as flagged during
+  planning): both this branch and `drawing-color-and-line-width-t`
+  independently extended `Room` (`shared/src/types.ts`), `Lobby.svelte`,
+  `session.ts`, and the socket handler/dispatch surface
+  (`handlers.ts`/`server.ts`) — 14 files conflicted. Resolved by
+  combining both features' additions (never favoring one side), plus
+  fixing a handful of `Room` test fixtures in each branch that
+  predated the other branch's new fields. Verified post-merge:
+  typecheck 0 errors, full suite passing (shared 18 + server 75 +
+  client 55 = 148 tests), lint clean.
 - `play-again-control-on-reveal-p` (backlogged) — on the Reveal page,
   non-host players see "Leave game" (back to host/join page) and "Vote
   to play again" (waits for the host); the host sees "End game" (back
@@ -98,8 +104,9 @@ turn-room-engine plan above does add timeout-vote-specific logging
 
 Backlog/feedback items grouped into 3 phases (agreed 2026-07-14):
 
-1. **Turn/room engine** — planned and tasked, **implementation in
-   progress** (13/15) in a delegated worktree — see In Flight below.
+1. **Turn/room engine** — **implemented and merged to `main`** (with
+   manual conflict resolution against Phase 2 — see Feature Backlog
+   above). Done.
 2. **Drawing tools** — **implemented and merged to `main`**. Done.
 3. **Reveal page** — `play-again-control-on-reveal-p` +
    `animated-interactive-reveal-bo`. Not yet planned.
@@ -109,10 +116,7 @@ Feature Backlog above).
 
 ## In Flight
 
-- Worktree `.claude/worktrees/agent-ac70673531b6f69d4` (branch
-  `worktree-agent-ac70673531b6f69d4`) — `tasks-turn-room-engine-1d61.md`
-  at `in-progress`, 13/15. `merge_policy: auto` — will merge
-  automatically to `main` on completion, then this section clears.
+_(none)_
 
 ## fly-io-deployment: shipped
 
@@ -159,24 +163,24 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-0 defects open (not re-verified against the newly-merged drawing-tools
-code yet — see Recommended Next Step). 0 open feedback files. No
-cross-artifact conflicts or constitution violations. Phase 2
-(drawing tools) implemented and merged clean. Phase 1 (turn/room
-engine) implementation in progress (13/15), running in a delegated
-worktree. Safe to /plan: yes.
+0 defects open (not re-verified against this session's two feature
+merges yet — see Recommended Next Step). 0 open feedback files. No
+cross-artifact conflicts or constitution violations. Phases 1 and 2 of
+the phase plan (turn/room engine, drawing tools) are both implemented
+and merged to `main` — working tree clean, no worktrees in flight.
+Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Let `tasks-turn-room-engine-1d61.md` finish (13/15) — it will merge to
-`main` automatically (`merge_policy: auto`) once its subagent
-completes; no action needed unless it reports a blocker. After it
-lands, worth a fresh `/ardd-defects` pass (last verified 2026-07-14,
-before this session's two feature merges). Phase 3 (Reveal page —
-`/ardd-plan play-again-control-on-reveal-p
-animated-interactive-reveal-bo`) is ready to plan whenever.
-`host-game-moderation-controls` still needs a phase assignment before
-or when it's planned. `/ardd-backlog` for the one remaining gap noted
-during v1 implementation (start/end-game observability logging) is
-still outstanding. `/ardd-diagram` on datamodel, infrastructure, and
-ui would also give this stable design a visual reference.
+A fresh `/ardd-defects` pass is worth running now — last verified
+2026-07-14, before this session's two substantial feature merges
+(round-gated turns, min player count, turn timer, drawing color/width/
+fill/monochrome). Phase 3 (Reveal page — `/ardd-plan
+play-again-control-on-reveal-p animated-interactive-reveal-bo`) is
+ready to plan whenever. `host-game-moderation-controls` still needs a
+phase assignment before or when it's planned. `/ardd-backlog` for the
+one remaining gap noted during v1 implementation (start/end-game
+observability logging) is still outstanding. `/ardd-diagram` on
+datamodel, infrastructure, and ui would also give this stable design a
+visual reference. Also worth a manual smoke test of the merged app
+(`/run`) given how much surface area landed in one session.
