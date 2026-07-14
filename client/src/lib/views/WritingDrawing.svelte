@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy, onMount } from 'svelte';
   import { computeNextEntries, parseStrokes, serializeStrokes } from '@exquisite-telephone/shared';
   import type { StrokeData } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
@@ -10,6 +11,20 @@
 
   let textValue = '';
   let drawnStrokes: StrokeData = [];
+
+  // Ticks the countdown (ui.md Writing/Drawing View) once a second.
+  // Registered/cleaned up across the component lifecycle (constitution
+  // Quality Standards — touch/timer cleanup).
+  let now = Date.now();
+  let tickInterval: ReturnType<typeof setInterval> | undefined;
+  onMount(() => {
+    tickInterval = setInterval(() => {
+      now = Date.now();
+    }, 1000);
+  });
+  onDestroy(() => {
+    if (tickInterval) clearInterval(tickInterval);
+  });
 
   $: state = $session;
   $: myTurn =
@@ -37,6 +52,23 @@
     drawnStrokes = [];
   }
 
+  // Countdown to this player's individual deadline (datamodel.md
+  // Normalization Rules — Turn timer): only shown when the host has set
+  // Room.turnTimerMinutes. `now` re-evaluates this every tick.
+  $: deadline =
+    state.room && state.player && state.room.turnTimerMinutes && state.room.roundStartedAt != null
+      ? state.room.roundStartedAt +
+        (state.room.timerExtensions[state.player.id] ?? state.room.turnTimerMinutes * 60_000)
+      : null;
+  $: countdownLabel = deadline !== null ? formatCountdown(Math.max(0, deadline - now)) : null;
+
+  function formatCountdown(msRemaining: number): string {
+    const totalSeconds = Math.floor(msRemaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
   async function handleSubmitText() {
     if (!myTurn || !textValue.trim()) return;
     await session.submitEntry(myTurn.bookId, textValue.trim());
@@ -55,6 +87,12 @@
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
   {#if state.room}
     <TurnStatus room={state.room} />
+  {/if}
+
+  {#if countdownLabel !== null}
+    <p data-testid="turn-timer-countdown" class="text-sm font-medium text-amber-700">
+      Time remaining: {countdownLabel}
+    </p>
   {/if}
 
   {#if !myTurn}

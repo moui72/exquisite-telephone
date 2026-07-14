@@ -180,6 +180,31 @@ describe('Writing/Drawing view', () => {
     expect(screen.getByText(/waiting for the round to finish/i)).toBeInTheDocument();
   });
 
+  it('shows a countdown to the deadline when Room.turnTimerMinutes is set', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const roundStartedAt = Date.now() - 60_000;
+    const room: Room = {
+      ...makeRoom([adaBook]),
+      turnTimerMinutes: 30,
+      roundStartedAt,
+    };
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByTestId('turn-timer-countdown')).toBeInTheDocument();
+  });
+
+  it('shows no countdown when Room.turnTimerMinutes is null', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room: Room = { ...makeRoom([adaBook]), turnTimerMinutes: null };
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByTestId('turn-timer-countdown')).not.toBeInTheDocument();
+  });
+
   it('submits the written phrase to the session store', async () => {
     const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
     const room = makeRoom([adaBook]);
