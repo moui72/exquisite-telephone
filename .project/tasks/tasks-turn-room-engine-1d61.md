@@ -1,7 +1,7 @@
 ---
 plan: plan-turn-room-engine-2026-07-14-9249.md
 generated: 2026-07-14
-status: in-progress
+status: completed
 ---
 
 # Tasks
