@@ -1,6 +1,6 @@
 ---
 slug: drawing-color-and-line-width-t
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-drawing-color-and-line-width-t-2026-07-14-6006.md
 tasks: tasks-drawing-color-and-line-width-t-c7de.md
