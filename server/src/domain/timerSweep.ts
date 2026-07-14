@@ -6,9 +6,13 @@ import {
   type TimeoutVote,
   type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
+import type { RoomStore } from './roomStore.js';
 
 /** Fixed window an opened timeout vote stays open before resolving on its own. */
 const VOTE_WINDOW_MS = 2 * 60_000;
+
+/** How often the background sweep runs (infrastructure.md Turn Timer Sweep). */
+const SWEEP_INTERVAL_MS = 30_000;
 
 /**
  * Pure turn-timer sweep logic (infrastructure.md Turn Timer Sweep,
@@ -164,4 +168,47 @@ export function sweepRoom(room: Room, now: number): void {
     voteDeadline: now + VOTE_WINDOW_MS,
   };
   room.pendingTimeoutVote = vote;
+}
+
+/**
+ * The minimal Socket.IO server surface `startTimerSweep` needs to
+ * broadcast a changed room — kept as a small interface (mirroring
+ * `GameSocket` on the client) so it can be tested against a fake.
+ */
+export interface BroadcastServer {
+  to(room: string): { emit(event: string, payload: unknown): void };
+}
+
+/**
+ * Wires the 30-second background sweep (infrastructure.md Turn Timer
+ * Sweep): for every `writing` room with a turn timer set, runs
+ * `sweepRoom` and broadcasts `roomUpdated` to that Socket.IO room if its
+ * state changed as a result. This is the only piece of interval
+ * scheduling in the app — the entry point (`server/src/index.ts`) just
+ * calls this once at startup (constitution Principle X).
+ */
+export function startTimerSweep(
+  store: RoomStore,
+  io: BroadcastServer,
+  intervalMs = SWEEP_INTERVAL_MS,
+): { stop(): void } {
+  const interval = setInterval(() => {
+    const now = Date.now();
+    for (const room of store.rooms.values()) {
+      if (room.status !== 'writing' || room.turnTimerMinutes == null) {
+        continue;
+      }
+      const before = JSON.stringify(room);
+      sweepRoom(room, now);
+      if (JSON.stringify(room) !== before) {
+        io.to(room.id).emit('roomUpdated', { room });
+      }
+    }
+  }, intervalMs);
+
+  return {
+    stop() {
+      clearInterval(interval);
+    },
+  };
 }
