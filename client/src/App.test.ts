@@ -15,7 +15,9 @@ function makeFakeSession(initial: SessionState): SessionStore {
     joinRoom: vi.fn(async () => {}),
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
-    setMonochrome: vi.fn(async () => {}),
+setMonochrome: vi.fn(async () => {}),
+setTurnTimer: vi.fn(async () => {}),
+castTimeoutVote: vi.fn(async () => {}),
   };
 }
 
@@ -30,7 +32,11 @@ function makeRoom(status: Room['status']): Room {
     status,
     books: [],
     createdAt: Date.now(),
-    monochromeOnly: false,
+monochromeOnly: false,
+turnTimerMinutes: null,
+roundStartedAt: null,
+timerExtensions: {},
+pendingTimeoutVote: null,
   };
 }
 

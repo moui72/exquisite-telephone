@@ -24,6 +24,10 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           books: [],
           createdAt: Date.now(),
           monochromeOnly: false,
+          turnTimerMinutes: null,
+          roundStartedAt: null,
+          timerExtensions: {},
+          pendingTimeoutVote: null,
         },
         player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't' },
         error: null,
@@ -34,6 +38,8 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
     setMonochrome: vi.fn(async () => {}),
+    setTurnTimer: vi.fn(async () => {}),
+    castTimeoutVote: vi.fn(async () => {}),
   };
 }
 
@@ -62,6 +68,10 @@ describe('Lobby view', () => {
       books: [],
       createdAt: Date.now(),
       monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     const hostSession = makeFakeSession({
@@ -79,6 +89,120 @@ describe('Lobby view', () => {
     });
     render(Lobby, { props: { session: guestSession } });
     expect(screen.queryAllByRole('button', { name: /start game/i })).toHaveLength(1); // still just the host's
+  });
+
+  it('always shows player-count guidance to the host', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    expect(screen.getByText(/recommend 4\+.*minimum 3/i)).toBeInTheDocument();
+  });
+
+  it('below 3 players shows the small-game acknowledgment checkbox and disables start until checked', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' }],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const checkbox = screen.getByRole('checkbox', {
+      name: /i know this won.t really work but i want to test something/i,
+    });
+    const startButton = screen.getByRole('button', { name: /start game/i });
+    expect(startButton).toBeDisabled();
+
+    await fireEvent.click(checkbox);
+    expect(startButton).not.toBeDisabled();
+
+    await fireEvent.click(startButton);
+    expect(hostSession.startGame).toHaveBeenCalledWith(true);
+  });
+
+  it('at 3+ players the checkbox is absent and start game is enabled as today', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    expect(
+      screen.queryByRole('checkbox', { name: /i know this won.t really work/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start game/i })).not.toBeDisabled();
+  });
+
+  it("reflects Room.turnTimerMinutes in the host's timer selector and emits setTurnTimer on change", async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: 30,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/turn timer/i) as HTMLSelectElement;
+    expect(select.value).toBe('30');
+
+    await fireEvent.change(select, { target: { value: '60' } });
+
+    expect(hostSession.setTurnTimer).toHaveBeenCalledWith(60);
   });
 
   it('lets a guest join a room by code', async () => {
@@ -105,6 +229,10 @@ describe('Lobby view', () => {
       books: [],
       createdAt: Date.now(),
       monochromeOnly: true,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -127,6 +255,10 @@ describe('Lobby view', () => {
       books: [],
       createdAt: Date.now(),
       monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
     };
 
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });

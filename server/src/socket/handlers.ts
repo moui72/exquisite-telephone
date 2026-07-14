@@ -2,13 +2,16 @@ import { randomUUID } from 'node:crypto';
 import {
   computeNextEntries,
   computeNextEntry,
+  currentRoundFor,
   type Entry,
   type Player,
   type Room,
+  type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
+import { resolveTimeoutVote } from '../domain/timerSweep.js';
 import type { Logger } from '../observability/logger.js';
 
 /**
@@ -100,12 +103,21 @@ export function onJoinRoom(
 export interface StartGameInput {
   roomId: string;
   playerId: string;
+  /**
+   * One-time acknowledgment on the start-game request itself (not
+   * persisted room state, datamodel.md Normalization Rules) that lets
+   * the host override the minimum-player-count guard below.
+   */
+  acknowledgeSmallGame?: boolean;
 }
 
 export interface StartGameAck {
   room?: Room;
   error?: string;
 }
+
+/** Below this many players, starting requires an explicit host override. */
+const MINIMUM_RECOMMENDED_PLAYERS = 3;
 
 /**
  * Host-only transition out of the lobby. Turn/entry assignment for the
@@ -126,9 +138,57 @@ export function onStartGame(
     ack({ error: 'not-host' });
     return;
   }
+  if (room.players.length < MINIMUM_RECOMMENDED_PLAYERS && input.acknowledgeSmallGame !== true) {
+    ack({ error: 'too-few-players' });
+    return;
+  }
 
   room.status = 'writing';
   room.books = createBooksForRoom(room);
+  room.roundStartedAt = Date.now();
+  room.timerExtensions = {};
+  room.pendingTimeoutVote = null;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
+export interface SetTurnTimerInput {
+  roomId: string;
+  playerId: string;
+  turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
+}
+
+export interface SetTurnTimerAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.turnTimerMinutes` (ui.md Lobby
+ * View timer selector). Rejected once the room has left `lobby` — the
+ * timer is fixed for the duration of a game once writing/drawing starts.
+ */
+export function onSetTurnTimer(
+  socket: Socket,
+  store: RoomStore,
+  input: SetTurnTimerInput,
+  ack: (response: SetTurnTimerAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+
+  room.turnTimerMinutes = input.turnTimerMinutes;
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }
@@ -249,9 +309,14 @@ export function onSubmitEntry(
     return;
   }
 
+  if (book.entries.length >= room.players.length) {
+    ack({ error: 'book-complete' });
+    return;
+  }
+
   const next = computeNextEntry(room, book);
   if (!next) {
-    ack({ error: 'book-complete' });
+    ack({ error: 'round-not-open' });
     return;
   }
   if (next.authorId !== input.playerId) {
@@ -267,6 +332,8 @@ export function onSubmitEntry(
     return;
   }
 
+  const roundBeforeSubmit = currentRoundFor(room);
+
   const entry: Entry = {
     id: randomUUID(),
     bookId: book.id,
@@ -276,6 +343,13 @@ export function onSubmitEntry(
     content: input.content,
   };
   book.entries.push(entry);
+
+  if (currentRoundFor(room) > roundBeforeSubmit) {
+    room.roundStartedAt = Date.now();
+    room.timerExtensions = {};
+    room.pendingTimeoutVote = null;
+  }
+
   logger.log({
     event: 'turn_advanced',
     outcome: 'success',
@@ -293,6 +367,64 @@ export function onSubmitEntry(
 
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room, entry });
+}
+
+export interface CastTimeoutVoteInput {
+  roomId: string;
+  playerId: string;
+  choice: TimeoutVoteChoice;
+}
+
+export interface CastTimeoutVoteAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Records one eligible voter's choice on an open `Room.pendingTimeoutVote`
+ * (datamodel.md Normalization Rules — Turn timer). Once every eligible
+ * voter has cast a vote, resolves it immediately rather than waiting for
+ * the next background sweep (infrastructure.md Turn Timer Sweep).
+ */
+export function onCastTimeoutVote(
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: CastTimeoutVoteInput,
+  ack: (response: CastTimeoutVoteAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+
+  const vote = room.pendingTimeoutVote;
+  if (!vote) {
+    ack({ error: 'no-vote-pending' });
+    return;
+  }
+  if (!vote.eligibleVoterIds.includes(input.playerId)) {
+    ack({ error: 'not-eligible' });
+    return;
+  }
+
+  vote.votes[input.playerId] = input.choice;
+  logger.log({
+    event: 'timeout_vote_cast',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: input.playerId,
+    choice: input.choice,
+  });
+
+  const everyoneVoted = vote.eligibleVoterIds.every((voterId) => voterId in vote.votes);
+  if (everyoneVoted) {
+    resolveTimeoutVote(room, Date.now(), logger);
+  }
+
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
 }
 
 export interface RejoinInput {

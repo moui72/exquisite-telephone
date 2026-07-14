@@ -7,10 +7,15 @@
   let mode: 'create' | 'join' = 'create';
   let displayName = '';
   let roomCodeInput = '';
+  let acknowledgeSmallGame = false;
+
+  /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
+  const MINIMUM_RECOMMENDED_PLAYERS = 3;
 
   $: state = $session;
   $: isHost =
     state.room !== null && state.player !== null && state.player.id === state.room.hostPlayerId;
+  $: belowMinimumPlayers = (state.room?.players.length ?? 0) < MINIMUM_RECOMMENDED_PLAYERS;
 
   async function handleSubmit() {
     if (mode === 'create') {
@@ -21,7 +26,22 @@
   }
 
   async function handleStartGame() {
-    await session.startGame();
+    await session.startGame(belowMinimumPlayers ? acknowledgeSmallGame : undefined);
+  }
+
+  const TURN_TIMER_OPTIONS: { value: 15 | 30 | 60 | 240 | 720 | null; label: string }[] = [
+    { value: null, label: 'Off' },
+    { value: 15, label: '15 minutes' },
+    { value: 30, label: '30 minutes' },
+    { value: 60, label: '1 hour' },
+    { value: 240, label: '4 hours' },
+    { value: 720, label: '12 hours' },
+  ];
+
+  async function handleTurnTimerChange(event: Event) {
+    const raw = (event.target as HTMLSelectElement).value;
+    const turnTimerMinutes = raw === '' ? null : (Number(raw) as 15 | 30 | 60 | 240 | 720);
+    await session.setTurnTimer(turnTimerMinutes);
   }
 
   async function handleToggleMonochrome(event: Event) {
@@ -121,9 +141,34 @@
           Force monochrome
         </label>
 
+        <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          Turn timer
+          <select
+            class="rounded-md border px-3 py-2 text-base"
+            value={state.room.turnTimerMinutes ?? ''}
+            on:change={handleTurnTimerChange}
+          >
+            {#each TURN_TIMER_OPTIONS as option (option.value)}
+              <option value={option.value ?? ''}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+
+        <p class="text-xs text-slate-500">
+          Player count: recommend 4+ players, minimum 3.
+        </p>
+
+        {#if belowMinimumPlayers}
+          <label class="flex items-start gap-2 text-sm text-slate-700">
+            <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
+            I know this won't really work but I want to test something
+          </label>
+        {/if}
+
         <button
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white"
+          class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={belowMinimumPlayers && !acknowledgeSmallGame}
           on:click={handleStartGame}
         >
           Start game

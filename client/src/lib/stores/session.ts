@@ -1,4 +1,4 @@
-import type { Player, Room } from '@exquisite-telephone/shared';
+import type { Player, Room, TimeoutVoteChoice } from '@exquisite-telephone/shared';
 import { get, writable, type Readable } from 'svelte/store';
 import type { GameSocket } from '../socket/types.js';
 
@@ -47,9 +47,11 @@ function storeToken(token: string): void {
 export interface SessionStore extends Readable<SessionState> {
   createRoom(hostName: string): Promise<void>;
   joinRoom(roomId: string, playerName: string): Promise<void>;
-  startGame(): Promise<void>;
+  startGame(acknowledgeSmallGame?: boolean): Promise<void>;
   submitEntry(bookId: string, content: string): Promise<void>;
   setMonochrome(monochromeOnly: boolean): Promise<void>;
+  setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
+  castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -111,9 +113,13 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     joinRoom(roomId: string, playerName: string) {
       return emitWithAck('joinRoom', { roomId, playerName });
     },
-    startGame() {
+    startGame(acknowledgeSmallGame?: boolean) {
       const state = get(store);
-      return emitWithAck('startGame', { roomId: state.room?.id, playerId: state.player?.id });
+      return emitWithAck('startGame', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        acknowledgeSmallGame,
+      });
     },
     submitEntry(bookId: string, content: string) {
       const state = get(store);
@@ -130,6 +136,22 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         monochromeOnly,
+      });
+    },
+    setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null) {
+      const state = get(store);
+      return emitWithAck('setTurnTimer', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        turnTimerMinutes,
+      });
+    },
+    castTimeoutVote(choice: TimeoutVoteChoice) {
+      const state = get(store);
+      return emitWithAck('castTimeoutVote', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        choice,
       });
     },
   };

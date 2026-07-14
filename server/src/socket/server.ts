@@ -4,14 +4,18 @@ import type { RoomStore } from '../domain/roomStore.js';
 import { createSessionTokenStore, type SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { createLogger, type Logger } from '../observability/logger.js';
 import {
+  onCastTimeoutVote,
   onCreateRoom,
   onDisconnect,
   onEndGame,
   onJoinRoom,
   onRejoin,
   onSetMonochrome,
+  onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
+  type CastTimeoutVoteAck,
+  type CastTimeoutVoteInput,
   type CreateRoomAck,
   type CreateRoomInput,
   type EndGameAck,
@@ -22,6 +26,8 @@ import {
   type RejoinInput,
   type SetMonochromeAck,
   type SetMonochromeInput,
+  type SetTurnTimerAck,
+  type SetTurnTimerInput,
   type StartGameAck,
   type StartGameInput,
   type SubmitEntryAck,
@@ -67,9 +73,23 @@ export function createSocketServer(
       },
     );
 
+    socket.on(
+      'setTurnTimer',
+      (input: SetTurnTimerInput, ack: (response: SetTurnTimerAck) => void) => {
+        onSetTurnTimer(socket, store, input, ack);
+      },
+    );
+
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
       onSubmitEntry(socket, store, logger, input, ack);
     });
+
+    socket.on(
+      'castTimeoutVote',
+      (input: CastTimeoutVoteInput, ack: (response: CastTimeoutVoteAck) => void) => {
+        onCastTimeoutVote(socket, store, logger, input, ack);
+      },
+    );
 
     socket.on('rejoin', (input: RejoinInput, ack: (response: RejoinAck) => void) => {
       onRejoin(socket, store, sessionStore, logger, input, ack);

@@ -95,7 +95,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     await new Promise<void>((resolve) => {
       clientA.emit(
         'startGame',
-        { roomId, playerId: createAck.room!.hostPlayerId },
+        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
         () => resolve(),
       );
     });
@@ -120,7 +120,11 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     const roomId = createAck.room!.id;
 
     const ack = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: createAck.room!.hostPlayerId }, resolve);
+      clientA.emit(
+        'startGame',
+        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
+        resolve,
+      );
     });
 
     expect(ack.error).toBeUndefined();
@@ -142,7 +146,11 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     });
 
     const ack = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: createAck.room!.hostPlayerId }, resolve);
+      clientA.emit(
+        'startGame',
+        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
+        resolve,
+      );
     });
 
     expect(ack.room?.books).toHaveLength(2);
@@ -212,7 +220,11 @@ describe('onSubmitEntry', () => {
     const graceId = joinAck.player!.id;
 
     const startAck = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: adaId }, resolve);
+      clientA.emit(
+        'startGame',
+        { roomId, playerId: adaId, acknowledgeSmallGame: true },
+        resolve,
+      );
     });
 
     return { roomId, adaId, graceId, books: startAck.room!.books };
@@ -484,7 +496,7 @@ describe('observability (structured log events)', () => {
     const graceId = joinAck.player!.id;
 
     const startAck = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: adaId }, resolve);
+      clientA.emit('startGame', { roomId, playerId: adaId, acknowledgeSmallGame: true }, resolve);
     });
     const adaBook = startAck.room!.books.find((b) => b.originAuthorId === adaId)!;
     const graceBook = startAck.room!.books.find((b) => b.originAuthorId === graceId)!;

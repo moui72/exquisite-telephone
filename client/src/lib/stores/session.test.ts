@@ -43,6 +43,10 @@ const sampleRoom: Room = {
   books: [],
   createdAt: Date.now(),
   monochromeOnly: false,
+  turnTimerMinutes: null,
+  roundStartedAt: null,
+  timerExtensions: {},
+  pendingTimeoutVote: null,
 };
 
 describe('session store (client single source of state)', () => {

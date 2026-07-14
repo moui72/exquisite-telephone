@@ -53,6 +53,10 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     books: [],
     createdAt: Date.now(),
     monochromeOnly: false,
+    turnTimerMinutes: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
   };
 
   store.rooms.set(room.id, room);

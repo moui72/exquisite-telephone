@@ -27,6 +27,13 @@ export interface Entry {
    * `type`. Rasterized to PNG only at export time.
    */
   content: string;
+  /**
+   * `true` if this entry was auto-submitted empty because the author's
+   * per-turn timer expired and a timeout vote (or the no-eligible-voter
+   * fallback) resolved to "force empty". Omitted/`false` for normally
+   * submitted entries.
+   */
+  emptyByTimeout?: boolean;
 }
 
 /** One player's original prompt and the ordered chain of entries it accumulates. */
@@ -48,6 +55,25 @@ export interface Player {
   sessionToken: string;
 }
 
+/** One of the four choices a player may cast in a pending {@link TimeoutVote}. */
+export type TimeoutVoteChoice = 'full' | 'half' | '15m' | 'force-empty';
+
+/**
+ * Open while a round's timer has expired with players still short of
+ * their deadline (datamodel.md Normalization Rules — Turn timer). Only
+ * present as `Room.pendingTimeoutVote`.
+ */
+export interface TimeoutVote {
+  /** FK -> Player.id — every player who hadn't submitted their current-round entry when the timer expired. */
+  stalledPlayerIds: string[];
+  /** FK -> Player.id — players who had already submitted this round, or every player in the room if none had. */
+  eligibleVoterIds: string[];
+  /** Cast so far; a player may vote once per pending vote. */
+  votes: Record<string, TimeoutVoteChoice>;
+  /** Epoch ms; the vote resolves when every eligible voter has voted, or this deadline passes, whichever is first. */
+  voteDeadline: number;
+}
+
 /** The authoritative, in-memory game session. */
 export interface Room {
   /** Short, human-shareable room code (e.g. 4-6 chars), not a UUID. */
@@ -64,4 +90,26 @@ export interface Room {
    * all strokes render in the default ink color.
    */
   monochromeOnly: boolean;
+  /**
+   * Host-configurable, set before `status` leaves `lobby`. Defaults
+   * `null` (no timer — the room waits indefinitely for the current
+   * round). One of 15|30|60|240|720 minutes when set.
+   */
+  turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
+  /**
+   * Epoch ms marking when the current round began; `null` while
+   * `status === 'lobby'`. Reset whenever the room-wide current round
+   * advances. Only meaningful when `turnTimerMinutes` is set.
+   */
+  roundStartedAt: number | null;
+  /**
+   * Per-player extra milliseconds granted this round via a timeout vote;
+   * cleared whenever the round advances.
+   */
+  timerExtensions: Record<string, number>;
+  /**
+   * Set by the server when a round's timer expires with players still
+   * short of their deadline; `null` otherwise.
+   */
+  pendingTimeoutVote: TimeoutVote | null;
 }
