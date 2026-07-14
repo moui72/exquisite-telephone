@@ -16,6 +16,7 @@ function makeFakeSession(initial: SessionState): SessionStore {
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
+    castTimeoutVote: vi.fn(async () => {}),
   };
 }
 

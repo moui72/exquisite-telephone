@@ -17,6 +17,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
+    castTimeoutVote: vi.fn(async () => {}),
   };
 }
 
@@ -203,6 +204,98 @@ describe('Writing/Drawing view', () => {
     render(WritingDrawing, { props: { session } });
 
     expect(screen.queryByTestId('turn-timer-countdown')).not.toBeInTheDocument();
+  });
+
+  it('shows the timeout-vote prompt naming the stalled player(s) when the current player is eligible to vote', () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'a0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase',
+        },
+      ],
+    };
+    const room: Room = {
+      ...makeRoom([adaBook], [ada, grace]),
+      pendingTimeoutVote: {
+        stalledPlayerIds: [ada.id],
+        eligibleVoterIds: [grace.id],
+        votes: {},
+        voteDeadline: Date.now() + 60_000,
+      },
+    };
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/ada still hasn.t submitted/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /full turn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /half turn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /15 minutes/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /force empty/i })).toBeInTheDocument();
+  });
+
+  it('emits castTimeoutVote with the chosen option', async () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'a0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase',
+        },
+      ],
+    };
+    const room: Room = {
+      ...makeRoom([adaBook], [ada, grace]),
+      pendingTimeoutVote: {
+        stalledPlayerIds: [ada.id],
+        eligibleVoterIds: [grace.id],
+        votes: {},
+        voteDeadline: Date.now() + 60_000,
+      },
+    };
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /full turn/i }));
+
+    expect(session.castTimeoutVote).toHaveBeenCalledWith('full');
+  });
+
+  it('does not show the timeout-vote prompt to a player who is not an eligible voter', () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [],
+    };
+    const room: Room = {
+      ...makeRoom([adaBook], [ada, grace]),
+      pendingTimeoutVote: {
+        stalledPlayerIds: [ada.id],
+        eligibleVoterIds: [grace.id],
+        votes: {},
+        voteDeadline: Date.now() + 60_000,
+      },
+    };
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByRole('button', { name: /force empty/i })).not.toBeInTheDocument();
   });
 
   it('submits the written phrase to the session store', async () => {

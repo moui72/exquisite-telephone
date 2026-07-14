@@ -1,4 +1,4 @@
-import type { Player, Room } from '@exquisite-telephone/shared';
+import type { Player, Room, TimeoutVoteChoice } from '@exquisite-telephone/shared';
 import { get, writable, type Readable } from 'svelte/store';
 import type { GameSocket } from '../socket/types.js';
 
@@ -50,6 +50,7 @@ export interface SessionStore extends Readable<SessionState> {
   startGame(acknowledgeSmallGame?: boolean): Promise<void>;
   submitEntry(bookId: string, content: string): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
+  castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -134,6 +135,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         turnTimerMinutes,
+      });
+    },
+    castTimeoutVote(choice: TimeoutVoteChoice) {
+      const state = get(store);
+      return emitWithAck('castTimeoutVote', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        choice,
       });
     },
   };

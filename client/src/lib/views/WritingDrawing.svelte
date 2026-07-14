@@ -82,6 +82,25 @@
   function handleStrokeComplete(strokes: StrokeData) {
     drawnStrokes = strokes;
   }
+
+  // Timeout-vote prompt (ui.md Writing/Drawing View): shown to every
+  // eligible voter while a vote is open. Names the stalled player(s) by
+  // name (never their in-progress content).
+  $: pendingTimeoutVote = state.room?.pendingTimeoutVote ?? null;
+  $: canVoteOnTimeout =
+    pendingTimeoutVote !== null &&
+    state.player !== null &&
+    pendingTimeoutVote.eligibleVoterIds.includes(state.player.id);
+  $: stalledPlayerNames =
+    pendingTimeoutVote && state.room
+      ? pendingTimeoutVote.stalledPlayerIds
+          .map((id) => state.room!.players.find((p) => p.id === id)?.name ?? id)
+          .join(', ')
+      : '';
+
+  async function handleCastTimeoutVote(choice: 'full' | 'half' | '15m' | 'force-empty') {
+    await session.castTimeoutVote(choice);
+  }
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
@@ -93,6 +112,44 @@
     <p data-testid="turn-timer-countdown" class="text-sm font-medium text-amber-700">
       Time remaining: {countdownLabel}
     </p>
+  {/if}
+
+  {#if canVoteOnTimeout}
+    <div class="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4">
+      <p class="text-sm text-slate-700">
+        {stalledPlayerNames} still hasn't submitted this round. What should happen?
+      </p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="rounded-md border px-3 py-1 text-sm"
+          on:click={() => handleCastTimeoutVote('full')}
+        >
+          Give a full turn
+        </button>
+        <button
+          type="button"
+          class="rounded-md border px-3 py-1 text-sm"
+          on:click={() => handleCastTimeoutVote('half')}
+        >
+          Give a half turn
+        </button>
+        <button
+          type="button"
+          class="rounded-md border px-3 py-1 text-sm"
+          on:click={() => handleCastTimeoutVote('15m')}
+        >
+          Give 15 minutes
+        </button>
+        <button
+          type="button"
+          class="rounded-md border px-3 py-1 text-sm"
+          on:click={() => handleCastTimeoutVote('force-empty')}
+        >
+          Force empty now
+        </button>
+      </div>
+    </div>
   {/if}
 
   {#if !myTurn}
