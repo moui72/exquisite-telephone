@@ -49,6 +49,7 @@ export interface SessionStore extends Readable<SessionState> {
   joinRoom(roomId: string, playerName: string): Promise<void>;
   startGame(acknowledgeSmallGame?: boolean): Promise<void>;
   submitEntry(bookId: string, content: string): Promise<void>;
+  setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -125,6 +126,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         playerId: state.player?.id,
         bookId,
         content,
+      });
+    },
+    setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null) {
+      const state = get(store);
+      return emitWithAck('setTurnTimer', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        turnTimerMinutes,
       });
     },
   };

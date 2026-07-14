@@ -36,6 +36,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     joinRoom: vi.fn(async () => {}),
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
+    setTurnTimer: vi.fn(async () => {}),
   };
 }
 
@@ -165,6 +166,35 @@ describe('Lobby view', () => {
       screen.queryByRole('checkbox', { name: /i know this won.t really work/i }),
     ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /start game/i })).not.toBeDisabled();
+  });
+
+  it("reflects Room.turnTimerMinutes in the host's timer selector and emits setTurnTimer on change", async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      turnTimerMinutes: 30,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/turn timer/i) as HTMLSelectElement;
+    expect(select.value).toBe('30');
+
+    await fireEvent.change(select, { target: { value: '60' } });
+
+    expect(hostSession.setTurnTimer).toHaveBeenCalledWith(60);
   });
 
   it('lets a guest join a room by code', async () => {

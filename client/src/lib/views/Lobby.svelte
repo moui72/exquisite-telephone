@@ -28,6 +28,21 @@
   async function handleStartGame() {
     await session.startGame(belowMinimumPlayers ? acknowledgeSmallGame : undefined);
   }
+
+  const TURN_TIMER_OPTIONS: { value: 15 | 30 | 60 | 240 | 720 | null; label: string }[] = [
+    { value: null, label: 'Off' },
+    { value: 15, label: '15 minutes' },
+    { value: 30, label: '30 minutes' },
+    { value: 60, label: '1 hour' },
+    { value: 240, label: '4 hours' },
+    { value: 720, label: '12 hours' },
+  ];
+
+  async function handleTurnTimerChange(event: Event) {
+    const raw = (event.target as HTMLSelectElement).value;
+    const turnTimerMinutes = raw === '' ? null : (Number(raw) as 15 | 30 | 60 | 240 | 720);
+    await session.setTurnTimer(turnTimerMinutes);
+  }
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
@@ -112,6 +127,19 @@
       </ul>
 
       {#if isHost}
+        <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          Turn timer
+          <select
+            class="rounded-md border px-3 py-2 text-base"
+            value={state.room.turnTimerMinutes ?? ''}
+            on:change={handleTurnTimerChange}
+          >
+            {#each TURN_TIMER_OPTIONS as option (option.value)}
+              <option value={option.value ?? ''}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+
         <p class="text-xs text-slate-500">
           Player count: recommend 4+ players, minimum 3.
         </p>
