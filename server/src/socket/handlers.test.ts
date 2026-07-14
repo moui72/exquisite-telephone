@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { Socket } from 'socket.io';
 import { createBooksForRoom, createRoom, createRoomStore, joinRoom } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
-import { onStartGame, onSubmitEntry } from './handlers.js';
+import { onSetTurnTimer, onStartGame, onSubmitEntry } from './handlers.js';
 
 /**
  * A minimal fake of the Socket.IO `Socket` surface the handlers touch
@@ -210,5 +210,71 @@ describe('minimum player count (onStartGame)', () => {
 
     expect(room.status).toBe('writing');
     expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+});
+
+describe('onSetTurnTimer', () => {
+  it('lets the host set Room.turnTimerMinutes while the room is in lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetTurnTimer(socket, store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 30 }, ack);
+
+    expect(room.turnTimerMinutes).toBe(30);
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('accepts null to turn the timer back off', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.turnTimerMinutes = 15;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetTurnTimer(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, turnTimerMinutes: null },
+      ack,
+    );
+
+    expect(room.turnTimerMinutes).toBeNull();
+  });
+
+  it('rejects a non-host caller with not-host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetTurnTimer(
+      socket,
+      store,
+      { roomId: room.id, playerId: graceId, turnTimerMinutes: 30 },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(room.turnTimerMinutes).toBeNull();
+  });
+
+  it('rejects setting the timer once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetTurnTimer(socket, store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 30 }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.turnTimerMinutes).toBeNull();
   });
 });

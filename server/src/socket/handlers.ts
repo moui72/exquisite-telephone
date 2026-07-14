@@ -150,6 +150,47 @@ export function onStartGame(
   ack({ room });
 }
 
+export interface SetTurnTimerInput {
+  roomId: string;
+  playerId: string;
+  turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
+}
+
+export interface SetTurnTimerAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.turnTimerMinutes` (ui.md Lobby
+ * View timer selector). Rejected once the room has left `lobby` — the
+ * timer is fixed for the duration of a game once writing/drawing starts.
+ */
+export function onSetTurnTimer(
+  socket: Socket,
+  store: RoomStore,
+  input: SetTurnTimerInput,
+  ack: (response: SetTurnTimerAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+
+  room.turnTimerMinutes = input.turnTimerMinutes;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface EndGameInput {
   roomId: string;
   playerId: string;

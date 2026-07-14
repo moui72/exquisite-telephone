@@ -20,7 +20,7 @@ status: in-progress
 
 ## Phase 3: Turn timer control and countdown
 
-- [ ] T007 [artifacts: datamodel] In `server/src/socket/handlers.test.ts`, write a failing test for a new `onSetTurnTimer` handler: accepted (sets `Room.turnTimerMinutes`) only when `playerId === room.hostPlayerId` and `room.status === 'lobby'`, for a value of `15 | 30 | 60 | 240 | 720 | null`; rejected with `not-host` or a status error otherwise. Confirm failure, then implement `onSetTurnTimer` in `server/src/socket/handlers.ts` and wire a `setTurnTimer` event to it in `server/src/socket/server.ts`.
+- [x] T007 [artifacts: datamodel] In `server/src/socket/handlers.test.ts`, write a failing test for a new `onSetTurnTimer` handler: accepted (sets `Room.turnTimerMinutes`) only when `playerId === room.hostPlayerId` and `room.status === 'lobby'`, for a value of `15 | 30 | 60 | 240 | 720 | null`; rejected with `not-host` or a status error otherwise. Confirm failure, then implement `onSetTurnTimer` in `server/src/socket/handlers.ts` and wire a `setTurnTimer` event to it in `server/src/socket/server.ts`.
 - [ ] T008 [artifacts: ui] [parallel] In `client/src/lib/views/Lobby.test.ts`, write a failing test asserting the host-only timer selector (off/15m/30m/1hr/4hr/12hr) reflects `Room.turnTimerMinutes` and emits `setTurnTimer` with the chosen value on change. Confirm failure, then implement in `Lobby.svelte`.
 - [ ] T009 [artifacts: ui] [parallel] In `WritingDrawing.svelte`, write a failing test asserting a countdown to `Room.roundStartedAt + (Room.timerExtensions[player.id] ?? Room.turnTimerMinutes * 60000)` is shown for the current player when `Room.turnTimerMinutes` is set, and no countdown is shown when it's `null`. Confirm failure, then implement.
 

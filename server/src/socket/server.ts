@@ -9,6 +9,7 @@ import {
   onEndGame,
   onJoinRoom,
   onRejoin,
+  onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
   type CreateRoomAck,
@@ -19,6 +20,8 @@ import {
   type JoinRoomInput,
   type RejoinAck,
   type RejoinInput,
+  type SetTurnTimerAck,
+  type SetTurnTimerInput,
   type StartGameAck,
   type StartGameInput,
   type SubmitEntryAck,
@@ -56,6 +59,13 @@ export function createSocketServer(
     socket.on('endGame', (input: EndGameInput, ack: (response: EndGameAck) => void) => {
       onEndGame(socket, store, input, ack);
     });
+
+    socket.on(
+      'setTurnTimer',
+      (input: SetTurnTimerInput, ack: (response: SetTurnTimerAck) => void) => {
+        onSetTurnTimer(socket, store, input, ack);
+      },
+    );
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
       onSubmitEntry(socket, store, logger, input, ack);
