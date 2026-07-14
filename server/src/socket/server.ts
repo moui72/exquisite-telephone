@@ -9,6 +9,7 @@ import {
   onEndGame,
   onJoinRoom,
   onRejoin,
+  onSetMonochrome,
   onStartGame,
   onSubmitEntry,
   type CreateRoomAck,
@@ -19,6 +20,8 @@ import {
   type JoinRoomInput,
   type RejoinAck,
   type RejoinInput,
+  type SetMonochromeAck,
+  type SetMonochromeInput,
   type StartGameAck,
   type StartGameInput,
   type SubmitEntryAck,
@@ -56,6 +59,13 @@ export function createSocketServer(
     socket.on('endGame', (input: EndGameInput, ack: (response: EndGameAck) => void) => {
       onEndGame(socket, store, input, ack);
     });
+
+    socket.on(
+      'set_monochrome',
+      (input: SetMonochromeInput, ack: (response: SetMonochromeAck) => void) => {
+        onSetMonochrome(socket, store, input, ack);
+      },
+    );
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
       onSubmitEntry(socket, store, logger, input, ack);

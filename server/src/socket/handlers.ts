@@ -133,6 +133,46 @@ export function onStartGame(
   ack({ room });
 }
 
+export interface SetMonochromeInput {
+  roomId: string;
+  playerId: string;
+  monochromeOnly: boolean;
+}
+
+export interface SetMonochromeAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only toggle of Room.monochromeOnly (datamodel.md),
+ * mirroring onStartGame's host-only/status guard shape.
+ */
+export function onSetMonochrome(
+  socket: Socket,
+  store: RoomStore,
+  input: SetMonochromeInput,
+  ack: (response: SetMonochromeAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+
+  room.monochromeOnly = input.monochromeOnly;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface EndGameInput {
   roomId: string;
   playerId: string;
