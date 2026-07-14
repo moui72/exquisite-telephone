@@ -42,6 +42,13 @@
   export let ops: DrawOps = [];
   export let readOnly = false;
   export let onOpsChange: (ops: DrawOps) => void = () => {};
+  /**
+   * When true (Room.monochromeOnly, host-configured lobby setting), the
+   * color palette is hidden and every new stroke uses the default ink
+   * color, regardless of any prior palette selection (ui.md Writing/
+   * Drawing View).
+   */
+  export let monochromeOnly = false;
 
   let canvasEl: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
@@ -49,6 +56,8 @@
   let activeColor = DEFAULT_COLOR;
   let activeWidth = DEFAULT_WIDTH;
   let tool: 'stroke' | 'fill' = 'stroke';
+
+  $: effectiveColor = monochromeOnly ? DEFAULT_COLOR : activeColor;
 
   function toPoint(event: PointerEvent | MouseEvent): Point {
     const rect = canvasEl.getBoundingClientRect();
@@ -95,8 +104,8 @@
     if (readOnly) return;
     if (tool === 'fill') {
       const point = toPoint(event);
-      applyFill(point, activeColor);
-      onOpsChange([...ops, { type: 'fill', point, color: activeColor }]);
+      applyFill(point, effectiveColor);
+      onOpsChange([...ops, { type: 'fill', point, color: effectiveColor }]);
       return;
     }
     canvasEl.setPointerCapture?.(event.pointerId);
@@ -116,7 +125,7 @@
     if (currentStroke.length >= 2) {
       onOpsChange([
         ...ops,
-        { type: 'stroke', points: currentStroke, color: activeColor, width: activeWidth },
+        { type: 'stroke', points: currentStroke, color: effectiveColor, width: activeWidth },
       ]);
     }
     currentStroke = null;
@@ -172,20 +181,22 @@
 
 {#if !readOnly}
   <div class="mb-2 flex flex-wrap items-center gap-3">
-    <div class="flex gap-1" role="group" aria-label="Stroke color">
-      {#each PALETTE_COLORS as color (color)}
-        <button
-          type="button"
-          class="h-6 w-6 rounded-full border-2"
-          class:border-slate-900={activeColor === color}
-          class:border-transparent={activeColor !== color}
-          style="background-color: {color};"
-          aria-label="Color {color}"
-          aria-pressed={activeColor === color}
-          on:click={() => selectColor(color)}
-        ></button>
-      {/each}
-    </div>
+    {#if !monochromeOnly}
+      <div class="flex gap-1" role="group" aria-label="Stroke color">
+        {#each PALETTE_COLORS as color (color)}
+          <button
+            type="button"
+            class="h-6 w-6 rounded-full border-2"
+            class:border-slate-900={activeColor === color}
+            class:border-transparent={activeColor !== color}
+            style="background-color: {color};"
+            aria-label="Color {color}"
+            aria-pressed={activeColor === color}
+            on:click={() => selectColor(color)}
+          ></button>
+        {/each}
+      </div>
+    {/if}
 
     <div class="flex gap-1" role="group" aria-label="Line width">
       {#each WIDTH_PRESETS as preset (preset.label)}

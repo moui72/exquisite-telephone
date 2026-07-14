@@ -181,6 +181,25 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     vi.restoreAllMocks();
   });
 
+  it('hides the color palette and forces the default ink color when monochromeOnly is true', async () => {
+    const onOpsChange = vi.fn();
+    const { container, queryByLabelText, queryByRole } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange, monochromeOnly: true },
+    });
+    const canvas = container.querySelector('canvas')!;
+
+    expect(queryByLabelText('Color #ef4444')).not.toBeInTheDocument();
+    expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointerup', 10, 10);
+
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].color).toBe('#1e293b');
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;

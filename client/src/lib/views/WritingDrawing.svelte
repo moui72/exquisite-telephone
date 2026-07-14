@@ -78,7 +78,11 @@
       </form>
     {:else}
       <div class="flex flex-col gap-4">
-        <DrawingCanvas ops={drawnOps} onOpsChange={handleOpsChange} />
+        <DrawingCanvas
+          ops={drawnOps}
+          onOpsChange={handleOpsChange}
+          monochromeOnly={state.room?.monochromeOnly ?? false}
+        />
         <button
           type="button"
           class="rounded-md bg-slate-800 px-4 py-2 text-base text-white"
