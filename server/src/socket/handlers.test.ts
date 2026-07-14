@@ -108,7 +108,12 @@ describe('round timer bookkeeping (Room.roundStartedAt / timerExtensions / pendi
 
     const socket = makeFakeSocket();
     const ack = vi.fn();
-    onStartGame(socket, store, { roomId: room.id, playerId: adaId }, ack);
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      ack,
+    );
 
     const after = Date.now();
     expect(room.status).toBe('writing');
@@ -171,5 +176,39 @@ describe('round timer bookkeeping (Room.roundStartedAt / timerExtensions / pendi
     expect(room.roundStartedAt!).toBeLessThanOrEqual(after);
     expect(room.timerExtensions).toEqual({});
     expect(room.pendingTimeoutVote).toBeNull();
+  });
+});
+
+describe('minimum player count (onStartGame)', () => {
+  it('rejects starting with fewer than 3 players when acknowledgeSmallGame is not true', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(socket, store, { roomId: room.id, playerId: adaId }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'too-few-players' });
+    expect(room.status).toBe('lobby');
+  });
+
+  it('starts with 1 player when acknowledgeSmallGame is true', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      ack,
+    );
+
+    expect(room.status).toBe('writing');
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
   });
 });

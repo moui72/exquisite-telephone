@@ -101,12 +101,21 @@ export function onJoinRoom(
 export interface StartGameInput {
   roomId: string;
   playerId: string;
+  /**
+   * One-time acknowledgment on the start-game request itself (not
+   * persisted room state, datamodel.md Normalization Rules) that lets
+   * the host override the minimum-player-count guard below.
+   */
+  acknowledgeSmallGame?: boolean;
 }
 
 export interface StartGameAck {
   room?: Room;
   error?: string;
 }
+
+/** Below this many players, starting requires an explicit host override. */
+const MINIMUM_RECOMMENDED_PLAYERS = 3;
 
 /**
  * Host-only transition out of the lobby. Turn/entry assignment for the
@@ -125,6 +134,10 @@ export function onStartGame(
   }
   if (room.hostPlayerId !== input.playerId) {
     ack({ error: 'not-host' });
+    return;
+  }
+  if (room.players.length < MINIMUM_RECOMMENDED_PLAYERS && input.acknowledgeSmallGame !== true) {
+    ack({ error: 'too-few-players' });
     return;
   }
 
