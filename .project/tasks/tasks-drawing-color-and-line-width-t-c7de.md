@@ -1,7 +1,7 @@
 ---
 plan: plan-drawing-color-and-line-width-t-2026-07-14-6006.md
 generated: 2026-07-14
-status: ready
+status: in-progress
 ---
 
 # Tasks
