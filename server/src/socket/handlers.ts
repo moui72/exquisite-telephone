@@ -209,9 +209,14 @@ export function onSubmitEntry(
     return;
   }
 
+  if (book.entries.length >= room.players.length) {
+    ack({ error: 'book-complete' });
+    return;
+  }
+
   const next = computeNextEntry(room, book);
   if (!next) {
-    ack({ error: 'book-complete' });
+    ack({ error: 'round-not-open' });
     return;
   }
   if (next.authorId !== input.playerId) {
