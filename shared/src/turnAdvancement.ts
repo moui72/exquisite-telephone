@@ -22,12 +22,32 @@ function entryTypeForPosition(position: number): EntryType {
 }
 
 /**
- * Computes the next Entry due on `book`, or null once every player in
- * the room has contributed to it exactly once (the book is complete).
+ * The room-wide current round: the minimum `entries.length` across all
+ * of `Room.books`. Turns are round-gated, not asynchronous (datamodel.md
+ * Normalization Rules, reversed 2026-07-14 per feedback F001) — a book
+ * ahead of this round waits rather than being assigned its next entry,
+ * so no book runs further ahead of the rest of the room. Purely derived
+ * from existing state (constitution Principle VI), not persisted.
+ */
+export function currentRoundFor(room: Room): number {
+  if (room.books.length === 0) {
+    return 0;
+  }
+  return Math.min(...room.books.map((b) => b.entries.length));
+}
+
+/**
+ * Computes the next Entry due on `book`, or null when the book is
+ * complete (every player has contributed once) or when it has already
+ * moved ahead of the room-wide current round and must wait for the rest
+ * of the room to catch up (round-gating).
  */
 export function computeNextEntry(room: Room, book: Book): NextEntry | null {
   const position = book.entries.length;
   if (position >= room.players.length) {
+    return null;
+  }
+  if (position > currentRoundFor(room)) {
     return null;
   }
 

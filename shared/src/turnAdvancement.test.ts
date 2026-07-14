@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Book, Entry, Player, Room } from './types.js';
-import { computeNextEntry, computeNextEntries } from './turnAdvancement.js';
+import { computeNextEntry, computeNextEntries, currentRoundFor } from './turnAdvancement.js';
 
 function makePlayer(id: string, roomId: string): Player {
   return { id, roomId, name: id, connected: true, sessionToken: `${id}-token` };
@@ -123,5 +123,89 @@ describe('turn advancement (round-robin per book)', () => {
     const room = makeRoom([completeBook]);
 
     expect(computeNextEntries(room)).toEqual([]);
+  });
+});
+
+describe('round-gating (turns are round-gated, not asynchronous)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+  const players = [ada, grace, lin];
+
+  function makeRoom(books: Book[]): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players,
+      status: 'writing',
+      books,
+      createdAt: Date.now(),
+    };
+  }
+
+  it('assigns the normal next entry to the book at the room-wide minimum round', () => {
+    // bookA is at the minimum (1 entry); bookB is ahead (2 entries).
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('bookA', ada.id, 0)],
+    };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('bookB', grace.id, 0), makeEntry('bookB', lin.id, 1)],
+    };
+    const room = makeRoom([bookA, bookB]);
+
+    const next = computeNextEntry(room, bookA);
+
+    expect(next).toEqual({ authorId: grace.id, type: 'drawing', position: 1 });
+  });
+
+  it('returns null for a book ahead of the room-wide minimum round even though it is not complete', () => {
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('bookA', ada.id, 0)],
+    };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('bookB', grace.id, 0), makeEntry('bookB', lin.id, 1)],
+    };
+    const room = makeRoom([bookA, bookB]);
+
+    // bookB is ahead of the room-wide minimum (1) even though it's not
+    // complete (2 < 3 players) — it must wait for bookA to catch up.
+    expect(computeNextEntry(room, bookB)).toBeNull();
+  });
+
+  it('currentRoundFor returns the minimum entries.length across all books', () => {
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('bookA', ada.id, 0)],
+    };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('bookB', grace.id, 0), makeEntry('bookB', lin.id, 1)],
+    };
+    const room = makeRoom([bookA, bookB]);
+
+    expect(currentRoundFor(room)).toBe(1);
+  });
+
+  it('currentRoundFor returns 0 for an empty books array', () => {
+    const room = makeRoom([]);
+
+    expect(currentRoundFor(room)).toBe(0);
   });
 });
