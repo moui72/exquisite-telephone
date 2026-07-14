@@ -69,17 +69,18 @@ export function onJoinRoom(
   input: JoinRoomInput,
   ack: (response: JoinRoomAck) => void,
 ): void {
-  const player = joinRoom(store, { roomId: input.roomId, playerName: input.playerName });
-  if (!player) {
+  const result = joinRoom(store, { roomId: input.roomId, playerName: input.playerName });
+  if (!result.player) {
     logger.log({
       event: 'player_joined',
       outcome: 'failure',
       roomId: input.roomId,
-      reason: 'room-not-found',
+      reason: result.error,
     });
-    ack({ error: 'room-not-found' });
+    ack({ error: result.error });
     return;
   }
+  const player = result.player;
   player.sessionToken = sessionStore.issue(player.id, input.roomId);
   socket.data.playerId = player.id;
   socket.data.roomId = input.roomId;

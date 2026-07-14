@@ -50,15 +50,14 @@ a PNG image strip (see [[infrastructure]] Export Pipeline).
 
 ## States
 
-- **Loading**: Initial connection/room-join in progress — shown briefly
-  while the Socket.IO handshake completes.
 - **Empty**: Lobby with only the host present — waiting-for-players
   state, distinct from mid-game states.
 - **Error**: Room code not found, room already started (late join
-  rejected), or connection lost with reconnect in progress (distinct from
-  a hard error — reconnect shows a "reconnecting..." state per
-  [[infrastructure]] Session Store, not a failure state, until it times
-  out).
+  rejected — the server refuses to seat a new player once `Room.status`
+  has left `lobby`), or connection lost with reconnect in progress
+  (distinct from a hard error — reconnect shows a "reconnecting..." state
+  per [[infrastructure]] Session Store, not a failure state, until it
+  times out).
 
 ## Styling
 

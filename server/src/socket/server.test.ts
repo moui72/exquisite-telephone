@@ -84,6 +84,33 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     expect(ack.room).toBeUndefined();
   });
 
+  it('onJoinRoom rejects a late join once the game has started (ui.md Error state)', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const roomId = createAck.room!.id;
+
+    await new Promise<void>((resolve) => {
+      clientA.emit(
+        'startGame',
+        { roomId, playerId: createAck.room!.hostPlayerId },
+        () => resolve(),
+      );
+    });
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
+      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
+    });
+
+    expect(joinAck.error).toBe('room-already-started');
+    expect(joinAck.room).toBeUndefined();
+    expect(joinAck.player).toBeUndefined();
+  });
+
   it('onStartGame lets the host start the game, moving the room out of lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await new Promise<void>((resolve) => clientA.on('connect', resolve));

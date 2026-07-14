@@ -23,18 +23,31 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
   it('player join adds to room.players', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 
-    const player = joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const result = joinRoom(store, { roomId: room.id, playerName: 'Grace' });
 
-    expect(player).not.toBeNull();
+    expect(result.player).toBeDefined();
+    expect(result.error).toBeUndefined();
     const updatedRoom = store.getRoom(room.id);
     expect(updatedRoom?.players).toHaveLength(2);
     expect(updatedRoom?.players.map((p) => p.name)).toEqual(['Ada', 'Grace']);
   });
 
-  it('joining a room that does not exist returns null', () => {
-    const player = joinRoom(store, { roomId: 'NOPE', playerName: 'Grace' });
+  it('joining a room that does not exist returns a room-not-found error', () => {
+    const result = joinRoom(store, { roomId: 'NOPE', playerName: 'Grace' });
 
-    expect(player).toBeNull();
+    expect(result.player).toBeUndefined();
+    expect(result.error).toBe('room-not-found');
+  });
+
+  it('joining a room that has already started returns a room-already-started error (ui.md Error state)', () => {
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+
+    const result = joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+
+    expect(result.player).toBeUndefined();
+    expect(result.error).toBe('room-already-started');
+    expect(store.getRoom(room.id)?.players).toHaveLength(1);
   });
 
   it('looks up a room by Room.id', () => {

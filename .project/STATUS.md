@@ -23,14 +23,12 @@ _(none)_
 
 ## Code-vs-Artifact Defects
 
-Never formally checked — run `/ardd-defects` for a full pass. The
-v1 implementation run already surfaced one known mismatch worth logging:
-`Room.status` (datamodel.md) lists `drawing` as a room-wide phase, but the
-server only ever transitions `writing` → `reveal`/`ended` — each
-player's current entry type (text vs. drawing) is computed per-book/
-per-player instead, since players work on different books
-asynchronously. The client handles both statuses identically, so this
-isn't a functional bug, just an artifact/code naming mismatch.
+0 defects — see `.project/DEFECTS.md`, last checked 2026-07-13. All 4
+defects from the earlier pass today are resolved: late-join rejection is
+now implemented and tested, the never-built Loading state was dropped from
+`ui.md`, `server/src/index.ts` now explicitly constructs `sessionStore`/
+`logger` (closing the Principle X drift), and the stale `drawing` value was
+removed from `Room.status`'s documented enum.
 
 ## Feature Backlog
 
@@ -100,11 +98,16 @@ lint/typecheck/76 tests/build all pass under pnpm.
 Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 (`origin`, `main` tracked). CI runs on push/PR there.
 
+## Summary
+
+All 4 defects from today's `/ardd-defects` pass are resolved and verified
+by a fresh re-check: 0 open. No cross-artifact conflicts or constitution
+violations. Safe to /plan: yes.
+
 ## Recommended Next Step
 
-Run `/ardd-defects` to formally log the `Room.status` drawing-phase
-mismatch, then `/ardd-backlog` for the end-game-control and
-start/end-game-logging gaps. `/ardd-plan asynchronous-play-turn-timer`
-when ready to design that feature. `/ardd-diagram` on datamodel,
-infrastructure, and ui would also give this stable design a visual
-reference.
+`/ardd-backlog` for the two gaps noted during v1 implementation (end-game
+UI control, start/end-game observability logging), then `/ardd-plan
+asynchronous-play-turn-timer` when ready to design that feature.
+`/ardd-diagram` on datamodel, infrastructure, and ui would also give this
+stable design a visual reference.

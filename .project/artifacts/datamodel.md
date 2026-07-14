@@ -32,7 +32,7 @@ to survive a server restart.
 | id | string | Short human-shareable room code (e.g. 4-6 chars), not a UUID |
 | hostPlayerId | string | FK -> Player.id |
 | players | Player[] | |
-| status | enum | `lobby` \| `writing` \| `drawing` \| `reveal` \| `ended` |
+| status | enum | `lobby` \| `writing` \| `reveal` \| `ended` — a room-wide phase only; there is no room-wide `drawing` phase, since players progress through their own book asynchronously and are individually writing or drawing at any given moment (see `Entry.type` below) |
 | books | Book[] | One per player's original prompt |
 | createdAt | timestamp | |
 

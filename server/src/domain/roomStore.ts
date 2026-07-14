@@ -63,15 +63,23 @@ export interface JoinRoomInput {
   playerName: string;
 }
 
+export interface JoinRoomResult {
+  player?: Player;
+  error?: 'room-not-found' | 'room-already-started';
+}
+
 /**
- * Adds a new player to an existing room. Returns null if the room does
- * not exist — callers (e.g. the onJoinRoom socket handler) turn that into
- * a "room not found" response rather than silently creating one.
+ * Adds a new player to an existing room. A room past `lobby` (ui.md's
+ * documented "already started" Error state) rejects the join rather than
+ * silently seating a late joiner mid-game.
  */
-export function joinRoom(store: RoomStore, input: JoinRoomInput): Player | null {
+export function joinRoom(store: RoomStore, input: JoinRoomInput): JoinRoomResult {
   const room = store.rooms.get(input.roomId);
   if (!room) {
-    return null;
+    return { error: 'room-not-found' };
+  }
+  if (room.status !== 'lobby') {
+    return { error: 'room-already-started' };
   }
 
   const player: Player = {
@@ -83,7 +91,7 @@ export function joinRoom(store: RoomStore, input: JoinRoomInput): Player | null 
   };
 
   room.players.push(player);
-  return player;
+  return { player };
 }
 
 /**
