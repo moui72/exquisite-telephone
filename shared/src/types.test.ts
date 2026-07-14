@@ -65,7 +65,7 @@ describe('datamodel types (datamodel.md)', () => {
       createdAt: Date.now(),
     };
 
-    const validStatuses: Room['status'][] = ['lobby', 'writing', 'drawing', 'reveal', 'ended'];
+    const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];
     expect(validStatuses).toContain(room.status);
     expect(room.players).toHaveLength(1);
   });

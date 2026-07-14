@@ -1,27 +1,38 @@
 # Defects
 
-_Last verified: 2026-07-13_
+_Last verified: 2026-07-14_
 
 No defects found — artifacts match the codebase as of this run.
 
-All 4 defects from the previous pass (2026-07-13) are resolved:
+The one defect found earlier in this pass is now fixed: `RoomStatus`
+(`shared/src/types.ts:9`) no longer includes the dead `'drawing'` value,
+and `client/src/App.svelte`'s corresponding dead branch
+(`state.room.status === 'drawing'`) was removed — `shared/src/types.test.ts`
+updated to match. Full suite (12 shared + 38 server + 35 client), lint,
+and typecheck all pass.
 
-- **ui.md** late-join rejection: `joinRoom` now rejects a join once
-  `Room.status` has left `lobby` (`server/src/domain/roomStore.ts`,
-  `server/src/socket/handlers.ts`), matching the documented Error state.
-- **ui.md** Loading state: removed from the artifact (was documented but
-  never built, with no functional gap to justify building it).
-- **constitution.md** Principle X: `server/src/index.ts` now explicitly
-  constructs `sessionStore` and `logger` and passes them into
-  `createSocketServer`, rather than relying on that function's default
-  parameters — dependency construction is now fully centralized in the
-  entry point as the principle requires.
-- **datamodel.md** `Room.status` enum: the stale `drawing` value was
-  removed; the field's notes now clarify the phase is room-wide only
-  (`lobby`/`writing`/`reveal`/`ended`) and that per-player write/draw state
-  is tracked via `Entry.type` instead.
+## infrastructure.md
 
-_Note (not a defect): `server/src/httpRequestHandler.ts`'s `/healthz` route,
-referenced by `fly.toml`'s health check, isn't mentioned in
+No defects found — single-process Socket.IO + static serving, session
+store TTL/rejoin-after-end behavior, named per-event handler dispatch,
+client-side PNG export, and the Fly.io deployment setup all match the
+described implementation.
+
+_Note (not a defect): `server/src/httpRequestHandler.ts`'s `/healthz`
+route, referenced by `fly.toml`'s health check, isn't mentioned in
 infrastructure.md's Deployment section. Not a contradicted claim — just a
 possible documentation gap left for `/ardd-refine` to consider._
+
+## ui.md
+
+No defects found — Lobby/WritingDrawing/Reveal views, States (Empty,
+Error including the now-correct late-join rejection), and Tailwind styling
+all match the implementation. The late-join rejection and Loading-state
+removal from the previous pass both hold up on independent re-verification.
+
+## constitution.md
+
+No defects found — all 10 principles and the Quality Standards / Pre-commit
+/ CI Enforcement sections match actual practice, including Principle X's
+entry-point dependency wiring (now fixed in `server/src/index.ts`) and
+Principle VIII's per-event handler decomposition.

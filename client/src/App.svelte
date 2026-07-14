@@ -20,7 +20,7 @@
   </main>
 {:else if !state.room || state.room.status === 'lobby'}
   <Lobby {session} />
-{:else if state.room.status === 'writing' || state.room.status === 'drawing'}
+{:else if state.room.status === 'writing'}
   <WritingDrawing {session} />
 {:else if state.room.status === 'reveal'}
   <Reveal room={state.room} />

@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-13. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14. Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -23,12 +23,11 @@ _(none)_
 
 ## Code-vs-Artifact Defects
 
-0 defects — see `.project/DEFECTS.md`, last checked 2026-07-13. All 4
-defects from the earlier pass today are resolved: late-join rejection is
-now implemented and tested, the never-built Loading state was dropped from
-`ui.md`, `server/src/index.ts` now explicitly constructs `sessionStore`/
-`logger` (closing the Principle X drift), and the stale `drawing` value was
-removed from `Room.status`'s documented enum.
+0 defects — see `.project/DEFECTS.md`, last checked 2026-07-14. The dead
+`'drawing'` value in `RoomStatus` (`shared/src/types.ts`) and the
+corresponding dead branch in `client/src/App.svelte` found by this run's
+fresh survey are now fixed and re-verified; all 4 defects from yesterday's
+pass remain fixed too.
 
 ## Feature Backlog
 
@@ -100,8 +99,9 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-All 4 defects from today's `/ardd-defects` pass are resolved and verified
-by a fresh re-check: 0 open. No cross-artifact conflicts or constitution
+0 defects open — the `RoomStatus` dead-value/dead-branch cleanup found by
+today's fresh `/ardd-defects` pass is fixed and re-verified (full suite,
+lint, typecheck all pass). No cross-artifact conflicts or constitution
 violations. Safe to /plan: yes.
 
 ## Recommended Next Step

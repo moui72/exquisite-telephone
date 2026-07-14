@@ -6,7 +6,7 @@
  */
 
 /** Lifecycle stage of a Room, per datamodel.md. */
-export type RoomStatus = 'lobby' | 'writing' | 'drawing' | 'reveal' | 'ended';
+export type RoomStatus = 'lobby' | 'writing' | 'reveal' | 'ended';
 
 /** Whether an Entry is a written phrase or a drawing of one. */
 export type EntryType = 'text' | 'drawing';
