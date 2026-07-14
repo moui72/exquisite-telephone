@@ -1,15 +1,40 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import type { DrawOps, Point } from '@exquisite-telephone/shared';
+  import { floodFill } from '../drawing/floodFill.js';
 
   const DEFAULT_COLOR = '#1e293b';
   const DEFAULT_WIDTH = 3;
+
+  /** 8-color preset palette (ui.md Writing/Drawing View), including black. */
+  const PALETTE_COLORS = [
+    '#000000',
+    '#1e293b',
+    '#ef4444',
+    '#f97316',
+    '#eab308',
+    '#22c55e',
+    '#3b82f6',
+    '#8b5cf6',
+  ];
+
+  /** 3 line-width presets (thin/medium/thick), in canvas pixels. */
+  const WIDTH_PRESETS: { label: string; width: number }[] = [
+    { label: 'Thin', width: 1 },
+    { label: 'Medium', width: 3 },
+    { label: 'Thick', width: 8 },
+  ];
 
   /**
    * Mobile-friendly, pointer-event-based drawing canvas (constitution
    * Principle II). Captures strokes as vector draw ops (datamodel.md
    * Entry.content), not raster. Used both to draw (readOnly=false) and
    * to replay an existing drawing for reference/reveal (readOnly=true).
+   *
+   * Has a small toolbar (ui.md Writing/Drawing View): an 8-color preset
+   * palette, 3 line-width presets, and a fill tool that flood-fills an
+   * enclosed region from the tapped point instead of drawing a stroke.
+   * The active color/width selection applies to new strokes only.
    *
    * Pointer listeners are registered in onMount and torn down in
    * onDestroy (constitution touch-cleanup quality standard).
@@ -21,6 +46,9 @@
   let canvasEl: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
   let currentStroke: Point[] | null = null;
+  let activeColor = DEFAULT_COLOR;
+  let activeWidth = DEFAULT_WIDTH;
+  let tool: 'stroke' | 'fill' = 'stroke';
 
   function toPoint(event: PointerEvent | MouseEvent): Point {
     const rect = canvasEl.getBoundingClientRect();
@@ -40,21 +68,37 @@
     ctx.stroke();
   }
 
+  function applyFill(point: Point, color: string) {
+    if (!ctx || !canvasEl) return;
+    const imageData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
+    floodFill(imageData, point, color);
+    ctx.putImageData(imageData, 0, 0);
+  }
+
   function redrawAll() {
     if (!ctx || !canvasEl) return;
     ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
     for (const op of ops) {
-      if (op.type !== 'stroke') continue;
-      ctx.strokeStyle = op.color;
-      ctx.lineWidth = op.width;
-      for (let i = 1; i < op.points.length; i += 1) {
-        drawSegment(op.points[i - 1]!, op.points[i]!);
+      if (op.type === 'stroke') {
+        ctx.strokeStyle = op.color;
+        ctx.lineWidth = op.width;
+        for (let i = 1; i < op.points.length; i += 1) {
+          drawSegment(op.points[i - 1]!, op.points[i]!);
+        }
+      } else {
+        applyFill(op.point, op.color);
       }
     }
   }
 
   function handlePointerDown(event: PointerEvent) {
     if (readOnly) return;
+    if (tool === 'fill') {
+      const point = toPoint(event);
+      applyFill(point, activeColor);
+      onOpsChange([...ops, { type: 'fill', point, color: activeColor }]);
+      return;
+    }
     canvasEl.setPointerCapture?.(event.pointerId);
     currentStroke = [toPoint(event)];
   }
@@ -72,10 +116,22 @@
     if (currentStroke.length >= 2) {
       onOpsChange([
         ...ops,
-        { type: 'stroke', points: currentStroke, color: DEFAULT_COLOR, width: DEFAULT_WIDTH },
+        { type: 'stroke', points: currentStroke, color: activeColor, width: activeWidth },
       ]);
     }
     currentStroke = null;
+  }
+
+  function selectColor(color: string) {
+    activeColor = color;
+  }
+
+  function selectWidth(width: number) {
+    activeWidth = width;
+  }
+
+  function toggleFillTool() {
+    tool = tool === 'fill' ? 'stroke' : 'fill';
   }
 
   onMount(() => {
@@ -87,9 +143,9 @@
       ctx = null;
     }
     if (ctx) {
-      ctx.lineWidth = DEFAULT_WIDTH;
+      ctx.lineWidth = activeWidth;
       ctx.lineCap = 'round';
-      ctx.strokeStyle = DEFAULT_COLOR;
+      ctx.strokeStyle = activeColor;
     }
     redrawAll();
 
@@ -113,6 +169,53 @@
     redrawAll();
   }
 </script>
+
+{#if !readOnly}
+  <div class="mb-2 flex flex-wrap items-center gap-3">
+    <div class="flex gap-1" role="group" aria-label="Stroke color">
+      {#each PALETTE_COLORS as color (color)}
+        <button
+          type="button"
+          class="h-6 w-6 rounded-full border-2"
+          class:border-slate-900={activeColor === color}
+          class:border-transparent={activeColor !== color}
+          style="background-color: {color};"
+          aria-label="Color {color}"
+          aria-pressed={activeColor === color}
+          on:click={() => selectColor(color)}
+        ></button>
+      {/each}
+    </div>
+
+    <div class="flex gap-1" role="group" aria-label="Line width">
+      {#each WIDTH_PRESETS as preset (preset.label)}
+        <button
+          type="button"
+          class="rounded-md border px-2 py-1 text-xs font-medium"
+          class:bg-slate-800={activeWidth === preset.width}
+          class:text-white={activeWidth === preset.width}
+          class:text-slate-700={activeWidth !== preset.width}
+          aria-pressed={activeWidth === preset.width}
+          on:click={() => selectWidth(preset.width)}
+        >
+          {preset.label}
+        </button>
+      {/each}
+    </div>
+
+    <button
+      type="button"
+      class="rounded-md border px-2 py-1 text-xs font-medium"
+      class:bg-slate-800={tool === 'fill'}
+      class:text-white={tool === 'fill'}
+      class:text-slate-700={tool !== 'fill'}
+      aria-pressed={tool === 'fill'}
+      on:click={toggleFillTool}
+    >
+      Fill tool
+    </button>
+  </div>
+{/if}
 
 <!-- canvas's native ARIA role is "img" per the HTML-AAM spec; svelte's a11y
      check flags this as a false positive since canvas is nominally interactive. -->

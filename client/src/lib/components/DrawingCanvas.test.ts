@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DrawingCanvas from './DrawingCanvas.svelte';
 
@@ -8,6 +8,25 @@ function firePointer(canvas: Element, type: string, x: number, y: number) {
   const event = new MouseEvent(type, { clientX: x, clientY: y, bubbles: true });
   Object.defineProperty(event, 'pointerId', { value: 1 });
   canvas.dispatchEvent(event);
+}
+
+/** A fake 2D context sufficient for the fill-tool path (getImageData/putImageData). */
+function makeFakeCtx() {
+  const width = 320;
+  const height = 240;
+  const data = new Uint8ClampedArray(width * height * 4).fill(255);
+  return {
+    lineWidth: 1,
+    lineCap: 'round',
+    strokeStyle: '#000000',
+    clearRect: vi.fn(),
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    getImageData: vi.fn(() => ({ width, height, data })),
+    putImageData: vi.fn(),
+  } as unknown as CanvasRenderingContext2D;
 }
 
 describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
@@ -85,6 +104,81 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     const ops = onOpsChange.mock.calls[0][0];
     expect(ops[0].points[0]).toEqual({ x: 80, y: 60 });
     expect(ops[0].points[1]).toEqual({ x: 120, y: 90 });
+  });
+
+  it('uses the clicked palette color for the next drawn stroke', async () => {
+    const onOpsChange = vi.fn();
+    const { container, getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange },
+    });
+    const canvas = container.querySelector('canvas')!;
+
+    await fireEvent.click(getByLabelText('Color #ef4444'));
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointerup', 10, 10);
+
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].type).toBe('stroke');
+    expect(ops[0].color).toBe('#ef4444');
+  });
+
+  it('uses the selected width preset for the next drawn stroke', async () => {
+    const onOpsChange = vi.fn();
+    const { container, getByText } = render(DrawingCanvas, { props: { ops: [], onOpsChange } });
+    const canvas = container.querySelector('canvas')!;
+
+    await fireEvent.click(getByText('Thick'));
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointerup', 10, 10);
+
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].type).toBe('stroke');
+    expect(ops[0].width).toBe(8);
+  });
+
+  it('appends a FillOp instead of starting a stroke when the fill tool is active', async () => {
+    const fakeCtx = makeFakeCtx();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
+
+    const onOpsChange = vi.fn();
+    const { container, getByText } = render(DrawingCanvas, { props: { ops: [], onOpsChange } });
+    const canvas = container.querySelector('canvas')!;
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 320,
+      bottom: 240,
+      width: 320,
+      height: 240,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+
+    await fireEvent.click(getByText('Fill tool'));
+
+    firePointer(canvas, 'pointerdown', 5, 5);
+
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops).toHaveLength(1);
+    expect(ops[0].type).toBe('fill');
+    expect(ops[0].point).toEqual({ x: 5, y: 5 });
+    expect(fakeCtx.getImageData).toHaveBeenCalled();
+    expect(fakeCtx.putImageData).toHaveBeenCalled();
+
+    // No stroke should start: a subsequent pointermove/up shouldn't emit again.
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointerup', 10, 10);
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+
+    vi.restoreAllMocks();
   });
 
   it('removes its pointer listeners on unmount without throwing', () => {
