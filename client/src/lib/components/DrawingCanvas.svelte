@@ -21,7 +21,12 @@
 
   function toPoint(event: PointerEvent | MouseEvent): Point {
     const rect = canvasEl.getBoundingClientRect();
-    return { x: event.clientX - rect.left, y: event.clientY - rect.top };
+    const scaleX = canvasEl.width / rect.width;
+    const scaleY = canvasEl.height / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
   }
 
   function drawSegment(from: Point, to: Point) {

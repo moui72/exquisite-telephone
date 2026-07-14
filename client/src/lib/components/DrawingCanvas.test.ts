@@ -55,6 +55,37 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(onStrokeComplete).not.toHaveBeenCalled();
   });
 
+  it('scales pointer coordinates from CSS-rendered size to bitmap resolution', async () => {
+    const onStrokeComplete = vi.fn();
+    const { container } = render(DrawingCanvas, { props: { strokes: [], onStrokeComplete } });
+    const canvas = container.querySelector('canvas')!;
+
+    // Canvas bitmap is 320x240 (its width/height attrs), but CSS-rendered
+    // size is stretched to 160x120 — half size on both axes — so a pointer
+    // at (40, 30) in page coordinates should be recorded as (80, 60) in
+    // bitmap space.
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 160,
+      bottom: 120,
+      width: 160,
+      height: 120,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+
+    firePointer(canvas, 'pointerdown', 40, 30);
+    firePointer(canvas, 'pointermove', 60, 45);
+    firePointer(canvas, 'pointerup', 60, 45);
+
+    expect(onStrokeComplete).toHaveBeenCalledTimes(1);
+    const strokes = onStrokeComplete.mock.calls[0][0];
+    expect(strokes[0][0]).toEqual({ x: 80, y: 60 });
+    expect(strokes[0][1]).toEqual({ x: 120, y: 90 });
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { strokes: [] } });
     const canvas = container.querySelector('canvas')!;

@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Coordinate fix
 
-- [ ] T001 [artifacts: ui] Write a failing test for `client/src/lib/components/DrawingCanvas.svelte`'s `toPoint()` asserting pointer coordinates are scaled by `canvasEl.width / rect.width` and `canvasEl.height / rect.height` when the canvas's CSS-rendered size (mocked via `getBoundingClientRect`) differs from its bitmap resolution (`width="320" height="240"`). Confirm the test fails against current `toPoint()`, then fix `toPoint()` to apply the scale factors. Addresses feedback F001 in `.project/feedback/feedback-main-296e.md`.
+- [x] T001 [artifacts: ui] Write a failing test for `client/src/lib/components/DrawingCanvas.svelte`'s `toPoint()` asserting pointer coordinates are scaled by `canvasEl.width / rect.width` and `canvasEl.height / rect.height` when the canvas's CSS-rendered size (mocked via `getBoundingClientRect`) differs from its bitmap resolution (`width="320" height="240"`). Confirm the test fails against current `toPoint()`, then fix `toPoint()` to apply the scale factors. Addresses feedback F001 in `.project/feedback/feedback-main-296e.md`.
 
 ## Phase 2: Draw-op data format
 
