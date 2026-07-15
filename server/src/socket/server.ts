@@ -14,6 +14,7 @@ import {
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
+  onVoteToPlayAgain,
   type CastTimeoutVoteAck,
   type CastTimeoutVoteInput,
   type CreateRoomAck,
@@ -32,6 +33,8 @@ import {
   type StartGameInput,
   type SubmitEntryAck,
   type SubmitEntryInput,
+  type VoteToPlayAgainAck,
+  type VoteToPlayAgainInput,
 } from './handlers.js';
 
 /**
@@ -94,6 +97,13 @@ export function createSocketServer(
     socket.on('rejoin', (input: RejoinInput, ack: (response: RejoinAck) => void) => {
       onRejoin(socket, store, sessionStore, logger, input, ack);
     });
+
+    socket.on(
+      'voteToPlayAgain',
+      (input: VoteToPlayAgainInput, ack: (response: VoteToPlayAgainAck) => void) => {
+        onVoteToPlayAgain(socket, store, input, ack);
+      },
+    );
 
     socket.on('disconnect', () => {
       onDisconnect(socket, store, logger);

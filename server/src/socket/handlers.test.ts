@@ -18,6 +18,7 @@ import {
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
+  onVoteToPlayAgain,
   type CreateRoomAck,
   type JoinRoomAck,
   type SetMonochromeAck,
@@ -562,5 +563,41 @@ describe('onEndGame observability', () => {
 
     expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
     expect(events.filter((e) => e.event === 'game_completed')).toHaveLength(0);
+  });
+});
+
+/**
+ * onVoteToPlayAgain: host-agnostic — adds the caller's playerId to
+ * Room.playAgainVotes (deduplicated) and broadcasts roomUpdated
+ * (datamodel.md Normalization Rules — End-of-game controls).
+ */
+describe('onVoteToPlayAgain', () => {
+  it("adds playerId to Room.playAgainVotes and broadcasts roomUpdated", () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+
+    onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(room.playAgainVotes).toEqual([grace.id]);
+    expect(socket.to).toHaveBeenCalledWith(room.id);
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('voting twice with the same playerId does not create a duplicate entry', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+
+    onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+    onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(room.playAgainVotes).toEqual([grace.id]);
   });
 });

@@ -276,6 +276,43 @@ export function onEndGame(
   ack({ room });
 }
 
+export interface VoteToPlayAgainInput {
+  roomId: string;
+  playerId: string;
+}
+
+export interface VoteToPlayAgainAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-agnostic — no host-only guard, since the "vote to play again"
+ * button is simply never shown to the host client-side, and a stray
+ * server-side vote from anyone is harmless (datamodel.md Normalization
+ * Rules — End-of-game controls). Deduplicated: voting twice does not
+ * create a duplicate entry in Room.playAgainVotes.
+ */
+export function onVoteToPlayAgain(
+  socket: Socket,
+  store: RoomStore,
+  input: VoteToPlayAgainInput,
+  ack: (response: VoteToPlayAgainAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+
+  if (!room.playAgainVotes.includes(input.playerId)) {
+    room.playAgainVotes.push(input.playerId);
+  }
+
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface SubmitEntryInput {
   roomId: string;
   playerId: string;
