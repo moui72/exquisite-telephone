@@ -24,4 +24,15 @@
   <WritingDrawing {session} />
 {:else if state.room.status === 'reveal'}
   <Reveal room={state.room} />
+{:else if state.room.status === 'ended'}
+  <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+    <p class="text-lg text-slate-600">This game has ended.</p>
+    <button
+      type="button"
+      class="rounded bg-slate-700 px-4 py-2 text-white hover:bg-slate-800"
+      on:click={() => session.leaveGame()}
+    >
+      Return to home
+    </button>
+  </main>
 {/if}

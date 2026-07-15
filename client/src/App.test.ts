@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/svelte';
+import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Room } from '@exquisite-telephone/shared';
@@ -70,6 +70,23 @@ describe('App (top-level state routing per ui.md States)', () => {
     render(App, { props: { session } });
 
     expect(screen.getByText(/this game has ended/i)).toBeInTheDocument();
+  });
+
+  it('shows a distinct "ended" state (Room.status === \'ended\') with a Return to home control that calls leaveGame', async () => {
+    const session = makeFakeSession({
+      room: makeRoom('ended'),
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(App, { props: { session } });
+
+    expect(screen.getByText(/this game has ended/i)).toBeInTheDocument();
+    const returnButton = screen.getByRole('button', { name: /return to home/i });
+    await fireEvent.click(returnButton);
+
+    expect(session.leaveGame).toHaveBeenCalled();
   });
 
   it('shows the Lobby when there is no room and no reconnect/ended state', () => {
