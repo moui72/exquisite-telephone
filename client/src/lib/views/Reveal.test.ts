@@ -198,4 +198,71 @@ describe('Reveal view', () => {
 
     expect(exportFn).toHaveBeenCalledWith(bookA, room.players);
   });
+
+  function makeMinimalRoom(overrides: Partial<Room> = {}): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      ...overrides,
+    };
+  }
+
+  it('shows a non-host "Leave game" and "Vote to play again", which call the corresponding session methods', async () => {
+    const room = makeMinimalRoom();
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(Reveal, { props: { session } });
+
+    const leaveButton = screen.getByRole('button', { name: /leave game/i });
+    const voteButton = screen.getByRole('button', { name: /vote to play again/i });
+    expect(screen.queryByRole('button', { name: /^end game$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^play again$/i })).not.toBeInTheDocument();
+
+    await fireEvent.click(leaveButton);
+    expect(session.leaveGame).toHaveBeenCalled();
+
+    await fireEvent.click(voteButton);
+    expect(session.voteToPlayAgain).toHaveBeenCalled();
+  });
+
+  it('shows the host "End game" and "Play again" (not the non-host pair), which call the corresponding session methods', async () => {
+    const room = makeMinimalRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+
+    const endButton = screen.getByRole('button', { name: /^end game$/i });
+    const playAgainButton = screen.getByRole('button', { name: /^play again$/i });
+    expect(screen.queryByRole('button', { name: /leave game/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /vote to play again/i })).not.toBeInTheDocument();
+
+    await fireEvent.click(endButton);
+    expect(session.endGame).toHaveBeenCalled();
+
+    await fireEvent.click(playAgainButton);
+    expect(session.playAgain).toHaveBeenCalled();
+  });
+
+  it('shows the host a readiness count reflecting playAgainVotes vs players, not shown to a non-host', () => {
+    const room = makeMinimalRoom({ playAgainVotes: [grace.id] });
+
+    const hostSession = makeFakeSession({ room, player: ada, error: null });
+    render(Reveal, { props: { session: hostSession } });
+    expect(screen.getByText(/1 of 2 ready/i)).toBeInTheDocument();
+    cleanup();
+
+    const nonHostSession = makeFakeSession({ room, player: grace, error: null });
+    render(Reveal, { props: { session: nonHostSession } });
+    expect(screen.queryByText(/1 of 2 ready/i)).not.toBeInTheDocument();
+  });
 });
