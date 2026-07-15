@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-14 (very very late). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (nearly 2026-07-15). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -52,7 +52,7 @@ item), and it's a deliberate decline, not outstanding work.
 
 ## Feature Backlog
 
-3 backlogged · 0 planned · 0 tasked · 3 implemented — see
+1 backlogged · 0 planned · 2 tasked · 3 implemented — see
 `.project/features/`. Target a backlogged slug with `/ardd-plan
 <slug>`.
 
@@ -88,23 +88,26 @@ item), and it's a deliberate decline, not outstanding work.
   predated the other branch's new fields. Verified post-merge:
   typecheck 0 errors, full suite passing (shared 18 + server 75 +
   client 55 = 148 tests), lint clean.
-- `play-again-control-on-reveal-p` (backlogged) — on the Reveal page,
-  non-host players see "Leave game" (back to host/join page) and "Vote
-  to play again" (waits for the host); the host sees "End game" (back
-  to host/join page) and "Play again" (hosts a new game, auto-joining
-  all current players).
-- `animated-interactive-reveal-bo` (backlogged) — redesign the Reveal
-  page's book viewer into a fun, animated, interactive experience: one
-  book at a time, opening on a "cover" (player name + randomly
-  generated colorful abstract design), timed auto-advance revealing up
-  to 2 pages at a time, then showing everything at the end.
+- `play-again-control-on-reveal-p` + `animated-interactive-reveal-bo`
+  (**both tasked**) — planned together as Phase 3 (Reveal page): host
+  vs. non-host end-of-game controls (leave, end game, vote to play
+  again, play again with per-socket auto-rejoin into a fresh room) plus
+  a paced, animated one-book-at-a-time viewer (deterministic cover art,
+  timed 2-entry reveal steps, manual prev/next/skip controls). Also
+  closes a previously-unnoticed gap: `App.svelte` had no rendering
+  branch for `Room.status === 'ended'` at all. Plan:
+  `plan-reveal-page-2026-07-14-b586.md`. Tasks:
+  `tasks-reveal-page-036a.md` (**ready**, 0/11) — run
+  `/ardd-implement` to execute. 3 phases: data model + server
+  (T001–T004), client end-of-game controls (T005–T008), animated
+  viewer (T009–T011).
 - `host-game-moderation-controls` (backlogged) — host-facing "end
   game", "kick player", and "restart game" controls. Kicking a player
   immediately makes the current game non-continuable (without
   auto-restarting), so the host has time to kick more players before
-  manually restarting from turn 0. Not yet assigned to a phase (logged
-  after the phase grouping below was agreed; closest in spirit to
-  Phase 1's turn/room engine but not discussed at grouping time).
+  manually restarting from turn 0. Distinct from Phase 3's "play
+  again" (a fresh room after a game naturally ends) despite surface
+  similarity to "restart". Still not assigned to a phase.
 
 The `onEndGame`-not-logged gap noted during v1 implementation is now
 fixed and merged — see `plan-4401-2026-07-14-7cf3.md` /
@@ -118,11 +121,12 @@ Backlog/feedback items grouped into 3 phases (agreed 2026-07-14):
    manual conflict resolution against Phase 2 — see Feature Backlog
    above). Done.
 2. **Drawing tools** — **implemented and merged to `main`**. Done.
-3. **Reveal page** — `play-again-control-on-reveal-p` +
-   `animated-interactive-reveal-bo`. Not yet planned.
+3. **Reveal page** — **planned and tasked**, see Feature Backlog above;
+   `/ardd-implement` is ready to run.
 
 `host-game-moderation-controls` still isn't assigned to a phase (see
-Feature Backlog above).
+Feature Backlog above) — with all three original phases now
+planned/implemented, it's the only remaining backlog item.
 
 ## In Flight
 
@@ -175,19 +179,20 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 Of the 3 defects on file: 2 fixed and merged, 1 deliberately declined.
 0 open feedback files. No cross-artifact conflicts or constitution
-violations. Both defect fixes plus Phases 1 and 2 of the phase plan
-(turn/room engine, drawing tools) are implemented and merged to
-`main`. Working tree clean, no worktrees in flight, all 5 tasks files
-`completed`. Safe to /plan: yes.
+violations. Phases 1 and 2 of the phase plan (turn/room engine,
+drawing tools) are implemented and merged to `main`. Phase 3 (Reveal
+page) is planned and tasked, ready to implement
+(`tasks-reveal-page-036a.md`, 0/11). Working tree clean, no worktrees
+in flight. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-A fresh `/ardd-defects` pass would confirm both fixes clean and
-re-baseline DEFECTS.md (currently stale, still showing the two
-now-fixed items). Otherwise, Phase 3 (Reveal page — `/ardd-plan
-play-again-control-on-reveal-p animated-interactive-reveal-bo`) is
-ready to plan whenever. `host-game-moderation-controls` still needs a
-phase assignment before or when it's planned. `/ardd-diagram` on
-datamodel, infrastructure, and ui would also give this stable design a
-visual reference. Also worth a manual smoke test of the merged app
-(`/run`) given how much surface area landed in this session.
+`/ardd-implement` to execute `tasks-reveal-page-036a.md` (11 tasks, 3
+phases — the last planned work on the original 3-phase Phase Plan).
+After that lands, a fresh `/ardd-defects` pass would confirm the two
+already-fixed defects clean and re-baseline against the new Reveal
+page surface. `host-game-moderation-controls` is the only remaining
+backlogged item, ready to plan whenever. `/ardd-diagram` on datamodel,
+infrastructure, and ui would also give this stable design a visual
+reference. Also still worth a manual smoke test of the merged app
+(`/run`) given how much surface area has landed this session.
