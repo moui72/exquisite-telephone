@@ -1,9 +1,11 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
+import { generateCoverArt } from '../reveal/coverArt.js';
 import Reveal from './Reveal.svelte';
 
 afterEach(() => cleanup());
@@ -31,7 +33,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
 }
 
 describe('Reveal view', () => {
-  it("renders each book's full ordered chain of entries", () => {
+  it("renders each book's full ordered chain of entries", async () => {
     const strokes = serializeDrawOps([
       {
         type: 'stroke',
@@ -83,12 +85,13 @@ describe('Reveal view', () => {
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
     expect(screen.getByText('a spoonful of sugar')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /drawing preview/i })).toBeInTheDocument();
   });
 
-  it('renders one section per book, in order', () => {
+  it('renders one section per book, in order', async () => {
     const bookA: Book = {
       id: 'book-a',
       roomId,
@@ -136,6 +139,7 @@ describe('Reveal view', () => {
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
     expect(screen.getByText('phrase A')).toBeInTheDocument();
     expect(screen.getByText('phrase B')).toBeInTheDocument();
@@ -190,6 +194,7 @@ describe('Reveal view', () => {
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 
     render(Reveal, { props: { session, exportFn } });
+    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
     const saveButtons = screen.getAllByRole('button', { name: /save/i });
     expect(saveButtons).toHaveLength(2);
@@ -264,5 +269,134 @@ describe('Reveal view', () => {
     const nonHostSession = makeFakeSession({ room, player: grace, error: null });
     render(Reveal, { props: { session: nonHostSession } });
     expect(screen.queryByText(/1 of 2 ready/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)', () => {
+  function makeEntry(bookId: string, authorId: string, position: number, content: string) {
+    return {
+      id: `${bookId}-${position}`,
+      bookId,
+      authorId,
+      position,
+      type: 'text' as const,
+      content,
+    };
+  }
+
+  function makeTwoBookRoom(): Room {
+    const bookA: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        makeEntry('book-a', ada.id, 0, 'a0'),
+        makeEntry('book-a', grace.id, 1, 'a1'),
+        makeEntry('book-a', ada.id, 2, 'a2'),
+        makeEntry('book-a', grace.id, 3, 'a3'),
+        makeEntry('book-a', ada.id, 4, 'a4'),
+      ],
+    };
+    const bookB: Book = {
+      id: 'book-b',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('book-b', grace.id, 0, 'b0')],
+    };
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [bookA, bookB],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+    };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("on initial render, only the first book's cover is shown (author name + generateCoverArt output), no entries visible yet", async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
+    expect(screen.queryByText('a0')).not.toBeInTheDocument();
+    expect(screen.queryByText('b0')).not.toBeInTheDocument();
+    const art = generateCoverArt(ada.id);
+    expect(document.querySelectorAll('circle')).toHaveLength(art.shapes.length);
+  });
+
+  it('reveals up to 2 entries after the 2.5s cover delay plus one 4s tick', async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    vi.advanceTimersByTime(2500 + 4000);
+    await tick();
+
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a1')).toBeInTheDocument();
+    expect(screen.queryByText('a2')).not.toBeInTheDocument();
+  });
+
+  it("fully reveals the book then advances to the next book's cover after enough ticks", async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    // cover delay + 3 ticks reveals all 5 entries of book A (2+2+1) and
+    // moves on to book B's cover.
+    vi.advanceTimersByTime(2500 + 4000 * 3);
+    await tick();
+
+    expect(screen.getByText(/grace.s book/i)).toBeInTheDocument();
+    expect(screen.queryByText('b0')).not.toBeInTheDocument();
+  });
+
+  it('a "show everything" control immediately renders every book\'s full chain regardless of timer state', async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
+
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a4')).toBeInTheDocument();
+    expect(screen.getByText('b0')).toBeInTheDocument();
+  });
+
+  it('manual previous/next controls step between books without waiting for the timer', async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/grace.s book/i)).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: /^previous$/i }));
+    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
   });
 });
