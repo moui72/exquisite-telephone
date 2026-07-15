@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-14 (very late). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-14 (very very late). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -24,21 +24,23 @@ _(none)_
 ## Code-vs-Artifact Defects
 
 3 defects on file — see `.project/DEFECTS.md`, last checked 2026-07-14
-(read-only summary below; not yet re-verified against the two fixes
-applied since). All three surfaced and dispositioned in
-`plan-4401-2026-07-14-7cf3.md`:
+(read-only summary below; stale w.r.t. the two fixes landed since —
+next `/ardd-defects` pass will confirm both clean). All three surfaced
+and dispositioned in `plan-4401-2026-07-14-7cf3.md`:
 - **drift** (`constitution.md`, Principle IX, `4056be9c`): `onEndGame`
-  doesn't log `game_completed` on the host-ended path. **Fix planned
-  and tasked** — `tasks-4401-7214.md` T001, `ready`, not yet
-  implemented.
+  didn't log `game_completed` on the host-ended path. **Fixed and
+  merged** — `tasks-4401-7214.md` completed (1/1); `onEndGame` now
+  logs `{ event: 'game_completed', outcome: 'success', roomId, reason:
+  'host-ended' }`.
 - **drift** (`constitution.md`, Quality Standards, `17a7ea0a`): no
   artifact states a performance budget for any real-time operation.
   **Declined** for now — recorded as surfaced, no fix planned.
 - **cosmetic** (`infrastructure.md`, `a5b7918a`): the Realtime Sync
-  section named a nonexistent `onDrawStroke` handler. **Already
-  fixed** — corrected directly in `infrastructure.md` during planning
-  (doc-only, no code task needed); a fresh `/ardd-defects` pass would
-  confirm it clean.
+  section named a nonexistent `onDrawStroke` handler. **Fixed** —
+  corrected directly in `infrastructure.md` during planning.
+
+Only 1 of 3 defects remains open (the declined performance-budgets
+item), and it's a deliberate decline, not outstanding work.
 
 ## Feedback
 
@@ -105,11 +107,8 @@ applied since). All three surfaced and dispositioned in
   Phase 1's turn/room engine but not discussed at grouping time).
 
 The `onEndGame`-not-logged gap noted during v1 implementation is now
-planned and tasked — see `plan-4401-2026-07-14-7cf3.md` /
-`tasks-4401-7214.md` in Code-vs-Artifact Defects above. The
-turn-room-engine plan's timeout-vote-specific logging (T015) is a
-distinct code path from plain start-game/end-game and doesn't cover
-this gap on its own.
+fixed and merged — see `plan-4401-2026-07-14-7cf3.md` /
+`tasks-4401-7214.md` in Code-vs-Artifact Defects above.
 
 ## Phase Plan
 
@@ -174,23 +173,21 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-Of the 3 defects on file: 1 fixed (doc-only), 1 planned and tasked
-(`tasks-4401-7214.md`, 0/1, ready), 1 declined. 0 open feedback files.
-No cross-artifact conflicts or constitution violations. Phases 1 and 2
-of the phase plan (turn/room engine, drawing tools) are both
-implemented and merged to `main`. Working tree clean, no worktrees in
-flight. Safe to /plan: yes.
+Of the 3 defects on file: 2 fixed and merged, 1 deliberately declined.
+0 open feedback files. No cross-artifact conflicts or constitution
+violations. Both defect fixes plus Phases 1 and 2 of the phase plan
+(turn/room engine, drawing tools) are implemented and merged to
+`main`. Working tree clean, no worktrees in flight, all 5 tasks files
+`completed`. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-implement` to execute `tasks-4401-7214.md` (1 small task —
-`onEndGame` logging fix). After that lands, a fresh `/ardd-defects`
-pass would confirm both fixes and re-baseline against the declined
-performance-budgets item. Otherwise, Phase 3 (Reveal page —
-`/ardd-plan play-again-control-on-reveal-p
-animated-interactive-reveal-bo`) is ready to plan whenever.
-`host-game-moderation-controls` still needs a phase assignment before
-or when it's planned. `/ardd-diagram` on datamodel, infrastructure,
-and ui would also give this stable design a visual reference. Also
-worth a manual smoke test of the merged app (`/run`) given how much
-surface area landed in this session.
+A fresh `/ardd-defects` pass would confirm both fixes clean and
+re-baseline DEFECTS.md (currently stale, still showing the two
+now-fixed items). Otherwise, Phase 3 (Reveal page — `/ardd-plan
+play-again-control-on-reveal-p animated-interactive-reveal-bo`) is
+ready to plan whenever. `host-game-moderation-controls` still needs a
+phase assignment before or when it's planned. `/ardd-diagram` on
+datamodel, infrastructure, and ui would also give this stable design a
+visual reference. Also worth a manual smoke test of the merged app
+(`/run`) given how much surface area landed in this session.
