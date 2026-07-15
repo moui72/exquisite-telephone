@@ -55,26 +55,28 @@ describe('onSetMonochrome', () => {
   it('lets the host set Room.monochromeOnly and broadcasts the updated room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
     const hostId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    await new Promise<void>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, () => resolve());
-    });
+    await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
 
     const roomUpdatePromise = waitForEvent<{ room: SetMonochromeAck['room'] }>(
       clientB,
       'roomUpdated',
     );
 
-    const ack = await new Promise<SetMonochromeAck>((resolve) => {
-      clientA.emit('set_monochrome', { roomId, playerId: hostId, monochromeOnly: true }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_monochrome', {
+        roomId,
+        playerId: hostId,
+        monochromeOnly: true,
+      })) as SetMonochromeAck;
 
     expect(ack.error).toBeUndefined();
     expect(ack.room?.monochromeOnly).toBe(true);
@@ -86,24 +88,24 @@ describe('onSetMonochrome', () => {
   it('rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
 
-    const ack = await new Promise<SetMonochromeAck>((resolve) => {
-      clientB.emit(
-        'set_monochrome',
-        { roomId, playerId: joinAck.player!.id, monochromeOnly: true },
-        resolve,
-      );
-    });
+    const ack = (await clientB
+      .timeout(5000)
+      .emitWithAck('set_monochrome', {
+        roomId,
+        playerId: joinAck.player!.id,
+        monochromeOnly: true,
+      })) as SetMonochromeAck;
 
     expect(ack.error).toBe('not-host');
   });
@@ -111,19 +113,27 @@ describe('onSetMonochrome', () => {
   it('rejects once the room has left the lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
     const hostId = createAck.room!.hostPlayerId;
 
-    await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: hostId, acknowledgeSmallGame: true }, resolve);
-    });
+    (await clientA
+      .timeout(5000)
+      .emitWithAck('startGame', {
+        roomId,
+        playerId: hostId,
+        acknowledgeSmallGame: true,
+      })) as StartGameAck;
 
-    const ack = await new Promise<SetMonochromeAck>((resolve) => {
-      clientA.emit('set_monochrome', { roomId, playerId: hostId, monochromeOnly: true }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_monochrome', {
+        roomId,
+        playerId: hostId,
+        monochromeOnly: true,
+      })) as SetMonochromeAck;
 
     expect(ack.error).toBe('room-not-in-lobby');
   });
@@ -575,7 +585,7 @@ describe('onEndGame observability', () => {
  * (datamodel.md Normalization Rules — End-of-game controls).
  */
 describe('onVoteToPlayAgain', () => {
-  it("adds playerId to Room.playAgainVotes and broadcasts roomUpdated", () => {
+  it('adds playerId to Room.playAgainVotes and broadcasts roomUpdated', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;

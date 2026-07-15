@@ -44,9 +44,9 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
 
-    const ack = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
 
     expect(ack.error).toBeUndefined();
     expect(ack.room?.status).toBe('lobby');
@@ -58,16 +58,16 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   it('onJoinRoom adds a player to an existing room and both clients are in the socket.io room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
 
     expect(joinAck.error).toBeUndefined();
     expect(joinAck.room?.players).toHaveLength(2);
@@ -78,9 +78,9 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
 
-    const ack = await new Promise<JoinRoomAck>((resolve) => {
-      clientA.emit('joinRoom', { roomId: 'NOPE1', playerName: 'Grace' }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId: 'NOPE1', playerName: 'Grace' })) as JoinRoomAck;
 
     expect(ack.error).toBe('room-not-found');
     expect(ack.room).toBeUndefined();
@@ -89,24 +89,22 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   it('onJoinRoom rejects a late join once the game has started (ui.md Error state)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
-    await new Promise<void>((resolve) => {
-      clientA.emit(
-        'startGame',
-        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
-        () => resolve(),
-      );
+    await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: createAck.room!.hostPlayerId,
+      acknowledgeSmallGame: true,
     });
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
 
     expect(joinAck.error).toBe('room-already-started');
     expect(joinAck.room).toBeUndefined();
@@ -116,18 +114,16 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   it('onStartGame lets the host start the game, moving the room out of lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
-    const ack = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit(
-        'startGame',
-        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
-        resolve,
-      );
-    });
+    const ack = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: createAck.room!.hostPlayerId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
 
     expect(ack.error).toBeUndefined();
     expect(ack.room?.status).toBe('writing');
@@ -136,24 +132,20 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   it('onStartGame creates one empty Book per player, one per originAuthor', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    await new Promise<void>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, () => resolve());
-    });
+    await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
 
-    const ack = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit(
-        'startGame',
-        { roomId, playerId: createAck.room!.hostPlayerId, acknowledgeSmallGame: true },
-        resolve,
-      );
-    });
+    const ack = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: createAck.room!.hostPlayerId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
 
     expect(ack.room?.books).toHaveLength(2);
     expect(ack.room?.books.every((book) => book.entries.length === 0)).toBe(true);
@@ -165,20 +157,20 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   it('onStartGame rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
 
-    const ack = await new Promise<StartGameAck>((resolve) => {
-      clientB.emit('startGame', { roomId, playerId: joinAck.player!.id }, resolve);
-    });
+    const ack = (await clientB
+      .timeout(5000)
+      .emitWithAck('startGame', { roomId, playerId: joinAck.player!.id })) as StartGameAck;
 
     expect(ack.error).toBe('not-host');
   });
@@ -208,26 +200,24 @@ describe('onSubmitEntry', () => {
   async function setUpTwoPlayerGame() {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinAck.player!.id;
 
-    const startAck = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit(
-        'startGame',
-        { roomId, playerId: adaId, acknowledgeSmallGame: true },
-        resolve,
-      );
-    });
+    const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: adaId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
 
     return { roomId, adaId, graceId, books: startAck.room!.books };
   }
@@ -236,13 +226,12 @@ describe('onSubmitEntry', () => {
     const { roomId, adaId, books } = await setUpTwoPlayerGame();
     const adaBook = books.find((b) => b.originAuthorId === adaId)!;
 
-    const ack = await new Promise<SubmitEntryAck>((resolve) => {
-      clientA.emit(
-        'submitEntry',
-        { roomId, playerId: adaId, bookId: adaBook.id, content: 'a spoonful of sugar' },
-        resolve,
-      );
-    });
+    const ack = (await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: adaBook.id,
+      content: 'a spoonful of sugar',
+    })) as SubmitEntryAck;
 
     expect(ack.error).toBeUndefined();
     const updatedBook = ack.room?.books.find((b) => b.id === adaBook.id);
@@ -259,13 +248,12 @@ describe('onSubmitEntry', () => {
     const { roomId, graceId, books } = await setUpTwoPlayerGame();
     const adaBook = books.find((b) => b.originAuthorId !== graceId)!;
 
-    const ack = await new Promise<SubmitEntryAck>((resolve) => {
-      clientB.emit(
-        'submitEntry',
-        { roomId, playerId: graceId, bookId: adaBook.id, content: 'wrong turn' },
-        resolve,
-      );
-    });
+    const ack = (await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: adaBook.id,
+      content: 'wrong turn',
+    })) as SubmitEntryAck;
 
     expect(ack.error).toBe('not-your-turn');
   });
@@ -276,36 +264,32 @@ describe('onSubmitEntry', () => {
     const graceBook = books.find((b) => b.originAuthorId === graceId)!;
 
     // Round 1: each player writes the origin prompt for their own book.
-    await new Promise<SubmitEntryAck>((resolve) => {
-      clientA.emit(
-        'submitEntry',
-        { roomId, playerId: adaId, bookId: adaBook.id, content: 'phrase one' },
-        resolve,
-      );
-    });
-    await new Promise<SubmitEntryAck>((resolve) => {
-      clientB.emit(
-        'submitEntry',
-        { roomId, playerId: graceId, bookId: graceBook.id, content: 'phrase two' },
-        resolve,
-      );
-    });
+    (await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: adaBook.id,
+      content: 'phrase one',
+    })) as SubmitEntryAck;
+    (await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: graceBook.id,
+      content: 'phrase two',
+    })) as SubmitEntryAck;
 
     // Round 2: each player draws the other's book (2-player rotation).
-    await new Promise<SubmitEntryAck>((resolve) => {
-      clientB.emit(
-        'submitEntry',
-        { roomId, playerId: graceId, bookId: adaBook.id, content: 'stroke-data-1' },
-        resolve,
-      );
-    });
-    const finalAck = await new Promise<SubmitEntryAck>((resolve) => {
-      clientA.emit(
-        'submitEntry',
-        { roomId, playerId: adaId, bookId: graceBook.id, content: 'stroke-data-2' },
-        resolve,
-      );
-    });
+    (await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: adaBook.id,
+      content: 'stroke-data-1',
+    })) as SubmitEntryAck;
+    const finalAck = (await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: graceBook.id,
+      content: 'stroke-data-2',
+    })) as SubmitEntryAck;
 
     expect(finalAck.room?.status).toBe('reveal');
   });
@@ -333,9 +317,9 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
   it('a dropped connection can resume the same seat with its session token', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const token = createAck.player!.sessionToken;
     const roomId = createAck.room!.id;
     const playerId = createAck.player!.id;
@@ -351,9 +335,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const rejoinAck = await new Promise<RejoinAck>((resolve) => {
-      clientA.emit('rejoin', { token }, resolve);
-    });
+    const rejoinAck = (await clientA.timeout(5000).emitWithAck('rejoin', { token })) as RejoinAck;
 
     expect(rejoinAck.error).toBeUndefined();
     expect(rejoinAck.player?.id).toBe(createAck.player!.id);
@@ -365,9 +347,9 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
 
-    const ack = await new Promise<RejoinAck>((resolve) => {
-      clientA.emit('rejoin', { token: 'never-issued' }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('rejoin', { token: 'never-issued' })) as RejoinAck;
 
     expect(ack.error).toBe('invalid-token');
     expect(ack.room).toBeUndefined();
@@ -376,9 +358,9 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
   it('marks a disconnected player as not connected without removing their seat', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
     const playerId = createAck.player!.id;
 
@@ -416,21 +398,18 @@ describe('rejoin-after-room-ended rejection', () => {
   it('onEndGame lets the host mark the room ended', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
 
     // Put the room into 'reveal' directly — bypassing the full game flow,
     // matching how onPlayAgain's tests set up preconditions.
     store.getRoom(createAck.room!.id)!.status = 'reveal';
 
-    const ack = await new Promise<EndGameAck>((resolve) => {
-      clientA.emit(
-        'endGame',
-        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
-        resolve,
-      );
-    });
+    const ack = (await clientA.timeout(5000).emitWithAck('endGame', {
+      roomId: createAck.room!.id,
+      playerId: createAck.room!.hostPlayerId,
+    })) as EndGameAck;
 
     expect(ack.error).toBeUndefined();
     expect(ack.room?.status).toBe('ended');
@@ -439,29 +418,23 @@ describe('rejoin-after-room-ended rejection', () => {
   it('onEndGame rejects when the room is not in reveal', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
 
-    const lobbyAck = await new Promise<EndGameAck>((resolve) => {
-      clientA.emit(
-        'endGame',
-        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
-        resolve,
-      );
-    });
+    const lobbyAck = (await clientA.timeout(5000).emitWithAck('endGame', {
+      roomId: createAck.room!.id,
+      playerId: createAck.room!.hostPlayerId,
+    })) as EndGameAck;
     expect(lobbyAck.error).toBe('room-not-in-reveal');
     expect(store.getRoom(createAck.room!.id)?.status).toBe('lobby');
 
     store.getRoom(createAck.room!.id)!.status = 'writing';
 
-    const writingAck = await new Promise<EndGameAck>((resolve) => {
-      clientA.emit(
-        'endGame',
-        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
-        resolve,
-      );
-    });
+    const writingAck = (await clientA.timeout(5000).emitWithAck('endGame', {
+      roomId: createAck.room!.id,
+      playerId: createAck.room!.hostPlayerId,
+    })) as EndGameAck;
     expect(writingAck.error).toBe('room-not-in-reveal');
     expect(store.getRoom(createAck.room!.id)?.status).toBe('writing');
   });
@@ -469,22 +442,19 @@ describe('rejoin-after-room-ended rejection', () => {
   it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const token = createAck.player!.sessionToken;
     const roomId = createAck.room!.id;
     const playerId = createAck.player!.id;
 
     store.getRoom(createAck.room!.id)!.status = 'reveal';
 
-    await new Promise<EndGameAck>((resolve) => {
-      clientA.emit(
-        'endGame',
-        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
-        resolve,
-      );
-    });
+    (await clientA.timeout(5000).emitWithAck('endGame', {
+      roomId: createAck.room!.id,
+      playerId: createAck.room!.hostPlayerId,
+    })) as EndGameAck;
 
     clientA.close();
     await waitFor(
@@ -494,9 +464,7 @@ describe('rejoin-after-room-ended rejection', () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
 
-    const rejoinAck = await new Promise<RejoinAck>((resolve) => {
-      clientA.emit('rejoin', { token }, resolve);
-    });
+    const rejoinAck = (await clientA.timeout(5000).emitWithAck('rejoin', { token })) as RejoinAck;
 
     expect(rejoinAck.error).toBe('game-ended');
     expect(rejoinAck.room).toBeUndefined();
@@ -535,52 +503,50 @@ describe('observability (structured log events)', () => {
   it('logs room creation, join, turn advance, and game completion with outcome and identifiers', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinAck.player!.id;
 
-    const startAck = await new Promise<StartGameAck>((resolve) => {
-      clientA.emit('startGame', { roomId, playerId: adaId, acknowledgeSmallGame: true }, resolve);
-    });
+    const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: adaId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
     const adaBook = startAck.room!.books.find((b) => b.originAuthorId === adaId)!;
     const graceBook = startAck.room!.books.find((b) => b.originAuthorId === graceId)!;
 
-    await new Promise((resolve) => {
-      clientA.emit(
-        'submitEntry',
-        { roomId, playerId: adaId, bookId: adaBook.id, content: 'phrase one' },
-        resolve,
-      );
+    await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: adaBook.id,
+      content: 'phrase one',
     });
-    await new Promise((resolve) => {
-      clientB.emit(
-        'submitEntry',
-        { roomId, playerId: graceId, bookId: graceBook.id, content: 'phrase two' },
-        resolve,
-      );
+    await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: graceBook.id,
+      content: 'phrase two',
     });
-    await new Promise((resolve) => {
-      clientB.emit(
-        'submitEntry',
-        { roomId, playerId: graceId, bookId: adaBook.id, content: 'stroke-1' },
-        resolve,
-      );
+    await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: adaBook.id,
+      content: 'stroke-1',
     });
-    await new Promise((resolve) => {
-      clientA.emit(
-        'submitEntry',
-        { roomId, playerId: adaId, bookId: graceBook.id, content: 'stroke-2' },
-        resolve,
-      );
+    await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: graceBook.id,
+      content: 'stroke-2',
     });
 
     const events = parsedEvents();
@@ -607,9 +573,7 @@ describe('observability (structured log events)', () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
 
-    await new Promise((resolve) => {
-      clientA.emit('rejoin', { token: 'never-issued' }, resolve);
-    });
+    await clientA.timeout(5000).emitWithAck('rejoin', { token: 'never-issued' });
 
     const events = parsedEvents();
     expect(events).toContainEqual(
@@ -624,9 +588,9 @@ describe('observability (structured log events)', () => {
   it('logs a successful reconnect and a player leaving (disconnect)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const token = createAck.player!.sessionToken;
     const roomId = createAck.room!.id;
     const playerId = createAck.player!.id;
@@ -639,9 +603,7 @@ describe('observability (structured log events)', () => {
 
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    await new Promise((resolve) => {
-      clientA.emit('rejoin', { token }, resolve);
-    });
+    await clientA.timeout(5000).emitWithAck('rejoin', { token });
 
     const events = parsedEvents();
     expect(events).toContainEqual(
@@ -694,20 +656,20 @@ describe('onPlayAgain', () => {
     return lines.map((line) => JSON.parse(line));
   }
 
-  it("gives the host a new room/player, pushes the other client its own new roomChanged, and logs room_created with reason play-again", async () => {
+  it('gives the host a new room/player, pushes the other client its own new roomChanged, and logs room_created with reason play-again', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const oldRoomId = createAck.room!.id;
     const hostId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId: oldRoomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinAck.player!.id;
 
     // Put the room into 'reveal' directly — bypassing the full game flow,
@@ -719,9 +681,9 @@ describe('onPlayAgain', () => {
       player: PlayAgainAck['player'];
     }>(clientB, 'roomChanged');
 
-    const ack = await new Promise<PlayAgainAck>((resolve) => {
-      clientA.emit('playAgain', { roomId: oldRoomId, playerId: hostId }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('playAgain', { roomId: oldRoomId, playerId: hostId })) as PlayAgainAck;
 
     expect(ack.error).toBeUndefined();
     expect(ack.room).toBeDefined();
@@ -749,22 +711,23 @@ describe('onPlayAgain', () => {
   it('rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const oldRoomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientB, 'connect');
-    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
-      clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
-    });
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId: oldRoomId, playerName: 'Grace' })) as JoinRoomAck;
 
     store.getRoom(oldRoomId)!.status = 'reveal';
 
-    const ack = await new Promise<PlayAgainAck>((resolve) => {
-      clientB.emit('playAgain', { roomId: oldRoomId, playerId: joinAck.player!.id }, resolve);
-    });
+    const ack = (await clientB.timeout(5000).emitWithAck('playAgain', {
+      roomId: oldRoomId,
+      playerId: joinAck.player!.id,
+    })) as PlayAgainAck;
 
     expect(ack.error).toBe('not-host');
   });
@@ -772,15 +735,15 @@ describe('onPlayAgain', () => {
   it('rejects when the room is not in reveal', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
-    const createAck = await new Promise<CreateRoomAck>((resolve) => {
-      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
-    });
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const oldRoomId = createAck.room!.id;
     const hostId = createAck.room!.hostPlayerId;
 
-    const ack = await new Promise<PlayAgainAck>((resolve) => {
-      clientA.emit('playAgain', { roomId: oldRoomId, playerId: hostId }, resolve);
-    });
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('playAgain', { roomId: oldRoomId, playerId: hostId })) as PlayAgainAck;
 
     expect(ack.error).toBe('room-not-in-reveal');
   });
