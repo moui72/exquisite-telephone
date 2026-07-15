@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-15 (later still). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-15 (evening). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -24,19 +24,19 @@ _(none)_
 ## Code-vs-Artifact Defects
 
 3 defects on file — see `.project/DEFECTS.md`, last checked 2026-07-14
-(read-only summary below; stale w.r.t. the fix-up plan below, not yet
-implemented). `infrastructure.md` is fully clean — the earlier
-`onDrawStroke` fix holds up, and the handler list matches exactly.
+(read-only summary below; stale w.r.t. the two fixes landed since —
+next `/ardd-defects` pass will confirm both clean).
 - **drift** (`datamodel.md`, `f333f65c`): the End-of-game-controls
   Normalization Rule claims all three actions (Leave/End/Play again)
   are "only meaningful while `Room.status === 'reveal'`", but only
-  `onPlayAgain` actually enforces this server-side. **Fix planned and
-  tasked** — `tasks-reveal-defects-c65e.md` T001/T002, `ready`, not
-  yet implemented.
+  `onPlayAgain` actually enforced this server-side. **Fixed and
+  merged** — `tasks-reveal-defects-c65e.md` completed (3/3);
+  `onEndGame` and `onVoteToPlayAgain` now both reject with
+  `room-not-in-reveal` outside `status === 'reveal'`.
 - **drift** (`ui.md`, `aff300d1`): the Reveal View claims the PNG save
-  control is "available in both modes," but it's only rendered in the
-  static show-everything grid. **Fix planned and tasked** — same
-  tasks file, T003.
+  control is "available in both modes," but it was only rendered in
+  the static show-everything grid. **Fixed and merged** — the animated
+  mode now has the same "Save as PNG" button.
 - **drift** (`constitution.md`, Quality Standards, `17a7ea0a`): no
   artifact states a performance budget for any real-time operation.
   Still deliberately declined (`plan-4401-2026-07-14-7cf3.md`) —
@@ -178,19 +178,20 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**All three phases of the agreed Phase Plan are implemented and merged
-to `main`.** Of the 3 defects on file, 2 are planned and tasked
-(`tasks-reveal-defects-c65e.md`, 0/3, ready), 1 remains a deliberate
-decline. 0 open feedback files. No cross-artifact conflicts or
-constitution violations. Working tree clean, no worktrees in flight.
-Safe to /plan: yes.
+**All three phases of the agreed Phase Plan, plus both defect fix-up
+plans, are implemented and merged to `main`.** Of the 3 defects on
+file: 2 fixed and merged, 1 deliberately declined. 0 open feedback
+files. No cross-artifact conflicts or constitution violations. Working
+tree clean, no worktrees in flight, all 7 tasks files `completed`.
+Safe to /plan: yes. (One test flaked on a single full-suite run during
+verification — passed clean on two immediate re-runs; not treated as
+a regression, but worth a glance if it recurs — likely timing
+sensitivity in one of the real-Socket.IO integration tests.)
 
 ## Recommended Next Step
 
-`/ardd-implement` to execute `tasks-reveal-defects-c65e.md` (3 small
-tasks, 2 phases — status guards on `onEndGame`/`onVoteToPlayAgain`,
-plus the missing save button in animated Reveal mode). After that
-lands, a fresh `/ardd-defects` pass would confirm both clean.
+A fresh `/ardd-defects` pass would confirm the two just-fixed items
+clean (last verified 2026-07-14, before this fix landed).
 `host-game-moderation-controls` is the only remaining backlogged item,
 ready to plan whenever (`/ardd-plan host-game-moderation-controls`).
 `/ardd-diagram` on datamodel, infrastructure, and ui would also give
