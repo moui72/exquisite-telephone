@@ -2,29 +2,39 @@
 
 _Last verified: 2026-07-14_
 
-## constitution.md
-
-- **Claim:** Principle IX (Observability) — "Non-trivial server operations (room creation, player join/leave/reconnect, turn advance, game completion) emit structured, machine-readable log events, including outcome (success/failure) and identifiers sufficient to reproduce an error without a debugger attached."
-  **Actual:** `onEndGame` (`server/src/socket/handlers.ts:251-270`) transitions `Room.status` to `'ended'` — a "game completion" operation — without emitting any log event at all. The other game-completion path (natural completion via `onSubmitEntry` when every book finishes, `server/src/socket/handlers.ts:355-358`) does correctly emit a `game_completed` event; `onEndGame`'s host-triggered early termination does not.
-  **Location:** `server/src/socket/handlers.ts:251-270`
-  **Severity:** drift (pre-existing gap, not introduced this session — already informally tracked as an outstanding item in STATUS.md's Feature Backlog notes, but not previously recorded here as a defect)
-
-- **Claim:** Quality Standards — "Performance Budgets: any user-observable real-time operation (stroke sync latency, turn-passing, reconnect time) has a stated performance budget, defined per feature when the operation is added."
-  **Actual:** No artifact states a performance budget for any real-time operation — not the three the principle names as examples (stroke sync, turn-passing, reconnect time), and not the two new ones added this session (turn-timer countdown accuracy/tick rate, timeout-vote resolution latency). A repo-wide search of `.project/artifacts/*.md` for "budget"/"latency"/"performance" finds only the principle's own text.
-  **Location:** `.project/artifacts/constitution.md:120-122` (the claim itself); no corresponding budget exists anywhere in `ui.md` or `infrastructure.md`
-  **Severity:** drift (pre-existing across the whole project, not newly introduced this session)
-
-## infrastructure.md
-
-- **Claim:** Realtime Sync — "Server-side event handling is decomposed by concern (Principle VIII): one named handler per event type (e.g. `onJoinRoom`, `onSubmitEntry`, `onDrawStroke`, `onDisconnect`)."
-  **Actual:** `onDrawStroke` does not exist anywhere in the codebase — there is no per-stroke real-time sync handler. Drawing entries are synced only once, in full, via `onSubmitEntry` when a player finishes their turn (per-stroke data never leaves the client until then). The other three named handlers (`onJoinRoom`, `onSubmitEntry`, `onDisconnect`) do exist as described; only the fourth example is fictitious.
-  **Location:** `.project/artifacts/infrastructure.md:36-39` (the claim); `server/src/socket/server.ts` (the real, complete event list: `createRoom`, `joinRoom`, `startGame`, `endGame`, `set_monochrome`, `setTurnTimer`, `submitEntry`, `castTimeoutVote`, `rejoin`, `disconnect`)
-  **Severity:** cosmetic (an inaccurate illustrative example in prose; doesn't affect behavior, Principle VIII's decomposition requirement is otherwise genuinely upheld)
-
 ## datamodel.md
 
-No defects found — `Room`, `Player`, `Book`, `Entry`, and `TimeoutVote` in `shared/src/types.ts` match the documented fields exactly, including the fields added this session (`monochromeOnly`, `turnTimerMinutes`, `roundStartedAt`, `timerExtensions`, `pendingTimeoutVote`, `Entry.emptyByTimeout`). The draw-op format (`shared/src/strokeData.ts`'s `StrokeOp`/`FillOp`/`DrawOp`/`DrawOps`/`serializeDrawOps`/`parseDrawOps`) matches the documented `Entry.content` shape exactly. All Normalization Rules verified against implementation: round-gating (`shared/src/turnAdvancement.ts`'s `currentRoundFor`/`computeNextEntry`), minimum player count (`onStartGame`'s `MINIMUM_RECOMMENDED_PLAYERS` guard), and the turn-timer/timeout-vote flow (`server/src/domain/timerSweep.ts`'s `resolveTimeoutVote`/`sweepRoom`, including the plurality resolution, force-empty fallback, and per-player deadline extensions) all match as documented.
+- **Claim:** Normalization Rules — End-of-game controls: "Three distinct actions, all only meaningful while `Room.status === 'reveal'`" (Leave game, End game, Play again).
+  **Actual:** Only `onPlayAgain` actually enforces this server-side (`server/src/socket/handlers.ts`, rejects with `room-not-in-reveal` when `oldRoom.status !== 'reveal'`). `onEndGame` has no status guard at all — it accepts the transition from any `Room.status` (pre-existing behavior, unchanged by this session's work, but the artifact's new wording now overclaims a restriction that was never actually true for this handler). `onVoteToPlayAgain` also has no status guard — a vote is accepted and pushed onto `Room.playAgainVotes` regardless of room status, contradicting the `Room.playAgainVotes` field's own documented invariant ("Never populated outside `status === 'reveal'`") a few lines above it in the same artifact.
+  **Location:** `server/src/socket/handlers.ts:257-282` (`onEndGame`), `server/src/socket/handlers.ts:302-320` (`onVoteToPlayAgain`)
+  **Severity:** drift (not exploitable through the normal UI, since the buttons are only rendered on the Reveal page client-side, but the artifact states a server-level invariant that isn't actually enforced)
 
 ## ui.md
 
-No defects found — Lobby View (monochrome toggle, player-count guidance/override checkbox, turn-timer selector), Writing/Drawing View (coordinate-scaling fix, color/width/fill toolbar, round-gated wait state, countdown, timeout-vote prompt), Reveal View, and States all match the implementation exactly (`Lobby.svelte`, `DrawingCanvas.svelte`, `WritingDrawing.svelte`, `Reveal.svelte`, `App.svelte`, `TurnStatus.svelte`).
+- **Claim:** Reveal View — "Each book has a save control (available in both modes) that exports it as a PNG image strip."
+  **Actual:** The "Save as PNG" button only appears in the static show-everything grid (the `{:else}` branch). The animated one-book-at-a-time mode (`{#if !showEverything && currentBook}` branch) renders no save control at all — a player can't export a book while it's still in the paced/animated view, only after switching to (or auto-advancing into) show-everything mode.
+  **Location:** `client/src/lib/views/Reveal.svelte` (compare the animated-mode section, no `handleSave` button, against the show-everything section, which has one)
+  **Severity:** drift (a stated feature explicitly promised in both modes is only implemented in one)
+
+## constitution.md
+
+- **Claim:** Quality Standards — "Performance Budgets: any user-observable real-time operation (stroke sync latency, turn-passing, reconnect time) has a stated performance budget, defined per feature when the operation is added."
+  **Actual:** Still no artifact states a performance budget for any real-time operation — unchanged from the previous pass (2026-07-14, earlier same day). Deliberately declined as a fix in `plan-4401-2026-07-14-7cf3.md`; carried forward here rather than dropped, since declining a fix doesn't make the underlying claim true.
+  **Location:** `.project/artifacts/constitution.md:120-122` (the claim itself); no corresponding budget exists anywhere in `ui.md` or `infrastructure.md`
+  **Severity:** drift (pre-existing across the whole project; a known, standing decline)
+
+## infrastructure.md
+
+No defects found — the Realtime Sync handler list (`onCreateRoom`,
+`onJoinRoom`, `onStartGame`, `onEndGame`, `onSetMonochrome`,
+`onSetTurnTimer`, `onSubmitEntry`, `onCastTimeoutVote`,
+`onVoteToPlayAgain`, `onPlayAgain`, `onRejoin`, `onDisconnect`) now
+matches `server/src/socket/handlers.ts` exactly — the previous
+`onDrawStroke` fictitious-example defect (fixed 2026-07-14, earlier
+same day) holds up on re-verification. The `onPlayAgain` per-socket
+`roomChanged` unicast description matches `server/src/socket/handlers.ts`'s
+implementation exactly (local `io.sockets.adapter.rooms` /
+`io.sockets.sockets` lookup, not the cross-process `fetchSockets()`
+API). Turn Timer Sweep, Session Store, Export Pipeline, and Deployment
+sections all still match their implementations, unaffected by this
+session's changes.
