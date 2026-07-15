@@ -1,7 +1,7 @@
 ---
 plan: plan-reveal-page-2026-07-14-b586.md
 generated: 2026-07-14
-status: ready
+status: in-progress
 ---
 
 # Tasks
