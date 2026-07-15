@@ -201,9 +201,18 @@
 
     {#if !showEverything && currentBook}
       <section class="flex flex-col gap-4 border-b border-slate-200 pb-8">
-        <h2 class="text-sm font-medium text-slate-500">
-          {playerName(currentBook.originAuthorId)}'s book
-        </h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-medium text-slate-500">
+            {playerName(currentBook.originAuthorId)}'s book
+          </h2>
+          <button
+            type="button"
+            class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+            on:click={() => handleSave(currentBook.id)}
+          >
+            Save as PNG
+          </button>
+        </div>
 
         {#if revealedCount === 0}
           <div class="flex flex-col items-center gap-4 py-8">

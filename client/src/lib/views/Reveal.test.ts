@@ -404,4 +404,18 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
     await fireEvent.click(screen.getByRole('button', { name: /^previous$/i }));
     expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
   });
+
+  it('has a save control for the currently displayed book that calls the export pipeline (ui.md: available in both modes)', async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+    const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
+
+    render(Reveal, { props: { session, exportFn } });
+    await tick();
+
+    const saveButton = screen.getByRole('button', { name: /save/i });
+    await fireEvent.click(saveButton);
+
+    expect(exportFn).toHaveBeenCalledWith(room.books[0], room.players);
+  });
 });
