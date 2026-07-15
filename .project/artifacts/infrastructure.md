@@ -35,8 +35,12 @@ which directly serves the reconnect-tolerance requirement below.
 
 Each `Room` (see [[datamodel]]) maps to a Socket.IO room. Server-side
 event handling is decomposed by concern (Principle VIII): one named
-handler per event type (e.g. `onJoinRoom`, `onSubmitEntry`,
-`onDrawStroke`, `onDisconnect`), not a single large switch.
+handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
+`onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSubmitEntry`,
+`onCastTimeoutVote`, `onRejoin`, `onDisconnect`), not a single large
+switch. Drawing entries sync only once, in full, via `onSubmitEntry`
+when a player finishes their turn — there is no per-stroke real-time
+sync handler; stroke data never leaves the client mid-turn.
 
 ## Session Store (Reconnect Tolerance)
 
