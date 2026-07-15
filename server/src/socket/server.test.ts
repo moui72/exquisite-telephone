@@ -409,6 +409,10 @@ describe('rejoin-after-room-ended rejection', () => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
 
+    // Put the room into 'reveal' directly — bypassing the full game flow,
+    // matching how onPlayAgain's tests set up preconditions.
+    store.getRoom(createAck.room!.id)!.status = 'reveal';
+
     const ack = await new Promise<EndGameAck>((resolve) => {
       clientA.emit(
         'endGame',
@@ -421,6 +425,36 @@ describe('rejoin-after-room-ended rejection', () => {
     expect(ack.room?.status).toBe('ended');
   });
 
+  it('onEndGame rejects when the room is not in reveal', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+
+    const lobbyAck = await new Promise<EndGameAck>((resolve) => {
+      clientA.emit(
+        'endGame',
+        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
+        resolve,
+      );
+    });
+    expect(lobbyAck.error).toBe('room-not-in-reveal');
+    expect(store.getRoom(createAck.room!.id)?.status).toBe('lobby');
+
+    store.getRoom(createAck.room!.id)!.status = 'writing';
+
+    const writingAck = await new Promise<EndGameAck>((resolve) => {
+      clientA.emit(
+        'endGame',
+        { roomId: createAck.room!.id, playerId: createAck.room!.hostPlayerId },
+        resolve,
+      );
+    });
+    expect(writingAck.error).toBe('room-not-in-reveal');
+    expect(store.getRoom(createAck.room!.id)?.status).toBe('writing');
+  });
+
   it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await new Promise<void>((resolve) => clientA.on('connect', resolve));
@@ -428,6 +462,8 @@ describe('rejoin-after-room-ended rejection', () => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const token = createAck.player!.sessionToken;
+
+    store.getRoom(createAck.room!.id)!.status = 'reveal';
 
     await new Promise<EndGameAck>((resolve) => {
       clientA.emit(

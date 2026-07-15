@@ -270,6 +270,10 @@ export function onEndGame(
     ack({ error: 'not-host' });
     return;
   }
+  if (room.status !== 'reveal') {
+    ack({ error: 'room-not-in-reveal' });
+    return;
+  }
 
   room.status = 'ended';
   logger.log({
@@ -308,6 +312,10 @@ export function onVoteToPlayAgain(
   const room = store.getRoom(input.roomId);
   if (!room) {
     ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status !== 'reveal') {
+    ack({ error: 'room-not-in-reveal' });
     return;
   }
 

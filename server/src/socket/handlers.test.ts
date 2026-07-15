@@ -517,6 +517,7 @@ describe('onEndGame observability', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const hostId = room.hostPlayerId;
+    room.status = 'reveal';
 
     const socket = makeFakeSocket();
     const events: Array<Record<string, unknown>> = [];
@@ -576,6 +577,7 @@ describe('onVoteToPlayAgain', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'reveal';
 
     const socket = makeFakeSocket();
     const ack = vi.fn();
@@ -591,6 +593,7 @@ describe('onVoteToPlayAgain', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'reveal';
 
     const socket = makeFakeSocket();
     const ack = vi.fn();
@@ -599,5 +602,27 @@ describe('onVoteToPlayAgain', () => {
     onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
 
     expect(room.playAgainVotes).toEqual([grace.id]);
+  });
+
+  it('rejects with room-not-in-reveal when the room is in lobby or writing, leaving playAgainVotes unmodified', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const lobbyAck = vi.fn();
+
+    onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, lobbyAck);
+
+    expect(lobbyAck).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
+    expect(room.playAgainVotes).toEqual([]);
+
+    room.status = 'writing';
+    const writingAck = vi.fn();
+
+    onVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, writingAck);
+
+    expect(writingAck).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
+    expect(room.playAgainVotes).toEqual([]);
   });
 });
