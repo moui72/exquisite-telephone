@@ -40,6 +40,7 @@ to survive a server restart.
 | roundStartedAt | timestamp \| null | Epoch ms marking when the current round began; `null` while `status === 'lobby'`. Reset whenever the room-wide current round advances (see Normalization Rules). Only meaningful when `turnTimerMinutes` is set. |
 | timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); cleared whenever the round advances. |
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
+| playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 
 ### Player
 
@@ -129,6 +130,28 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   which — combined with round-gating above — lets the round advance
   normally. `Room.timerExtensions` and `Room.pendingTimeoutVote` reset
   to empty/`null` whenever the current round advances.
+- **End-of-game controls (Reveal page).** Three distinct actions, all
+  only meaningful while `Room.status === 'reveal'`:
+  - *Leave game* (non-host): client-local only — clears the leaving
+    player's stored session token and resets their local session
+    state. No server event; `Player.connected` and the room roster are
+    left as-is (matches the existing pattern of not eagerly cleaning
+    up disconnected/departed players).
+  - *End game* (host-only): the existing `Room.status = 'ended'`
+    transition (`onEndGame`) — now reachable from the Reveal page's
+    UI, not just conceptually available server-side.
+  - *Play again* (host-only): creates a **brand-new** `Room` (fresh
+    `id`, `status: 'lobby'`, empty `playAgainVotes`) and auto-joins
+    every player in the old room's `players` array — regardless of
+    `connected` state — as a new `Player` (new `id`, new
+    `sessionToken`) in the new room; the old room's host remains host
+    of the new room. Every currently-connected old-room socket is
+    moved server-side (`socket.leave`/`socket.join`) and pushed its own
+    new `{ room, player }` pair directly (not a room-wide broadcast,
+    since each player's `Player` record differs) so their client
+    routes to the new room's Lobby without re-entering a code. The old
+    room is left in the store untouched (same non-cleanup pattern as
+    `ended` rooms).
 
 ## Indexes
 

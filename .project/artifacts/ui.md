@@ -87,15 +87,46 @@ instead.
 
 ## Reveal View
 
-At `Room.status == 'reveal'`, each `Book`'s full chain (original phrase ->
-drawing -> guess -> drawing -> ...) is displayed in order, so the group
-can see how it drifted. Each book has a save control that exports it as
-a PNG image strip (see [[infrastructure]] Export Pipeline).
+At `Room.status == 'reveal'`, the default mode is an animated,
+one-book-at-a-time viewer rather than showing everything statically at
+once: the current book opens on a "cover" (the origin author's name
+plus a randomly-but-deterministically generated colorful abstract
+design, seeded from the book's `originAuthorId` so it's stable across
+re-renders rather than reshuffling every time), shown for 2.5 seconds,
+then auto-advances every 4 seconds revealing up to 2 entries at a time
+(original phrase -> drawing -> guess -> drawing -> ...) until that
+book is fully shown, then moves to the next book's cover. Manual
+previous/next controls and a "show everything" skip button are always
+available, so the pacing is a default, not a forced slideshow. Once
+every book has been shown (by auto-advance, skip, or manual
+navigation), the view settles into a static full-grid mode — every
+book's complete chain visible at once, matching the pre-redesign
+layout. Each book has a save control (available in both modes) that
+exports it as a PNG image strip (see [[infrastructure]] Export
+Pipeline).
+
+Also on the Reveal page, host and non-host players see different
+end-of-game controls (see [[datamodel]] Normalization Rules — End-of-
+game controls):
+- **Non-host**: "Leave game" (returns to the host/join page) and "Vote
+  to play again" (sets this player in `Room.playAgainVotes`; shown to
+  the host as a live readiness count, e.g. "3 of 4 ready" — purely
+  informational, doesn't unlock or gate the host's controls).
+- **Host**: "End game" (transitions `Room.status` to `ended` — see the
+  **Ended** state below) and "Play again" (starts a brand-new room,
+  auto-joining every current player; available regardless of how many
+  have voted).
 
 ## States
 
 - **Empty**: Lobby with only the host present — waiting-for-players
   state, distinct from mid-game states.
+- **Ended**: `Room.status == 'ended'` — shown to every player still on
+  the page when the host clicks "End game" (or, distinctly, if a
+  player tries to rejoin a room that already ended — see
+  [[infrastructure]] Session Store). Displays "This game has ended"
+  and a "Return to home" control (client-local reset, same mechanism
+  as "Leave game" above).
 - **Error**: Room code not found, room already started (late join
   rejected — the server refuses to seat a new player once `Room.status`
   has left `lobby`), or connection lost with reconnect in progress

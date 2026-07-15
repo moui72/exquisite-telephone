@@ -1,7 +1,9 @@
 ---
 slug: play-again-control-on-reveal-p
-status: backlogged
+status: tasked
 logged: 2026-07-14
+plan: plan-reveal-page-2026-07-14-b586.md
+tasks: tasks-reveal-page-036a.md
 ---
 
 On the Reveal page, give the host and non-host players different end-of-game controls. Non-host players see "Leave game" (returns to the host/join page) and "Vote to play again" (waits for the host to start a new game with the current players). The host sees "End game" (returns to the host/join page) and "Play again" (same as hosting a new game, but all current players auto-join the new session).
