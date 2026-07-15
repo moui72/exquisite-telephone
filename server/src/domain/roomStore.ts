@@ -112,6 +112,57 @@ export function removePlayer(store: RoomStore, roomId: string, playerId: string)
   room.players = room.players.filter((p) => p.id !== playerId);
 }
 
+export interface ReplayRoomResult {
+  room: Room;
+  /** Maps each old player's id to their corresponding new Player. */
+  playerIdMap: Map<string, Player>;
+}
+
+/**
+ * Host-only "Play again" (datamodel.md Normalization Rules — End-of-game
+ * controls): creates a brand-new Room (fresh id, `status: 'lobby'`, empty
+ * `playAgainVotes`, and other createRoom-style defaults) and one fresh
+ * Player (new id, new sessionToken) per player in `oldRoom.players`,
+ * preserving `name` and carrying over `connected` as-is. The old room is
+ * left untouched in the store (same non-cleanup pattern as `ended` rooms).
+ */
+export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
+  const roomId = generateUniqueRoomCode(store);
+  const playerIdMap = new Map<string, Player>();
+
+  const players: Player[] = oldRoom.players.map((oldPlayer) => {
+    const newPlayer: Player = {
+      id: randomUUID(),
+      roomId,
+      name: oldPlayer.name,
+      connected: oldPlayer.connected,
+      sessionToken: randomUUID(),
+    };
+    playerIdMap.set(oldPlayer.id, newPlayer);
+    return newPlayer;
+  });
+
+  const newHostPlayer = playerIdMap.get(oldRoom.hostPlayerId)!;
+
+  const room: Room = {
+    id: roomId,
+    hostPlayerId: newHostPlayer.id,
+    players,
+    status: 'lobby',
+    books: [],
+    createdAt: Date.now(),
+    monochromeOnly: false,
+    turnTimerMinutes: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
+    playAgainVotes: [],
+  };
+
+  store.rooms.set(room.id, room);
+  return { room, playerIdMap };
+}
+
 /**
  * Creates one empty Book per player (datamodel.md: "One per player's
  * original prompt") when the host starts the game. Each player writes

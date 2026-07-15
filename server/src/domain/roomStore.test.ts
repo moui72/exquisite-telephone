@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { createRoom, createRoomStore, joinRoom, type RoomStore } from './roomStore.js';
+import {
+  createRoom,
+  createRoomStore,
+  joinRoom,
+  replayRoom,
+  type RoomStore,
+} from './roomStore.js';
 
 describe('room store (in-memory, datamodel.md Room/Player)', () => {
   let store: RoomStore;
@@ -61,5 +67,64 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
 
     expect(store.getRoom(room.id)?.id).toBe(room.id);
     expect(store.getRoom('MISSING')).toBeUndefined();
+  });
+});
+
+describe('replayRoom (host-only "Play again" — datamodel.md Normalization Rules)', () => {
+  let store: RoomStore;
+
+  beforeEach(() => {
+    store = createRoomStore();
+  });
+
+  it('returns a new room with a fresh id, lobby status, empty playAgainVotes, and createRoom-style defaults', () => {
+    const oldRoom = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: oldRoom.id, playerName: 'Grace' });
+    const oldRoomWithGrace = store.getRoom(oldRoom.id)!;
+
+    const { room } = replayRoom(store, oldRoomWithGrace);
+
+    expect(room.id).not.toBe(oldRoomWithGrace.id);
+    expect(room.status).toBe('lobby');
+    expect(room.playAgainVotes).toEqual([]);
+    expect(room.monochromeOnly).toBe(false);
+    expect(room.turnTimerMinutes).toBeNull();
+    expect(room.roundStartedAt).toBeNull();
+    expect(room.timerExtensions).toEqual({});
+    expect(room.pendingTimeoutVote).toBeNull();
+    expect(room.books).toEqual([]);
+  });
+
+  it('creates exactly one new Player per old player, preserving name and connected, with new id/sessionToken', () => {
+    const oldRoom = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: oldRoom.id, playerName: 'Grace' });
+    const oldRoomWithGrace = store.getRoom(oldRoom.id)!;
+    const oldAda = oldRoomWithGrace.players[0]!;
+    const oldGrace = oldRoomWithGrace.players[1]!;
+    oldGrace.connected = false;
+
+    const { room, playerIdMap } = replayRoom(store, oldRoomWithGrace);
+
+    expect(room.players).toHaveLength(2);
+    const newAda = room.players.find((p) => p.name === 'Ada')!;
+    const newGrace = room.players.find((p) => p.name === 'Grace')!;
+    expect(newAda.id).not.toBe(oldAda.id);
+    expect(newAda.sessionToken).not.toBe(oldAda.sessionToken);
+    expect(newAda.connected).toBe(oldAda.connected);
+    expect(newGrace.connected).toBe(false);
+    expect(playerIdMap.get(oldAda.id)).toBe(newAda);
+    expect(playerIdMap.get(oldGrace.id)).toBe(newGrace);
+  });
+
+  it("the new room's hostPlayerId equals the new player mapped from the old host", () => {
+    const oldRoom = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: oldRoom.id, playerName: 'Grace' });
+    const oldRoomWithGrace = store.getRoom(oldRoom.id)!;
+    const oldAda = oldRoomWithGrace.players[0]!;
+
+    const { room, playerIdMap } = replayRoom(store, oldRoomWithGrace);
+
+    const newAda = playerIdMap.get(oldAda.id)!;
+    expect(room.hostPlayerId).toBe(newAda.id);
   });
 });
