@@ -1,7 +1,7 @@
 ---
 plan: plan-reveal-defects-2026-07-14-c2bb.md
 generated: 2026-07-14
-status: in-progress
+status: completed
 ---
 
 # Tasks
