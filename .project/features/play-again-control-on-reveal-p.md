@@ -1,6 +1,6 @@
 ---
 slug: play-again-control-on-reveal-p
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-reveal-page-2026-07-14-b586.md
 tasks: tasks-reveal-page-036a.md
