@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-15. Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-15 (later). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -23,24 +23,30 @@ _(none)_
 
 ## Code-vs-Artifact Defects
 
-3 defects on file — see `.project/DEFECTS.md`, last checked 2026-07-14
-(read-only summary below; stale w.r.t. the two fixes landed since —
-next `/ardd-defects` pass will confirm both clean). All three surfaced
-and dispositioned in `plan-4401-2026-07-14-7cf3.md`:
-- **drift** (`constitution.md`, Principle IX, `4056be9c`): `onEndGame`
-  didn't log `game_completed` on the host-ended path. **Fixed and
-  merged** — `tasks-4401-7214.md` completed (1/1); `onEndGame` now
-  logs `{ event: 'game_completed', outcome: 'success', roomId, reason:
-  'host-ended' }`.
-- **drift** (`constitution.md`, Quality Standards, `17a7ea0a`): no
-  artifact states a performance budget for any real-time operation.
-  **Declined** for now — recorded as surfaced, no fix planned.
-- **cosmetic** (`infrastructure.md`, `a5b7918a`): the Realtime Sync
-  section named a nonexistent `onDrawStroke` handler. **Fixed** —
-  corrected directly in `infrastructure.md` during planning.
-
-Only 1 of 3 defects remains open (the declined performance-budgets
-item), and it's a deliberate decline, not outstanding work.
+3 defects — see `.project/DEFECTS.md`, last checked 2026-07-14 (fresh
+pass, run right after Phase 3 merged). `infrastructure.md` is fully
+clean — the earlier `onDrawStroke` fix holds up, and the handler list
+now matches exactly (12 handlers, including the two new ones from this
+session). Two new defects surfaced from the Reveal page work, plus the
+carried-over decline:
+- **drift** (`datamodel.md`): the End-of-game-controls Normalization
+  Rule claims all three actions (Leave/End/Play again) are "only
+  meaningful while `Room.status === 'reveal'`", but only `onPlayAgain`
+  actually enforces this server-side. `onEndGame` has no status guard
+  (pre-existing behavior; the new wording now overclaims a restriction
+  that was never true for it). `onVoteToPlayAgain` also has no status
+  guard, contradicting `playAgainVotes`'s own documented invariant a
+  few lines above it in the same artifact. Not exploitable through the
+  normal UI (buttons only render on the Reveal page), but a real
+  claim-vs-code gap. Not yet planned.
+- **drift** (`ui.md`): the Reveal View claims the PNG save control is
+  "available in both modes," but it's only rendered in the static
+  show-everything grid — the animated one-book-at-a-time mode has no
+  save button at all. Not yet planned.
+- **drift** (`constitution.md`, Quality Standards): no artifact states
+  a performance budget for any real-time operation. Still deliberately
+  declined (`plan-4401-2026-07-14-7cf3.md`) — carried forward each
+  pass since declining the fix doesn't make the underlying claim true.
 
 ## Feedback
 
@@ -178,21 +184,22 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 ## Summary
 
 **All three phases of the agreed Phase Plan are now implemented and
-merged to `main`.** Of the 3 defects on file: 2 fixed and merged, 1
-deliberately declined. 0 open feedback files. No cross-artifact
-conflicts or constitution violations. Working tree clean, no
-worktrees in flight, all 6 tasks files `completed`, all 5 non-backlog
-features `implemented`. Safe to /plan: yes.
+merged to `main`.** A fresh `/ardd-defects` pass afterward found 3
+defects: 2 new (both from the Reveal page work, not yet planned), 1
+carried-over deliberate decline. 0 open feedback files. No
+cross-artifact conflicts or constitution violations. Working tree
+clean, no worktrees in flight, all 6 tasks files `completed`, all 5
+non-backlog features `implemented`. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-A fresh `/ardd-defects` pass is now the most valuable next step —
-`.project/DEFECTS.md` was last verified 2026-07-14, before all four
-feature merges landed this session (turn/room engine, drawing tools,
-onEndGame logging, and now the Reveal page). `host-game-moderation-controls`
-is the only remaining backlogged item, ready to plan whenever
+The 2 new Reveal-page defects (End-of-game status guards, missing save
+control in animated mode) are small and independent — `/ardd-plan
+defects` would surface them for a quick fix-up plan whenever
+convenient. `host-game-moderation-controls` is the only remaining
+backlogged item, ready to plan whenever
 (`/ardd-plan host-game-moderation-controls`). `/ardd-diagram` on
 datamodel, infrastructure, and ui would also give this stable design a
 visual reference. A manual smoke test of the merged app (`/run`) is
-worth doing at this natural stopping point, given how much surface
-area has landed across this session.
+still worth doing at this natural stopping point, given how much
+surface area has landed across this session.
