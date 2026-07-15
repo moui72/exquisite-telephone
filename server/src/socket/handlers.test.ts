@@ -11,6 +11,7 @@ import {
   type RoomStore,
 } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
+import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
 import {
   onCastTimeoutVote,
@@ -53,7 +54,7 @@ describe('onSetMonochrome', () => {
 
   it('lets the host set Room.monochromeOnly and broadcasts the updated room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -61,14 +62,15 @@ describe('onSetMonochrome', () => {
     const hostId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     await new Promise<void>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, () => resolve());
     });
 
-    const roomUpdatePromise = new Promise<{ room: SetMonochromeAck['room'] }>((resolve) => {
-      clientB.once('roomUpdated', resolve);
-    });
+    const roomUpdatePromise = waitForEvent<{ room: SetMonochromeAck['room'] }>(
+      clientB,
+      'roomUpdated',
+    );
 
     const ack = await new Promise<SetMonochromeAck>((resolve) => {
       clientA.emit('set_monochrome', { roomId, playerId: hostId, monochromeOnly: true }, resolve);
@@ -83,14 +85,14 @@ describe('onSetMonochrome', () => {
 
   it('rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -108,7 +110,7 @@ describe('onSetMonochrome', () => {
 
   it('rejects once the room has left the lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });

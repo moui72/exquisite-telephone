@@ -4,6 +4,7 @@ import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
+import { waitFor, waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
 import type {
   CreateRoomAck,
@@ -41,7 +42,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onCreateRoom creates a room and returns it to the caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
 
     const ack = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
@@ -56,14 +57,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom adds a player to an existing room and both clients are in the socket.io room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -75,7 +76,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom returns an error for an unknown room code', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
 
     const ack = await new Promise<JoinRoomAck>((resolve) => {
       clientA.emit('joinRoom', { roomId: 'NOPE1', playerName: 'Grace' }, resolve);
@@ -87,7 +88,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom rejects a late join once the game has started (ui.md Error state)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -102,7 +103,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     });
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -114,7 +115,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame lets the host start the game, moving the room out of lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -134,14 +135,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame creates one empty Book per player, one per originAuthor', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     await new Promise<void>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, () => resolve());
     });
@@ -163,14 +164,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -206,7 +207,7 @@ describe('onSubmitEntry', () => {
 
   async function setUpTwoPlayerGame() {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -214,7 +215,7 @@ describe('onSubmitEntry', () => {
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -331,18 +332,25 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('a dropped connection can resume the same seat with its session token', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const token = createAck.player!.sessionToken;
+    const roomId = createAck.room!.id;
+    const playerId = createAck.player!.id;
 
-    // Simulate a dropped connection: close and reconnect with a new socket.
+    // Simulate a dropped connection: close and wait for the server to
+    // actually process the disconnect (not a guessed sleep) before
+    // reconnecting with a new socket.
     clientA.close();
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === playerId)?.connected === false,
+      { description: `player ${playerId} to be marked disconnected` },
+    );
 
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const rejoinAck = await new Promise<RejoinAck>((resolve) => {
       clientA.emit('rejoin', { token }, resolve);
     });
@@ -355,7 +363,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('rejects an unknown or expired token as a new join (distinct error)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
 
     const ack = await new Promise<RejoinAck>((resolve) => {
       clientA.emit('rejoin', { token: 'never-issued' }, resolve);
@@ -367,7 +375,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('marks a disconnected player as not connected without removing their seat', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -375,7 +383,10 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
     const playerId = createAck.player!.id;
 
     clientA.close();
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === playerId)?.connected === false,
+      { description: `player ${playerId} to be marked disconnected` },
+    );
 
     const room = store.getRoom(roomId);
     expect(room?.players).toHaveLength(1);
@@ -404,7 +415,7 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('onEndGame lets the host mark the room ended', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -427,7 +438,7 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('onEndGame rejects when the room is not in reveal', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -457,11 +468,13 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const token = createAck.player!.sessionToken;
+    const roomId = createAck.room!.id;
+    const playerId = createAck.player!.id;
 
     store.getRoom(createAck.room!.id)!.status = 'reveal';
 
@@ -474,9 +487,12 @@ describe('rejoin-after-room-ended rejection', () => {
     });
 
     clientA.close();
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === playerId)?.connected === false,
+      { description: `player ${playerId} to be marked disconnected` },
+    );
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
 
     const rejoinAck = await new Promise<RejoinAck>((resolve) => {
       clientA.emit('rejoin', { token }, resolve);
@@ -518,7 +534,7 @@ describe('observability (structured log events)', () => {
 
   it('logs room creation, join, turn advance, and game completion with outcome and identifiers', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -526,7 +542,7 @@ describe('observability (structured log events)', () => {
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId, playerName: 'Grace' }, resolve);
     });
@@ -589,7 +605,7 @@ describe('observability (structured log events)', () => {
 
   it('logs a failed reconnect with the failure reason', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
 
     await new Promise((resolve) => {
       clientA.emit('rejoin', { token: 'never-issued' }, resolve);
@@ -607,7 +623,7 @@ describe('observability (structured log events)', () => {
 
   it('logs a successful reconnect and a player leaving (disconnect)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -616,10 +632,13 @@ describe('observability (structured log events)', () => {
     const playerId = createAck.player!.id;
 
     clientA.close();
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === playerId)?.connected === false,
+      { description: `player ${playerId} to be marked disconnected` },
+    );
 
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     await new Promise((resolve) => {
       clientA.emit('rejoin', { token }, resolve);
     });
@@ -677,7 +696,7 @@ describe('onPlayAgain', () => {
 
   it("gives the host a new room/player, pushes the other client its own new roomChanged, and logs room_created with reason play-again", async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
@@ -685,7 +704,7 @@ describe('onPlayAgain', () => {
     const hostId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
     });
@@ -695,11 +714,10 @@ describe('onPlayAgain', () => {
     // matching how onEndGame/onSetMonochrome tests set up preconditions.
     store.getRoom(oldRoomId)!.status = 'reveal';
 
-    const roomChangedPromise = new Promise<{ room: PlayAgainAck['room']; player: PlayAgainAck['player'] }>(
-      (resolve) => {
-        clientB.once('roomChanged', resolve);
-      },
-    );
+    const roomChangedPromise = waitForEvent<{
+      room: PlayAgainAck['room'];
+      player: PlayAgainAck['player'];
+    }>(clientB, 'roomChanged');
 
     const ack = await new Promise<PlayAgainAck>((resolve) => {
       clientA.emit('playAgain', { roomId: oldRoomId, playerId: hostId }, resolve);
@@ -730,14 +748,14 @@ describe('onPlayAgain', () => {
 
   it('rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
     const oldRoomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    await waitForEvent(clientB, 'connect');
     const joinAck = await new Promise<JoinRoomAck>((resolve) => {
       clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
     });
@@ -753,7 +771,7 @@ describe('onPlayAgain', () => {
 
   it('rejects when the room is not in reveal', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    await waitForEvent(clientA, 'connect');
     const createAck = await new Promise<CreateRoomAck>((resolve) => {
       clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
     });
