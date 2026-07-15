@@ -37,6 +37,7 @@ describe('turn advancement (round-robin per book)', () => {
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
   }
 
@@ -151,6 +152,7 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
   }
 

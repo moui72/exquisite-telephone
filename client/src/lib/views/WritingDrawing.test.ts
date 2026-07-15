@@ -40,6 +40,7 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     roundStartedAt: null,
     timerExtensions: {},
     pendingTimeoutVote: null,
+    playAgainVotes: [],
   };
 }
 

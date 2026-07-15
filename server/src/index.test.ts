@@ -48,6 +48,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       roundStartedAt: Date.now() - 60 * 60_000,
       timerExtensions: {},
       pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
     store.rooms.set(room.id, room);
     return { store, room };

@@ -58,6 +58,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
     };
 
     render(Reveal, { props: { room } });
@@ -109,6 +110,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
     };
 
     render(Reveal, { props: { room } });
@@ -160,6 +162,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
     };
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 

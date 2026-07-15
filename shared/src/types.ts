@@ -112,4 +112,12 @@ export interface Room {
    * short of their deadline; `null` otherwise.
    */
   pendingTimeoutVote: TimeoutVote | null;
+  /**
+   * FK -> Player.id, deduplicated. Non-host players who've clicked "vote
+   * to play again" on the Reveal page. Purely informational — shown to
+   * the host as a readiness count, never gates `Room.status`. Never
+   * populated outside `status === 'reveal'`; a fresh `Room` created by
+   * "Play again" starts with an empty array like any other new room.
+   */
+  playAgainVotes: string[];
 }

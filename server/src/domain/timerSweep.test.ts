@@ -24,6 +24,7 @@ function makeRoom(overrides: Partial<Room> & { books: Book[] }): Room {
     roundStartedAt: Date.now() - 40 * 60_000,
     timerExtensions: {},
     pendingTimeoutVote: null,
+    playAgainVotes: [],
     ...overrides,
   };
 }

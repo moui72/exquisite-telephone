@@ -47,6 +47,7 @@ const sampleRoom: Room = {
   roundStartedAt: null,
   timerExtensions: {},
   pendingTimeoutVote: null,
+  playAgainVotes: [],
 };
 
 describe('session store (client single source of state)', () => {

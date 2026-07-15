@@ -37,6 +37,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
   };
 }
 

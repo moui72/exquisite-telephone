@@ -25,6 +25,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
     };
 
     render(TurnStatus, { props: { room } });
@@ -63,6 +64,7 @@ turnTimerMinutes: null,
 roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
+playAgainVotes: [],
     };
 
     render(TurnStatus, { props: { room } });

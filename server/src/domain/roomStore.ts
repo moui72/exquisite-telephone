@@ -57,6 +57,7 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     roundStartedAt: null,
     timerExtensions: {},
     pendingTimeoutVote: null,
+    playAgainVotes: [],
   };
 
   store.rooms.set(room.id, room);

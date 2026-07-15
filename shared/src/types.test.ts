@@ -68,10 +68,12 @@ describe('datamodel types (datamodel.md)', () => {
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];
     expect(validStatuses).toContain(room.status);
     expect(room.players).toHaveLength(1);
+    expect(room.playAgainVotes).toHaveLength(0);
   });
 });
