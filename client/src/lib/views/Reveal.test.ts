@@ -1,7 +1,9 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
+import { writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
+import type { SessionState, SessionStore } from '../stores/session.js';
 import Reveal from './Reveal.svelte';
 
 afterEach(() => cleanup());
@@ -9,6 +11,24 @@ afterEach(() => cleanup());
 const roomId = 'ABCDE';
 const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
 const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2' };
+
+function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore {
+  const store = writable<SessionState>({ reconnecting: false, ...initial });
+  return {
+    subscribe: store.subscribe,
+    createRoom: vi.fn(async () => {}),
+    joinRoom: vi.fn(async () => {}),
+    startGame: vi.fn(async () => {}),
+    submitEntry: vi.fn(async () => {}),
+    setMonochrome: vi.fn(async () => {}),
+    setTurnTimer: vi.fn(async () => {}),
+    castTimeoutVote: vi.fn(async () => {}),
+    endGame: vi.fn(async () => {}),
+    leaveGame: vi.fn(),
+    voteToPlayAgain: vi.fn(async () => {}),
+    playAgain: vi.fn(async () => {}),
+  };
+}
 
 describe('Reveal view', () => {
   it("renders each book's full ordered chain of entries", () => {
@@ -53,15 +73,16 @@ describe('Reveal view', () => {
       status: 'reveal',
       books: [book],
       createdAt: Date.now(),
-monochromeOnly: false,
-turnTimerMinutes: null,
-roundStartedAt: null,
-timerExtensions: {},
-pendingTimeoutVote: null,
-playAgainVotes: [],
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
+    const session = makeFakeSession({ room, player: ada, error: null });
 
-    render(Reveal, { props: { room } });
+    render(Reveal, { props: { session } });
 
     expect(screen.getByText('a spoonful of sugar')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: /drawing preview/i })).toBeInTheDocument();
@@ -105,15 +126,16 @@ playAgainVotes: [],
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
-monochromeOnly: false,
-turnTimerMinutes: null,
-roundStartedAt: null,
-timerExtensions: {},
-pendingTimeoutVote: null,
-playAgainVotes: [],
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
+    const session = makeFakeSession({ room, player: ada, error: null });
 
-    render(Reveal, { props: { room } });
+    render(Reveal, { props: { session } });
 
     expect(screen.getByText('phrase A')).toBeInTheDocument();
     expect(screen.getByText('phrase B')).toBeInTheDocument();
@@ -157,16 +179,17 @@ playAgainVotes: [],
       status: 'reveal',
       books: [bookA, bookB],
       createdAt: Date.now(),
-monochromeOnly: false,
-turnTimerMinutes: null,
-roundStartedAt: null,
-timerExtensions: {},
-pendingTimeoutVote: null,
-playAgainVotes: [],
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
     };
+    const session = makeFakeSession({ room, player: ada, error: null });
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 
-    render(Reveal, { props: { room, exportFn } });
+    render(Reveal, { props: { session, exportFn } });
 
     const saveButtons = screen.getAllByRole('button', { name: /save/i });
     expect(saveButtons).toHaveLength(2);

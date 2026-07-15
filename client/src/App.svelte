@@ -23,7 +23,7 @@
 {:else if state.room.status === 'writing'}
   <WritingDrawing {session} />
 {:else if state.room.status === 'reveal'}
-  <Reveal room={state.room} />
+  <Reveal {session} />
 {:else if state.room.status === 'ended'}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
     <p class="text-lg text-slate-600">This game has ended.</p>
