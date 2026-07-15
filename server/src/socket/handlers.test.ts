@@ -14,6 +14,7 @@ import { createLogger } from '../observability/logger.js';
 import { createSocketServer } from './server.js';
 import {
   onCastTimeoutVote,
+  onEndGame,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -500,5 +501,66 @@ describe('onCastTimeoutVote', () => {
 
     expect(room.pendingTimeoutVote).toBeNull();
     expect(room.timerExtensions[adaId]).toBe(30 * 60_000);
+  });
+});
+
+/**
+ * onEndGame: host-only transition to 'ended' must emit a structured
+ * game_completed log event (constitution Principle IX), matching the
+ * natural-completion path in onSubmitEntry but distinguishable via
+ * reason: 'host-ended'. Only the success path logs — rejections
+ * (room-not-found, not-host) must not.
+ */
+describe('onEndGame observability', () => {
+  it("logs game_completed with reason 'host-ended' when the host ends the game", () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const hostId = room.hostPlayerId;
+
+    const socket = makeFakeSocket();
+    const events: Array<Record<string, unknown>> = [];
+    const logger = createLogger((line) => events.push(JSON.parse(line)));
+    const ack = vi.fn();
+
+    onEndGame(socket, store, logger, { roomId: room.id, playerId: hostId }, ack);
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'game_completed',
+        outcome: 'success',
+        roomId: room.id,
+        reason: 'host-ended',
+      }),
+    );
+  });
+
+  it('does not log game_completed when the room is not found', () => {
+    const store = createRoomStore();
+
+    const socket = makeFakeSocket();
+    const events: Array<Record<string, unknown>> = [];
+    const logger = createLogger((line) => events.push(JSON.parse(line)));
+    const ack = vi.fn();
+
+    onEndGame(socket, store, logger, { roomId: 'nonexistent', playerId: 'p1' }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-found' });
+    expect(events.filter((e) => e.event === 'game_completed')).toHaveLength(0);
+  });
+
+  it('does not log game_completed when the caller is not the host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const events: Array<Record<string, unknown>> = [];
+    const logger = createLogger((line) => events.push(JSON.parse(line)));
+    const ack = vi.fn();
+
+    onEndGame(socket, store, logger, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(events.filter((e) => e.event === 'game_completed')).toHaveLength(0);
   });
 });

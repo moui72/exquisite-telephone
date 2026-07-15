@@ -251,6 +251,7 @@ export interface EndGameAck {
 export function onEndGame(
   socket: Socket,
   store: RoomStore,
+  logger: Logger,
   input: EndGameInput,
   ack: (response: EndGameAck) => void,
 ): void {
@@ -265,6 +266,12 @@ export function onEndGame(
   }
 
   room.status = 'ended';
+  logger.log({
+    event: 'game_completed',
+    outcome: 'success',
+    roomId: input.roomId,
+    reason: 'host-ended',
+  });
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }

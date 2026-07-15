@@ -63,7 +63,7 @@ export function createSocketServer(
     });
 
     socket.on('endGame', (input: EndGameInput, ack: (response: EndGameAck) => void) => {
-      onEndGame(socket, store, input, ack);
+      onEndGame(socket, store, logger, input, ack);
     });
 
     socket.on(
