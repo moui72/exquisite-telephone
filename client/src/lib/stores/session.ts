@@ -39,6 +39,14 @@ function storeToken(token: string): void {
   }
 }
 
+function clearStoredToken(): void {
+  try {
+    localStorage.removeItem(SESSION_TOKEN_STORAGE_KEY);
+  } catch {
+    // localStorage unavailable — nothing to clear.
+  }
+}
+
 /**
  * The client's single source of state (constitution Principle VI): the
  * client holds no authoritative game state of its own, only whatever the
@@ -52,6 +60,11 @@ export interface SessionStore extends Readable<SessionState> {
   setMonochrome(monochromeOnly: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
+  endGame(): Promise<void>;
+  /** Client-local only: clears the stored session token and resets local state. No server event. */
+  leaveGame(): void;
+  voteToPlayAgain(): Promise<void>;
+  playAgain(): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -66,6 +79,15 @@ export function createSessionStore(socket: GameSocket): SessionStore {
   socket.on('roomUpdated', (payload) => {
     const { room } = payload as { room: Room };
     update((state) => ({ ...state, room, error: null }));
+  });
+
+  // Distinct from roomUpdated: fired only by onPlayAgain's per-socket
+  // unicast (infrastructure.md), since each player gets their own new
+  // Player identity, not just an updated shared room.
+  socket.on('roomChanged', (payload) => {
+    const { room, player } = payload as { room: Room; player: Player };
+    storeToken(player.sessionToken);
+    update((state) => ({ ...state, room, player, error: null }));
   });
 
   function applyAck(ack: RoomAck, { reconnecting = false } = {}) {
@@ -152,6 +174,31 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         choice,
+      });
+    },
+    endGame() {
+      const state = get(store);
+      return emitWithAck('endGame', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+      });
+    },
+    leaveGame() {
+      clearStoredToken();
+      update(() => ({ room: null, player: null, error: null, reconnecting: false }));
+    },
+    voteToPlayAgain() {
+      const state = get(store);
+      return emitWithAck('voteToPlayAgain', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+      });
+    },
+    playAgain() {
+      const state = get(store);
+      return emitWithAck('playAgain', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
       });
     },
   };

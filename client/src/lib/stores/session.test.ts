@@ -177,4 +177,87 @@ describe('session store (client single source of state)', () => {
 
     expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('tok');
   });
+
+  it('endGame emits endGame with roomId/playerId, mirroring setMonochrome shape', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, status: 'ended' } });
+    await session.endGame();
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'endGame',
+      payload: { roomId: 'ABCDE', playerId: 'p1' },
+    });
+    expect(get(session).room?.status).toBe('ended');
+  });
+
+  it('voteToPlayAgain emits voteToPlayAgain with roomId/playerId', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, playAgainVotes: ['p1'] } });
+    await session.voteToPlayAgain();
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'voteToPlayAgain',
+      payload: { roomId: 'ABCDE', playerId: 'p1' },
+    });
+  });
+
+  it('playAgain emits playAgain with roomId/playerId and applies the ack like createRoom', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    const newRoom: Room = { ...sampleRoom, id: 'NEWRM', status: 'lobby' };
+    const newPlayer = { ...sampleRoom.players[0]!, id: 'p1-new', sessionToken: 'new-tok' };
+    fake.setNextAck({ room: newRoom, player: newPlayer });
+    await session.playAgain();
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'playAgain',
+      payload: { roomId: 'ABCDE', playerId: 'p1' },
+    });
+    expect(get(session).room).toEqual(newRoom);
+    expect(get(session).player).toEqual(newPlayer);
+    expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('new-tok');
+  });
+
+  it('leaveGame clears the stored session token and resets state without emitting any socket event', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+    expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('tok');
+
+    session.leaveGame();
+
+    expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBeNull();
+    expect(get(session)).toEqual({
+      room: null,
+      player: null,
+      error: null,
+      reconnecting: false,
+    });
+    expect(fake.getLastEmit()?.event).toBe('createRoom');
+  });
+
+  it('a roomChanged broadcast updates both room and player (unlike roomUpdated) and stores the new token', () => {
+    const fake = makeFakeSocket();
+    const session = createSessionStore(fake.socket);
+
+    const newRoom: Room = { ...sampleRoom, id: 'NEWRM', status: 'lobby' };
+    const newPlayer = { ...sampleRoom.players[0]!, id: 'p1-new', sessionToken: 'roomchanged-tok' };
+    fake.trigger('roomChanged', { room: newRoom, player: newPlayer });
+
+    expect(get(session).room).toEqual(newRoom);
+    expect(get(session).player).toEqual(newPlayer);
+    expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('roomchanged-tok');
+  });
 });
