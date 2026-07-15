@@ -8,8 +8,14 @@ import {
   type Room,
   type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
-import type { Socket } from 'socket.io';
-import { createBooksForRoom, createRoom, joinRoom, type RoomStore } from '../domain/roomStore.js';
+import type { Server as SocketIOServer, Socket } from 'socket.io';
+import {
+  createBooksForRoom,
+  createRoom,
+  joinRoom,
+  replayRoom,
+  type RoomStore,
+} from '../domain/roomStore.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { resolveTimeoutVote } from '../domain/timerSweep.js';
 import type { Logger } from '../observability/logger.js';
@@ -311,6 +317,94 @@ export function onVoteToPlayAgain(
 
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
+}
+
+export interface PlayAgainInput {
+  roomId: string;
+  playerId: string;
+}
+
+export interface PlayAgainAck {
+  room?: Room;
+  player?: Player;
+  error?: string;
+}
+
+/**
+ * Host-only, reveal-only "play again" (datamodel.md Normalization Rules —
+ * End-of-game controls). Creates a brand-new room via `replayRoom`, then
+ * moves every currently-connected old-room socket into the new room and
+ * pushes each its own `{ room, player }` pair via `roomChanged` — a
+ * per-socket unicast, not a room-wide broadcast, since every recipient's
+ * new `Player` differs (infrastructure.md's one exception to the
+ * broadcast-one-shared-payload pattern). Single-process scale
+ * (Principle I) means no need for Socket.IO's cross-process
+ * `fetchSockets()` adapter API: connected socket ids are resolved
+ * locally via `io.sockets.adapter.rooms` / `io.sockets.sockets`. The
+ * initiating host's own socket goes through the same loop (no
+ * special-casing) and also receives the `ack` response.
+ */
+export function onPlayAgain(
+  socket: Socket,
+  store: RoomStore,
+  sessionStore: SessionTokenStore,
+  logger: Logger,
+  io: SocketIOServer,
+  input: PlayAgainInput,
+  ack: (response: PlayAgainAck) => void,
+): void {
+  const oldRoom = store.getRoom(input.roomId);
+  if (!oldRoom) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (oldRoom.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (oldRoom.status !== 'reveal') {
+    ack({ error: 'room-not-in-reveal' });
+    return;
+  }
+
+  const { room: newRoom, playerIdMap } = replayRoom(store, oldRoom);
+  const newHostPlayer = playerIdMap.get(oldRoom.hostPlayerId)!;
+
+  logger.log({
+    event: 'room_created',
+    outcome: 'success',
+    roomId: newRoom.id,
+    playerId: newHostPlayer.id,
+    reason: 'play-again',
+    previousRoomId: oldRoom.id,
+  });
+
+  const oldRoomSocketIds = io.sockets.adapter.rooms.get(oldRoom.id);
+  if (oldRoomSocketIds) {
+    for (const socketId of oldRoomSocketIds) {
+      const memberSocket = io.sockets.sockets.get(socketId);
+      if (!memberSocket) {
+        continue;
+      }
+      const { playerId: oldPlayerId } = memberSocket.data as { playerId?: string };
+      if (!oldPlayerId) {
+        continue;
+      }
+      const newPlayer = playerIdMap.get(oldPlayerId);
+      if (!newPlayer) {
+        continue;
+      }
+
+      memberSocket.leave(oldRoom.id);
+      memberSocket.join(newRoom.id);
+      memberSocket.data.playerId = newPlayer.id;
+      memberSocket.data.roomId = newRoom.id;
+      newPlayer.sessionToken = sessionStore.issue(newPlayer.id, newRoom.id);
+      memberSocket.emit('roomChanged', { room: newRoom, player: newPlayer });
+    }
+  }
+
+  ack({ room: newRoom, player: newHostPlayer });
 }
 
 export interface SubmitEntryInput {

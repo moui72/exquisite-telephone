@@ -10,6 +10,7 @@ import {
   onEndGame,
   onJoinRoom,
   onRejoin,
+  onPlayAgain,
   onSetMonochrome,
   onSetTurnTimer,
   onStartGame,
@@ -23,6 +24,8 @@ import {
   type EndGameInput,
   type JoinRoomAck,
   type JoinRoomInput,
+  type PlayAgainAck,
+  type PlayAgainInput,
   type RejoinAck,
   type RejoinInput,
   type SetMonochromeAck,
@@ -104,6 +107,10 @@ export function createSocketServer(
         onVoteToPlayAgain(socket, store, input, ack);
       },
     );
+
+    socket.on('playAgain', (input: PlayAgainInput, ack: (response: PlayAgainAck) => void) => {
+      onPlayAgain(socket, store, sessionStore, logger, io, input, ack);
+    });
 
     socket.on('disconnect', () => {
       onDisconnect(socket, store, logger);

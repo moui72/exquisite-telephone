@@ -9,6 +9,7 @@ import type {
   CreateRoomAck,
   EndGameAck,
   JoinRoomAck,
+  PlayAgainAck,
   RejoinAck,
   StartGameAck,
   SubmitEntryAck,
@@ -599,5 +600,134 @@ describe('observability (structured log events)', () => {
     expect(events).toContainEqual(
       expect.objectContaining({ event: 'player_left', outcome: 'success', roomId, playerId }),
     );
+  });
+});
+
+/**
+ * onPlayAgain: host-only, reveal-only "play again" (datamodel.md
+ * Normalization Rules — End-of-game controls; infrastructure.md's one
+ * exception to the broadcast-one-shared-payload pattern). Uses a
+ * local-socket-lookup approach (io.sockets.adapter.rooms.get /
+ * io.sockets.sockets.get), not Socket.IO's cross-process fetchSockets()
+ * API, since this is a single-process app (Principle I).
+ */
+describe('onPlayAgain', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let clientB: ClientSocket;
+  let port: number;
+  let lines: string[];
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    lines = [];
+    const logger = createLogger((line) => lines.push(line));
+    httpServer = createServer();
+    createSocketServer(httpServer, store, undefined, logger);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    clientB?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  function parsedEvents(): Array<Record<string, unknown>> {
+    return lines.map((line) => JSON.parse(line));
+  }
+
+  it("gives the host a new room/player, pushes the other client its own new roomChanged, and logs room_created with reason play-again", async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const oldRoomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
+      clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
+    });
+    const graceId = joinAck.player!.id;
+
+    // Put the room into 'reveal' directly — bypassing the full game flow,
+    // matching how onEndGame/onSetMonochrome tests set up preconditions.
+    store.getRoom(oldRoomId)!.status = 'reveal';
+
+    const roomChangedPromise = new Promise<{ room: PlayAgainAck['room']; player: PlayAgainAck['player'] }>(
+      (resolve) => {
+        clientB.once('roomChanged', resolve);
+      },
+    );
+
+    const ack = await new Promise<PlayAgainAck>((resolve) => {
+      clientA.emit('playAgain', { roomId: oldRoomId, playerId: hostId }, resolve);
+    });
+
+    expect(ack.error).toBeUndefined();
+    expect(ack.room).toBeDefined();
+    expect(ack.player).toBeDefined();
+    expect(ack.room!.id).not.toBe(oldRoomId);
+    expect(ack.player!.id).not.toBe(hostId);
+
+    const changed = await roomChangedPromise;
+    expect(changed.room!.id).toBe(ack.room!.id);
+    expect(changed.player!.id).not.toBe(hostId);
+    expect(changed.player!.id).not.toBe(graceId);
+    expect(changed.player!.id).not.toBe(ack.player!.id);
+
+    const events = parsedEvents();
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'room_created',
+        outcome: 'success',
+        reason: 'play-again',
+        previousRoomId: oldRoomId,
+      }),
+    );
+  });
+
+  it('rejects a non-host caller', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const oldRoomId = createAck.room!.id;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientB.on('connect', resolve));
+    const joinAck = await new Promise<JoinRoomAck>((resolve) => {
+      clientB.emit('joinRoom', { roomId: oldRoomId, playerName: 'Grace' }, resolve);
+    });
+
+    store.getRoom(oldRoomId)!.status = 'reveal';
+
+    const ack = await new Promise<PlayAgainAck>((resolve) => {
+      clientB.emit('playAgain', { roomId: oldRoomId, playerId: joinAck.player!.id }, resolve);
+    });
+
+    expect(ack.error).toBe('not-host');
+  });
+
+  it('rejects when the room is not in reveal', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await new Promise<void>((resolve) => clientA.on('connect', resolve));
+    const createAck = await new Promise<CreateRoomAck>((resolve) => {
+      clientA.emit('createRoom', { hostName: 'Ada' }, resolve);
+    });
+    const oldRoomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    const ack = await new Promise<PlayAgainAck>((resolve) => {
+      clientA.emit('playAgain', { roomId: oldRoomId, playerId: hostId }, resolve);
+    });
+
+    expect(ack.error).toBe('room-not-in-reveal');
   });
 });
