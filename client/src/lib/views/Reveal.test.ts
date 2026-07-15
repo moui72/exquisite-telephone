@@ -33,7 +33,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
 }
 
 describe('Reveal view', () => {
-  it("renders each book's full ordered chain of entries", async () => {
+  it("renders each book's full ordered chain of entries once \"show everything\" is clicked (reused full-grid code path)", async () => {
     const strokes = serializeDrawOps([
       {
         type: 'stroke',
@@ -85,6 +85,11 @@ describe('Reveal view', () => {
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
+
+    // Before "show everything", the animated default is showing only the
+    // book's cover (T010) — the entry content isn't visible yet.
+    expect(screen.queryByText('a spoonful of sugar')).not.toBeInTheDocument();
+
     await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
     expect(screen.getByText('a spoonful of sugar')).toBeInTheDocument();
