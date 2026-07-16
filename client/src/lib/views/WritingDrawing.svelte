@@ -6,6 +6,7 @@
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
+  import ModerationPanel from '../components/ModerationPanel.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -105,6 +106,7 @@
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
   {#if state.room}
+    <ModerationPanel {session} />
     <TurnStatus room={state.room} />
   {/if}
 

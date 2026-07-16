@@ -1,6 +1,7 @@
 <script lang="ts">
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
+  import ModerationPanel from '../components/ModerationPanel.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -117,6 +118,8 @@
     </form>
   {:else}
     <div class="flex flex-col gap-4">
+      <ModerationPanel {session} />
+
       <p class="text-sm text-slate-600">Room code</p>
       <p class="text-3xl font-bold tracking-widest text-slate-900">{state.room.id}</p>
 

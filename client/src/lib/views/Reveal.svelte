@@ -4,6 +4,7 @@
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
+  import ModerationPanel from '../components/ModerationPanel.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
 
@@ -162,6 +163,8 @@
   <h1 class="text-2xl font-semibold text-slate-800">Reveal</h1>
 
   {#if room}
+    <ModerationPanel {session} />
+
     <div class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-6">
       {#if isHost}
         <button
