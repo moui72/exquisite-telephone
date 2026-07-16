@@ -16,6 +16,8 @@ import { createSocketServer } from './server.js';
 import {
   onCastTimeoutVote,
   onEndGame,
+  onKickPlayer,
+  onRestartGame,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -636,5 +638,345 @@ describe('onVoteToPlayAgain', () => {
 
     expect(writingAck).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
     expect(room.playAgainVotes).toEqual([]);
+  });
+});
+
+/**
+ * onKickPlayer: host-only. Sets Player.kicked = true; only sets
+ * Room.nonContinuable when the kick happens during 'writing' (a
+ * kick during lobby/reveal has nothing to make non-continuable).
+ * Logs a structured player_kicked event and broadcasts roomUpdated.
+ */
+describe('onKickPlayer', () => {
+  it('rejects when the caller is not the host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    const lin = joinRoom(store, { roomId: room.id, playerName: 'Lin' }).player!;
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: grace.id, targetPlayerId: lin.id },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(lin.kicked).toBe(false);
+  });
+
+  it('rejects when the room is not found', () => {
+    const store = createRoomStore();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: 'nonexistent', playerId: 'p1', targetPlayerId: 'p2' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-found' });
+  });
+
+  it('kicks a player during lobby without setting nonContinuable', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+
+    expect(grace.kicked).toBe(true);
+    expect(room.nonContinuable).toBe(false);
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('kicks a player during writing and sets nonContinuable', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+
+    expect(grace.kicked).toBe(true);
+    expect(room.nonContinuable).toBe(true);
+  });
+
+  it('kicks a player during reveal without setting nonContinuable', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'reveal';
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+
+    expect(grace.kicked).toBe(true);
+    expect(room.nonContinuable).toBe(false);
+  });
+
+  it('is idempotent when the same player is kicked twice', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+
+    expect(grace.kicked).toBe(true);
+    expect(room.nonContinuable).toBe(true);
+  });
+
+  it('logs a structured player_kicked event on success', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+
+    const socket = makeFakeSocket();
+    const events: Array<Record<string, unknown>> = [];
+    const logger = createLogger((line) => events.push(JSON.parse(line)));
+    const ack = vi.fn();
+
+    onKickPlayer(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: grace.id },
+      ack,
+    );
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'player_kicked',
+        outcome: 'success',
+        roomId: room.id,
+        kickedPlayerId: grace.id,
+        hostPlayerId: room.hostPlayerId,
+      }),
+    );
+  });
+});
+
+/**
+ * onSubmitEntry: rejects with room-non-continuable before any other
+ * check once Room.nonContinuable is true (moderation plan).
+ */
+describe('onSubmitEntry nonContinuable guard', () => {
+  it('rejects with room-non-continuable when the room is frozen', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    room.nonContinuable = true;
+
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        bookId: room.books[0]!.id,
+        playerId: room.hostPlayerId,
+        content: 'hello',
+      },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-non-continuable' });
+  });
+});
+
+/**
+ * onRestartGame: host-only, requires Room.nonContinuable === true.
+ * Regenerates books excluding kicked players, clears round state, and
+ * resumes 'writing'.
+ */
+describe('onRestartGame', () => {
+  it('rejects when the caller is not the host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'writing';
+    room.nonContinuable = true;
+
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onRestartGame(makeFakeSocket(), store, logger, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+  });
+
+  it('rejects when the room is not found', () => {
+    const store = createRoomStore();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onRestartGame(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: 'nonexistent', playerId: 'p1' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-found' });
+  });
+
+  it('rejects with nothing-to-restart when Room.nonContinuable is false', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onRestartGame(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'nothing-to-restart' });
+  });
+
+  it('restarts a frozen game, excluding kicked players and resetting round state', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    const lin = joinRoom(store, { roomId: room.id, playerName: 'Lin' }).player!;
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    room.timerExtensions = { [lin.id]: 60_000 };
+    room.pendingTimeoutVote = {
+      stalledPlayerIds: [lin.id],
+      eligibleVoterIds: [room.hostPlayerId, grace.id],
+      votes: {},
+      voteDeadline: Date.now() + 60_000,
+    };
+
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onKickPlayer(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId, targetPlayerId: lin.id },
+      vi.fn(),
+    );
+    expect(room.nonContinuable).toBe(true);
+
+    const beforeRestart = Date.now();
+    onRestartGame(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId },
+      ack,
+    );
+
+    expect(room.status).toBe('writing');
+    expect(room.nonContinuable).toBe(false);
+    expect(room.books.every((b) => b.entries.length === 0)).toBe(true);
+    expect(room.timerExtensions).toEqual({});
+    expect(room.pendingTimeoutVote).toBeNull();
+    expect(room.roundStartedAt).toBeGreaterThanOrEqual(beforeRestart);
+    expect(room.books.map((b) => b.originAuthorId).sort()).toEqual(
+      [room.hostPlayerId, grace.id].sort(),
+    );
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('logs a structured game_restarted event on success', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+    room.nonContinuable = true;
+
+    const events: Array<Record<string, unknown>> = [];
+    const logger = createLogger((line) => events.push(JSON.parse(line)));
+    const ack = vi.fn();
+
+    onRestartGame(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: room.hostPlayerId },
+      ack,
+    );
+
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        event: 'game_restarted',
+        outcome: 'success',
+        roomId: room.id,
+      }),
+    );
   });
 });

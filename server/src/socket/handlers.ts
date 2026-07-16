@@ -285,6 +285,122 @@ export function onEndGame(
   ack({ room });
 }
 
+export interface KickPlayerInput {
+  roomId: string;
+  playerId: string;
+  targetPlayerId: string;
+}
+
+export interface KickPlayerAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only "kick player" (host-game-moderation-controls plan): sets the
+ * target `Player.kicked = true`. A kick during `writing` also sets
+ * `Room.nonContinuable = true` — the round-robin turn engine is not
+ * taught to skip a kicked player's now-orphaned turn in place (see the
+ * plan's Technical Approach), so the room is frozen until the host runs
+ * `onRestartGame`. Kicking during `lobby` or `reveal` leaves
+ * `nonContinuable` untouched. Idempotent — kicking an already-kicked
+ * player is a harmless no-op re-assertion.
+ */
+export function onKickPlayer(
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: KickPlayerInput,
+  ack: (response: KickPlayerAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  const target = room.players.find((p) => p.id === input.targetPlayerId);
+  if (!target) {
+    ack({ error: 'player-not-found' });
+    return;
+  }
+
+  target.kicked = true;
+  if (room.status === 'writing') {
+    room.nonContinuable = true;
+  }
+
+  logger.log({
+    event: 'player_kicked',
+    outcome: 'success',
+    roomId: input.roomId,
+    kickedPlayerId: target.id,
+    hostPlayerId: input.playerId,
+  });
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
+export interface RestartGameInput {
+  roomId: string;
+  playerId: string;
+}
+
+export interface RestartGameAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only "restart game" (host-game-moderation-controls plan): only
+ * meaningful once `Room.nonContinuable` is `true` (set by a kick during
+ * `writing`). Regenerates `books` fresh — one per non-kicked player, via
+ * `createBooksForRoom`'s kicked-excluding filter — reusing the same
+ * `Room.id` and every remaining `Player`'s existing `id`/`sessionToken`
+ * (distinct from `replayRoom` / "Play again", which mints a brand-new
+ * room and new players). Clears round state and resumes `writing`.
+ */
+export function onRestartGame(
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: RestartGameInput,
+  ack: (response: RestartGameAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (!room.nonContinuable) {
+    ack({ error: 'nothing-to-restart' });
+    return;
+  }
+
+  room.books = createBooksForRoom(room);
+  room.timerExtensions = {};
+  room.pendingTimeoutVote = null;
+  room.status = 'writing';
+  room.roundStartedAt = Date.now();
+  room.nonContinuable = false;
+
+  logger.log({
+    event: 'game_restarted',
+    outcome: 'success',
+    roomId: input.roomId,
+    hostPlayerId: input.playerId,
+  });
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface VoteToPlayAgainInput {
   roomId: string;
   playerId: string;
@@ -445,6 +561,11 @@ export function onSubmitEntry(
   const room = store.getRoom(input.roomId);
   if (!room) {
     ack({ error: 'room-not-found' });
+    return;
+  }
+
+  if (room.nonContinuable) {
+    ack({ error: 'room-non-continuable' });
     return;
   }
 
