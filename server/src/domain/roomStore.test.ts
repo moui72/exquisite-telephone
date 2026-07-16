@@ -1,11 +1,42 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import type { Player, Room } from '@exquisite-telephone/shared';
 import {
+  createBooksForRoom,
   createRoom,
   createRoomStore,
   joinRoom,
   replayRoom,
   type RoomStore,
 } from './roomStore.js';
+
+function makePlayer(id: string, roomId: string, kicked = false): Player {
+  return {
+    id,
+    roomId,
+    name: id,
+    connected: true,
+    sessionToken: `${id}-token`,
+    kicked,
+  };
+}
+
+function makeRoomWithPlayers(players: Player[]): Room {
+  return {
+    id: 'ROOM1',
+    hostPlayerId: players[0]?.id ?? 'host',
+    players,
+    status: 'writing',
+    books: [],
+    createdAt: Date.now(),
+    monochromeOnly: false,
+    turnTimerMinutes: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
+    playAgainVotes: [],
+    nonContinuable: false,
+  };
+}
 
 describe('room store (in-memory, datamodel.md Room/Player)', () => {
   let store: RoomStore;
@@ -126,5 +157,38 @@ describe('replayRoom (host-only "Play again" — datamodel.md Normalization Rule
 
     const newAda = playerIdMap.get(oldAda.id)!;
     expect(room.hostPlayerId).toBe(newAda.id);
+  });
+});
+
+describe('createBooksForRoom (excludes kicked players — moderation plan)', () => {
+  it('creates one book per player when no one is kicked (same output as today)', () => {
+    const ada = makePlayer('ada', 'ROOM1');
+    const grace = makePlayer('grace', 'ROOM1');
+    const room = makeRoomWithPlayers([ada, grace]);
+
+    const books = createBooksForRoom(room);
+
+    expect(books).toHaveLength(2);
+    expect(books.map((b) => b.originAuthorId).sort()).toEqual(['ada', 'grace']);
+  });
+
+  it('excludes a kicked player from the generated books', () => {
+    const ada = makePlayer('ada', 'ROOM1');
+    const grace = makePlayer('grace', 'ROOM1', true);
+    const room = makeRoomWithPlayers([ada, grace]);
+
+    const books = createBooksForRoom(room);
+
+    expect(books).toHaveLength(1);
+    expect(books[0]?.originAuthorId).toBe('ada');
+  });
+
+  it('does not throw when every player is kicked (edge case, not reachable in practice)', () => {
+    const ada = makePlayer('ada', 'ROOM1', true);
+    const grace = makePlayer('grace', 'ROOM1', true);
+    const room = makeRoomWithPlayers([ada, grace]);
+
+    expect(() => createBooksForRoom(room)).not.toThrow();
+    expect(createBooksForRoom(room)).toEqual([]);
   });
 });

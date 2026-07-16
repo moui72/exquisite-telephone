@@ -169,15 +169,22 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
 }
 
 /**
- * Creates one empty Book per player (datamodel.md: "One per player's
- * original prompt") when the host starts the game. Each player writes
- * their own book's starting phrase as its first Entry.
+ * Creates one empty Book per non-kicked player (datamodel.md: "One per
+ * player's original prompt") when the host starts the game, or when the
+ * host restarts a `nonContinuable` game (moderation plan — kicked
+ * players are excluded from the regenerated `books`). Each remaining
+ * player writes their own book's starting phrase as its first Entry.
+ * Does not throw if every player happens to be kicked (unreachable in
+ * practice, but the helper degrades to an empty array rather than
+ * erroring).
  */
 export function createBooksForRoom(room: Room): Book[] {
-  return room.players.map((player) => ({
-    id: randomUUID(),
-    roomId: room.id,
-    originAuthorId: player.id,
-    entries: [],
-  }));
+  return room.players
+    .filter((player) => !player.kicked)
+    .map((player) => ({
+      id: randomUUID(),
+      roomId: room.id,
+      originAuthorId: player.id,
+      entries: [],
+    }));
 }
