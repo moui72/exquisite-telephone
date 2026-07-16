@@ -24,4 +24,4 @@ status: in-progress
 - [x] T011 [artifacts: ui] Add a "this game can't continue" notice (visible to every player, not just the host) shown whenever `room.nonContinuable` is `true`, distinct from the host-only restart control — non-host players need to know why the game froze even though they can't fix it themselves.
 
 ## Phase 4: Integration verification
-- [ ] T012 Full-suite run (`pnpm test`, `pnpm typecheck`, `pnpm lint`) after Phases 1–3 land, confirming no regression in the existing End-of-game-controls / turn-advancement / timer-sweep test coverage that this plan's changes touch.
+- [x] T012 Full-suite run (`pnpm test`, `pnpm typecheck`, `pnpm lint`) after Phases 1–3 land, confirming no regression in the existing End-of-game-controls / turn-advancement / timer-sweep test coverage that this plan's changes touch.
