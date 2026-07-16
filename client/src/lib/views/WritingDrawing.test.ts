@@ -27,9 +27,9 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
 }
 
 const roomId = 'ABCDE';
-const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
-const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2' };
-const lin = { id: 'lin', roomId, name: 'Lin', connected: true, sessionToken: 't3' };
+const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
+const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
+const lin = { id: 'lin', roomId, name: 'Lin', connected: true, sessionToken: 't3', kicked: false };
 
 function makeRoom(books: Book[], players = [ada, grace]): Room {
   return {
@@ -45,6 +45,7 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     timerExtensions: {},
     pendingTimeoutVote: null,
     playAgainVotes: [],
+    nonContinuable: false,
   };
 }
 

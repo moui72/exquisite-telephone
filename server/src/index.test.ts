@@ -27,6 +27,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       name: 'Ada',
       connected: true,
       sessionToken: 't1',
+      kicked: false,
     };
     const grace = {
       id: 'grace',
@@ -34,6 +35,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       name: 'Grace',
       connected: true,
       sessionToken: 't2',
+      kicked: false,
     };
     const bookA: Book = { id: 'bookA', roomId: 'ROOM1', originAuthorId: ada.id, entries: [] };
     const room: Room = {
@@ -49,6 +51,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     store.rooms.set(room.id, room);
     return { store, room };

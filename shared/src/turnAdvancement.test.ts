@@ -3,7 +3,7 @@ import type { Book, Entry, Player, Room } from './types.js';
 import { computeNextEntry, computeNextEntries, currentRoundFor } from './turnAdvancement.js';
 
 function makePlayer(id: string, roomId: string): Player {
-  return { id, roomId, name: id, connected: true, sessionToken: `${id}-token` };
+  return { id, roomId, name: id, connected: true, sessionToken: `${id}-token`, kicked: false };
 }
 
 function makeEntry(bookId: string, authorId: string, position: number): Entry {
@@ -38,6 +38,7 @@ describe('turn advancement (round-robin per book)', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
   }
 
@@ -153,6 +154,7 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
   }
 

@@ -26,7 +26,7 @@ castTimeoutVote: vi.fn(async () => {}),
 }
 
 const roomId = 'ABCDE';
-const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
+const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
 
 function makeRoom(status: Room['status']): Room {
   return {
@@ -42,6 +42,7 @@ roundStartedAt: null,
 timerExtensions: {},
 pendingTimeoutVote: null,
 playAgainVotes: [],
+nonContinuable: false,
   };
 }
 

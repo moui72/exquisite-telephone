@@ -18,7 +18,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           id: 'ABCDE',
           hostPlayerId: 'p1',
           players: [
-            { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't' },
+            { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
           ],
           status: 'lobby',
           books: [],
@@ -29,8 +29,9 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           timerExtensions: {},
           pendingTimeoutVote: null,
           playAgainVotes: [],
+          nonContinuable: false,
         },
-        player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't' },
+        player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
         error: null,
         reconnecting: false,
       });
@@ -66,8 +67,8 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
       ],
       status: 'lobby',
       books: [],
@@ -78,6 +79,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
 
     const hostSession = makeFakeSession({
@@ -102,9 +104,9 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
       ],
       status: 'lobby',
       books: [],
@@ -115,6 +117,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -127,7 +130,7 @@ describe('Lobby view', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' }],
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -137,6 +140,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -160,9 +164,9 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
       ],
       status: 'lobby',
       books: [],
@@ -173,6 +177,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -189,9 +194,9 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3' },
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
       ],
       status: 'lobby',
       books: [],
@@ -202,6 +207,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -232,8 +238,8 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2' },
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
       ],
       status: 'lobby',
       books: [],
@@ -244,6 +250,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -261,7 +268,7 @@ describe('Lobby view', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1' }],
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -271,6 +278,7 @@ describe('Lobby view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
 
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });

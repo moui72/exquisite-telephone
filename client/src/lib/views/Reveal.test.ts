@@ -11,8 +11,8 @@ import Reveal from './Reveal.svelte';
 afterEach(() => cleanup());
 
 const roomId = 'ABCDE';
-const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
-const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2' };
+const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
+const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
 
 function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore {
   const store = writable<SessionState>({ reconnecting: false, ...initial });
@@ -81,6 +81,7 @@ describe('Reveal view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -140,6 +141,7 @@ describe('Reveal view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -194,6 +196,7 @@ describe('Reveal view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
@@ -223,6 +226,7 @@ describe('Reveal view', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
       ...overrides,
     };
   }
@@ -321,6 +325,7 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
   }
 

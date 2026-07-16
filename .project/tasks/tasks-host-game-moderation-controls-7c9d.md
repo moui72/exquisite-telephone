@@ -7,7 +7,7 @@ status: in-progress
 # Tasks
 
 ## Phase 1: Shared types and turn-advancement guard rail
-- [ ] T001 [artifacts: datamodel] Add `kicked: boolean` to `Player` and `nonContinuable: boolean` to `Room` in `shared/src/types.ts`. Test-first (constitution Principle III): update `shared` fixtures/tests that construct a `Room`/`Player` literal to include the new fields.
+- [x] T001 [artifacts: datamodel] Add `kicked: boolean` to `Player` and `nonContinuable: boolean` to `Room` in `shared/src/types.ts`. Test-first (constitution Principle III): update `shared` fixtures/tests that construct a `Room`/`Player` literal to include the new fields.
 - [ ] T002 [artifacts: datamodel] Add a `createBooksForActivePlayers`-style helper (or extend `createBooksForRoom`) in `server/src/domain/roomStore.ts` that excludes `kicked` players when generating `books`, with a unit test covering: no kicked players (same output as today), one kicked player (excluded from `books`), all players kicked (edge case — should not be reachable in practice since a fully-kicked room can't restart with 0 players, but the helper itself should not throw).
 
 ## Phase 2: Server handlers [parallel with Phase 3]

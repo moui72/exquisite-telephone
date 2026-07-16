@@ -36,25 +36,28 @@ describe('datamodel types (datamodel.md)', () => {
     expect(book.entries[0]?.id).toBe('entry-1');
   });
 
-  it('Player requires id, roomId, name, connected, sessionToken', () => {
+  it('Player requires id, roomId, name, connected, sessionToken, kicked', () => {
     const player: Player = {
       id: 'player-1',
       roomId: 'room-1',
       name: 'Ada',
       connected: true,
       sessionToken: 'token-1',
+      kicked: false,
     };
 
     expect(player.connected).toBe(true);
+    expect(player.kicked).toBe(false);
   });
 
-  it('Room requires id, hostPlayerId, players, status, books, createdAt', () => {
+  it('Room requires id, hostPlayerId, players, status, books, createdAt, nonContinuable', () => {
     const player: Player = {
       id: 'player-1',
       roomId: 'room-1',
       name: 'Ada',
       connected: true,
       sessionToken: 'token-1',
+      kicked: false,
     };
     const room: Room = {
       id: 'room-1',
@@ -69,11 +72,13 @@ describe('datamodel types (datamodel.md)', () => {
       timerExtensions: {},
       pendingTimeoutVote: null,
       playAgainVotes: [],
+      nonContinuable: false,
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];
     expect(validStatuses).toContain(room.status);
     expect(room.players).toHaveLength(1);
     expect(room.playAgainVotes).toHaveLength(0);
+    expect(room.nonContinuable).toBe(false);
   });
 });

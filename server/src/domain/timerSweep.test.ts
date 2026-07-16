@@ -4,7 +4,7 @@ import { createLogger } from '../observability/logger.js';
 import { resolveTimeoutVote, sweepRoom } from './timerSweep.js';
 
 function makePlayer(id: string, roomId: string): Player {
-  return { id, roomId, name: id, connected: true, sessionToken: `${id}-token` };
+  return { id, roomId, name: id, connected: true, sessionToken: `${id}-token`, kicked: false };
 }
 
 const roomId = 'ROOM1';
@@ -25,6 +25,7 @@ function makeRoom(overrides: Partial<Room> & { books: Book[] }): Room {
     timerExtensions: {},
     pendingTimeoutVote: null,
     playAgainVotes: [],
+    nonContinuable: false,
     ...overrides,
   };
 }

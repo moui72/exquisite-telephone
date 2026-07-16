@@ -43,6 +43,7 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     name: input.hostName,
     connected: true,
     sessionToken: randomUUID(),
+    kicked: false,
   };
 
   const room: Room = {
@@ -58,6 +59,7 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     timerExtensions: {},
     pendingTimeoutVote: null,
     playAgainVotes: [],
+    nonContinuable: false,
   };
 
   store.rooms.set(room.id, room);
@@ -94,6 +96,7 @@ export function joinRoom(store: RoomStore, input: JoinRoomInput): JoinRoomResult
     name: input.playerName,
     connected: true,
     sessionToken: randomUUID(),
+    kicked: false,
   };
 
   room.players.push(player);
@@ -137,6 +140,7 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
       name: oldPlayer.name,
       connected: oldPlayer.connected,
       sessionToken: randomUUID(),
+      kicked: false,
     };
     playerIdMap.set(oldPlayer.id, newPlayer);
     return newPlayer;
@@ -157,6 +161,7 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
     timerExtensions: {},
     pendingTimeoutVote: null,
     playAgainVotes: [],
+    nonContinuable: false,
   };
 
   store.rooms.set(room.id, room);

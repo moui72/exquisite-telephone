@@ -12,8 +12,8 @@ import {
 } from './pngExport.js';
 
 const roomId = 'ABCDE';
-const ada: Player = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1' };
-const grace: Player = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2' };
+const ada: Player = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
+const grace: Player = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
 const players = [ada, grace];
 
 function makeFixtureBook(): Book {

@@ -38,7 +38,7 @@ function makeFakeSocket() {
 const sampleRoom: Room = {
   id: 'ABCDE',
   hostPlayerId: 'p1',
-  players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 'tok' }],
+  players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 'tok', kicked: false }],
   status: 'lobby',
   books: [],
   createdAt: Date.now(),
@@ -48,6 +48,7 @@ const sampleRoom: Room = {
   timerExtensions: {},
   pendingTimeoutVote: null,
   playAgainVotes: [],
+  nonContinuable: false,
 };
 
 describe('session store (client single source of state)', () => {

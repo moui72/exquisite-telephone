@@ -53,6 +53,13 @@ export interface Player {
   connected: boolean;
   /** Opaque token used to resume the same Player.id after a dropped connection. */
   sessionToken: string;
+  /**
+   * Host-set via moderation "kick player"; defaults `false`. A kicked
+   * player stays in `Room.players` but is excluded from the regenerated
+   * `books` on the next "restart game," and from
+   * `eligibleVoterIds`/`stalledPlayerIds` on any subsequent timeout vote.
+   */
+  kicked: boolean;
 }
 
 /** One of the four choices a player may cast in a pending {@link TimeoutVote}. */
@@ -120,4 +127,11 @@ export interface Room {
    * "Play again" starts with an empty array like any other new room.
    */
   playAgainVotes: string[];
+  /**
+   * Set `true` the moment a host kicks a player while `status ===
+   * 'writing'`; `false` otherwise, including after "restart game" clears
+   * it. Never set outside `writing` — a kick during `lobby` or `reveal`
+   * has nothing to make non-continuable.
+   */
+  nonContinuable: boolean;
 }
