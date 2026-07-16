@@ -415,7 +415,7 @@ describe('rejoin-after-room-ended rejection', () => {
     expect(ack.room?.status).toBe('ended');
   });
 
-  it('onEndGame rejects when the room is not in reveal', async () => {
+  it('onEndGame succeeds from lobby or writing, not just reveal (host-only-anytime, moderation plan)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
     const createAck = (await clientA
@@ -426,17 +426,20 @@ describe('rejoin-after-room-ended rejection', () => {
       roomId: createAck.room!.id,
       playerId: createAck.room!.hostPlayerId,
     })) as EndGameAck;
-    expect(lobbyAck.error).toBe('room-not-in-reveal');
-    expect(store.getRoom(createAck.room!.id)?.status).toBe('lobby');
+    expect(lobbyAck.error).toBeUndefined();
+    expect(store.getRoom(createAck.room!.id)?.status).toBe('ended');
 
-    store.getRoom(createAck.room!.id)!.status = 'writing';
+    const createAck2 = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Grace' })) as CreateRoomAck;
+    store.getRoom(createAck2.room!.id)!.status = 'writing';
 
     const writingAck = (await clientA.timeout(5000).emitWithAck('endGame', {
-      roomId: createAck.room!.id,
-      playerId: createAck.room!.hostPlayerId,
+      roomId: createAck2.room!.id,
+      playerId: createAck2.room!.hostPlayerId,
     })) as EndGameAck;
-    expect(writingAck.error).toBe('room-not-in-reveal');
-    expect(store.getRoom(createAck.room!.id)?.status).toBe('writing');
+    expect(writingAck.error).toBeUndefined();
+    expect(store.getRoom(createAck2.room!.id)?.status).toBe('ended');
   });
 
   it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {

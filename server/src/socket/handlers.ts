@@ -250,9 +250,12 @@ export interface EndGameAck {
 }
 
 /**
- * Host-only transition to `ended`. The room is kept in the store (not
- * deleted) so a still-valid session token can be told clearly "this game
- * has ended" (see onRejoin) rather than "room not found".
+ * Host-only transition to `ended`, reachable from any `Room.status`
+ * (host-game-moderation-controls plan — relaxed from the earlier
+ * reveal-only guard so a disruptive/offensive-content situation can be
+ * shut down without waiting for Reveal). The room is kept in the store
+ * (not deleted) so a still-valid session token can be told clearly "this
+ * game has ended" (see onRejoin) rather than "room not found".
  */
 export function onEndGame(
   socket: Socket,
@@ -268,10 +271,6 @@ export function onEndGame(
   }
   if (room.hostPlayerId !== input.playerId) {
     ack({ error: 'not-host' });
-    return;
-  }
-  if (room.status !== 'reveal') {
-    ack({ error: 'room-not-in-reveal' });
     return;
   }
 
