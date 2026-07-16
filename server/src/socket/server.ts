@@ -9,8 +9,10 @@ import {
   onDisconnect,
   onEndGame,
   onJoinRoom,
+  onKickPlayer,
   onRejoin,
   onPlayAgain,
+  onRestartGame,
   onSetMonochrome,
   onSetTurnTimer,
   onStartGame,
@@ -24,10 +26,14 @@ import {
   type EndGameInput,
   type JoinRoomAck,
   type JoinRoomInput,
+  type KickPlayerAck,
+  type KickPlayerInput,
   type PlayAgainAck,
   type PlayAgainInput,
   type RejoinAck,
   type RejoinInput,
+  type RestartGameAck,
+  type RestartGameInput,
   type SetMonochromeAck,
   type SetMonochromeInput,
   type SetTurnTimerAck,
@@ -71,6 +77,17 @@ export function createSocketServer(
     socket.on('endGame', (input: EndGameInput, ack: (response: EndGameAck) => void) => {
       onEndGame(socket, store, logger, input, ack);
     });
+
+    socket.on('kickPlayer', (input: KickPlayerInput, ack: (response: KickPlayerAck) => void) => {
+      onKickPlayer(socket, store, logger, input, ack);
+    });
+
+    socket.on(
+      'restartGame',
+      (input: RestartGameInput, ack: (response: RestartGameAck) => void) => {
+        onRestartGame(socket, store, logger, input, ack);
+      },
+    );
 
     socket.on(
       'set_monochrome',
