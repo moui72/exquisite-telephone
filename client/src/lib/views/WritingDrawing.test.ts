@@ -326,4 +326,25 @@ describe('Writing/Drawing view', () => {
 
     expect(session.submitEntry).toHaveBeenCalledWith('book-ada', 'a spoonful of sugar');
   });
+
+  it('shows a "game can\'t continue" notice to every player when Room.nonContinuable is true', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room = { ...makeRoom([adaBook]), nonContinuable: true };
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/can't continue/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/waiting on the host/i);
+  });
+
+  it('does not show the "game can\'t continue" notice when Room.nonContinuable is false', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room = makeRoom([adaBook]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });

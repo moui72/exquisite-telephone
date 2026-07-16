@@ -107,6 +107,18 @@
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
   {#if state.room}
     <ModerationPanel {session} />
+
+    {#if state.room.nonContinuable}
+      <p role="alert" class="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800">
+        This game can't continue — the host removed a player mid-round.
+        {#if state.player?.id === state.room.hostPlayerId}
+          Use the Moderation panel above to restart.
+        {:else}
+          Waiting on the host to restart or end the game.
+        {/if}
+      </p>
+    {/if}
+
     <TurnStatus room={state.room} />
   {/if}
 
