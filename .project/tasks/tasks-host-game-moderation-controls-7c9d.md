@@ -1,7 +1,7 @@
 ---
 plan: plan-host-game-moderation-controls-2026-07-15-9c9b.md
 generated: 2026-07-16
-status: ready
+status: in-progress
 ---
 
 # Tasks
