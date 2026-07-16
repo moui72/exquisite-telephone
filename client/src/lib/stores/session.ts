@@ -61,6 +61,10 @@ export interface SessionStore extends Readable<SessionState> {
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
   endGame(): Promise<void>;
+  /** Host-only moderation control (host-game-moderation-controls plan). */
+  kickPlayer(targetPlayerId: string): Promise<void>;
+  /** Host-only moderation control, valid once Room.nonContinuable is true. */
+  restartGame(): Promise<void>;
   /** Client-local only: clears the stored session token and resets local state. No server event. */
   leaveGame(): void;
   voteToPlayAgain(): Promise<void>;
@@ -179,6 +183,21 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     endGame() {
       const state = get(store);
       return emitWithAck('endGame', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+      });
+    },
+    kickPlayer(targetPlayerId: string) {
+      const state = get(store);
+      return emitWithAck('kickPlayer', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        targetPlayerId,
+      });
+    },
+    restartGame() {
+      const state = get(store);
+      return emitWithAck('restartGame', {
         roomId: state.room?.id,
         playerId: state.player?.id,
       });

@@ -23,6 +23,8 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
+    kickPlayer: vi.fn(async () => {}),
+    restartGame: vi.fn(async () => {}),
   };
 }
 

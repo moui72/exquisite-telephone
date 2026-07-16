@@ -230,6 +230,38 @@ describe('session store (client single source of state)', () => {
     expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('new-tok');
   });
 
+  it('kickPlayer emits kickPlayer with roomId/playerId/targetPlayerId, mirroring endGame shape', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, nonContinuable: true } });
+    await session.kickPlayer('p2');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'kickPlayer',
+      payload: { roomId: 'ABCDE', playerId: 'p1', targetPlayerId: 'p2' },
+    });
+    expect(get(session).room?.nonContinuable).toBe(true);
+  });
+
+  it('restartGame emits restartGame with roomId/playerId, mirroring endGame shape', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, status: 'writing', nonContinuable: false } });
+    await session.restartGame();
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'restartGame',
+      payload: { roomId: 'ABCDE', playerId: 'p1' },
+    });
+    expect(get(session).room?.status).toBe('writing');
+  });
+
   it('leaveGame clears the stored session token and resets state without emitting any socket event', async () => {
     const fake = makeFakeSocket();
     fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
