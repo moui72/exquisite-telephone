@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-16 (post-/ardd-plan: host-game-moderation-controls tasked). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-16 (post-/ardd-implement: host-game-moderation-controls merged). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -41,7 +41,7 @@ in code and dropped from the file).
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 1 tasked · 6 implemented — see
+0 backlogged · 0 planned · 0 tasked · 7 implemented — see
 `.project/features/`.
 
 - `fly-io-deployment` (implemented) — deployed at
@@ -90,7 +90,7 @@ in code and dropped from the file).
   conflicts), worktree reaped. Verified post-merge: typecheck 0
   errors, full suite passing (shared 18 + server 86 + client 72 = 176
   tests), lint clean.
-- `host-game-moderation-controls` (**tasked**) — host-facing "end
+- `host-game-moderation-controls` (**implemented**) — host-facing "end
   game" (now host-only at any `Room.status`, relaxed from the prior
   reveal-only guard), "kick player" (`Player.kicked`), and "restart
   game" (resets the same room to a fresh turn 0, requires
@@ -101,12 +101,22 @@ in code and dropped from the file).
   player's orphaned turn in place — the host must restart or end.
   Distinct from Phase 3's "play again" (a fresh room/players after a
   game naturally ends). Plan:
-  `plan-host-game-moderation-controls-2026-07-15-9c9b.md` (`approved`).
-  Tasks: `tasks-host-game-moderation-controls-7c9d.md` (`ready`, 0/12)
-  — 4 phases: shared types + kick-excluding book generation (T001–T002),
-  server handlers (T003–T007, parallel with Phase 3), client Moderation
-  Panel (T008–T011, parallel with Phase 2), full-suite verification
-  (T012). Not yet implemented.
+  `plan-host-game-moderation-controls-2026-07-15-9c9b.md`. Tasks:
+  `tasks-host-game-moderation-controls-7c9d.md` (**completed**, 12/12)
+  — delegated to a worktree subagent, merged to `main` clean
+  (fast-forward, no conflicts), worktree reaped. 4 phases: shared types
+  + kick-excluding book generation (T001–T002), server handlers
+  (T003–T007), client Moderation Panel + "game can't continue" notice
+  (T008–T011), full-suite verification (T012). Verified post-merge:
+  typecheck 0 errors, full suite passing (shared 18 + server 110 +
+  client 83 = 211 tests), lint clean. One server test flaked once
+  during a pre-commit hook run (timing-sensitive Socket.IO integration
+  test) but passed clean on immediate re-run and on the final full-suite
+  pass — not treated as a regression. No artifact changes were needed
+  during implementation beyond what `/ardd-plan` already applied
+  (`client/src/lib/stores/session.ts` turned out to be the right home
+  for the new socket methods, not `client.ts` as the plan's T008
+  suggested — a minor implementer judgment call, no artifact impact).
 
 The `onEndGame`-not-logged gap noted during v1 implementation is now
 fixed and merged — see `plan-4401-2026-07-14-7cf3.md` /
@@ -122,8 +132,9 @@ three are now implemented and merged to `main`.**
 2. **Drawing tools** — implemented.
 3. **Reveal page** — implemented.
 
-`host-game-moderation-controls` is now planned and tasked on its own
-(not part of any of the 3 phases above) — see Feature Backlog.
+`host-game-moderation-controls` was planned and tasked on its own
+(not part of any of the 3 phases above) and is now implemented and
+merged — see Feature Backlog.
 
 ## In Flight
 
@@ -174,29 +185,27 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**All three phases of the agreed Phase Plan, plus both defect fix-up
-plans, remain implemented and merged to `main`.** `host-game-
-moderation-controls` — the last backlogged feature — is now planned
-and tasked (not yet implemented): datamodel/infrastructure/ui were
-amended (new `Player.kicked`/`Room.nonContinuable` fields, `onEndGame`'s
-reveal-only guard relaxed to host-only-anytime, new `onKickPlayer`/
-`onRestartGame` handlers, new Moderation Panel UI section), all three
-now `stale` on diagrams pending a fresh `/ardd-diagram` pass. 1 defect
-remains on file (the deliberately-declined performance-budget claim,
-unaffected by this change). 0 open feedback files, 0 backlogged
-features. No cross-artifact conflicts or constitution violations.
-Working tree has this pass's changes only (3 artifacts, `STATUS.md`,
-new plan + tasks + feature-register files); no worktrees in flight.
-`tasks-host-game-moderation-controls-7c9d.md` is `ready`, 0/12 — the
-only non-`completed` tasks file among the 8 now present. Safe to
-/plan: yes (though the natural next step is /implement, not another
-/plan).
+**All 7 features (the original 3-phase Phase Plan, both defect
+fix-up plans, and now `host-game-moderation-controls`) are
+implemented and merged to `main`.** The last backlogged feature added
+host-only "kick player"/"end game" (any status)/"restart game"
+controls; datamodel/infrastructure/ui were amended accordingly (new
+`Player.kicked`/`Room.nonContinuable` fields, relaxed `onEndGame`
+guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
+Panel UI section) and all three are `stale` on diagrams pending a
+fresh `/ardd-diagram` pass. 1 defect remains on file (the
+deliberately-declined performance-budget claim, unaffected by this
+change). 0 open feedback files, 0 backlogged/planned/tasked features
+— every feature in the register is `implemented`. No cross-artifact
+conflicts or constitution violations. Working tree clean; no
+worktrees in flight; all 8 tasks files `completed`. Full suite: 211
+tests passing (shared 18 + server 110 + client 83), typecheck clean,
+lint clean. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-implement` to execute `tasks-host-game-moderation-controls-7c9d.md`
-(12 tasks across 4 phases). `/ardd-diagram` on datamodel,
-infrastructure, and ui would also bring the now-stale diagrams back in
-sync with this session's artifact changes. A manual smoke test of the
-merged app (`/run`) is still worth doing at some point, given how much
-surface area has landed across recent sessions.
+`/ardd-diagram` on datamodel, infrastructure, and ui to bring the
+now-stale diagrams back in sync with this session's artifact changes.
+A manual smoke test of the merged app (`/run`), particularly the new
+Moderation Panel's kick/end/restart flow, is worth doing at some
+point given how much surface area has landed across recent sessions.
