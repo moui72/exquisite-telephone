@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-14
-diagram_status: unrendered
+last_updated: 2026-07-15
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -43,6 +43,28 @@ The host also sees a per-turn timer selector (off / 15m / 30m / 1hr /
 means the room waits indefinitely for the current round (see Writing /
 Drawing View); a duration means the room can advance a stalled round
 via the timeout-vote flow described there.
+
+## Moderation Panel
+
+A host-only, collapsible panel available during `lobby`, `writing`, and
+`reveal` (see [[datamodel]] Normalization Rules — Moderation), never
+shown to non-host players:
+
+- **Per-player "kick"** control next to each entry in the player list.
+  Kicking sets `Player.kicked` and, if the room is `writing`, also sets
+  `Room.nonContinuable` — the panel then surfaces a "this game can't
+  continue" notice to the host (and, via the room-wide broadcast, to
+  every player) alongside the "restart game" control below. Kicked
+  players are shown struck-through in the roster rather than removed
+  from the list, so their contribution to books-so-far stays visible.
+- **"End game"** — the same host-only control already described on the
+  Reveal page (see Reveal View below), now also reachable from
+  `lobby`/`writing` via this panel, since a host moderating offensive
+  content can't wait for the game to reach Reveal.
+- **"Restart game"** — visible only once `Room.nonContinuable` is
+  `true`. Restarts the *same* room from a fresh turn 0 (new `books`,
+  `entries` cleared, back to `writing`), excluding any kicked players;
+  distinct from Reveal's "Play again", which creates a brand-new room.
 
 ## Writing / Drawing View
 
@@ -113,9 +135,10 @@ game controls):
   the host as a live readiness count, e.g. "3 of 4 ready" — purely
   informational, doesn't unlock or gate the host's controls).
 - **Host**: "End game" (transitions `Room.status` to `ended` — see the
-  **Ended** state below) and "Play again" (starts a brand-new room,
-  auto-joining every current player; available regardless of how many
-  have voted).
+  **Ended** state below; the same control also exposed via the
+  Moderation Panel during `lobby`/`writing`) and "Play again" (starts a
+  brand-new room, auto-joining every current player; available
+  regardless of how many have voted).
 
 ## States
 

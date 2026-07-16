@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-15 (evening). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-16 (post-/ardd-plan: host-game-moderation-controls tasked). Keep this current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -17,31 +17,19 @@ _(none)_
 
 ## Diagrams
 
-- datamodel.md — unrendered ⚠️ (never generated — run `/ardd-diagram datamodel`)
-- infrastructure.md — unrendered ⚠️ (never generated — run `/ardd-diagram infrastructure`)
-- ui.md — unrendered ⚠️ (never generated — run `/ardd-diagram ui`)
+- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` — `kicked`/`nonContinuable` fields added by this plan's artifact changes aren't reflected yet)
+- infrastructure.md — stale ⚠️ (run `/ardd-diagram infrastructure` — `onKickPlayer`/`onRestartGame` handlers added)
+- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Moderation Panel added)
 
 ## Code-vs-Artifact Defects
 
-3 defects on file — see `.project/DEFECTS.md`, last checked 2026-07-14
-(read-only summary below; stale w.r.t. the two fixes landed since —
-next `/ardd-defects` pass will confirm both clean).
-- **drift** (`datamodel.md`, `f333f65c`): the End-of-game-controls
-  Normalization Rule claims all three actions (Leave/End/Play again)
-  are "only meaningful while `Room.status === 'reveal'`", but only
-  `onPlayAgain` actually enforced this server-side. **Fixed and
-  merged** — `tasks-reveal-defects-c65e.md` completed (3/3);
-  `onEndGame` and `onVoteToPlayAgain` now both reject with
-  `room-not-in-reveal` outside `status === 'reveal'`.
-- **drift** (`ui.md`, `aff300d1`): the Reveal View claims the PNG save
-  control is "available in both modes," but it was only rendered in
-  the static show-everything grid. **Fixed and merged** — the animated
-  mode now has the same "Save as PNG" button.
-- **drift** (`constitution.md`, Quality Standards, `17a7ea0a`): no
-  artifact states a performance budget for any real-time operation.
-  Still deliberately declined (`plan-4401-2026-07-14-7cf3.md`) —
-  carried forward each pass since declining the fix doesn't make the
-  underlying claim true.
+1 defect on file — see `.project/DEFECTS.md`, last checked 2026-07-15
+(fresh full pass; the two previously-recorded fixes reconfirmed clean
+in code and dropped from the file).
+- **drift** (`constitution.md`, Quality Standards): no artifact states
+  a performance budget for any real-time operation. Still deliberately
+  declined (`plan-4401-2026-07-14-7cf3.md`) — carried forward each
+  pass since declining the fix doesn't make the underlying claim true.
 
 ## Feedback
 
@@ -53,9 +41,8 @@ next `/ardd-defects` pass will confirm both clean).
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 0 tasked · 5 implemented — see
-`.project/features/`. Target a backlogged slug with `/ardd-plan
-<slug>`.
+0 backlogged · 0 planned · 1 tasked · 6 implemented — see
+`.project/features/`.
 
 - `fly-io-deployment` (implemented) — deployed at
   https://exquisite-telephone.fly.dev/. Plan:
@@ -103,13 +90,23 @@ next `/ardd-defects` pass will confirm both clean).
   conflicts), worktree reaped. Verified post-merge: typecheck 0
   errors, full suite passing (shared 18 + server 86 + client 72 = 176
   tests), lint clean.
-- `host-game-moderation-controls` (backlogged) — host-facing "end
-  game", "kick player", and "restart game" controls. Kicking a player
-  immediately makes the current game non-continuable (without
-  auto-restarting), so the host has time to kick more players before
-  manually restarting from turn 0. Distinct from Phase 3's "play
-  again" (a fresh room after a game naturally ends) despite surface
-  similarity to "restart". Still not assigned to a phase.
+- `host-game-moderation-controls` (**tasked**) — host-facing "end
+  game" (now host-only at any `Room.status`, relaxed from the prior
+  reveal-only guard), "kick player" (`Player.kicked`), and "restart
+  game" (resets the same room to a fresh turn 0, requires
+  `Room.nonContinuable`) controls. Kicking a player during `writing`
+  immediately sets `Room.nonContinuable` and freezes further
+  submissions (`onSubmitEntry` rejects `room-non-continuable`) rather
+  than trying to make the round-robin turn engine skip the kicked
+  player's orphaned turn in place — the host must restart or end.
+  Distinct from Phase 3's "play again" (a fresh room/players after a
+  game naturally ends). Plan:
+  `plan-host-game-moderation-controls-2026-07-15-9c9b.md` (`approved`).
+  Tasks: `tasks-host-game-moderation-controls-7c9d.md` (`ready`, 0/12)
+  — 4 phases: shared types + kick-excluding book generation (T001–T002),
+  server handlers (T003–T007, parallel with Phase 3), client Moderation
+  Panel (T008–T011, parallel with Phase 2), full-suite verification
+  (T012). Not yet implemented.
 
 The `onEndGame`-not-logged gap noted during v1 implementation is now
 fixed and merged — see `plan-4401-2026-07-14-7cf3.md` /
@@ -125,9 +122,8 @@ three are now implemented and merged to `main`.**
 2. **Drawing tools** — implemented.
 3. **Reveal page** — implemented.
 
-`host-game-moderation-controls` is the only remaining backlog item,
-not yet assigned to a phase (there's no phase left to assign it to —
-it can just be planned on its own whenever).
+`host-game-moderation-controls` is now planned and tasked on its own
+(not part of any of the 3 phases above) — see Feature Backlog.
 
 ## In Flight
 
@@ -179,22 +175,28 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 ## Summary
 
 **All three phases of the agreed Phase Plan, plus both defect fix-up
-plans, are implemented and merged to `main`.** Of the 3 defects on
-file: 2 fixed and merged, 1 deliberately declined. 0 open feedback
-files. No cross-artifact conflicts or constitution violations. Working
-tree clean, no worktrees in flight, all 7 tasks files `completed`.
-Safe to /plan: yes. (One test flaked on a single full-suite run during
-verification — passed clean on two immediate re-runs; not treated as
-a regression, but worth a glance if it recurs — likely timing
-sensitivity in one of the real-Socket.IO integration tests.)
+plans, remain implemented and merged to `main`.** `host-game-
+moderation-controls` — the last backlogged feature — is now planned
+and tasked (not yet implemented): datamodel/infrastructure/ui were
+amended (new `Player.kicked`/`Room.nonContinuable` fields, `onEndGame`'s
+reveal-only guard relaxed to host-only-anytime, new `onKickPlayer`/
+`onRestartGame` handlers, new Moderation Panel UI section), all three
+now `stale` on diagrams pending a fresh `/ardd-diagram` pass. 1 defect
+remains on file (the deliberately-declined performance-budget claim,
+unaffected by this change). 0 open feedback files, 0 backlogged
+features. No cross-artifact conflicts or constitution violations.
+Working tree has this pass's changes only (3 artifacts, `STATUS.md`,
+new plan + tasks + feature-register files); no worktrees in flight.
+`tasks-host-game-moderation-controls-7c9d.md` is `ready`, 0/12 — the
+only non-`completed` tasks file among the 8 now present. Safe to
+/plan: yes (though the natural next step is /implement, not another
+/plan).
 
 ## Recommended Next Step
 
-A fresh `/ardd-defects` pass would confirm the two just-fixed items
-clean (last verified 2026-07-14, before this fix landed).
-`host-game-moderation-controls` is the only remaining backlogged item,
-ready to plan whenever (`/ardd-plan host-game-moderation-controls`).
-`/ardd-diagram` on datamodel, infrastructure, and ui would also give
-this stable design a visual reference. A manual smoke test of the
+`/ardd-implement` to execute `tasks-host-game-moderation-controls-7c9d.md`
+(12 tasks across 4 phases). `/ardd-diagram` on datamodel,
+infrastructure, and ui would also bring the now-stale diagrams back in
+sync with this session's artifact changes. A manual smoke test of the
 merged app (`/run`) is still worth doing at some point, given how much
-surface area has landed across this session.
+surface area has landed across recent sessions.

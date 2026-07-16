@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-14
-diagram_status: unrendered
+last_updated: 2026-07-15
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -41,6 +41,7 @@ to survive a server restart.
 | timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); cleared whenever the round advances. |
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
+| nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
 
 ### Player
 
@@ -51,6 +52,7 @@ to survive a server restart.
 | name | string | Display name chosen at join time |
 | connected | boolean | Drives reconnect-tolerance UI state |
 | sessionToken | string | Opaque token used to resume the same Player.id after a dropped connection. TTL and rejoin-after-end behavior are defined in [[infrastructure]]'s Session Store section. |
+| kicked | boolean | Host-set via moderation "kick player" (see Normalization Rules); defaults `false`. A kicked player stays in `Room.players` (matches the existing non-cleanup pattern for disconnected/departed players); excluded from the regenerated `books` on the next "restart game," and from `eligibleVoterIds`/`stalledPlayerIds` on any *subsequent* timeout vote (a vote already open at kick time is unaffected — it resolves or expires as already computed). |
 
 ### Book
 
@@ -130,17 +132,25 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   which — combined with round-gating above — lets the round advance
   normally. `Room.timerExtensions` and `Room.pendingTimeoutVote` reset
   to empty/`null` whenever the current round advances.
-- **End-of-game controls (Reveal page).** Three distinct actions, all
-  only meaningful while `Room.status === 'reveal'`:
-  - *Leave game* (non-host): client-local only — clears the leaving
-    player's stored session token and resets their local session
-    state. No server event; `Player.connected` and the room roster are
-    left as-is (matches the existing pattern of not eagerly cleaning
-    up disconnected/departed players).
-  - *End game* (host-only): the existing `Room.status = 'ended'`
-    transition (`onEndGame`) — now reachable from the Reveal page's
-    UI, not just conceptually available server-side.
-  - *Play again* (host-only): creates a **brand-new** `Room` (fresh
+- **End-of-game controls (Reveal page).** Three distinct actions:
+  - *Leave game* (non-host, `status === 'reveal'` only): client-local
+    only — clears the leaving player's stored session token and
+    resets their local session state. No server event;
+    `Player.connected` and the room roster are left as-is (matches
+    the existing pattern of not eagerly cleaning up
+    disconnected/departed players).
+  - *End game* (host-only, **any `Room.status`**): the `Room.status =
+    'ended'` transition (`onEndGame`). Reachable both from the Reveal
+    page's UI and from the moderation panel available during
+    `lobby`/`writing` (see Moderation below) — the same handler, no
+    status guard, since a host ending a game for offensive content
+    can't wait for `reveal`. Revised from the original reveal-only
+    guard when moderation controls were added: that guard existed only
+    to make the artifact's wording match the code, and moderation
+    requires an any-time end, so the wording moved instead of the
+    code staying restricted.
+  - *Play again* (host-only, `status === 'reveal'` only): creates a
+    **brand-new** `Room` (fresh
     `id`, `status: 'lobby'`, empty `playAgainVotes`) and auto-joins
     every player in the old room's `players` array — regardless of
     `connected` state — as a new `Player` (new `id`, new
@@ -152,6 +162,34 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
     routes to the new room's Lobby without re-entering a code. The old
     room is left in the store untouched (same non-cleanup pattern as
     `ended` rooms).
+- **Moderation (kick / restart).** Host-only controls, visible during
+  `lobby`/`writing`/`reveal` (see [[ui]] Lobby View / Writing-Drawing
+  View), distinct from the Reveal-only "Play again" above:
+  - *Kick player*: sets the target `Player.kicked = true`; their
+    already-submitted entries stay in their books untouched. If the
+    room is `writing` when the kick happens, `Room.nonContinuable` is
+    also set `true` in the same operation — round-gating means a book
+    still waiting on the kicked player's now-abandoned turn can never
+    reach the next round on its own. Rather than teaching the
+    round-robin engine to skip a kicked player's now-orphaned turn
+    in-place (nontrivial: it would shift author-index math for every
+    book, mid-round), `onSubmitEntry` simply rejects every further
+    submission (`room-non-continuable`) while `Room.nonContinuable` is
+    `true` — the round is frozen until the host restarts or ends.
+    Kicking during `lobby` or `reveal` does not set `nonContinuable`
+    (there's no in-progress round to strand): a `lobby` kick just
+    shrinks the roster before `onStartGame`'s book generation, and a
+    `reveal` kick is purely cosmetic (the game is already over).
+  - *Restart game*: only meaningful once `Room.nonContinuable` is
+    `true`. Resets the **same** `Room` in place — `books` regenerated
+    fresh (one per non-kicked player, per the existing
+    `createBooksForRoom` shape used by `onStartGame`), `entries`
+    empty, `status` back to `writing`, `roundStartedAt` reset to now,
+    `timerExtensions`/`pendingTimeoutVote` cleared, `nonContinuable`
+    reset to `false`. Unlike *Play again*, this does not create a new
+    `Room.id` or new `Player` records — kicked players are simply
+    excluded from the regenerated `books`, and everyone else keeps
+    their existing `Player.id`/`sessionToken`.
 
 ## Indexes
 

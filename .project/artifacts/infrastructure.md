@@ -1,8 +1,8 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-14
-diagram_status: unrendered
+last_updated: 2026-07-15
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -37,11 +37,22 @@ Each `Room` (see [[datamodel]]) maps to a Socket.IO room. Server-side
 event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
 `onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSubmitEntry`,
-`onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`, `onRejoin`,
-`onDisconnect`), not a single large switch. Drawing entries sync only
-once, in full, via `onSubmitEntry` when a player finishes their turn —
-there is no per-stroke real-time sync handler; stroke data never
-leaves the client mid-turn.
+`onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`, `onKickPlayer`,
+`onRestartGame`, `onRejoin`, `onDisconnect`), not a single large
+switch. Drawing entries sync only once, in full, via `onSubmitEntry`
+when a player finishes their turn — there is no per-stroke real-time
+sync handler; stroke data never leaves the client mid-turn.
+
+`onEndGame` carries no `Room.status` guard (host-only is the only
+check) — it's reachable both from the Reveal page and from the
+moderation panel available during `lobby`/`writing` (see [[datamodel]]
+Normalization Rules — End-of-game controls). `onKickPlayer` (host-only)
+sets the target `Player.kicked = true` and, if `status === 'writing'`,
+also sets `Room.nonContinuable = true` in the same update. `onRestartGame`
+(host-only, requires `Room.nonContinuable === true`) regenerates
+`books`/`entries` for the same `Room` and returns it to `writing` — see
+[[datamodel]] Normalization Rules — Moderation for the full field-level
+behavior of all three.
 
 Every other handler broadcasts one shared payload to a room
 (`socket.to(roomId).emit(...)`), since every recipient's view of that
