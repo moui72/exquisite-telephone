@@ -1,6 +1,6 @@
 ---
 slug: host-game-moderation-controls
-status: tasked
+status: implemented
 logged: 2026-07-14
 plan: plan-host-game-moderation-controls-2026-07-15-9c9b.md
 tasks: tasks-host-game-moderation-controls-7c9d.md
