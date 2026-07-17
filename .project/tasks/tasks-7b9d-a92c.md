@@ -1,7 +1,7 @@
 ---
 plan: plan-7b9d-2026-07-17-dded.md
 generated: 2026-07-17
-status: ready
+status: in-progress
 ---
 
 # Tasks
