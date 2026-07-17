@@ -30,6 +30,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           pendingTimeoutVote: null,
           playAgainVotes: [],
           nonContinuable: false,
+          revealStartedAt: null,
         },
         player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
         error: null,
@@ -82,6 +83,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
 
     const hostSession = makeFakeSession({
@@ -120,6 +122,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -143,6 +146,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -180,6 +184,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -210,6 +215,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -253,6 +259,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -281,6 +288,7 @@ describe('Lobby view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
 
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });

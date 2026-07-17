@@ -27,6 +27,7 @@ timerExtensions: {},
 pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
+revealStartedAt: null,
     };
 
     render(TurnStatus, { props: { room } });
@@ -67,6 +68,7 @@ timerExtensions: {},
 pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
+revealStartedAt: null,
     };
 
     render(TurnStatus, { props: { room } });

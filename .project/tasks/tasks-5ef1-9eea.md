@@ -56,7 +56,7 @@ made and recorded in `.project/artifacts/datamodel.md` and
 `.project/artifacts/ui.md` (refined 2026-07-17). Load both artifacts
 before starting either task.
 
-- [ ] T005 [artifacts: datamodel, ui] **Reveal pacing: server-synchronized
+- [x] T005 [artifacts: datamodel, ui] **Reveal pacing: server-synchronized
   clock.** Confirmed root cause: `Reveal.svelte`'s `startCoverDelay`/
   `startTickInterval` run a plain client-local `setTimeout`/
   `setInterval` per socket with no shared clock, so timer drift between

@@ -45,6 +45,7 @@ timerExtensions: {},
 pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
+revealStartedAt: null,
   };
 }
 

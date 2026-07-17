@@ -84,6 +84,7 @@ describe('Reveal view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -144,6 +145,7 @@ describe('Reveal view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -199,6 +201,7 @@ describe('Reveal view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     const session = makeFakeSession({ room, player: ada, error: null });
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
@@ -229,6 +232,7 @@ describe('Reveal view', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
       ...overrides,
     };
   }
@@ -328,6 +332,7 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
   }
 
@@ -424,5 +429,135 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
     await fireEvent.click(saveButton);
 
     expect(exportFn).toHaveBeenCalledWith(room.books[0], room.players);
+  });
+});
+
+describe('Reveal view — position derived from Room.revealStartedAt, independent of mount time', () => {
+  function makeEntry(bookId: string, authorId: string, position: number, content: string) {
+    return {
+      id: `${bookId}-${position}`,
+      bookId,
+      authorId,
+      position,
+      type: 'text' as const,
+      content,
+    };
+  }
+
+  function makeTwoBookRoom(revealStartedAt: number | null): Room {
+    const bookA: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        makeEntry('book-a', ada.id, 0, 'a0'),
+        makeEntry('book-a', grace.id, 1, 'a1'),
+        makeEntry('book-a', ada.id, 2, 'a2'),
+        makeEntry('book-a', grace.id, 3, 'a3'),
+        makeEntry('book-a', ada.id, 4, 'a4'),
+      ],
+    };
+    const bookB: Book = {
+      id: 'book-b',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('book-b', grace.id, 0, 'b0')],
+    };
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [bookA, bookB],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt,
+    };
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('given a fixed revealStartedAt and fixed "now", two mounts at different real times produce the same visible state', async () => {
+    const revealStartedAt = 1_000_000;
+
+    // First mount: the component's own mount happens "soon" after
+    // revealStartedAt.
+    vi.setSystemTime(revealStartedAt + 1000);
+    const roomEarly = makeTwoBookRoom(revealStartedAt);
+    const sessionEarly = makeFakeSession({ room: roomEarly, player: ada, error: null });
+    const { unmount } = render(Reveal, { props: { session: sessionEarly } });
+    await tick();
+
+    // Advance the shared clock to a fixed elapsed time: cover delay (2.5s)
+    // plus one full 4s tick — 2 entries should be visible.
+    vi.setSystemTime(revealStartedAt + 2500 + 4000);
+    await tick();
+    // Force a recompute tick (the component polls every 250ms).
+    vi.advanceTimersByTime(300);
+    await tick();
+
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a1')).toBeInTheDocument();
+    expect(screen.queryByText('a2')).not.toBeInTheDocument();
+    unmount();
+    cleanup();
+
+    // Second mount: the component itself mounts much later in real time
+    // (simulating a client that joined/refreshed long after reveal
+    // started), but the room's revealStartedAt and "now" are identical to
+    // the first mount's final state above.
+    vi.setSystemTime(revealStartedAt + 2500 + 4000);
+    const roomLate = makeTwoBookRoom(revealStartedAt);
+    const sessionLate = makeFakeSession({ room: roomLate, player: ada, error: null });
+    render(Reveal, { props: { session: sessionLate } });
+    await tick();
+    vi.advanceTimersByTime(300);
+    await tick();
+
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a1')).toBeInTheDocument();
+    expect(screen.queryByText('a2')).not.toBeInTheDocument();
+  });
+
+  it('settles into showEverything once elapsed time exceeds every book\'s full reveal sequence', async () => {
+    const revealStartedAt = 2_000_000;
+    vi.setSystemTime(revealStartedAt);
+    const room = makeTwoBookRoom(revealStartedAt);
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    // Far beyond the time needed to fully reveal both books.
+    vi.setSystemTime(revealStartedAt + 10_000_000);
+    vi.advanceTimersByTime(300);
+    await tick();
+
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a4')).toBeInTheDocument();
+    expect(screen.getByText('b0')).toBeInTheDocument();
+  });
+
+  it('falls back to its own mount time when revealStartedAt is null, without throwing', async () => {
+    const room = makeTwoBookRoom(null);
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await tick();
+
+    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
+    expect(screen.queryByText('a0')).not.toBeInTheDocument();
   });
 });

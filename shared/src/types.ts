@@ -134,4 +134,12 @@ export interface Room {
    * has nothing to make non-continuable.
    */
   nonContinuable: boolean;
+  /**
+   * Epoch ms marking when `status` transitioned to `reveal`; `null`
+   * otherwise. Gives every client a shared reference point to derive the
+   * Reveal page's animated pacing (current book index, revealed-entry
+   * count) as a pure function of `now - revealStartedAt`, rather than
+   * each client running its own independent local timer.
+   */
+  revealStartedAt: number | null;
 }

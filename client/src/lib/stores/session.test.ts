@@ -49,6 +49,7 @@ const sampleRoom: Room = {
   pendingTimeoutVote: null,
   playAgainVotes: [],
   nonContinuable: false,
+  revealStartedAt: null,
 };
 
 describe('session store (client single source of state)', () => {
