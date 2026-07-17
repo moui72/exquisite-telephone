@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Confirmed-root-cause fixes (F1, F2)
 
-- [ ] T001 [artifacts: ui] Write a failing test in
+- [x] T001 [artifacts: ui] Write a failing test in
   `client/src/lib/views/WritingDrawing.svelte`'s test file reproducing
   F1: render the component for "player B" whose `myTurn` is assigned and
   who has typed a partial phrase (or drawn partial strokes) into local
@@ -19,7 +19,7 @@ status: in-progress
   `textValue`/`drawnOps` are still intact after that update — this test
   should fail against current code, which clears them.
   `[feedback: feedback-main-3ea6.md F001]`
-- [ ] T002 [artifacts: ui] Fix the draft-reset reactive statement in
+- [x] T002 [artifacts: ui] Fix the draft-reset reactive statement in
   `client/src/lib/views/WritingDrawing.svelte` (currently `$: if (myTurn)
   { textValue = ''; drawnOps = []; }` around line 51-54). Track the
   previous turn's identity (`bookId` + `position`) in a local variable
