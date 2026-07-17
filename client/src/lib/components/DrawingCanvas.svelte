@@ -108,6 +108,10 @@
       onOpsChange([...ops, { type: 'fill', point, color: effectiveColor }]);
       return;
     }
+    if (ctx) {
+      ctx.strokeStyle = effectiveColor;
+      ctx.lineWidth = activeWidth;
+    }
     canvasEl.setPointerCapture?.(event.pointerId);
     currentStroke = [toPoint(event)];
   }

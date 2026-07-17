@@ -28,7 +28,7 @@ status: in-progress
   player), not merely when `myTurn`'s object reference changes due to an
   unrelated room broadcast. Make T001 pass.
   `[feedback: feedback-main-3ea6.md F001]`
-- [ ] T003 [artifacts: ui] [parallel] Write a failing test in
+- [x] T003 [artifacts: ui] [parallel] Write a failing test in
   `client/src/lib/components/DrawingCanvas.svelte`'s test file
   reproducing F2: mount the canvas, select a non-default color and/or
   width, dispatch `pointerdown` then a `pointermove` (without a
@@ -39,7 +39,7 @@ status: in-progress
   should fail against current code, which only updates `ctx` on
   `redrawAll()` after the stroke's `onOpsChange` fires.
   `[feedback: feedback-main-6d3d.md F001]`
-- [ ] T004 [artifacts: ui] [parallel] Fix
+- [x] T004 [artifacts: ui] [parallel] Fix
   `client/src/lib/components/DrawingCanvas.svelte`'s `handlePointerDown`
   to set `ctx.strokeStyle = effectiveColor` and `ctx.lineWidth =
   activeWidth` before starting the new stroke (`currentStroke =
