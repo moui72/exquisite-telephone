@@ -1,16 +1,18 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-17 (the PNG-export flood-fill leak bug is now fixed and
-merged: `tasks-7b9d-a92c.md` (3/3, `completed`) merged clean
-(fast-forward, no conflicts) from its delegated worktree; full suite
-green post-merge, 212 tests. The other four bugs' plan
-(`plan-5ef1-2026-07-17-9e40.md` / `tasks-5ef1-9eea.md`) is still being
-implemented in a separate delegated worktree — 4/7 as of this writing,
-not yet merged. A fresh `/ardd-audit` full pass also ran this session —
-8 findings (0 suggestions, 5 questions, 3 risks) written to
-`.project/audit.md`, not tracked here since it isn't part of this
-report's schema; see that file directly.). Keep this current as
-artifacts are refined and open questions are resolved._
+_Updated: 2026-07-17 (`tasks-5ef1-9eea.md`'s worktree reported back and
+merged (non-fast-forward, no conflicts): 2 of its 4 bugs are fixed with
+passing regression tests (F1 input-clearing, F2 stale draw color/width);
+the other 2 hit the reproduce-first task's escape hatch and need a
+decision — see Open Questions below. The tasks file stays `in-progress`
+(4/7) on `main`, not `completed`, until F3/F4 are resolved one way or
+another. Combined with the earlier-merged PNG-export fix
+(`tasks-7b9d-a92c.md`, 3/3, `completed`), full suite on `main` is now 214
+tests, all green (lint/typecheck clean too). A fresh `/ardd-audit` full
+pass also ran this session — 8 findings (0 suggestions, 5 questions, 3
+risks) written to `.project/audit.md`, not tracked here since it isn't
+part of this report's schema; see that file directly.). Keep this
+current as artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -23,7 +25,33 @@ artifacts are refined and open questions are resolved._
 
 ## Open Questions
 
-_(none)_
+- **F3 (host missing Reveal replays, `feedback-main-4258.md`) — real bug,
+  needs a scoping decision.** Live 3-tab reproduction confirmed the
+  symptom and found the root cause: `Reveal.svelte`'s reveal-pacing
+  animation runs a plain client-local `setTimeout`/`setInterval` per
+  socket, seeded from that client's own `onMount`, with no shared clock
+  — timer drift between clients compounds unrecoverably over a 3-book
+  sequence, so the host's tab reliably raced ahead of non-host tabs to
+  the static end state. A correct fix needs a new `Room` field (e.g.
+  `revealStartedAt`, stamped server-side when `status` flips to
+  `reveal`) so every client derives its animation position as a pure
+  function of `now - revealStartedAt` instead of local counters — a
+  `datamodel.md` decision, not something the implementer was authorized
+  to add unilaterally. Decide: scope a follow-up `/ardd-refine
+  datamodel` + plan for a server-synchronized reveal clock, or handle
+  differently.
+- **F4 (kick button doing nothing, `feedback-main-e2ff.md`) — does not
+  reproduce.** Live-tested the exact reported flow (host kicks a
+  non-host player) in both `writing` and `reveal` phases, twice
+  independently — kick worked correctly every time: ack/broadcast
+  round-tripped, target shown struck-through with a disabled "Kicked"
+  button, room-wide "can't continue" notice appeared correctly during
+  `writing`. This directly contradicts the original report. Decide:
+  close `feedback-main-e2ff.md` as non-reproducing, or is there a
+  specific path not covered (one candidate surfaced during testing: the
+  *kicked player's own* client shows no notice/ejection when kicked
+  mid-`reveal` — possibly in-spec, since `ui.md` only documents a
+  writing-phase `nonContinuable` notice, not a reveal-phase one)?
 
 ## Diagrams
 
@@ -46,15 +74,22 @@ in code and dropped from the file).
 0 open feedback files. All seven items to date are `planned`:
 `feedback-main-296e.md` (mouse-drawing cursor bug) and
 `feedback-main-4af4.md` (round-gated turns) into their original
-2026-07-14 plans; the four items found in this session's `/run`
-smoke-testing — `feedback-main-3ea6.md` (F001, input-clearing),
-`feedback-main-4258.md` (F001, host missing Reveal replays),
-`feedback-main-6d3d.md` (F001, stale draw-tool color/width mid-stroke),
-and `feedback-main-e2ff.md` (F001, kick button doing nothing) — into
-`plan-5ef1-2026-07-17-9e40.md` (tasked as `tasks-5ef1-9eea.md`, 0/7,
-being implemented in a delegated worktree); and `feedback-main-8a99.md`
-(F001, PNG-export flood-fill leak) into `plan-7b9d-2026-07-17-dded.md`
-(tasked as `tasks-7b9d-a92c.md`, **completed 3/3, merged to `main`**).
+2026-07-14 plans; `feedback-main-8a99.md` (F001, PNG-export flood-fill
+leak) into `plan-7b9d-2026-07-17-dded.md` (tasked as
+`tasks-7b9d-a92c.md`, **completed 3/3, merged to `main`**); and the four
+items found in this session's `/run` smoke-testing into
+`plan-5ef1-2026-07-17-9e40.md` (tasked as `tasks-5ef1-9eea.md`,
+**in-progress, 4/7, merged to `main` at that progress**):
+- `feedback-main-3ea6.md` (F001, input-clearing) — **fixed**, regression
+  test passing.
+- `feedback-main-6d3d.md` (F001, stale draw-tool color/width mid-stroke)
+  — **fixed**, regression test passing.
+- `feedback-main-4258.md` (F001, host missing Reveal replays) — **not
+  yet fixed**; reproduced live with a confirmed root cause, but the fix
+  needs a `datamodel.md` decision — see Open Questions above.
+- `feedback-main-e2ff.md` (F001, kick button doing nothing) — **does not
+  reproduce** on further live testing — see Open Questions above.
+
 Neither plan has bound features (both are pure bug-fix plans), so
 neither is reflected in the Feature Backlog counts below.
 
@@ -157,12 +192,8 @@ merged — see Feature Backlog.
 
 ## In Flight
 
-- Worktree `.claude/worktrees/agent-ac842881e4bdaf8d2` (branch
-  `worktree-agent-ac842881e4bdaf8d2`) — `tasks-5ef1-9eea.md`
-  `in-progress`, 4/7 as of this writing (four bug fixes: input-clearing,
-  stale draw-tool color/width, host missing Reveal replays, kick button
-  doing nothing). Delegated via `delegation: eager`; will auto-merge on
-  completion per `merge_policy: auto`.
+_(none — both delegated worktrees from this session reported back,
+merged clean, and were reaped)_
 
 ## fly-io-deployment: shipped
 
@@ -219,47 +250,55 @@ guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
 Panel UI section) and all three are `stale` on diagrams pending a
 fresh `/ardd-diagram` pass. 1 defect remains on file (the
 deliberately-declined performance-budget claim, unaffected by this
-change). 0 open feedback files — all 5 bugs found this session are
-planned; 1 of 2 bug-fix plans is fully merged (see Feedback above), 0
+change). 0 open feedback files, but 2 open questions now block full
+closure of `tasks-5ef1-9eea.md` — see Open Questions above. Of the 5
+bugs found this session: 3 are fully fixed and merged (input-clearing,
+stale draw color/width, PNG-export flood-fill leak — all with passing
+regression tests); 1 (host missing Reveal replays) reproduced live with
+a confirmed root cause but needs a `datamodel.md` decision before it can
+be fixed; 1 (kick button doing nothing) does not reproduce on further
+live testing and needs a decision on whether to close it. 0
 backlogged/planned/tasked features — every feature in the register is
 `implemented` (both new plans bind no features). No cross-artifact
-conflicts or constitution violations. Working tree clean on `main`, one
-worktree still in flight (see In Flight below) implementing
-`tasks-5ef1-9eea.md`, 4/7 as of this writing. `tasks-7b9d-a92c.md`
-(3/3, `completed`) merged clean (fast-forward) and its worktree reaped.
-9 tasks files now `completed` total. Full suite on `main` post-merge:
-212 tests passing (shared 18 + server 110 + client 84 — the new
-flood-fill regression test added the +1), typecheck clean, lint clean.
-A manual `/run` smoke test this session (3 real isolated player
-sessions, live in Chrome) confirmed the core write→draw→write loop,
-round-gating, and the drawing-canvas pointer-accuracy fix all work
-correctly end-to-end; all 5 bugs now planned were reported separately by
-the user after that session, from further hands-on use. Root cause was
-confirmed by reading the code for 3 of the 5 (input-clearing:
-`WritingDrawing.svelte`'s draft-reset reactive statement fires on any
-room broadcast, not just this player's own turn changing; stale
-color/width: `DrawingCanvas.svelte` only applies the selected
-color/width to the canvas context after a stroke finishes, not when it
-starts; PNG-export flood-fill leak: `pngExport.ts`'s `renderBookOntoContext`
-scoped the flood fill to the *entire* composite canvas instead of just
-the current entry's own row, so a background fill bled into
-neighboring entries — now fixed and merged; distinct from `ui.md`'s
-already-documented exact-match-color Production Annotation, which is
-about tolerance, not bounding). The other 2 (host missing Reveal
-replays; kick button doing nothing), still in progress in the other
-worktree, read correctly in the code on static inspection — including
-the kick handler, which `DEFECTS.md`'s last pass found matching its
-artifact description with passing tests — so that plan's Phase 2
-reproduces both live before writing a fix, rather than guessing. A
-separate `/ardd-audit` full pass wrote 8 findings (0 suggestions, 5
-questions, 3 risks) to `.project/audit.md` — open, not yet resolved.
-Safe to /plan: yes.
+conflicts or constitution violations. Working tree clean on `main`; no
+worktrees in flight — both this session's delegated worktrees reported
+back, merged (one fast-forward, one non-fast-forward, neither with
+conflicts), and were reaped. `tasks-7b9d-a92c.md` (3/3) is `completed`;
+`tasks-5ef1-9eea.md` (4/7) stays `in-progress` pending the two open
+questions. 9 tasks files now `completed`, 1 `in-progress`. Full suite on
+`main` post-merge: 214 tests passing (shared 18 + server 110 + client
+86), typecheck clean, lint clean. A manual `/run` smoke test this
+session (3 real isolated player sessions, live in Chrome) confirmed the
+core write→draw→write loop, round-gating, and the drawing-canvas
+pointer-accuracy fix all work correctly end-to-end; the 5 bugs above
+were reported separately by the user after that session, from further
+hands-on use. Root cause was confirmed and fixed for 3 of the 5
+(input-clearing: `WritingDrawing.svelte`'s draft-reset reactive
+statement fired on any room broadcast, not just this player's own turn
+changing; stale color/width: `DrawingCanvas.svelte` only applied the
+selected color/width to the canvas context after a stroke finished, not
+when it started; PNG-export flood-fill leak: `pngExport.ts`'s
+`renderBookOntoContext` scoped the flood fill to the *entire* composite
+canvas instead of just the current entry's own row — distinct from
+`ui.md`'s already-documented exact-match-color Production Annotation,
+which is about tolerance, not bounding). The other 2 needed live
+reproduction per the plan's design: the Reveal-replay bug turned out
+real (a per-client unsynchronized animation clock — see Open Questions),
+while the kick bug turned out not to reproduce at all, directly
+contradicting the original report. A separate `/ardd-audit` full pass
+wrote 8 findings (0 suggestions, 5 questions, 3 risks) to
+`.project/audit.md` — open, not yet resolved. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Check in on the in-flight worktree implementing `tasks-5ef1-9eea.md`
-(see In Flight above, 4/7); merge it when it reports back (per
-`merge_policy: auto`). Also worth doing at some point: `/ardd-diagram`
-on datamodel, infrastructure, and ui to bring the now-stale diagrams
-back in sync, and a look through `.project/audit.md`'s open findings (5
-questions, 3 risks) to decide which merit a refine or backlog entry.
+Resolve the two open questions above (both need your input, not more
+investigation): whether to scope a follow-up plan for a
+server-synchronized Reveal clock (F3), and whether to close the
+non-reproducing kick-button feedback item (F4) or dig into the one
+specific gap surfaced during testing (kicked player's own client during
+`reveal`). Once decided, `/ardd-plan` can finish out `tasks-5ef1-9eea.md`
+(currently 4/7, blocked on exactly these two tasks). Also worth doing at
+some point: `/ardd-diagram` on datamodel, infrastructure, and ui to
+bring the now-stale diagrams back in sync, and a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
+which merit a refine or backlog entry.
