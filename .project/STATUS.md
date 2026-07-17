@@ -1,6 +1,15 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-16 (post-/ardd-implement: host-game-moderation-controls merged). Keep this current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-17 (a fifth bug found this session: an unbounded
+background flood-fill on a drawing turn leaks into the exported PNG's
+entire background instead of staying bounded to that turn's entry —
+`feedback-main-8a99.md`, open, not yet planned. The prior four bugs from
+this session's smoke-testing are already planned/tasked as
+`tasks-5ef1-9eea.md` (0/7, `ready`). A fresh `/ardd-audit` full pass also
+ran this session — 8 findings (0 suggestions, 5 questions, 3 risks)
+written to `.project/audit.md`, not tracked here since it isn't part of
+this report's schema; see that file directly.). Keep this current as
+artifacts are refined and open questions are resolved._
 
 ## Artifact Status
 
@@ -33,11 +42,24 @@ in code and dropped from the file).
 
 ## Feedback
 
-0 open feedback files. Both prior items are now `planned`:
-`feedback-main-296e.md` (mouse-drawing cursor bug) into
-`plan-drawing-color-and-line-width-t-2026-07-14-6006.md`;
-`feedback-main-4af4.md` (round-gated turns) into
-`plan-turn-room-engine-2026-07-14-9249.md`.
+1 open feedback file — see `.project/feedback/`, will be picked up by the
+next `/ardd-plan`:
+- `feedback-main-8a99.md` (F001, bug, `[artifacts: infrastructure, ui]`):
+  an unbounded background flood-fill on a drawing turn leaks into the
+  exported PNG's entire background instead of staying bounded to that
+  turn's entry.
+
+The other six items to date are all `planned`: `feedback-main-296e.md`
+(mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
+turns) into their original 2026-07-14 plans; the four items found in
+this session's `/run` smoke-testing — `feedback-main-3ea6.md` (F001,
+input-clearing), `feedback-main-4258.md` (F001, host missing Reveal
+replays), `feedback-main-6d3d.md` (F001, stale draw-tool color/width
+mid-stroke), and `feedback-main-e2ff.md` (F001, kick button doing
+nothing) — all into `plan-5ef1-2026-07-17-9e40.md`, now tasked as
+`tasks-5ef1-9eea.md` (0/7, `ready`). That plan has no bound features
+(it's a pure bug-fix plan), so it isn't reflected in the Feature Backlog
+counts below.
 
 ## Feature Backlog
 
@@ -195,17 +217,51 @@ guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
 Panel UI section) and all three are `stale` on diagrams pending a
 fresh `/ardd-diagram` pass. 1 defect remains on file (the
 deliberately-declined performance-budget claim, unaffected by this
-change). 0 open feedback files, 0 backlogged/planned/tasked features
-— every feature in the register is `implemented`. No cross-artifact
-conflicts or constitution violations. Working tree clean; no
-worktrees in flight; all 8 tasks files `completed`. Full suite: 211
+change). 1 open feedback file (the PNG-export flood-fill leak — see
+Feedback above), plus 4 already-planned bugs from this session's `/run`
+smoke-testing now tasked as `tasks-5ef1-9eea.md` (0/7, `ready`), 0
+backlogged/planned/tasked features — every feature in the register is
+`implemented` (this session's bug-fix plan binds no features). No
+cross-artifact conflicts or constitution violations. Working tree clean;
+no worktrees in flight; 8 prior tasks files `completed`, plus the new
+`tasks-5ef1-9eea.md` at `ready` (0/7) — not yet started. Full suite: 211
 tests passing (shared 18 + server 110 + client 83), typecheck clean,
-lint clean. Safe to /plan: yes.
+lint clean — as of the last full run, before this session's pending
+fixes. A manual `/run` smoke test this session (3 real isolated player
+sessions, live in Chrome) confirmed the core write→draw→write loop,
+round-gating, and the drawing-canvas pointer-accuracy fix all work
+correctly end-to-end; all 5 bugs now recorded (4 planned + 1 open) were
+reported separately by the user after that session, from further
+hands-on use. Root cause was confirmed by reading the code for 2 of the
+4 already-planned bugs (input-clearing: `WritingDrawing.svelte`'s
+draft-reset reactive statement fires on any room broadcast, not just
+this player's own turn changing; stale color/width: `DrawingCanvas.svelte`
+only applies the selected color/width to the canvas context after a
+stroke finishes, not when it starts) — Phase 1 of that plan fixes these
+directly. The other 2 (host missing Reveal replays; kick button doing
+nothing) read correctly in the code on static inspection — including the
+kick handler, which `DEFECTS.md`'s last pass found matching its artifact
+description with passing tests — so Phase 2 reproduces both live before
+writing a fix, rather than guessing. The newest bug (PNG-export
+flood-fill leak) hasn't been triaged in code yet — it's plausibly related
+to how `applyFill`'s scanline flood-fill interacts with an entry's own
+canvas bounds vs. the exported composite's, given `ui.md`'s Production
+Annotations already flag the fill tool's exact-match-only boundary
+behavior as a known rough edge, though that's a different aspect (color
+tolerance, not bounding) — worth checking during planning whether they're
+related or distinct. A separate `/ardd-audit` full pass wrote 8 findings
+(0 suggestions, 5 questions, 3 risks) to `.project/audit.md` — open, not
+yet resolved. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-diagram` on datamodel, infrastructure, and ui to bring the
-now-stale diagrams back in sync with this session's artifact changes.
-A manual smoke test of the merged app (`/run`), particularly the new
-Moderation Panel's kick/end/restart flow, is worth doing at some
-point given how much surface area has landed across recent sessions.
+`/ardd-implement` to work `tasks-5ef1-9eea.md` (0/7, `ready`) — Phase 1
+(T001-T004) fixes the two confirmed bugs with tests; Phase 2
+(T005-T006) reproduces the other two live before fixing; Phase 3 (T007)
+is full-suite + manual verification. Separately, `/ardd-plan` to pick up
+the new PNG-export flood-fill bug (`feedback-main-8a99.md`) whenever
+convenient — it's independent of the other four. Also worth doing at
+some point: `/ardd-diagram` on datamodel, infrastructure, and ui to
+bring the now-stale diagrams back in sync, and a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
+which merit a refine or backlog entry.
