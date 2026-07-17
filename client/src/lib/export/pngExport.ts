@@ -84,9 +84,9 @@ export function renderBookOntoContext(
           }
           ctx.stroke();
         } else {
-          const imageData = ctx.getImageData(0, 0, width, height);
-          floodFill(imageData, { x: op.point.x, y: op.point.y + y }, op.color);
-          ctx.putImageData(imageData, 0, 0);
+          const imageData = ctx.getImageData(0, y, width, DRAWING_ROW_HEIGHT);
+          floodFill(imageData, { x: op.point.x, y: op.point.y }, op.color);
+          ctx.putImageData(imageData, 0, y);
         }
       }
       y += DRAWING_ROW_HEIGHT;

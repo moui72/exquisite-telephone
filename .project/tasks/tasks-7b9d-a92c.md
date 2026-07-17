@@ -20,7 +20,7 @@ status: in-progress
   current code, which lets the fill bleed across row boundaries via
   `getImageData(0, 0, width, height)` spanning the whole composite
   canvas. `[feedback: feedback-main-8a99.md F001]`
-- [ ] T002 [artifacts: infrastructure, ui] Fix the `fill` op branch in
+- [x] T002 [artifacts: infrastructure, ui] Fix the `fill` op branch in
   `renderBookOntoContext` (`client/src/lib/export/pngExport.ts`,
   currently around lines 86-90):
   ```ts
