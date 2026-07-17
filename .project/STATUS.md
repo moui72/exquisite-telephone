@@ -1,18 +1,21 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-17 (`tasks-5ef1-9eea.md`'s worktree reported back and
-merged (non-fast-forward, no conflicts): 2 of its 4 bugs are fixed with
-passing regression tests (F1 input-clearing, F2 stale draw color/width);
-the other 2 hit the reproduce-first task's escape hatch and need a
-decision — see Open Questions below. The tasks file stays `in-progress`
-(4/7) on `main`, not `completed`, until F3/F4 are resolved one way or
-another. Combined with the earlier-merged PNG-export fix
-(`tasks-7b9d-a92c.md`, 3/3, `completed`), full suite on `main` is now 214
-tests, all green (lint/typecheck clean too). A fresh `/ardd-audit` full
-pass also ran this session — 8 findings (0 suggestions, 5 questions, 3
-risks) written to `.project/audit.md`, not tracked here since it isn't
-part of this report's schema; see that file directly.). Keep this
-current as artifacts are refined and open questions are resolved._
+_Updated: 2026-07-17 (`tasks-5ef1-9eea.md` is now fully `completed`
+(8/8): after the user supplied missing context on the two previously-
+open questions, `datamodel.md`/`ui.md` were refined with the resolved
+decisions (server-synchronized `Room.revealStartedAt` for Reveal
+pacing; kicked-player own-client ejection; full roster removal instead
+of strikethrough), and a second delegated worktree implemented T005-T008
+against that guidance — merged clean (non-fast-forward, no conflicts).
+All 5 bugs found this session are now fixed and merged. Combined with
+the PNG-export fix (`tasks-7b9d-a92c.md`, 3/3, `completed`), all 10
+tasks files in the project are now `completed`, full suite on `main` is
+222 tests, all green (lint/typecheck clean too). A fresh `/ardd-audit`
+full pass also ran this session — 8 findings (0 suggestions, 5
+questions, 3 risks) written to `.project/audit.md`, not tracked here
+since it isn't part of this report's schema; see that file directly.).
+Keep this current as artifacts are refined and open questions are
+resolved._
 
 ## Artifact Status
 
@@ -55,24 +58,28 @@ in code and dropped from the file).
 
 ## Feedback
 
-0 open feedback files. All seven items to date are `planned`:
-`feedback-main-296e.md` (mouse-drawing cursor bug) and
-`feedback-main-4af4.md` (round-gated turns) into their original
-2026-07-14 plans; `feedback-main-8a99.md` (F001, PNG-export flood-fill
-leak) into `plan-7b9d-2026-07-17-dded.md` (tasked as
-`tasks-7b9d-a92c.md`, **completed 3/3, merged to `main`**); and the four
-items found in this session's `/run` smoke-testing into
-`plan-5ef1-2026-07-17-9e40.md` (tasked as `tasks-5ef1-9eea.md`,
-**in-progress, 4/7, merged to `main` at that progress**):
-- `feedback-main-3ea6.md` (F001, input-clearing) — **fixed**, regression
-  test passing.
+0 open feedback files. All seven items to date are `planned`, and every
+one is now fixed and merged to `main`: `feedback-main-296e.md`
+(mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
+turns) from their original 2026-07-14 plans; `feedback-main-8a99.md`
+(F001, PNG-export flood-fill leak) via `plan-7b9d-2026-07-17-dded.md`
+(`tasks-7b9d-a92c.md`, **completed 3/3**); and all four items found in
+this session's `/run` smoke-testing via `plan-5ef1-2026-07-17-9e40.md`
+(`tasks-5ef1-9eea.md`, **completed 8/8**):
+- `feedback-main-3ea6.md` (F001, input-clearing) — **fixed**.
 - `feedback-main-6d3d.md` (F001, stale draw-tool color/width mid-stroke)
-  — **fixed**, regression test passing.
-- `feedback-main-4258.md` (F001, host missing Reveal replays) — **not
-  yet fixed**; reproduced live with a confirmed root cause, but the fix
-  needs a `datamodel.md` decision — see Open Questions above.
-- `feedback-main-e2ff.md` (F001, kick button doing nothing) — **does not
-  reproduce** on further live testing — see Open Questions above.
+  — **fixed**.
+- `feedback-main-4258.md` (F001, host missing Reveal replays) —
+  **fixed**: `Room.revealStartedAt` now gives every client a shared
+  clock to derive Reveal-animation pacing from, instead of independent
+  local timers.
+- `feedback-main-e2ff.md` (F001, kick button doing nothing) — **fixed**:
+  the user's follow-up clarified the real gap (kicked player's own
+  client never reacted to being kicked at all, and the host's roster
+  didn't visibly change) — now the kicked player's own client is ejected
+  to a dedicated "you were removed" state, and kicked players are
+  removed entirely from the host's roster (reversing the prior
+  struck-through-but-visible design).
 
 Neither plan has bound features (both are pure bug-fix plans), so
 neither is reflected in the Feature Backlog counts below.
@@ -234,53 +241,44 @@ guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
 Panel UI section) and all three are `stale` on diagrams pending a
 fresh `/ardd-diagram` pass. 1 defect remains on file (the
 deliberately-declined performance-budget claim, unaffected by this
-change). 0 open feedback files, 0 open questions — both decisions
-identified this session are now resolved and recorded in artifacts (see
-Open Questions above). Of the 5 bugs found this session: 3 are fully
-fixed and merged (input-clearing, stale draw color/width, PNG-export
-flood-fill leak — all with passing regression tests); the other 2 have
-confirmed root causes and concrete implementation guidance now written
-into `tasks-5ef1-9eea.md`'s T005-T007, but are not yet implemented.
-`datamodel.md` gained a `Room.revealStartedAt` field + Reveal-pacing
-normalization rule (server-synchronized clock for the Reveal
-animation) and an own-client-ejection rule for kicked players; `ui.md`
-was updated to match (Reveal View pacing description, Moderation
-Panel's roster-removal-not-strikethrough, and a new **Kicked** client
-state) — both refined 2026-07-17, both `stable`, both `diagram_status:
-stale` pending a fresh `/ardd-diagram` pass. 0 backlogged/planned/tasked
-features — every feature in the register is `implemented` (neither
-bug-fix plan binds features). No cross-artifact conflicts or
-constitution violations. Working tree clean on `main`; no worktrees in
-flight — both this session's delegated worktrees reported back, merged
-(one fast-forward, one non-fast-forward, neither with conflicts), and
-were reaped. `tasks-7b9d-a92c.md` (3/3) is `completed`;
-`tasks-5ef1-9eea.md` is `in-progress` at 4/7, now with 3 remaining tasks
-(T005-T007, renumbered from the original T005/T006 pair since the kick
-fix split into two concrete tasks: own-client ejection and roster
-display) plus T008 verification. 9 tasks files `completed`, 1
-`in-progress`. Full suite on `main`: 214 tests passing (shared 18 +
-server 110 + client 86), typecheck clean, lint clean — as of the last
-merge, before this session's tasks-file/artifact edits (no code changed
-in this latest round, only `.project/` files). A manual `/run` smoke
-test this session (3 real isolated player sessions, live in Chrome)
-confirmed the core write→draw→write loop, round-gating, and the
-drawing-canvas pointer-accuracy fix all work correctly end-to-end; the 5
-bugs above were reported separately by the user after that session, from
-further hands-on use, and 2 of them (Reveal replays, kick) needed a
-second round of live investigation before the user supplied the missing
-context that resolved both. A separate `/ardd-audit` full pass wrote 8
-findings (0 suggestions, 5 questions, 3 risks) to `.project/audit.md` —
-open, not yet resolved. Safe to /plan: yes.
+change). 0 open feedback files, 0 open questions. **All 5 bugs found
+this session are fixed and merged to `main`** (see Feedback above):
+input-clearing, stale draw color/width, PNG-export flood-fill leak, a
+server-synchronized Reveal clock (`Room.revealStartedAt`, resolving the
+host-races-ahead bug), and the kicked-player flow (own-client ejection
+to a new terminal state + full roster removal on the host's side,
+reversing the prior struck-through-but-visible design). `datamodel.md`
+and `ui.md` were both refined 2026-07-17 with these decisions before
+implementation — both `stable`, both `diagram_status: stale` pending a
+fresh `/ardd-diagram` pass. 0 backlogged/planned/tasked features — every
+feature in the register is `implemented` (neither bug-fix plan binds
+features). No cross-artifact conflicts or constitution violations.
+Working tree clean on `main`; no worktrees in flight — all three
+delegated worktrees this session reported back, merged (two
+fast-forward/non-fast-forward clean merges, one merge that needed the
+on-disk Claude signing key after a locked-1Password commit failure —
+still clean, no conflicts), and were reaped. **All 10 tasks files in the
+project are now `completed`** — `tasks-7b9d-a92c.md` (3/3) and
+`tasks-5ef1-9eea.md` (8/8, the last two tasks — T005-T008 — resolved in
+a second delegated round after this session's `/ardd-refine` decisions).
+Full suite on `main`: 222 tests passing (shared 18 + server 112 + client
+92), typecheck clean, lint clean. A manual `/run` smoke test earlier this
+session (3 real isolated player sessions, live in Chrome) confirmed the
+core write→draw→write loop, round-gating, and the drawing-canvas
+pointer-accuracy fix all work correctly end-to-end; the 5 bugs above
+were reported separately by the user from further hands-on use, and 2 of
+them needed a second round of live investigation plus user-supplied
+context (a genuine reproduction gap for the kick bug — the earlier check
+only verified the host's own view, not the kicked player's client or the
+roster's *removal*, not strikethrough) before both were fully understood
+and fixed. A separate `/ardd-audit` full pass wrote 8 findings (0
+suggestions, 5 questions, 3 risks) to `.project/audit.md` — open, not
+yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-implement` to finish `tasks-5ef1-9eea.md` (4/7, `in-progress`) —
-T005 (server-synchronized Reveal clock), T006 (kicked player's own
-client ejection), T007 (roster display removes kicked players
-entirely), then T008 verification. All three have concrete,
-artifact-grounded implementation guidance now; no further decisions
-needed. Also worth doing at some point: `/ardd-diagram` on datamodel,
-infrastructure, and ui to bring the now-stale diagrams back in sync
-(datamodel/ui doubly so, given this session's fresh changes), and a look
-through `.project/audit.md`'s open findings (5 questions, 3 risks) to
-decide which merit a refine or backlog entry.
+Nothing blocking. Worth doing at some point: `/ardd-diagram` on
+datamodel, infrastructure, and ui to bring the now-stale diagrams back
+in sync (datamodel/ui doubly so, given this session's fresh changes),
+and a look through `.project/audit.md`'s open findings (5 questions, 3
+risks) to decide which merit a refine or backlog entry.
