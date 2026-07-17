@@ -200,6 +200,44 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(ops[0].color).toBe('#1e293b');
   });
 
+  it('applies the newly-selected color/width to a stroke already in progress (F2 regression)', async () => {
+    const fakeCtx = makeFakeCtx();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
+
+    const onOpsChange = vi.fn();
+    const { container, getByLabelText, getByText } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange },
+    });
+    const canvas = container.querySelector('canvas')!;
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 320,
+      bottom: 240,
+      width: 320,
+      height: 240,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+
+    // Select a non-default color and width BEFORE starting the stroke.
+    await fireEvent.click(getByLabelText('Color #ef4444'));
+    await fireEvent.click(getByText('Thick'));
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    // The context must already reflect the newly-selected color/width
+    // during this in-progress stroke, not just after it's finalized.
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+    expect(fakeCtx.lineWidth).toBe(8);
+
+    firePointer(canvas, 'pointermove', 10, 10);
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+    expect(fakeCtx.lineWidth).toBe(8);
+
+    vi.restoreAllMocks();
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;

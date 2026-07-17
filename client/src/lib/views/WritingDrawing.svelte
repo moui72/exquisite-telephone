@@ -47,10 +47,20 @@
       (b) => b.originAuthorId === state.player!.id && b.entries.length < state.room!.players.length,
     );
 
-  // Reset local draft state whenever the assigned turn changes.
-  $: if (myTurn) {
-    textValue = '';
-    drawnOps = [];
+  // Reset local draft state only when the *identity* of the assigned turn
+  // changes (a genuinely new turn), not merely when `myTurn`'s object
+  // reference changes due to an unrelated room broadcast (F1 regression —
+  // feedback-main-3ea6.md). `computeNextEntries` returns a fresh object on
+  // every call, so comparing by reference would clear drafts on any
+  // broadcast, not just a real turn change.
+  let previousTurnKey: string | null = null;
+  $: turnKey = myTurn ? `${myTurn.bookId}:${myTurn.position}` : null;
+  $: if (turnKey !== previousTurnKey) {
+    previousTurnKey = turnKey;
+    if (turnKey !== null) {
+      textValue = '';
+      drawnOps = [];
+    }
   }
 
   // Countdown to this player's individual deadline (datamodel.md

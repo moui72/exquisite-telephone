@@ -1,5 +1,5 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
-import { writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
@@ -8,9 +8,12 @@ import WritingDrawing from './WritingDrawing.svelte';
 
 afterEach(() => cleanup());
 
-function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore {
+function makeFakeSession(
+  initial: Omit<SessionState, 'reconnecting'>,
+): SessionStore & { store: Writable<SessionState> } {
   const store = writable<SessionState>({ reconnecting: false, ...initial });
   return {
+    store,
     subscribe: store.subscribe,
     createRoom: vi.fn(async () => {}),
     joinRoom: vi.fn(async () => {}),
@@ -346,5 +349,68 @@ describe('Writing/Drawing view', () => {
     render(WritingDrawing, { props: { session } });
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('preserves in-progress draft text across a room broadcast that leaves this player\'s turn identity unchanged (F1 regression)', async () => {
+    // Grace is assigned position 1 (a guess) on Lin's book. Ada's book is a
+    // separate, independent book also mid-round.
+    const linBook: Book = {
+      id: 'book-lin',
+      roomId,
+      originAuthorId: lin.id,
+      entries: [
+        { id: 'l0', bookId: 'book-lin', authorId: lin.id, position: 0, type: 'text', content: 'p1' },
+        {
+          id: 'l1',
+          bookId: 'book-lin',
+          authorId: ada.id,
+          position: 1,
+          type: 'drawing',
+          content: serializeDrawOps([]),
+        },
+      ],
+    };
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        { id: 'a0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'p2' },
+        {
+          id: 'a1',
+          bookId: 'book-ada',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: serializeDrawOps([]),
+        },
+      ],
+    };
+    const room = makeRoom([linBook, adaBook], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    await fireEvent.input(screen.getByLabelText(/your phrase/i), {
+      target: { value: 'a partially typed guess' },
+    });
+    expect(screen.getByLabelText(/your phrase/i)).toHaveValue('a partially typed guess');
+
+    // Simulate an unrelated room broadcast (e.g. Ada submitting her own
+    // entry on a different book): a brand-new Room object, but Grace's
+    // assigned turn identity (bookId + position) is unchanged.
+    const adaBookAfterSubmit: Book = {
+      ...adaBook,
+      entries: [
+        ...adaBook.entries,
+        { id: 'a2', bookId: 'book-ada', authorId: lin.id, position: 2, type: 'text', content: 'p2-guess' },
+      ],
+    };
+    const newRoom = makeRoom([linBook, adaBookAfterSubmit], [ada, grace, lin]);
+    session.store.set({ reconnecting: false, room: newRoom, player: grace, error: null });
+
+    await Promise.resolve();
+
+    expect(screen.getByLabelText(/your phrase/i)).toHaveValue('a partially typed guess');
   });
 });
