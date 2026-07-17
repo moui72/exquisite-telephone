@@ -1,15 +1,19 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-17 (a fifth bug found this session: an unbounded
-background flood-fill on a drawing turn leaks into the exported PNG's
-entire background instead of staying bounded to that turn's entry —
-`feedback-main-8a99.md`, open, not yet planned. The prior four bugs from
-this session's smoke-testing are already planned/tasked as
-`tasks-5ef1-9eea.md` (0/7, `ready`). A fresh `/ardd-audit` full pass also
-ran this session — 8 findings (0 suggestions, 5 questions, 3 risks)
-written to `.project/audit.md`, not tracked here since it isn't part of
-this report's schema; see that file directly.). Keep this current as
-artifacts are refined and open questions are resolved._
+_Updated: 2026-07-17 (the fifth bug — PNG-export flood-fill leak — is now
+also planned and tasked: `plan-7b9d-2026-07-17-dded.md` /
+`tasks-7b9d-a92c.md` (0/3, `ready`); root cause fully confirmed by static
+reading (`pngExport.ts`'s flood-fill scope spans the whole composite
+canvas instead of just the current entry's row), so no reproduction
+needed for this one, unlike two of the four bugs in the other plan. The
+first four bugs' plan (`plan-5ef1-2026-07-17-9e40.md` /
+`tasks-5ef1-9eea.md`) is now actively being implemented in a delegated
+worktree (see In Flight below) — 0/7 as of this writing. A fresh
+`/ardd-audit` full pass also ran this session — 8 findings (0
+suggestions, 5 questions, 3 risks) written to `.project/audit.md`, not
+tracked here since it isn't part of this report's schema; see that file
+directly.). Keep this current as artifacts are refined and open
+questions are resolved._
 
 ## Artifact Status
 
@@ -42,24 +46,20 @@ in code and dropped from the file).
 
 ## Feedback
 
-1 open feedback file — see `.project/feedback/`, will be picked up by the
-next `/ardd-plan`:
-- `feedback-main-8a99.md` (F001, bug, `[artifacts: infrastructure, ui]`):
-  an unbounded background flood-fill on a drawing turn leaks into the
-  exported PNG's entire background instead of staying bounded to that
-  turn's entry.
-
-The other six items to date are all `planned`: `feedback-main-296e.md`
-(mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
-turns) into their original 2026-07-14 plans; the four items found in
-this session's `/run` smoke-testing — `feedback-main-3ea6.md` (F001,
-input-clearing), `feedback-main-4258.md` (F001, host missing Reveal
-replays), `feedback-main-6d3d.md` (F001, stale draw-tool color/width
-mid-stroke), and `feedback-main-e2ff.md` (F001, kick button doing
-nothing) — all into `plan-5ef1-2026-07-17-9e40.md`, now tasked as
-`tasks-5ef1-9eea.md` (0/7, `ready`). That plan has no bound features
-(it's a pure bug-fix plan), so it isn't reflected in the Feature Backlog
-counts below.
+0 open feedback files. All seven items to date are `planned`:
+`feedback-main-296e.md` (mouse-drawing cursor bug) and
+`feedback-main-4af4.md` (round-gated turns) into their original
+2026-07-14 plans; the four items found in this session's `/run`
+smoke-testing — `feedback-main-3ea6.md` (F001, input-clearing),
+`feedback-main-4258.md` (F001, host missing Reveal replays),
+`feedback-main-6d3d.md` (F001, stale draw-tool color/width mid-stroke),
+and `feedback-main-e2ff.md` (F001, kick button doing nothing) — into
+`plan-5ef1-2026-07-17-9e40.md` (tasked as `tasks-5ef1-9eea.md`, 0/7,
+being implemented in a delegated worktree); and `feedback-main-8a99.md`
+(F001, PNG-export flood-fill leak) into `plan-7b9d-2026-07-17-dded.md`
+(tasked as `tasks-7b9d-a92c.md`, 0/3, `ready`). Neither plan has bound
+features (both are pure bug-fix plans), so neither is reflected in the
+Feature Backlog counts below.
 
 ## Feature Backlog
 
@@ -160,7 +160,12 @@ merged — see Feature Backlog.
 
 ## In Flight
 
-_(none)_
+- Worktree `.claude/worktrees/agent-ac842881e4bdaf8d2` (branch
+  `worktree-agent-ac842881e4bdaf8d2`) — `tasks-5ef1-9eea.md`
+  `in-progress`, 0/7 as of this writing (four bug fixes: input-clearing,
+  stale draw-tool color/width, host missing Reveal replays, kick button
+  doing nothing). Delegated via `delegation: eager`; will auto-merge on
+  completion per `merge_policy: auto`.
 
 ## fly-io-deployment: shipped
 
@@ -217,51 +222,48 @@ guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
 Panel UI section) and all three are `stale` on diagrams pending a
 fresh `/ardd-diagram` pass. 1 defect remains on file (the
 deliberately-declined performance-budget claim, unaffected by this
-change). 1 open feedback file (the PNG-export flood-fill leak — see
-Feedback above), plus 4 already-planned bugs from this session's `/run`
-smoke-testing now tasked as `tasks-5ef1-9eea.md` (0/7, `ready`), 0
+change). 0 open feedback files — all 5 bugs found this session are now
+planned and tasked across two bug-fix plans (see Feedback above), 0
 backlogged/planned/tasked features — every feature in the register is
-`implemented` (this session's bug-fix plan binds no features). No
-cross-artifact conflicts or constitution violations. Working tree clean;
-no worktrees in flight; 8 prior tasks files `completed`, plus the new
-`tasks-5ef1-9eea.md` at `ready` (0/7) — not yet started. Full suite: 211
-tests passing (shared 18 + server 110 + client 83), typecheck clean,
-lint clean — as of the last full run, before this session's pending
-fixes. A manual `/run` smoke test this session (3 real isolated player
+`implemented` (both new plans bind no features). No cross-artifact
+conflicts or constitution violations. Working tree clean on `main`; one
+worktree in flight (see In Flight below) actively implementing
+`tasks-5ef1-9eea.md` (0/7 as of this writing). `tasks-7b9d-a92c.md`
+(0/3) is `ready` but not yet started/delegated. 8 prior tasks files
+`completed`. Full suite: 211 tests passing (shared 18 + server 110 +
+client 83), typecheck clean, lint clean — as of the last full run on
+`main`, before either of this session's pending bug-fix branches land.
+A manual `/run` smoke test this session (3 real isolated player
 sessions, live in Chrome) confirmed the core write→draw→write loop,
 round-gating, and the drawing-canvas pointer-accuracy fix all work
-correctly end-to-end; all 5 bugs now recorded (4 planned + 1 open) were
-reported separately by the user after that session, from further
-hands-on use. Root cause was confirmed by reading the code for 2 of the
-4 already-planned bugs (input-clearing: `WritingDrawing.svelte`'s
-draft-reset reactive statement fires on any room broadcast, not just
-this player's own turn changing; stale color/width: `DrawingCanvas.svelte`
-only applies the selected color/width to the canvas context after a
-stroke finishes, not when it starts) — Phase 1 of that plan fixes these
-directly. The other 2 (host missing Reveal replays; kick button doing
+correctly end-to-end; all 5 bugs now planned were reported separately by
+the user after that session, from further hands-on use. Root cause was
+confirmed by reading the code for 3 of the 5 (input-clearing:
+`WritingDrawing.svelte`'s draft-reset reactive statement fires on any
+room broadcast, not just this player's own turn changing; stale
+color/width: `DrawingCanvas.svelte` only applies the selected
+color/width to the canvas context after a stroke finishes, not when it
+starts; PNG-export flood-fill leak: `pngExport.ts`'s `renderBookOntoContext`
+scopes the flood fill to the *entire* composite canvas instead of just
+the current entry's own row, so a background fill bleeds into
+neighboring entries — distinct from `ui.md`'s already-documented
+exact-match-color Production Annotation, which is about tolerance, not
+bounding). The other 2 (host missing Reveal replays; kick button doing
 nothing) read correctly in the code on static inspection — including the
 kick handler, which `DEFECTS.md`'s last pass found matching its artifact
-description with passing tests — so Phase 2 reproduces both live before
-writing a fix, rather than guessing. The newest bug (PNG-export
-flood-fill leak) hasn't been triaged in code yet — it's plausibly related
-to how `applyFill`'s scanline flood-fill interacts with an entry's own
-canvas bounds vs. the exported composite's, given `ui.md`'s Production
-Annotations already flag the fill tool's exact-match-only boundary
-behavior as a known rough edge, though that's a different aspect (color
-tolerance, not bounding) — worth checking during planning whether they're
-related or distinct. A separate `/ardd-audit` full pass wrote 8 findings
-(0 suggestions, 5 questions, 3 risks) to `.project/audit.md` — open, not
-yet resolved. Safe to /plan: yes.
+description with passing tests — so that plan's Phase 2 reproduces both
+live before writing a fix, rather than guessing. A separate `/ardd-audit`
+full pass wrote 8 findings (0 suggestions, 5 questions, 3 risks) to
+`.project/audit.md` — open, not yet resolved. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-implement` to work `tasks-5ef1-9eea.md` (0/7, `ready`) — Phase 1
-(T001-T004) fixes the two confirmed bugs with tests; Phase 2
-(T005-T006) reproduces the other two live before fixing; Phase 3 (T007)
-is full-suite + manual verification. Separately, `/ardd-plan` to pick up
-the new PNG-export flood-fill bug (`feedback-main-8a99.md`) whenever
-convenient — it's independent of the other four. Also worth doing at
-some point: `/ardd-diagram` on datamodel, infrastructure, and ui to
-bring the now-stale diagrams back in sync, and a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry.
+Check in on the in-flight worktree implementing `tasks-5ef1-9eea.md`
+(see In Flight above); merge it when it reports back (per
+`merge_policy: auto`). Separately, `/ardd-implement` to start
+`tasks-7b9d-a92c.md` (0/3, `ready`, the PNG-export flood-fill fix) —
+independent of the other plan, safe to run concurrently in its own
+worktree. Also worth doing at some point: `/ardd-diagram` on datamodel,
+infrastructure, and ui to bring the now-stale diagrams back in sync, and
+a look through `.project/audit.md`'s open findings (5 questions, 3
+risks) to decide which merit a refine or backlog entry.
