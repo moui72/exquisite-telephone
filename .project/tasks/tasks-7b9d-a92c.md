@@ -47,7 +47,7 @@ status: in-progress
 
 ## Phase 2: Verification
 
-- [ ] T003 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run test`
+- [x] T003 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run test`
   across the whole workspace (shared/server/client) and confirm
   everything passes. Then manually verify live via the `/run` pattern:
   create a room with 3 players, play through to a drawing turn, use the
