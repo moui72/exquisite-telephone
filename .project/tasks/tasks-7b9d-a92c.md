@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Fix
 
-- [ ] T001 [artifacts: infrastructure, ui] Write a failing test in
+- [x] T001 [artifacts: infrastructure, ui] Write a failing test in
   `client/src/lib/export/pngExport.test.ts` reproducing the flood-fill
   leak: construct a `Book` with at least 3 entries — e.g. a text entry, a
   drawing entry containing an unbounded background `fill` op (seeded on

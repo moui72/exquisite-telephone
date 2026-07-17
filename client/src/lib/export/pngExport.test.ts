@@ -167,6 +167,112 @@ describe('renderBookOntoContext (composite drawings + text captions)', () => {
   });
 });
 
+describe('renderBookOntoContext (fill ops must not bleed across entry rows)', () => {
+  it('confines an unbounded background fill to its own drawing entry row', () => {
+    // Layout: text (row 0), drawing with an unbounded fill (row 1), text (row 2).
+    // The fill is seeded on open background with no enclosing stroke, so if
+    // getImageData/putImageData span the whole composite canvas instead of
+    // just this entry's row, the flood fill will bleed into the neighboring
+    // rows above and below (also blank/white background before they draw).
+    const fillOps = serializeDrawOps([{ type: 'fill', point: { x: 10, y: 10 }, color: '#22c55e' }]);
+    const book: Book = {
+      id: 'book-3',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-3',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'before the fill',
+        },
+        {
+          id: 'e1',
+          bookId: 'book-3',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: fillOps,
+        },
+        {
+          id: 'e2',
+          bookId: 'book-3',
+          authorId: ada.id,
+          position: 2,
+          type: 'text',
+          content: 'after the fill',
+        },
+      ],
+    };
+    const width = CANVAS_WIDTH;
+    const height = TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT;
+    // A single shared pixel buffer backs the whole composite canvas, mirroring
+    // how a real canvas's getImageData/putImageData operate against one
+    // underlying bitmap regardless of the rectangle requested.
+    const sharedPixels = new Uint8ClampedArray(width * height * 4).fill(255);
+    const ctx: MinimalCanvasContext = {
+      fillStyle: '',
+      strokeStyle: '',
+      lineWidth: 1,
+      lineCap: 'round',
+      font: '',
+      fillRect() {},
+      fillText() {},
+      beginPath() {},
+      moveTo() {},
+      lineTo() {},
+      stroke() {},
+      getImageData(x, y, w, h) {
+        const data = new Uint8ClampedArray(w * h * 4);
+        for (let row = 0; row < h; row += 1) {
+          const srcStart = ((y + row) * width + x) * 4;
+          const destStart = row * w * 4;
+          data.set(sharedPixels.subarray(srcStart, srcStart + w * 4), destStart);
+        }
+        return { width: w, height: h, data } as unknown as ImageData;
+      },
+      putImageData(imageData, x, y) {
+        const { width: w, height: h, data } = imageData;
+        for (let row = 0; row < h; row += 1) {
+          const destStart = ((y + row) * width + x) * 4;
+          const srcStart = row * w * 4;
+          sharedPixels.set(data.subarray(srcStart, srcStart + w * 4), destStart);
+        }
+      },
+    };
+
+    renderBookOntoContext(ctx, book, players);
+
+    const drawingRowStart = TEXT_ROW_HEIGHT;
+    const drawingRowEnd = TEXT_ROW_HEIGHT + DRAWING_ROW_HEIGHT;
+
+    function rowIsUntouched(rowStart: number, rowEnd: number): boolean {
+      for (let y = rowStart; y < rowEnd; y += 1) {
+        for (let x = 0; x < width; x += 1) {
+          const i = (y * width + x) * 4;
+          if (
+            sharedPixels[i] !== 255 ||
+            sharedPixels[i + 1] !== 255 ||
+            sharedPixels[i + 2] !== 255 ||
+            sharedPixels[i + 3] !== 255
+          ) {
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+
+    // The fill must have actually done something within its own row.
+    expect(rowIsUntouched(drawingRowStart, drawingRowEnd)).toBe(false);
+    // But the surrounding text rows must remain pristine white background.
+    expect(rowIsUntouched(0, drawingRowStart)).toBe(true);
+    expect(rowIsUntouched(drawingRowEnd, height)).toBe(true);
+  });
+});
+
 describe('exportBookToPng (flatten to a single PNG)', () => {
   it('sizes the canvas, renders the book, and returns the PNG data URL', () => {
     const book = makeFixtureBook();
