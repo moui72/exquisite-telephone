@@ -1,7 +1,7 @@
 ---
 plan: plan-5ef1-2026-07-17-9e40.md
 generated: 2026-07-17
-status: ready
+status: in-progress
 ---
 
 # Tasks
