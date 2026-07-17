@@ -120,7 +120,7 @@ before starting either task.
 
 ## Phase 3: Verification
 
-- [ ] T008 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [x] T008 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace (shared/server/client) and confirm
   everything passes. Then manually smoke-test all fixes live via the
   `/run` pattern with 3 real isolated player sessions: (1) submit a
