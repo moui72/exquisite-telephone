@@ -50,38 +50,80 @@ status: in-progress
 
 ## Phase 2: Reproduce-then-fix (F3, F4)
 
-- [ ] T005 [artifacts: ui] Reproduce F3 live: start the server (`/run`
-  pattern — build shared, build client, start server), open 3 isolated
-  browser sessions (host + 2 non-host players, using the
-  clear-localStorage-per-tab approach from this session, or real separate
-  profiles if available), play through writing/drawing to the final
-  round so the room reaches `status: reveal`, and observe specifically
-  what differs between the host's client and a non-host client at that
-  point (room state actually received by each socket — check via
-  `read_console_messages`/`read_network_requests` or temporary logging;
-  `Reveal.svelte`'s `onMount`/`isHost` behavior; component mount
-  timing). Once the actual divergence is identified, write a failing
-  regression test capturing it (unit test if the cause is
-  component-local, e.g. in `Reveal.svelte` or `session.ts`; otherwise
-  the most precise test the cause allows), then fix the real cause and
-  make the test pass. If reproduction instead shows this was an artifact
-  of the cleared-localStorage multi-session testing setup (not a real
-  bug), stop, document that finding in this task's line, and ask the
-  user how to proceed rather than fixing a non-issue.
-  `[feedback: feedback-main-4258.md F001]`
-- [ ] T006 [artifacts: ui] Reproduce F4 live: using the same live-session
-  setup as T005, as host, open the Moderation Panel and click "kick" on
-  a non-host player. Observe where the flow actually breaks: confirm
-  `isHost` evaluates `true` for the host's session; confirm the
-  `kickPlayer` socket event actually fires (network tab/console); confirm
-  the ack arrives and contains the target's `kicked: true`; confirm the
-  panel's player list re-renders from updated `room.players`. Once the
-  actual break point is identified, write a failing regression test
-  capturing it, then fix the real cause and make the test pass. If
-  reproduction instead shows this was an artifact of the test session
-  setup, stop, document the finding, and ask the user how to proceed
-  rather than fixing a non-issue.
-  `[feedback: feedback-main-e2ff.md F001]`
+- [ ] T005 [artifacts: ui] STOPPED — reproduced live but root cause is
+  architectural, not a small local bug; escalating rather than
+  unilaterally fixing. Using `claude-in-chrome` against a real running
+  server (3 isolated tabs, localStorage cleared before joining, host +
+  2 non-host, played a full 3-player game to `status: reveal`), the
+  exact reported symptom reproduced: at reveal onset all 3 clients
+  showed byte-identical state (same book, cover shown, 0 entries
+  revealed — confirmed via a same-batch simultaneous read across all 3
+  tabs), so there is no server/socket divergence and no `isHost`
+  branching exists anywhere in `Reveal.svelte`'s timer path (`isHost`
+  only swaps button labels/labels, per static reading). But over the
+  ~30s animated sequence, the host's tab reliably raced ahead — reaching
+  the static "show everything" full-grid end state while the two
+  non-host tabs were still mid-animation on an earlier book (confirmed
+  twice, once via polled screenshots, once via a same-batch read of
+  `document.querySelectorAll('h2').length` — host=3 books/grid,
+  non-host=1 book/animated — while all three read `hasFocus: false` at
+  the same instant, ruling out simple document-visibility throttling as
+  the sole explanation).
+
+  Root cause: `Reveal.svelte`'s `startCoverDelay`/`startTickInterval`
+  (lines ~56-66) run a **plain client-local `setTimeout`/`setInterval`
+  seeded from that client's own `onMount`**, with no shared clock — each
+  socket's animation timeline is entirely independent, derived from
+  when *that* browser mounted the component, not from anything the
+  server broadcasts. Any skew between clients (tab backgrounding,
+  scheduler jitter, or simply the accumulated JS-timer drift Chrome
+  permits) compounds unrecoverably over the 3-book sequence, since nothing
+  ever resyncs one client's `currentBookIndex`/`revealedCount` to
+  another's or to a server-side reference point. This matches the
+  reported symptom exactly and is a real bug, not a testing-rig fluke —
+  but it is a **timer-per-client design gap**, not a one-line fix: a
+  correct fix means the server stamping something like a
+  `Room.revealStartedAt` timestamp when `status` flips to `reveal`, and
+  `Reveal.svelte` deriving `currentBookIndex`/`revealedCount` as a pure
+  function of `now - revealStartedAt` (a shared clock) instead of
+  incrementing local counters on local ticks. That is a new `Room`
+  field — a decision belonging in `datamodel.md`, which I'm not
+  authorized to add unilaterally (constitution: don't modify
+  `.project/artifacts/*.md` during implementation; stop and report if an
+  artifact decision looks incomplete/wrong instead of editing it
+  myself). Per this task's own escape hatch and that rule, stopping here
+  rather than inventing the schema change. Left unchecked, tasks file
+  left `in-progress`. **Ask the user**: should a follow-up
+  `/ardd-refine datamodel` (or a new plan) add a server-synchronized
+  reveal clock, given this is a real, reproducible bug? `[feedback:
+  feedback-main-4258.md F001]`
+- [ ] T006 [artifacts: ui] STOPPED — does not reproduce; kick works
+  correctly in live testing. Using the same live 3-tab session (host +
+  2 non-host, real server), tested the exact reported flow — as host,
+  opened the Moderation Panel and clicked "Kick" on a non-host player —
+  in **both** `status: writing` and `status: reveal`, twice
+  independently. In both phases: `kickPlayer` fired, the ack/broadcast
+  round-tripped, the target's row immediately showed struck-through
+  with a disabled "Kicked" button in the host's panel, and (in the
+  `writing` case) the room-wide "this game can't continue" notice
+  appeared correctly on the kicked-adjacent non-host's own screen too
+  (confirmed via screenshot on that player's own tab), matching
+  `ui.md`'s Moderation Panel spec precisely. This directly contradicts
+  the reported symptom ("the kick control... does nothing... target
+  player is not kicked") — the control visibly does exactly what it
+  should, both times tested. No code path exists where kick could
+  silently no-op (traced `ModerationPanel.svelte` → `session.kickPlayer`
+  → socket ack, all wired straightforwardly, matching `DEFECTS.md`'s
+  prior finding that the kick handler and its tests were already clean).
+  Per this task's escape hatch, stopping rather than inventing a fix for
+  a non-reproducing issue. Left unchecked, tasks file left
+  `in-progress`. **Ask the user**: is there a specific
+  browser/device/reproduction path for F4 not covered here (e.g. the
+  *kicked player's own* client shows no notice or ejection when kicked
+  mid-`reveal` — observed as a real gap, but arguably in-spec since
+  `ui.md` only documents the writing-phase `nonContinuable` notice, not
+  a reveal-phase one) — or should `feedback-main-e2ff.md` be closed as
+  not reproducing? `[feedback: feedback-main-e2ff.md F001]`
 
 ## Phase 3: Verification
 
