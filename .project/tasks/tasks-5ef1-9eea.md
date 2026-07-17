@@ -102,7 +102,7 @@ before starting either task.
   should show the new Kicked state, not its normal view, regardless of
   `Room.status`), then implement. `[feedback: feedback-main-e2ff.md
   F001]`
-- [ ] T007 [artifacts: ui] **Kicked players removed entirely from the
+- [x] T007 [artifacts: ui] **Kicked players removed entirely from the
   visible roster (reversing the prior struck-through treatment).**
   Confirmed via user testing that the host's roster view did not
   reflect kicks as expected. Per the now-refined `ui.md` (Moderation
