@@ -82,7 +82,7 @@ before starting either task.
   `revealStartedAt` + elapsed time, independent of when the component
   mounted) per this project's test-first paradigm, confirm it fails,
   then implement. `[feedback: feedback-main-4258.md F001]`
-- [ ] T006 [artifacts: datamodel, ui] **Kicked player's own client is
+- [x] T006 [artifacts: datamodel, ui] **Kicked player's own client is
   ejected from the game.** Confirmed root cause: nothing in the client
   reacts to a player's own `kicked` flag — `player.kicked` is referenced
   only in `ModerationPanel.svelte` (the host's own display), so a kicked
