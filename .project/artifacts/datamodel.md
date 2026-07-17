@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-17
 diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
@@ -42,6 +42,7 @@ to survive a server restart.
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
+| revealStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `reveal`; `null` otherwise. Gives every client a shared reference point to derive the Reveal page's animated pacing (current book index, revealed-entry count) as a pure function of `now - revealStartedAt`, rather than each client running its own independent local timer — see [[ui]] Reveal View and Normalization Rules below. |
 
 ### Player
 
@@ -132,6 +133,23 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   which — combined with round-gating above — lets the round advance
   normally. `Room.timerExtensions` and `Room.pendingTimeoutVote` reset
   to empty/`null` whenever the current round advances.
+- **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
+  stamped the instant `status` transitions to `reveal` (the same
+  transition already logged as `game_completed` in `onSubmitEntry`).
+  Every client derives its Reveal-page animation position — which
+  book's cover/entries are showing — as a pure function of `now -
+  Room.revealStartedAt` against the same fixed cadence constants (cover
+  delay, per-tick duration, entries per tick; see [[ui]] Reveal View),
+  rather than incrementing local counters on that client's own
+  `setTimeout`/`setInterval` ticks. This guarantees every player sees
+  the same book at the same time regardless of when their own browser
+  mounted the page or how much clock drift accumulates locally —
+  reversed 2026-07-17 (feedback F001, `.project/feedback/
+  feedback-main-4258.md`) from the original per-client-local-timer
+  design, which let clients visibly diverge over a multi-book reveal
+  sequence. Manual prev/next/skip controls (see [[ui]]) still work by
+  jumping the *local* view ahead of or behind the clock-derived
+  position; the clock only drives the default auto-advance pacing.
 - **End-of-game controls (Reveal page).** Three distinct actions:
   - *Leave game* (non-host, `status === 'reveal'` only): client-local
     only — clears the leaving player's stored session token and
@@ -166,9 +184,12 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   `lobby`/`writing`/`reveal` (see [[ui]] Lobby View / Writing-Drawing
   View), distinct from the Reveal-only "Play again" above:
   - *Kick player*: sets the target `Player.kicked = true`; their
-    already-submitted entries stay in their books untouched. If the
-    room is `writing` when the kick happens, `Room.nonContinuable` is
-    also set `true` in the same operation — round-gating means a book
+    already-submitted entries stay in their books untouched, and the
+    `Player` record itself is never deleted (so `authorId` lookups for
+    already-authored entries keep resolving to a real name — see
+    [[ui]] for how this differs from what the *roster display* shows).
+    If the room is `writing` when the kick happens, `Room.nonContinuable`
+    is also set `true` in the same operation — round-gating means a book
     still waiting on the kicked player's now-abandoned turn can never
     reach the next round on its own. Rather than teaching the
     round-robin engine to skip a kicked player's now-orphaned turn
@@ -179,7 +200,15 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
     Kicking during `lobby` or `reveal` does not set `nonContinuable`
     (there's no in-progress round to strand): a `lobby` kick just
     shrinks the roster before `onStartGame`'s book generation, and a
-    `reveal` kick is purely cosmetic (the game is already over).
+    `reveal` kick is purely cosmetic (the game is already over). The
+    kicked player's own client, on receiving the `roomUpdated` broadcast
+    that carries its own `kicked: true`, immediately transitions to a
+    distinct terminal state ("you were removed from this game by the
+    host") rather than continuing to render its normal writing/drawing/
+    reveal view — see [[ui]] States. Reversed 2026-07-17 (feedback F001,
+    `.project/feedback/feedback-main-e2ff.md`): the kicked player's own
+    client previously had no reaction at all to its own `kicked` flag and
+    kept playing normally, which was never the intended behavior.
   - *Restart game*: only meaningful once `Room.nonContinuable` is
     `true`. Resets the **same** `Room` in place — `books` regenerated
     fresh (one per non-kicked player, per the existing

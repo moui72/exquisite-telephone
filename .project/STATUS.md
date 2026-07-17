@@ -25,39 +25,23 @@ current as artifacts are refined and open questions are resolved._
 
 ## Open Questions
 
-- **F3 (host missing Reveal replays, `feedback-main-4258.md`) — real bug,
-  needs a scoping decision.** Live 3-tab reproduction confirmed the
-  symptom and found the root cause: `Reveal.svelte`'s reveal-pacing
-  animation runs a plain client-local `setTimeout`/`setInterval` per
-  socket, seeded from that client's own `onMount`, with no shared clock
-  — timer drift between clients compounds unrecoverably over a 3-book
-  sequence, so the host's tab reliably raced ahead of non-host tabs to
-  the static end state. A correct fix needs a new `Room` field (e.g.
-  `revealStartedAt`, stamped server-side when `status` flips to
-  `reveal`) so every client derives its animation position as a pure
-  function of `now - revealStartedAt` instead of local counters — a
-  `datamodel.md` decision, not something the implementer was authorized
-  to add unilaterally. Decide: scope a follow-up `/ardd-refine
-  datamodel` + plan for a server-synchronized reveal clock, or handle
-  differently.
-- **F4 (kick button doing nothing, `feedback-main-e2ff.md`) — does not
-  reproduce.** Live-tested the exact reported flow (host kicks a
-  non-host player) in both `writing` and `reveal` phases, twice
-  independently — kick worked correctly every time: ack/broadcast
-  round-tripped, target shown struck-through with a disabled "Kicked"
-  button, room-wide "can't continue" notice appeared correctly during
-  `writing`. This directly contradicts the original report. Decide:
-  close `feedback-main-e2ff.md` as non-reproducing, or is there a
-  specific path not covered (one candidate surfaced during testing: the
-  *kicked player's own* client shows no notice/ejection when kicked
-  mid-`reveal` — possibly in-spec, since `ui.md` only documents a
-  writing-phase `nonContinuable` notice, not a reveal-phase one)?
+_(none — both prior open questions were resolved this session. F3:
+user confirmed a server-synchronized reveal clock; `datamodel.md` now
+records `Room.revealStartedAt` and its derivation rule. F4: the user
+clarified the real, reproducing bug — the earlier "does not reproduce"
+finding only checked the host's own view; the kicked player's own
+client never reacted to its own `kicked` flag at all, and separately the
+user wants kicked players fully removed from the host's roster display,
+reversing the "stay struck-through" design — `datamodel.md` now records
+the own-client-ejection rule; `ui.md` refine for the roster-display and
+Reveal-view changes is in progress. Implementation for both is pending
+a plan.)_
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` — `kicked`/`nonContinuable` fields added by this plan's artifact changes aren't reflected yet)
+- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` — `kicked`/`nonContinuable` fields plus the new `revealStartedAt` field aren't reflected yet)
 - infrastructure.md — stale ⚠️ (run `/ardd-diagram infrastructure` — `onKickPlayer`/`onRestartGame` handlers added)
-- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Moderation Panel added)
+- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Moderation Panel added, plus this session's roster-removal/Kicked-state/synchronized-reveal-clock changes)
 
 ## Code-vs-Artifact Defects
 
@@ -250,55 +234,53 @@ guard, new `onKickPlayer`/`onRestartGame` handlers, new Moderation
 Panel UI section) and all three are `stale` on diagrams pending a
 fresh `/ardd-diagram` pass. 1 defect remains on file (the
 deliberately-declined performance-budget claim, unaffected by this
-change). 0 open feedback files, but 2 open questions now block full
-closure of `tasks-5ef1-9eea.md` — see Open Questions above. Of the 5
-bugs found this session: 3 are fully fixed and merged (input-clearing,
-stale draw color/width, PNG-export flood-fill leak — all with passing
-regression tests); 1 (host missing Reveal replays) reproduced live with
-a confirmed root cause but needs a `datamodel.md` decision before it can
-be fixed; 1 (kick button doing nothing) does not reproduce on further
-live testing and needs a decision on whether to close it. 0
-backlogged/planned/tasked features — every feature in the register is
-`implemented` (both new plans bind no features). No cross-artifact
-conflicts or constitution violations. Working tree clean on `main`; no
-worktrees in flight — both this session's delegated worktrees reported
-back, merged (one fast-forward, one non-fast-forward, neither with
-conflicts), and were reaped. `tasks-7b9d-a92c.md` (3/3) is `completed`;
-`tasks-5ef1-9eea.md` (4/7) stays `in-progress` pending the two open
-questions. 9 tasks files now `completed`, 1 `in-progress`. Full suite on
-`main` post-merge: 214 tests passing (shared 18 + server 110 + client
-86), typecheck clean, lint clean. A manual `/run` smoke test this
-session (3 real isolated player sessions, live in Chrome) confirmed the
-core write→draw→write loop, round-gating, and the drawing-canvas
-pointer-accuracy fix all work correctly end-to-end; the 5 bugs above
-were reported separately by the user after that session, from further
-hands-on use. Root cause was confirmed and fixed for 3 of the 5
-(input-clearing: `WritingDrawing.svelte`'s draft-reset reactive
-statement fired on any room broadcast, not just this player's own turn
-changing; stale color/width: `DrawingCanvas.svelte` only applied the
-selected color/width to the canvas context after a stroke finished, not
-when it started; PNG-export flood-fill leak: `pngExport.ts`'s
-`renderBookOntoContext` scoped the flood fill to the *entire* composite
-canvas instead of just the current entry's own row — distinct from
-`ui.md`'s already-documented exact-match-color Production Annotation,
-which is about tolerance, not bounding). The other 2 needed live
-reproduction per the plan's design: the Reveal-replay bug turned out
-real (a per-client unsynchronized animation clock — see Open Questions),
-while the kick bug turned out not to reproduce at all, directly
-contradicting the original report. A separate `/ardd-audit` full pass
-wrote 8 findings (0 suggestions, 5 questions, 3 risks) to
-`.project/audit.md` — open, not yet resolved. Safe to /plan: yes.
+change). 0 open feedback files, 0 open questions — both decisions
+identified this session are now resolved and recorded in artifacts (see
+Open Questions above). Of the 5 bugs found this session: 3 are fully
+fixed and merged (input-clearing, stale draw color/width, PNG-export
+flood-fill leak — all with passing regression tests); the other 2 have
+confirmed root causes and concrete implementation guidance now written
+into `tasks-5ef1-9eea.md`'s T005-T007, but are not yet implemented.
+`datamodel.md` gained a `Room.revealStartedAt` field + Reveal-pacing
+normalization rule (server-synchronized clock for the Reveal
+animation) and an own-client-ejection rule for kicked players; `ui.md`
+was updated to match (Reveal View pacing description, Moderation
+Panel's roster-removal-not-strikethrough, and a new **Kicked** client
+state) — both refined 2026-07-17, both `stable`, both `diagram_status:
+stale` pending a fresh `/ardd-diagram` pass. 0 backlogged/planned/tasked
+features — every feature in the register is `implemented` (neither
+bug-fix plan binds features). No cross-artifact conflicts or
+constitution violations. Working tree clean on `main`; no worktrees in
+flight — both this session's delegated worktrees reported back, merged
+(one fast-forward, one non-fast-forward, neither with conflicts), and
+were reaped. `tasks-7b9d-a92c.md` (3/3) is `completed`;
+`tasks-5ef1-9eea.md` is `in-progress` at 4/7, now with 3 remaining tasks
+(T005-T007, renumbered from the original T005/T006 pair since the kick
+fix split into two concrete tasks: own-client ejection and roster
+display) plus T008 verification. 9 tasks files `completed`, 1
+`in-progress`. Full suite on `main`: 214 tests passing (shared 18 +
+server 110 + client 86), typecheck clean, lint clean — as of the last
+merge, before this session's tasks-file/artifact edits (no code changed
+in this latest round, only `.project/` files). A manual `/run` smoke
+test this session (3 real isolated player sessions, live in Chrome)
+confirmed the core write→draw→write loop, round-gating, and the
+drawing-canvas pointer-accuracy fix all work correctly end-to-end; the 5
+bugs above were reported separately by the user after that session, from
+further hands-on use, and 2 of them (Reveal replays, kick) needed a
+second round of live investigation before the user supplied the missing
+context that resolved both. A separate `/ardd-audit` full pass wrote 8
+findings (0 suggestions, 5 questions, 3 risks) to `.project/audit.md` —
+open, not yet resolved. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Resolve the two open questions above (both need your input, not more
-investigation): whether to scope a follow-up plan for a
-server-synchronized Reveal clock (F3), and whether to close the
-non-reproducing kick-button feedback item (F4) or dig into the one
-specific gap surfaced during testing (kicked player's own client during
-`reveal`). Once decided, `/ardd-plan` can finish out `tasks-5ef1-9eea.md`
-(currently 4/7, blocked on exactly these two tasks). Also worth doing at
-some point: `/ardd-diagram` on datamodel, infrastructure, and ui to
-bring the now-stale diagrams back in sync, and a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry.
+`/ardd-implement` to finish `tasks-5ef1-9eea.md` (4/7, `in-progress`) —
+T005 (server-synchronized Reveal clock), T006 (kicked player's own
+client ejection), T007 (roster display removes kicked players
+entirely), then T008 verification. All three have concrete,
+artifact-grounded implementation guidance now; no further decisions
+needed. Also worth doing at some point: `/ardd-diagram` on datamodel,
+infrastructure, and ui to bring the now-stale diagrams back in sync
+(datamodel/ui doubly so, given this session's fresh changes), and a look
+through `.project/audit.md`'s open findings (5 questions, 3 risks) to
+decide which merit a refine or backlog entry.

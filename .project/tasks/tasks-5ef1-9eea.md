@@ -48,93 +48,89 @@ status: in-progress
   after it's finalized into an op. Make T003 pass.
   `[feedback: feedback-main-6d3d.md F001]`
 
-## Phase 2: Reproduce-then-fix (F3, F4)
+## Phase 2: Resolved decisions (F3, F4) — datamodel/ui refined 2026-07-17
 
-- [ ] T005 [artifacts: ui] STOPPED — reproduced live but root cause is
-  architectural, not a small local bug; escalating rather than
-  unilaterally fixing. Using `claude-in-chrome` against a real running
-  server (3 isolated tabs, localStorage cleared before joining, host +
-  2 non-host, played a full 3-player game to `status: reveal`), the
-  exact reported symptom reproduced: at reveal onset all 3 clients
-  showed byte-identical state (same book, cover shown, 0 entries
-  revealed — confirmed via a same-batch simultaneous read across all 3
-  tabs), so there is no server/socket divergence and no `isHost`
-  branching exists anywhere in `Reveal.svelte`'s timer path (`isHost`
-  only swaps button labels/labels, per static reading). But over the
-  ~30s animated sequence, the host's tab reliably raced ahead — reaching
-  the static "show everything" full-grid end state while the two
-  non-host tabs were still mid-animation on an earlier book (confirmed
-  twice, once via polled screenshots, once via a same-batch read of
-  `document.querySelectorAll('h2').length` — host=3 books/grid,
-  non-host=1 book/animated — while all three read `hasFocus: false` at
-  the same instant, ruling out simple document-visibility throttling as
-  the sole explanation).
+Both tasks below were originally stopped pending user decisions (see
+git history for the full investigation notes). Both decisions are now
+made and recorded in `.project/artifacts/datamodel.md` and
+`.project/artifacts/ui.md` (refined 2026-07-17). Load both artifacts
+before starting either task.
 
-  Root cause: `Reveal.svelte`'s `startCoverDelay`/`startTickInterval`
-  (lines ~56-66) run a **plain client-local `setTimeout`/`setInterval`
-  seeded from that client's own `onMount`**, with no shared clock — each
-  socket's animation timeline is entirely independent, derived from
-  when *that* browser mounted the component, not from anything the
-  server broadcasts. Any skew between clients (tab backgrounding,
-  scheduler jitter, or simply the accumulated JS-timer drift Chrome
-  permits) compounds unrecoverably over the 3-book sequence, since nothing
-  ever resyncs one client's `currentBookIndex`/`revealedCount` to
-  another's or to a server-side reference point. This matches the
-  reported symptom exactly and is a real bug, not a testing-rig fluke —
-  but it is a **timer-per-client design gap**, not a one-line fix: a
-  correct fix means the server stamping something like a
-  `Room.revealStartedAt` timestamp when `status` flips to `reveal`, and
-  `Reveal.svelte` deriving `currentBookIndex`/`revealedCount` as a pure
-  function of `now - revealStartedAt` (a shared clock) instead of
-  incrementing local counters on local ticks. That is a new `Room`
-  field — a decision belonging in `datamodel.md`, which I'm not
-  authorized to add unilaterally (constitution: don't modify
-  `.project/artifacts/*.md` during implementation; stop and report if an
-  artifact decision looks incomplete/wrong instead of editing it
-  myself). Per this task's own escape hatch and that rule, stopping here
-  rather than inventing the schema change. Left unchecked, tasks file
-  left `in-progress`. **Ask the user**: should a follow-up
-  `/ardd-refine datamodel` (or a new plan) add a server-synchronized
-  reveal clock, given this is a real, reproducible bug? `[feedback:
-  feedback-main-4258.md F001]`
-- [ ] T006 [artifacts: ui] STOPPED — does not reproduce; kick works
-  correctly in live testing. Using the same live 3-tab session (host +
-  2 non-host, real server), tested the exact reported flow — as host,
-  opened the Moderation Panel and clicked "Kick" on a non-host player —
-  in **both** `status: writing` and `status: reveal`, twice
-  independently. In both phases: `kickPlayer` fired, the ack/broadcast
-  round-tripped, the target's row immediately showed struck-through
-  with a disabled "Kicked" button in the host's panel, and (in the
-  `writing` case) the room-wide "this game can't continue" notice
-  appeared correctly on the kicked-adjacent non-host's own screen too
-  (confirmed via screenshot on that player's own tab), matching
-  `ui.md`'s Moderation Panel spec precisely. This directly contradicts
-  the reported symptom ("the kick control... does nothing... target
-  player is not kicked") — the control visibly does exactly what it
-  should, both times tested. No code path exists where kick could
-  silently no-op (traced `ModerationPanel.svelte` → `session.kickPlayer`
-  → socket ack, all wired straightforwardly, matching `DEFECTS.md`'s
-  prior finding that the kick handler and its tests were already clean).
-  Per this task's escape hatch, stopping rather than inventing a fix for
-  a non-reproducing issue. Left unchecked, tasks file left
-  `in-progress`. **Ask the user**: is there a specific
-  browser/device/reproduction path for F4 not covered here (e.g. the
-  *kicked player's own* client shows no notice or ejection when kicked
-  mid-`reveal` — observed as a real gap, but arguably in-spec since
-  `ui.md` only documents the writing-phase `nonContinuable` notice, not
-  a reveal-phase one) — or should `feedback-main-e2ff.md` be closed as
-  not reproducing? `[feedback: feedback-main-e2ff.md F001]`
+- [ ] T005 [artifacts: datamodel, ui] **Reveal pacing: server-synchronized
+  clock.** Confirmed root cause: `Reveal.svelte`'s `startCoverDelay`/
+  `startTickInterval` run a plain client-local `setTimeout`/
+  `setInterval` per socket with no shared clock, so timer drift between
+  clients compounds over a multi-book sequence (the host's tab reliably
+  raced ahead of non-host tabs to the static end state). Per the now-
+  refined `datamodel.md` (Room table + Normalization Rules — Reveal
+  pacing) and `ui.md` (Reveal View): add `Room.revealStartedAt:
+  timestamp | null` to the shared `Room` type
+  (`shared/src/types.ts`), stamp it server-side in `onSubmitEntry`
+  (`server/src/socket/handlers.ts`) at the exact point `room.status` is
+  set to `'reveal'`. In `Reveal.svelte`, replace the local
+  `currentBookIndex`/`revealedCount` counters (currently driven by
+  `setTimeout`/`setInterval` ticks) with values derived as a pure
+  function of `Date.now() - room.revealStartedAt` against the existing
+  cadence constants (`COVER_DELAY_MS`, `TICK_MS`, `ENTRIES_PER_TICK`) —
+  a `setInterval` can still drive periodic re-computation/re-render, but
+  the *position* must be computed from the shared clock, not
+  incremented locally. Manual previous/next/skip controls continue to
+  work by overriding the clock-derived position locally (per `ui.md`).
+  Write a test first (server-side: `onSubmitEntry` stamps
+  `revealStartedAt` when `status` flips to `reveal`; client-side:
+  `Reveal.svelte` computes the same book/entry position from a given
+  `revealStartedAt` + elapsed time, independent of when the component
+  mounted) per this project's test-first paradigm, confirm it fails,
+  then implement. `[feedback: feedback-main-4258.md F001]`
+- [ ] T006 [artifacts: datamodel, ui] **Kicked player's own client is
+  ejected from the game.** Confirmed root cause: nothing in the client
+  reacts to a player's own `kicked` flag — `player.kicked` is referenced
+  only in `ModerationPanel.svelte` (the host's own display), so a kicked
+  player's own browser keeps rendering its normal view indefinitely. Per
+  the now-refined `datamodel.md` (Moderation Normalization Rules) and
+  `ui.md` (new **Kicked** state): when a client's own player record
+  (found via matching `state.player.id` against the incoming
+  `room.players`) shows `kicked: true`, the app must render a distinct
+  terminal state — "You were removed from this game by the host" plus a
+  "Return to home" control (same client-local reset as `Ended`/"Leave
+  game") — instead of the normal Lobby/WritingDrawing/Reveal view for
+  that `Room.status`. This is a routing-level change (likely in
+  `App.svelte`, alongside its existing `state.room.status` branches, or
+  in the shared session store if that's a better fit — use your
+  judgment for where the check belongs, consistent with Principle VI).
+  Write a failing test first reproducing this (a kicked player's client
+  should show the new Kicked state, not its normal view, regardless of
+  `Room.status`), then implement. `[feedback: feedback-main-e2ff.md
+  F001]`
+- [ ] T007 [artifacts: ui] **Kicked players removed entirely from the
+  visible roster (reversing the prior struck-through treatment).**
+  Confirmed via user testing that the host's roster view did not
+  reflect kicks as expected. Per the now-refined `ui.md` (Moderation
+  Panel): `ModerationPanel.svelte`'s player list must filter out any
+  `player.kicked === true` entries entirely (`room.players.filter(p =>
+  !p.kicked)`) rather than rendering them struck-through with a disabled
+  "Kicked" button as it does now. The underlying `Player` record and
+  `Room.players` array are untouched server-side (per `datamodel.md` —
+  needed so already-authored entries in Reveal still resolve to a real
+  author name via `playerName()` lookups elsewhere in the client); this
+  is a display-only filter in the roster list. Write a failing test
+  first (a kicked player should not appear in `ModerationPanel`'s
+  rendered list at all), then implement. `[feedback:
+  feedback-main-e2ff.md F001]`
 
 ## Phase 3: Verification
 
-- [ ] T007 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [ ] T008 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace (shared/server/client) and confirm
-  everything passes. Then manually smoke-test all four fixes live via
-  the `/run` pattern with 3 real isolated player sessions: (1) submit a
+  everything passes. Then manually smoke-test all fixes live via the
+  `/run` pattern with 3 real isolated player sessions: (1) submit a
   phrase as one player while another player has unsubmitted draft text —
   confirm it survives; (2) mid-stroke, change color/width and confirm
   the live line updates immediately; (3) play a full game through to
-  Reveal and confirm the host sees the animated book replays same as
-  non-host players; (4) as host, kick a non-host player and confirm they
-  are actually marked kicked (struck-through in the roster) for
-  everyone. Report results.
+  Reveal and confirm all 3 clients advance through books/entries in
+  lockstep (same book, same revealed-entry count, at the same time),
+  not just the host; (4) as host, kick a non-host player and confirm:
+  the kicked player disappears entirely from the host's roster, the
+  kicked player's own browser immediately shows the new "You were
+  removed" state, and (if kicked during `writing`) the "can't continue"
+  notice still appears for remaining players. Report results.

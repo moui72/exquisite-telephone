@@ -1,7 +1,7 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-15
+last_updated: 2026-07-17
 diagram_status: stale
 diagram_type: graph TD
 render_section: UI
@@ -54,9 +54,16 @@ shown to non-host players:
   Kicking sets `Player.kicked` and, if the room is `writing`, also sets
   `Room.nonContinuable` — the panel then surfaces a "this game can't
   continue" notice to the host (and, via the room-wide broadcast, to
-  every player) alongside the "restart game" control below. Kicked
-  players are shown struck-through in the roster rather than removed
-  from the list, so their contribution to books-so-far stays visible.
+  every player) alongside the "restart game" control below. A kicked
+  player is removed entirely from the visible roster shown to the host
+  and other players (reversed 2026-07-17, feedback F001
+  `.project/feedback/feedback-main-e2ff.md`, from the original
+  struck-through-but-visible treatment) — the underlying `Player` record
+  is untouched server-side (see [[datamodel]]), so their
+  already-authored entries still resolve to their name in Reveal; only
+  the roster *display* drops them. The kicked player's own client
+  immediately shows a distinct "you were removed from this game" state
+  (see States below) instead of continuing to render its normal view.
 - **"End game"** — the same host-only control already described on the
   Reveal page (see Reveal View below), now also reachable from
   `lobby`/`writing` via this panel, since a host moderating offensive
@@ -117,15 +124,26 @@ design, seeded from the book's `originAuthorId` so it's stable across
 re-renders rather than reshuffling every time), shown for 2.5 seconds,
 then auto-advances every 4 seconds revealing up to 2 entries at a time
 (original phrase -> drawing -> guess -> drawing -> ...) until that
-book is fully shown, then moves to the next book's cover. Manual
+book is fully shown, then moves to the next book's cover. This
+auto-advance pacing is derived identically on every client from
+`Room.revealStartedAt` (see [[datamodel]] Normalization Rules — Reveal
+pacing) — each client computes its current book index and revealed-entry
+count as a pure function of `now - Room.revealStartedAt` against these
+same fixed cadence constants, rather than running its own independent
+local timer, so every player sees the same book at the same time
+(reversed 2026-07-17, feedback F001 `.project/feedback/
+feedback-main-4258.md`, from the original per-client-local-timer design,
+which let clients visibly diverge — e.g. the host reaching the end while
+others were still mid-sequence — as clock drift accumulated). Manual
 previous/next controls and a "show everything" skip button are always
-available, so the pacing is a default, not a forced slideshow. Once
-every book has been shown (by auto-advance, skip, or manual
-navigation), the view settles into a static full-grid mode — every
-book's complete chain visible at once, matching the pre-redesign
-layout. Each book has a save control (available in both modes) that
-exports it as a PNG image strip (see [[infrastructure]] Export
-Pipeline).
+available and jump the *local* view ahead of or behind the
+clock-derived position, so the pacing is a default, not a forced
+slideshow. Once every book has been shown (by auto-advance, skip, or
+manual navigation), the view settles into a static full-grid mode —
+every book's complete chain visible at once, matching the
+pre-redesign layout. Each book has a save control (available in both
+modes) that exports it as a PNG image strip (see [[infrastructure]]
+Export Pipeline).
 
 Also on the Reveal page, host and non-host players see different
 end-of-game controls (see [[datamodel]] Normalization Rules — End-of-
@@ -156,6 +174,17 @@ game controls):
   (distinct from a hard error — reconnect shows a "reconnecting..." state
   per [[infrastructure]] Session Store, not a failure state, until it
   times out).
+- **Kicked**: shown only to the player who was just kicked, the instant
+  their own client observes `Player.kicked === true` on itself via a
+  `roomUpdated` broadcast, regardless of `Room.status` at the time.
+  Displays "You were removed from this game by the host" and a "Return
+  to home" control (same client-local reset as "Leave game"/"Ended"
+  above). Distinct from **Ended** — the room itself may still be
+  ongoing for everyone else; only the kicked player sees this state.
+  Added 2026-07-17 (feedback F001, `.project/feedback/
+  feedback-main-e2ff.md`) — previously the kicked player's own client
+  had no reaction to its own `kicked` flag at all and kept rendering its
+  normal view.
 
 ## Styling
 
