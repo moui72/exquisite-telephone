@@ -8,6 +8,12 @@
   export let session: SessionStore = defaultSession;
 
   $: state = $session;
+  // Kicked (ui.md States): the local player's own record showing
+  // kicked: true takes over regardless of Room.status — a kick can
+  // happen mid-writing or mid-reveal, and this client must stop
+  // rendering its normal view the instant it observes its own flag.
+  $: myPlayerRecord = state.room?.players.find((p) => p.id === state.player?.id) ?? null;
+  $: isKicked = myPlayerRecord?.kicked === true;
 </script>
 
 {#if state.reconnecting}
@@ -17,6 +23,17 @@
 {:else if state.error === 'game-ended'}
   <main class="flex min-h-screen items-center justify-center p-6">
     <p class="text-lg text-slate-600">This game has ended.</p>
+  </main>
+{:else if isKicked}
+  <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
+    <p class="text-lg text-slate-600">You were removed from this game by the host.</p>
+    <button
+      type="button"
+      class="rounded bg-slate-700 px-4 py-2 text-white hover:bg-slate-800"
+      on:click={() => session.leaveGame()}
+    >
+      Return to home
+    </button>
   </main>
 {:else if !state.room || state.room.status === 'lobby'}
   <Lobby {session} />

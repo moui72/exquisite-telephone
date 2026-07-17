@@ -52,6 +52,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
     store.rooms.set(room.id, room);
     return { store, room };

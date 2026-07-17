@@ -16,6 +16,10 @@
   $: state = $session;
   $: room = state.room;
   $: isHost = room !== null && state.player !== null && state.player.id === room.hostPlayerId;
+  // Kicked players are removed entirely from the visible roster (ui.md
+  // Moderation Panel, reversed 2026-07-17) — the underlying Player
+  // record is untouched server-side, this is a display-only filter.
+  $: visiblePlayers = room?.players.filter((p) => !p.kicked) ?? [];
 
   async function handleKick(targetPlayerId: string) {
     await session.kickPlayer(targetPlayerId);
@@ -44,19 +48,18 @@
 
     {#if expanded}
       <ul class="mt-3 flex flex-col gap-2">
-        {#each room.players as player (player.id)}
+        {#each visiblePlayers as player (player.id)}
           <li class="flex items-center justify-between text-sm">
-            <span class:line-through={player.kicked} class:text-slate-400={player.kicked}>
+            <span>
               {player.name}
             </span>
             {#if player.id !== room.hostPlayerId}
               <button
                 type="button"
-                class="min-h-11 rounded-md border px-3 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
-                disabled={player.kicked}
+                class="min-h-11 rounded-md border px-3 py-2 text-sm font-medium text-red-700"
                 on:click={() => handleKick(player.id)}
               >
-                {player.kicked ? 'Kicked' : 'Kick'}
+                Kick
               </button>
             {/if}
           </li>

@@ -51,6 +51,7 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
+    revealStartedAt: null,
   };
 }
 

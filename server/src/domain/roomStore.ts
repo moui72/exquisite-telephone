@@ -60,6 +60,7 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
+    revealStartedAt: null,
   };
 
   store.rooms.set(room.id, room);
@@ -162,6 +163,7 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
+    revealStartedAt: null,
   };
 
   store.rooms.set(room.id, room);

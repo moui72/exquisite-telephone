@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { parseDrawOps } from '@exquisite-telephone/shared';
+  import type { Book } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
@@ -24,78 +25,92 @@
   const TICK_MS = 4000;
   const ENTRIES_PER_TICK = 2;
 
+  /** How often the clock-derived position is recomputed while auto-advancing. */
+  const RECOMPUTE_INTERVAL_MS = 250;
+
   $: state = $session;
   $: room = state.room;
   $: isHost = room !== null && state.player !== null && state.player.id === room.hostPlayerId;
 
-  let currentBookIndex = 0;
-  let revealedCount = 0;
-  let showEverything = false;
+  /**
+   * Pure function of elapsed time since the reveal sequence's shared
+   * start — datamodel.md's Reveal pacing rule: every client derives the
+   * same book index / revealed-entry count from the same
+   * `Room.revealStartedAt` and the same fixed cadence constants, rather
+   * than incrementing local counters, so clock drift and mount-time
+   * differences between clients can't cause divergence.
+   */
+  function computeRevealPosition(
+    books: Book[],
+    elapsedMs: number,
+  ): { bookIndex: number; revealedCount: number; showEverything: boolean } {
+    let remaining = Math.max(0, elapsedMs);
 
-  // Timer driving auto-advance (constitution Quality Standards — touch/
-  // timer cleanup): registered in onMount, cleared in onDestroy, matching
-  // WritingDrawing.svelte's existing countdown-timer pattern. A plain
-  // `setTimeout` drives the one-off 2.5s cover delay; a `setInterval`
-  // takes over for the repeating 4s reveal ticks thereafter. Manual
-  // controls reset this timing so an auto-tick doesn't immediately
-  // override a manual action.
-  let timerHandle: ReturnType<typeof setTimeout> | undefined;
-  let timerIsInterval = false;
+    for (let i = 0; i < books.length; i++) {
+      const total = books[i]!.entries.length;
 
-  function clearTimer() {
-    if (timerHandle !== undefined) {
-      if (timerIsInterval) {
-        clearInterval(timerHandle);
-      } else {
-        clearTimeout(timerHandle);
+      if (remaining < COVER_DELAY_MS) {
+        return { bookIndex: i, revealedCount: 0, showEverything: false };
       }
-      timerHandle = undefined;
+
+      const afterCover = remaining - COVER_DELAY_MS;
+      const ticks = Math.floor(afterCover / TICK_MS);
+      const revealed = Math.min(ticks * ENTRIES_PER_TICK, total);
+
+      if (revealed < total) {
+        return { bookIndex: i, revealedCount: revealed, showEverything: false };
+      }
+
+      // This book is fully revealed; consume the time it took to fully
+      // reveal it and move on to considering the next book.
+      const ticksNeededForFull = Math.ceil(total / ENTRIES_PER_TICK);
+      const fullBookDuration = COVER_DELAY_MS + ticksNeededForFull * TICK_MS;
+      remaining -= fullBookDuration;
+
+      if (i === books.length - 1) {
+        return { bookIndex: i, revealedCount: total, showEverything: true };
+      }
     }
+
+    // No books at all.
+    return { bookIndex: 0, revealedCount: 0, showEverything: true };
   }
 
-  function startCoverDelay() {
-    clearTimer();
-    timerIsInterval = false;
-    timerHandle = setTimeout(startTickInterval, COVER_DELAY_MS);
-  }
+  // Manual previous/next/skip controls override the clock-derived
+  // position locally (ui.md Reveal View) — once set, these win over the
+  // auto-computed position for the rest of this component's lifetime,
+  // or until reset by another manual action.
+  let manualBookIndex: number | null = null;
+  let manualRevealedCount: number | null = null;
+  let manualShowEverything = false;
 
-  function startTickInterval() {
-    clearTimer();
-    timerIsInterval = true;
-    timerHandle = setInterval(revealNext, TICK_MS);
-  }
+  // Recomputation driver (constitution Quality Standards — touch/timer
+  // cleanup): registered in onMount, cleared in onDestroy. It only
+  // triggers periodic re-renders of the clock-derived position — the
+  // position itself is computed fresh each time from `Room.revealStartedAt`,
+  // not incremented.
+  let recomputeHandle: ReturnType<typeof setInterval> | undefined;
+  let nowTick = Date.now();
 
-  function revealNext() {
-    if (!room) return;
-    const book = room.books[currentBookIndex];
-    if (!book) return;
+  // Defensive fallback: `Room.revealStartedAt` should always be set once
+  // `status === 'reveal'`, but if it's ever null, fall back to this
+  // client's own mount time so the view still degrades gracefully
+  // instead of producing NaN/garbage positions.
+  let mountFallbackStart = Date.now();
 
-    const total = book.entries.length;
-    revealedCount = Math.min(revealedCount + ENTRIES_PER_TICK, total);
+  $: effectiveStart = room?.revealStartedAt ?? mountFallbackStart;
+  $: elapsedMs = nowTick - effectiveStart;
+  $: derived = room ? computeRevealPosition(room.books, elapsedMs) : null;
 
-    if (revealedCount >= total) {
-      advanceToNextBookOrFinish();
-    }
-  }
-
-  function advanceToNextBookOrFinish() {
-    if (!room) return;
-    if (currentBookIndex < room.books.length - 1) {
-      currentBookIndex += 1;
-      revealedCount = 0;
-      startCoverDelay();
-    } else {
-      showEverything = true;
-      clearTimer();
-    }
-  }
+  $: currentBookIndex = manualBookIndex ?? derived?.bookIndex ?? 0;
+  $: revealedCount = manualRevealedCount ?? derived?.revealedCount ?? 0;
+  $: showEverything = manualShowEverything || (derived?.showEverything ?? false);
 
   function goToBook(index: number) {
     if (!room) return;
     const clamped = Math.max(0, Math.min(index, room.books.length - 1));
-    currentBookIndex = clamped;
-    revealedCount = 0;
-    startCoverDelay();
+    manualBookIndex = clamped;
+    manualRevealedCount = 0;
   }
 
   function handlePrevious() {
@@ -107,17 +122,19 @@
   }
 
   function handleShowEverything() {
-    showEverything = true;
-    clearTimer();
+    manualShowEverything = true;
   }
 
   onMount(() => {
-    if (room && room.books.length > 0) {
-      startCoverDelay();
-    }
+    nowTick = Date.now();
+    recomputeHandle = setInterval(() => {
+      nowTick = Date.now();
+    }, RECOMPUTE_INTERVAL_MS);
   });
   onDestroy(() => {
-    clearTimer();
+    if (recomputeHandle !== undefined) {
+      clearInterval(recomputeHandle);
+    }
   });
 
   $: currentBook = room ? (room.books[currentBookIndex] ?? null) : null;

@@ -53,6 +53,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
+    revealStartedAt: null,
     ...overrides,
   };
 }
@@ -101,6 +102,22 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Kick' }));
 
     expect(session.kickPlayer).toHaveBeenCalledWith(grace.id);
+  });
+
+  it('filters a kicked player out of the roster entirely, rather than showing them struck-through', async () => {
+    const kickedGrace = { ...grace, kicked: true };
+    const session = makeFakeSession({
+      room: makeRoom({ players: [ada, kickedGrace] }),
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(ModerationPanel, { props: { session } });
+    await fireEvent.click(screen.getByText('Moderation'));
+
+    expect(screen.queryByText('Grace')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Kicked' })).not.toBeInTheDocument();
   });
 
   it('shows "Restart game" only when Room.nonContinuable is true', async () => {

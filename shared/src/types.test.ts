@@ -73,6 +73,7 @@ describe('datamodel types (datamodel.md)', () => {
       pendingTimeoutVote: null,
       playAgainVotes: [],
       nonContinuable: false,
+      revealStartedAt: null,
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];

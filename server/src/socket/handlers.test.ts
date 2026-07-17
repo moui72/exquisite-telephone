@@ -316,6 +316,61 @@ describe('round timer bookkeeping (Room.roundStartedAt / timerExtensions / pendi
   });
 });
 
+describe('onSubmitEntry reveal pacing (Room.revealStartedAt)', () => {
+  it("stamps revealStartedAt when the last entry flips status to 'reveal'", () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const adaId = room.players[0]!.id;
+    const adaBook = room.books[0]!;
+
+    expect(room.revealStartedAt).toBeNull();
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const before = Date.now();
+
+    onSubmitEntry(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: 'final phrase' },
+      vi.fn(),
+    );
+
+    const after = Date.now();
+    expect(room.status).toBe('reveal');
+    expect(room.revealStartedAt).not.toBeNull();
+    expect(room.revealStartedAt!).toBeGreaterThanOrEqual(before);
+    expect(room.revealStartedAt!).toBeLessThanOrEqual(after);
+  });
+
+  it('leaves revealStartedAt null when the submission does not complete the game', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const adaId = room.players[0]!.id;
+    const adaBook = room.books.find((b) => b.originAuthorId === adaId)!;
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    onSubmitEntry(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: 'not last' },
+      vi.fn(),
+    );
+
+    expect(room.status).toBe('writing');
+    expect(room.revealStartedAt).toBeNull();
+  });
+});
+
 describe('minimum player count (onStartGame)', () => {
   it('rejects starting with fewer than 3 players when acknowledgeSmallGame is not true', () => {
     const store = createRoomStore();

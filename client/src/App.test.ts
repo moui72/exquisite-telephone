@@ -45,6 +45,7 @@ timerExtensions: {},
 pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
+revealStartedAt: null,
   };
 }
 
@@ -103,6 +104,44 @@ describe('App (top-level state routing per ui.md States)', () => {
     render(App, { props: { session } });
 
     expect(screen.getByRole('button', { name: /create room/i })).toBeInTheDocument();
+  });
+
+  it('shows the Kicked state instead of the normal writing view when the local player has kicked: true, and Return to home calls leaveGame', async () => {
+    const kickedAda = { ...ada, kicked: true };
+    const room = makeRoom('writing');
+    room.players = [kickedAda];
+    const session = makeFakeSession({
+      room,
+      player: kickedAda,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(App, { props: { session } });
+
+    expect(screen.getByText(/you were removed from this game/i)).toBeInTheDocument();
+    expect(screen.queryByText(/this game has ended/i)).not.toBeInTheDocument();
+
+    const returnButton = screen.getByRole('button', { name: /return to home/i });
+    await fireEvent.click(returnButton);
+
+    expect(session.leaveGame).toHaveBeenCalled();
+  });
+
+  it('shows the Kicked state regardless of Room.status (e.g. reveal)', () => {
+    const kickedAda = { ...ada, kicked: true };
+    const room = makeRoom('reveal');
+    room.players = [kickedAda];
+    const session = makeFakeSession({
+      room,
+      player: kickedAda,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(App, { props: { session } });
+
+    expect(screen.getByText(/you were removed from this game/i)).toBeInTheDocument();
   });
 
   it('shows the Writing/Drawing view once the room is in progress', () => {

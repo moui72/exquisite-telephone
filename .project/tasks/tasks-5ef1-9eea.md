@@ -1,7 +1,7 @@
 ---
 plan: plan-5ef1-2026-07-17-9e40.md
 generated: 2026-07-17
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -56,7 +56,7 @@ made and recorded in `.project/artifacts/datamodel.md` and
 `.project/artifacts/ui.md` (refined 2026-07-17). Load both artifacts
 before starting either task.
 
-- [ ] T005 [artifacts: datamodel, ui] **Reveal pacing: server-synchronized
+- [x] T005 [artifacts: datamodel, ui] **Reveal pacing: server-synchronized
   clock.** Confirmed root cause: `Reveal.svelte`'s `startCoverDelay`/
   `startTickInterval` run a plain client-local `setTimeout`/
   `setInterval` per socket with no shared clock, so timer drift between
@@ -82,7 +82,7 @@ before starting either task.
   `revealStartedAt` + elapsed time, independent of when the component
   mounted) per this project's test-first paradigm, confirm it fails,
   then implement. `[feedback: feedback-main-4258.md F001]`
-- [ ] T006 [artifacts: datamodel, ui] **Kicked player's own client is
+- [x] T006 [artifacts: datamodel, ui] **Kicked player's own client is
   ejected from the game.** Confirmed root cause: nothing in the client
   reacts to a player's own `kicked` flag — `player.kicked` is referenced
   only in `ModerationPanel.svelte` (the host's own display), so a kicked
@@ -102,7 +102,7 @@ before starting either task.
   should show the new Kicked state, not its normal view, regardless of
   `Room.status`), then implement. `[feedback: feedback-main-e2ff.md
   F001]`
-- [ ] T007 [artifacts: ui] **Kicked players removed entirely from the
+- [x] T007 [artifacts: ui] **Kicked players removed entirely from the
   visible roster (reversing the prior struck-through treatment).**
   Confirmed via user testing that the host's roster view did not
   reflect kicks as expected. Per the now-refined `ui.md` (Moderation
@@ -120,7 +120,7 @@ before starting either task.
 
 ## Phase 3: Verification
 
-- [ ] T008 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [x] T008 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace (shared/server/client) and confirm
   everything passes. Then manually smoke-test all fixes live via the
   `/run` pattern with 3 real isolated player sessions: (1) submit a
