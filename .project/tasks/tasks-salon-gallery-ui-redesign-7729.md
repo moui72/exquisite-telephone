@@ -35,7 +35,7 @@ status: in-progress
 
 ## Phase 3: Writing / Drawing View
 
-- [ ] T004 [artifacts: ui] [parallel] Write failing tests in
+- [x] T004 [artifacts: ui] [parallel] Write failing tests in
   `WritingDrawing.test.ts` asserting the canvas/text-entry surface
   renders inside `GiltFrame` (from T002), and that its copy (submit
   control, waiting states, timeout-vote prompt and its four options) has

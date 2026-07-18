@@ -7,6 +7,7 @@
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
   import ModerationPanel from '../components/ModerationPanel.svelte';
+  import GiltFrame from '../components/GiltFrame.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -141,7 +142,8 @@
   {#if canVoteOnTimeout}
     <div class="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4">
       <p class="text-sm text-slate-700">
-        {stalledPlayerNames} still hasn't submitted this round. What should happen?
+        {stalledPlayerNames} has yet to present their contribution to the salon. How shall the house
+        proceed?
       </p>
       <div class="flex flex-wrap gap-2">
         <button
@@ -149,28 +151,28 @@
           class="rounded-md border px-3 py-1 text-sm"
           on:click={() => handleCastTimeoutVote('full')}
         >
-          Give a full turn
+          Grant a Full Turn
         </button>
         <button
           type="button"
           class="rounded-md border px-3 py-1 text-sm"
           on:click={() => handleCastTimeoutVote('half')}
         >
-          Give a half turn
+          Grant a Half Turn
         </button>
         <button
           type="button"
           class="rounded-md border px-3 py-1 text-sm"
           on:click={() => handleCastTimeoutVote('15m')}
         >
-          Give 15 minutes
+          Grant Fifteen Minutes
         </button>
         <button
           type="button"
           class="rounded-md border px-3 py-1 text-sm"
           on:click={() => handleCastTimeoutVote('force-empty')}
         >
-          Force empty now
+          Declare the Turn Forfeit
         </button>
       </div>
     </div>
@@ -178,53 +180,55 @@
 
   {#if !myTurn}
     {#if waitingForRoundToFinish}
-      <p class="text-lg text-slate-600">Waiting for the round to finish…</p>
+      <p class="text-lg text-slate-600">Awaiting the round's conclusion…</p>
     {:else}
-      <p class="text-lg text-slate-600">Waiting for your next turn…</p>
+      <p class="text-lg text-slate-600">Awaiting your next commission…</p>
     {/if}
   {:else}
-    {#if previousEntry}
-      <div class="flex flex-col gap-2">
-        <p class="text-sm text-slate-500">What the last player made:</p>
-        {#if previousEntry.type === 'text'}
-          <p class="text-xl font-medium text-slate-900">{previousEntry.content}</p>
-        {:else}
-          <DrawingCanvas ops={parseDrawOps(previousEntry.content)} readOnly />
-        {/if}
-      </div>
-    {/if}
+    <GiltFrame caption="The Easel — Work in Progress">
+      {#if previousEntry}
+        <div class="flex flex-col gap-2">
+          <p class="text-sm text-slate-500">What the last player made:</p>
+          {#if previousEntry.type === 'text'}
+            <p class="text-xl font-medium text-slate-900">{previousEntry.content}</p>
+          {:else}
+            <DrawingCanvas ops={parseDrawOps(previousEntry.content)} readOnly />
+          {/if}
+        </div>
+      {/if}
 
-    {#if myTurn.type === 'text'}
-      <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitText}>
-        <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          Your phrase
-          <input
-            class="rounded-md border px-3 py-2 text-base"
-            type="text"
-            required
-            bind:value={textValue}
-            autocomplete="off"
+      {#if myTurn.type === 'text'}
+        <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitText}>
+          <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+            Your phrase
+            <input
+              class="rounded-md border px-3 py-2 text-base"
+              type="text"
+              required
+              bind:value={textValue}
+              autocomplete="off"
+            />
+          </label>
+          <button type="submit" class="rounded-md bg-bubblegum px-4 py-2 text-base text-white">
+            Present your contribution
+          </button>
+        </form>
+      {:else}
+        <div class="flex flex-col gap-4">
+          <DrawingCanvas
+            ops={drawnOps}
+            onOpsChange={handleOpsChange}
+            monochromeOnly={state.room?.monochromeOnly ?? false}
           />
-        </label>
-        <button type="submit" class="rounded-md bg-slate-800 px-4 py-2 text-base text-white">
-          Submit
-        </button>
-      </form>
-    {:else}
-      <div class="flex flex-col gap-4">
-        <DrawingCanvas
-          ops={drawnOps}
-          onOpsChange={handleOpsChange}
-          monochromeOnly={state.room?.monochromeOnly ?? false}
-        />
-        <button
-          type="button"
-          class="rounded-md bg-slate-800 px-4 py-2 text-base text-white"
-          on:click={handleSubmitDrawing}
-        >
-          Submit
-        </button>
-      </div>
-    {/if}
+          <button
+            type="button"
+            class="rounded-md bg-bubblegum px-4 py-2 text-base text-white"
+            on:click={handleSubmitDrawing}
+          >
+            Present your contribution
+          </button>
+        </div>
+      {/if}
+    </GiltFrame>
   {/if}
 </div>
