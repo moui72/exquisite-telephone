@@ -31,7 +31,7 @@ status: in-progress
   current behavior, then add the host-exclusion condition to the
   existing `{#if state.room.nonContinuable}` block in
   `WritingDrawing.svelte`. Addresses feedback F001.
-- [ ] T004 [artifacts: ui] [parallel] Write failing tests in
+- [x] T004 [artifacts: ui] [parallel] Write failing tests in
   `Lobby.test.ts` asserting: (a) each of `room-not-found`, `not-host`,
   `too-few-players`, `room-not-in-lobby`, `invalid-token`, `game-ended`
   renders its own docent-voice copy (not the raw code string), and (b)

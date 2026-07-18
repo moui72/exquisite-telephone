@@ -325,4 +325,33 @@ describe('Lobby view', () => {
 
     expect(session.setMonochrome).toHaveBeenCalledWith(true);
   });
+
+  describe('error copy (F002)', () => {
+    const cases: Array<[string, RegExp]> = [
+      ['room-not-found', /no salon .* that code|couldn.t find .* room|room.*not.*found/i],
+      ['not-host', /host/i],
+      ['too-few-players', /(more|another).*(guest|player)|need at least/i],
+      ['room-not-in-lobby', /already.*(begun|underway|started)/i],
+      ['invalid-token', /session.*(expired|invalid)|reconnect/i],
+      ['game-ended', /ended/i],
+    ];
+
+    it.each(cases)('renders docent-voice copy for %s, not the raw code', (code, matcher) => {
+      const session = makeFakeSession({ room: null, player: null, error: code });
+      render(Lobby, { props: { session } });
+
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).toMatch(matcher);
+      expect(alert.textContent).not.toContain(code);
+    });
+
+    it('renders a generic fallback line for an unrecognized error code, not the raw string', () => {
+      const session = makeFakeSession({ room: null, player: null, error: 'some-unmapped-code' });
+      render(Lobby, { props: { session } });
+
+      const alert = screen.getByRole('alert');
+      expect(alert.textContent).not.toContain('some-unmapped-code');
+      expect(alert.textContent?.length ?? 0).toBeGreaterThan(0);
+    });
+  });
 });
