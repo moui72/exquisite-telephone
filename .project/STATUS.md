@@ -1,6 +1,18 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-7c63-355f.md` end to
+_Updated: 2026-07-18 (`/ardd-feedback` logged `feedback-main-5fdc.md`:
+F001 (UX) — the user reported the reskinned UI still "looks very
+plain," which a code check confirmed: `salon-gallery-ui-redesign`
+only actually reskinned the `GiltFrame` component itself; `font-
+display`/`font-body` are never applied anywhere, and the theme's
+background/text colors (`bg-butter`/`bg-velvet`/`bg-ink`/`bg-marigold`)
+appear nowhere outside `GiltFrame.svelte` — page headings, body text,
+labels, borders, and most buttons across Lobby/WritingDrawing/Reveal/
+ModerationPanel/TurnStatus/App terminal states are still stock
+Tailwind slate-gray/white. Open, queued for the next `/ardd-plan`.
+**ArDD update available**: installed `c5ce6e9`, source (beta channel)
+at `v0.10.3-beta.3` — run `/ardd-update` when convenient. Prior entry:
+`/ardd-implement` ran `tasks-7c63-355f.md` end to
 end: delegated to a worktree subagent (solo mode, `delegation: eager`),
 all 5 tasks completed and committed — `ui.md` clarified (host-only
 notice suppression rule, error-code-mapping rule), the duplicate
@@ -147,7 +159,10 @@ in code and dropped from the file).
 
 ## Feedback
 
-0 open feedback files. `feedback-main-8da5.md` (F001 bug —
+1 open feedback file — `feedback-main-5fdc.md` (F001, UX: the
+salon-gallery-ui-redesign theme was only ever applied to `GiltFrame`,
+not broadly across the app), queued for the next `/ardd-plan`. Prior:
+`feedback-main-8da5.md` (F001 bug —
 `ModerationPanel`/`WritingDrawing` double-render the "game can't
 continue" notice; F002 UX — Error/Empty states show raw error codes
 instead of docent-voice copy) is `planned` via
@@ -364,10 +379,11 @@ implementation — both `stable`, and all three renderable artifacts
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
 0 backlogged, 0 planned, 0 tasked, 8 implemented features. No
 cross-artifact conflicts or constitution violations. All diagrams
-current. 0 open feedback files — `feedback-main-8da5.md`'s two items
-(F001, F002) fixed and merged via `plan-7c63-2026-07-18-f55f.md` /
-`tasks-7c63-355f.md` (completed 5/5). Nothing blocking; nothing in
-flight.
+current. 1 open feedback file — `feedback-main-5fdc.md` (F001: theme
+only reached `GiltFrame`, not the rest of the app) — queued for
+`/ardd-plan`. `feedback-main-8da5.md`'s two prior items (F001, F002)
+remain fixed and merged. Nothing in flight. ArDD update available
+(beta channel, `v0.10.3-beta.3`).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -392,6 +408,10 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. Worth doing at some point: a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry.
+`/ardd-plan feedback-main-5fdc.md` to plan the full-app theme
+application (F001) — the salon/gallery reskin needs to reach page
+backgrounds, headings, body text, and controls beyond `GiltFrame`.
+`/ardd-update` when convenient (beta channel has a newer release).
+Also worth doing at some point: a look through `.project/audit.md`'s
+open findings (5 questions, 3 risks) to decide which merit a refine or
+backlog entry.
