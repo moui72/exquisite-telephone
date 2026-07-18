@@ -65,6 +65,33 @@ describe('Lobby view', () => {
     expect(screen.getByText('Ada')).toBeInTheDocument();
   });
 
+  it('renders the room card inside a GiltFrame with a plaque caption', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    const { container } = render(Lobby, { props: { session: hostSession } });
+
+    const frame = container.querySelector('.gilt-frame');
+    expect(frame).not.toBeNull();
+    expect(frame).toContainElement(screen.getByText('ABCDE'));
+    expect(frame?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/ABCDE/);
+  });
+
   it('shows the start game control only to the host', async () => {
     const room: Room = {
       id: 'ABCDE',
@@ -92,7 +119,7 @@ describe('Lobby view', () => {
       error: null,
     });
     render(Lobby, { props: { session: hostSession } });
-    expect(screen.getByRole('button', { name: /start game/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /commence the exhibition/i })).toBeInTheDocument();
 
     const guestSession = makeFakeSession({
       room,
@@ -100,7 +127,7 @@ describe('Lobby view', () => {
       error: null,
     });
     render(Lobby, { props: { session: guestSession } });
-    expect(screen.queryAllByRole('button', { name: /start game/i })).toHaveLength(1); // still just the host's
+    expect(screen.queryAllByRole('button', { name: /commence the exhibition/i })).toHaveLength(1); // still just the host's
   });
 
   it('always shows player-count guidance to the host', () => {
@@ -153,9 +180,9 @@ describe('Lobby view', () => {
     render(Lobby, { props: { session: hostSession } });
 
     const checkbox = screen.getByRole('checkbox', {
-      name: /i know this won.t really work but i want to test something/i,
+      name: /aware this salon is intimately attended.*wish to proceed nonetheless/i,
     });
-    const startButton = screen.getByRole('button', { name: /start game/i });
+    const startButton = screen.getByRole('button', { name: /commence the exhibition/i });
     expect(startButton).toBeDisabled();
 
     await fireEvent.click(checkbox);
@@ -191,9 +218,9 @@ describe('Lobby view', () => {
     render(Lobby, { props: { session: hostSession } });
 
     expect(
-      screen.queryByRole('checkbox', { name: /i know this won.t really work/i }),
+      screen.queryByRole('checkbox', { name: /aware this salon is intimately attended/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /start game/i })).not.toBeDisabled();
+    expect(screen.getByRole('button', { name: /commence the exhibition/i })).not.toBeDisabled();
   });
 
   it("reflects Room.turnTimerMinutes in the host's timer selector and emits setTurnTimer on change", async () => {
@@ -221,7 +248,7 @@ describe('Lobby view', () => {
 
     render(Lobby, { props: { session: hostSession } });
 
-    const select = screen.getByLabelText(/turn timer/i) as HTMLSelectElement;
+    const select = screen.getByLabelText(/allotted contemplation period/i) as HTMLSelectElement;
     expect(select.value).toBe('30');
 
     await fireEvent.change(select, { target: { value: '60' } });
@@ -264,13 +291,13 @@ describe('Lobby view', () => {
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session: hostSession } });
-    const toggle = screen.getByRole('checkbox', { name: /force monochrome/i });
+    const toggle = screen.getByRole('checkbox', { name: /enforce a monochrome decree/i });
     expect(toggle).toBeInTheDocument();
     expect(toggle).toBeChecked();
 
     const guestSession = makeFakeSession({ room, player: room.players[1]!, error: null });
     render(Lobby, { props: { session: guestSession } });
-    expect(screen.queryAllByRole('checkbox', { name: /force monochrome/i })).toHaveLength(1); // still just the host's
+    expect(screen.queryAllByRole('checkbox', { name: /enforce a monochrome decree/i })).toHaveLength(1); // still just the host's
   });
 
   it('emits set_monochrome with the new value when the host toggles it', async () => {
@@ -294,7 +321,7 @@ describe('Lobby view', () => {
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session } });
 
-    await fireEvent.click(screen.getByRole('checkbox', { name: /force monochrome/i }));
+    await fireEvent.click(screen.getByRole('checkbox', { name: /enforce a monochrome decree/i }));
 
     expect(session.setMonochrome).toHaveBeenCalledWith(true);
   });

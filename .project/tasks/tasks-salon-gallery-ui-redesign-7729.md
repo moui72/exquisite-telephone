@@ -25,7 +25,7 @@ status: in-progress
 
 ## Phase 2: Lobby View
 
-- [ ] T003 [artifacts: ui] Write failing tests in `Lobby.test.ts`
+- [x] T003 [artifacts: ui] Write failing tests in `Lobby.test.ts`
   asserting the room card renders inside `GiltFrame` (from T002) with a
   plaque caption, and that the lobby's button/label copy has been
   updated to the docent voice (host-facing controls: "start game,"

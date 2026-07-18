@@ -2,6 +2,7 @@
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import ModerationPanel from '../components/ModerationPanel.svelte';
+  import GiltFrame from '../components/GiltFrame.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -120,19 +121,21 @@
     <div class="flex flex-col gap-4">
       <ModerationPanel {session} />
 
-      <p class="text-sm text-slate-600">Room code</p>
-      <p class="text-3xl font-bold tracking-widest text-slate-900">{state.room.id}</p>
+      <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
+        <p class="text-sm text-slate-600">Room code</p>
+        <p class="text-3xl font-bold tracking-widest text-slate-900">{state.room.id}</p>
 
-      <ul class="flex flex-col gap-2">
-        {#each state.room.players as player (player.id)}
-          <li class="rounded-md border px-3 py-2 text-base">
-            {player.name}
-            {#if player.id === state.room.hostPlayerId}
-              <span class="text-xs text-slate-500">(host)</span>
-            {/if}
-          </li>
-        {/each}
-      </ul>
+        <ul class="flex flex-col gap-2">
+          {#each state.room.players as player (player.id)}
+            <li class="rounded-md border px-3 py-2 text-base">
+              {player.name}
+              {#if player.id === state.room.hostPlayerId}
+                <span class="text-xs text-slate-500">(host)</span>
+              {/if}
+            </li>
+          {/each}
+        </ul>
+      </GiltFrame>
 
       {#if isHost}
         <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
@@ -141,11 +144,11 @@
             checked={state.room.monochromeOnly}
             on:change={handleToggleMonochrome}
           />
-          Force monochrome
+          Enforce a Monochrome Decree
         </label>
 
         <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
-          Turn timer
+          Allotted Contemplation Period
           <select
             class="rounded-md border px-3 py-2 text-base"
             value={state.room.turnTimerMinutes ?? ''}
@@ -164,17 +167,18 @@
         {#if belowMinimumPlayers}
           <label class="flex items-start gap-2 text-sm text-slate-700">
             <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
-            I know this won't really work but I want to test something
+            I am aware this salon is intimately attended (fewer than three guests) and wish to proceed
+            nonetheless
           </label>
         {/if}
 
         <button
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-md bg-bubblegum px-4 py-2 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
           disabled={belowMinimumPlayers && !acknowledgeSmallGame}
           on:click={handleStartGame}
         >
-          Start game
+          Commence the Exhibition
         </button>
       {/if}
     </div>
