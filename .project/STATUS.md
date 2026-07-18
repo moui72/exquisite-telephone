@@ -1,22 +1,41 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-update --beta` ran: project deliberately
-switched from the `stable` to the `beta` channel and updated to v0.10.2,
-no pending migrations, no frontmatter backfill needed. Re-confirmed: no
+_Updated: 2026-07-18 (`/ardd-plan salon-gallery-ui-redesign` ran:
+designed and applied the feature's `ui.md` changes — a new "Visual
+Identity" section (color tokens, Fraunces/Rubik/Space Mono type
+pairing, the reusable Gilt Frame signature component, the Docent Voice
+copy rule, a `prefers-reduced-motion` carve-out for Reveal's decorative
+flourish only) plus short per-view framing notes (Lobby = RSVP card,
+Writing/Drawing = easel, Reveal = gallery opening) — replacing the old
+bare `## Styling` section; `ui.md` stays `stable`, `diagram_status` now
+`stale` pending a fresh `/ardd-diagram ui` pass. No changes needed to
+datamodel/infrastructure/constitution — presentation-layer only. Plan
+`plan-salon-gallery-ui-redesign-2026-07-18-885b.md` approved (6 phases,
+0 Complexity Tracking/Production Annotation entries — neither
+warranted); tasks file `tasks-salon-gallery-ui-redesign-7729.md`
+generated and `ready` (11 tasks, T001/T005/T011 untested by design —
+config-only, pure-restyle-no-behavior-change, and a verification run,
+respectively — every other task carries a failing-test-first
+requirement per constitution Principle III). Feature flipped
+`backlogged` -> `planned` -> `tasked`. Re-confirmed on this pass: no
 cross-artifact issues, no orphaned completion flips, nothing in flight,
 no open feedback, no documented-but-untracked capabilities, no epic
-grouping. `tasks-5ef1-9eea.md` is fully `completed`
+grouping. Prior entry:
+`/ardd-update --beta` ran: project deliberately switched from the
+`stable` to the `beta` channel and updated to v0.10.2, no pending
+migrations, no frontmatter backfill needed. `tasks-5ef1-9eea.md` is
+fully `completed`
 (8/8): after the user supplied missing context on the two previously-
 open questions, `datamodel.md`/`ui.md` were refined with the resolved
 decisions (server-synchronized `Room.revealStartedAt` for Reveal
 pacing; kicked-player own-client ejection; full roster removal instead
 of strikethrough), and a second delegated worktree implemented T005-T008
 against that guidance — merged clean (non-fast-forward, no conflicts).
-All 5 bugs found this session are now fixed and merged. Combined with
+All 5 bugs found that session are fixed and merged. Combined with
 the PNG-export fix (`tasks-7b9d-a92c.md`, 3/3, `completed`), all 10
 tasks files in the project are now `completed`, full suite on `main` is
 222 tests, all green (lint/typecheck clean too). A fresh `/ardd-audit`
-full pass also ran this session — 8 findings (0 suggestions, 5
+full pass also ran that session — 8 findings (0 suggestions, 5
 questions, 3 risks) written to `.project/audit.md`, not tracked here
 since it isn't part of this report's schema; see that file directly.).
 Keep this current as artifacts are refined and open questions are
@@ -29,7 +48,7 @@ resolved._
 | constitution.md | stable ✅ | — |
 | datamodel.md | stable ✅ | — |
 | infrastructure.md | stable ✅ | — |
-| ui.md | stable ✅ | — |
+| ui.md | stable ✅ | — (diagram stale, see below) |
 
 ## Open Questions
 
@@ -49,7 +68,8 @@ a plan.)_
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅
+- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Visual Identity section
+  added by `salon-gallery-ui-redesign`'s plan)
 
 ## Code-vs-Artifact Defects
 
@@ -91,8 +111,18 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 0 tasked · 7 implemented — see
+0 backlogged · 0 planned · 1 tasked · 7 implemented — see
 `.project/features/`.
+
+- `salon-gallery-ui-redesign` (**tasked**) — "tongue-in-cheek
+  exquisite" salon/gallery UI redesign (gilt-frame signature component,
+  Fraunces/Rubik/Space Mono type, candy-bright color tokens, docent-
+  voiced copy) across Lobby, WritingDrawing, Reveal, the Moderation
+  Panel, and terminal states, replacing the current unbranded
+  default-Tailwind look. `ui.md` already reflects the design. Plan:
+  `plan-salon-gallery-ui-redesign-2026-07-18-885b.md` (approved, 6
+  phases). Tasks: `tasks-salon-gallery-ui-redesign-7729.md` (`ready`,
+  0/11) — not yet implemented.
 
 - `fly-io-deployment` (implemented) — deployed at
   https://exquisite-telephone.fly.dev/. Plan:
@@ -257,9 +287,11 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-0 backlogged/planned/tasked features — every
-feature in the register is `implemented` (neither bug-fix plan binds
-features). No cross-artifact conflicts or constitution violations.
+0 backlogged, 0 planned, 1 tasked feature (`salon-gallery-ui-redesign`
+— plan approved and tasked this pass, not yet implemented), 7
+implemented. No cross-artifact conflicts or constitution violations.
+`ui.md` diagram is stale pending a post-implementation `/ardd-diagram
+ui` pass.
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -284,6 +316,9 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. Worth doing at some point: a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry.
+Nothing blocking. `/ardd-implement` to execute
+`tasks-salon-gallery-ui-redesign-7729.md` (11 tasks, ready). After it
+merges, run `/ardd-diagram ui` to refresh the now-stale UI diagram. Also
+worth doing at some point: a look through `.project/audit.md`'s open
+findings (5 questions, 3 risks) to decide which merit a refine or
+backlog entry.

@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-17
-diagram_status: current
+last_updated: 2026-07-18
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -23,10 +23,13 @@ display name entered at join time.
 
 ## Lobby View
 
-Host creates a room (gets a shareable room code); other players join by
-entering the code and a display name. Shows connected players and a
-"start game" control visible only to the host. Reflects `Room.status ==
-'lobby'` and the live `players` list from server state. The host also
+Framed as an RSVP/guest-list card (see Visual Identity below) — the
+room code and player list read like names checked in at the door of a
+salon. Host creates a room (gets a shareable room code); other players
+join by entering the code and a display name. Shows connected players
+and a "start game" control visible only to the host. Reflects
+`Room.status == 'lobby'` and the live `players` list from server
+state. The host also
 sees a "force monochrome" toggle (default off) that sets
 `Room.monochromeOnly`, hiding the color palette for everyone's drawing
 tool for the whole game (see Writing / Drawing View below) — not
@@ -75,7 +78,11 @@ shown to non-host players:
 
 ## Writing / Drawing View
 
-The core gameplay loop. Each player sees either a text-entry prompt
+Framed as the player's own easel (see Visual Identity below) — the
+canvas and text-entry prompt both sit inside the Gilt Frame component,
+same as the room card and every Reveal book, so the "you are making a
+piece for the salon" framing is consistent turn to turn. The core
+gameplay loop. Each player sees either a text-entry prompt
 (write a phrase) or a canvas (draw the previous phrase), depending on
 `Entry.type` for their current turn, driven entirely by server-broadcast
 room state (Principle VI — no client-side authoritative state). The
@@ -116,7 +123,18 @@ instead.
 
 ## Reveal View
 
-At `Room.status == 'reveal'`, the default mode is an animated,
+Framed as a gallery opening (see Visual Identity below) — each book is
+presented inside the Gilt Frame component with an engraved plaque
+caption underneath (mock-formal exhibit title, e.g. "Exhibit No. 3 —
+Untitled, Mixed Media, Anonymous"), unveiled one at a time under a
+spotlight moment before the view settles into the full gallery-wall
+grid described below. `prefers-reduced-motion` suppresses the
+decorative spotlight/curtain flourish around each unveil, but never the
+auto-advance pacing itself — that pacing is gameplay-load-bearing (see
+Reveal pacing below), not decorative, so it keeps running identically
+regardless of the user's motion preference; only the ornamental
+transition dressing is skipped. At `Room.status == 'reveal'`, the
+default mode is an animated,
 one-book-at-a-time viewer rather than showing everything statically at
 once: the current book opens on a "cover" (the origin author's name
 plus a randomly-but-deterministically generated colorful abstract
@@ -186,10 +204,50 @@ game controls):
   had no reaction to its own `kicked` flag at all and kept rendering its
   normal view.
 
-## Styling
+## Visual Identity
 
-Tailwind CSS — utility-first, fast to build with for a small app, no
-need for a full component library's opinionated styling overhead.
+A "tongue-in-cheek exquisite" salon/gallery theme: the real-world
+"Exquisite Corpse" game's Surrealist-salon origins, played straight-faced
+but rendered in candy-bright color instead of museum beige. Tailwind CSS
+remains the styling mechanism (utility-first, fast to build with for a
+small app, no need for a full component library's opinionated styling
+overhead), extended with this theme's tokens rather than left at
+Tailwind's defaults.
+
+**Color tokens:**
+
+| Name | Hex | Role |
+|---|---|---|
+| Ink | `#241B2F` | body text |
+| Velvet | `#2E1A47` | dark surfaces (header bands, spotlight backdrop) |
+| Marigold | `#F5A623` | gold/foil accent — frame borders, plaque rules |
+| Bubblegum | `#FF6F91` | primary call-to-action |
+| Butter | `#FFF3D6` | warm light card surface (not gray) |
+| Grass | `#2FA88A` | affirmative/success states |
+
+**Type pairing:** Fraunces (display serif, set at its soft/wonky optical
+axis, used sparingly for titles and plaque captions) paired with Rubik
+(body/UI — rounded, friendly, legible at small sizes) and Space Mono
+(utility — room codes, timers, plaque numbers; reads like a stamped
+ticket).
+
+**Signature element — the Gilt Frame:** a reusable component, an ornate
+CSS-drawn gold frame with a small engraved plaque underneath bearing a
+mock-formal caption. It is the one visual element reused everywhere an
+artifact appears in the game: the room card (Lobby View), the
+canvas/text-entry surface (Writing / Drawing View, "the easel"), and
+each book (Reveal View, "the gallery wall").
+
+**Docent Voice — copy register:** all UI copy (labels, button text,
+errors, empty states) is written in a mock-formal salon/gallery
+register — overly formal to the point of silliness — rather than plain
+utilitarian phrasing. An action keeps the same verb through its whole
+flow (e.g. a "Present your contribution" control produces a confirmation
+that echoes "presented," not a different word), matching the existing
+action-naming consistency already implied by the flows described above.
+Applies across Lobby View, Writing / Drawing View, Reveal View, and the
+States below (Empty, Ended, Error, Kicked all speak in this voice, not a
+neutral system tone).
 
 ## Production Annotations
 
