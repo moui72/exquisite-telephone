@@ -1,6 +1,15 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-salon-gallery-ui-
+_Updated: 2026-07-18 (`/ardd-feedback` logged `feedback-main-8da5.md`:
+the two implementer judgment calls flagged after
+`salon-gallery-ui-redesign`'s implementation, filed at the user's
+request — F001 (Bug, `[artifacts: ui]`): `ModerationPanel` and
+`WritingDrawing` both render the "game can't continue" notice,
+double-showing it when the panel's expanded; F002 (UX,
+`[artifacts: ui]`): Error/Empty states in `Lobby.svelte` still show raw
+server error codes instead of docent-voice copy. Both open, queued for
+the next `/ardd-plan`. Prior entry: `/ardd-implement` ran
+`tasks-salon-gallery-ui-
 redesign-7729.md` end to end: delegated to a worktree subagent (solo
 mode, `delegation: eager`), all 11 tasks completed and committed
 (Tailwind salon/gallery tokens + webfonts, `GiltFrame.svelte` signature
@@ -109,8 +118,12 @@ in code and dropped from the file).
 
 ## Feedback
 
-0 open feedback files. All seven items to date are `planned`, and every
-one is now fixed and merged to `main`: `feedback-main-296e.md`
+1 open feedback file — `feedback-main-8da5.md` (2 items: F001 bug —
+`ModerationPanel`/`WritingDrawing` double-render the "game can't
+continue" notice; F002 UX — Error/Empty states show raw error codes
+instead of docent-voice copy), queued for the next `/ardd-plan`. All
+seven prior items are `planned`, and every one is now fixed and merged
+to `main`: `feedback-main-296e.md`
 (mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
 turns) from their original 2026-07-14 plans; `feedback-main-8a99.md`
 (F001, PNG-export flood-fill leak) via `plan-7b9d-2026-07-17-dded.md`
@@ -319,10 +332,10 @@ implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
 0 backlogged, 0 planned, 0 tasked, 8 implemented features —
-`salon-gallery-ui-redesign` implemented and merged this pass. No
-cross-artifact conflicts or constitution violations. `ui.md` diagram is
-stale pending `/ardd-diagram ui`. Two implementer judgment calls
-flagged for the user's routing decision (not yet in feedback).
+`salon-gallery-ui-redesign` implemented and merged. No cross-artifact
+conflicts or constitution violations. `ui.md` diagram is stale pending
+`/ardd-diagram ui`. 1 open feedback file (2 items) from this pass's
+implementer judgment calls, queued for the next `/ardd-plan`.
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -348,8 +361,8 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 ## Recommended Next Step
 
 Nothing blocking. `/ardd-diagram ui` to refresh the now-stale UI
-diagram. Decide whether the two flagged implementer judgment calls
-(ModerationPanel double-render notice; Error/Empty states left without
-docent-voice copy) warrant `/ardd-feedback` entries. Also worth doing at
-some point: a look through `.project/audit.md`'s open findings (5
-questions, 3 risks) to decide which merit a refine or backlog entry.
+diagram. `/ardd-plan feedback-main-8da5.md` when ready to plan the two
+open feedback items (or fold them into a future UI-touching plan).
+Also worth doing at some point: a look through `.project/audit.md`'s
+open findings (5 questions, 3 risks) to decide which merit a refine or
+backlog entry.
