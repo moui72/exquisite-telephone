@@ -17,9 +17,9 @@
     <li class="flex items-center justify-between text-sm">
       <span>{player.name}</span>
       {#if pendingAuthorIds.has(player.id)}
-        <span class="text-amber-600">still working…</span>
+        <span class="text-marigold">at their easel…</span>
       {:else}
-        <span class="text-emerald-600">done</span>
+        <span class="text-grass">piece presented</span>
       {/if}
     </li>
   {/each}

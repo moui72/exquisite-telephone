@@ -59,12 +59,19 @@
                 class="min-h-11 rounded-md border px-3 py-2 text-sm font-medium text-red-700"
                 on:click={() => handleKick(player.id)}
               >
-                Kick
+                Escort from the Salon
               </button>
             {/if}
           </li>
         {/each}
       </ul>
+
+      {#if room.nonContinuable}
+        <p role="alert" class="mt-3 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-800">
+          This salon cannot continue — a guest was removed mid-round. Restage the Salon below to
+          continue.
+        </p>
+      {/if}
 
       <div class="mt-3 flex flex-wrap gap-2">
         <button
@@ -72,7 +79,7 @@
           class="min-h-11 rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
           on:click={handleEndGame}
         >
-          End game
+          Close the Exhibition
         </button>
         {#if room.nonContinuable}
           <button
@@ -80,7 +87,7 @@
             class="min-h-11 rounded-md bg-amber-700 px-4 py-2 text-sm font-medium text-white"
             on:click={handleRestartGame}
           >
-            Restart game
+            Restage the Salon
           </button>
         {/if}
       </div>

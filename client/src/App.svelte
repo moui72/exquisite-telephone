@@ -18,21 +18,21 @@
 
 {#if state.reconnecting}
   <main class="flex min-h-screen items-center justify-center p-6">
-    <p class="text-lg text-slate-600">Reconnecting…</p>
+    <p class="text-lg text-slate-600">Retrieving your ticket…</p>
   </main>
 {:else if state.error === 'game-ended'}
   <main class="flex min-h-screen items-center justify-center p-6">
-    <p class="text-lg text-slate-600">This game has ended.</p>
+    <p class="text-lg text-slate-600">The Exhibition has Closed.</p>
   </main>
 {:else if isKicked}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-slate-600">You were removed from this game by the host.</p>
+    <p class="text-lg text-slate-600">You have been asked to leave the salon by the host.</p>
     <button
       type="button"
-      class="rounded bg-slate-700 px-4 py-2 text-white hover:bg-slate-800"
+      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
       on:click={() => session.leaveGame()}
     >
-      Return to home
+      Return to the Foyer
     </button>
   </main>
 {:else if !state.room || state.room.status === 'lobby'}
@@ -43,13 +43,13 @@
   <Reveal {session} />
 {:else if state.room.status === 'ended'}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-slate-600">This game has ended.</p>
+    <p class="text-lg text-slate-600">The Exhibition has Closed.</p>
     <button
       type="button"
-      class="rounded bg-slate-700 px-4 py-2 text-white hover:bg-slate-800"
+      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
       on:click={() => session.leaveGame()}
     >
-      Return to home
+      Return to the Foyer
     </button>
   </main>
 {/if}

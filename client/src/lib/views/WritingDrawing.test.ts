@@ -61,10 +61,11 @@ describe('Writing/Drawing view', () => {
     const room = makeRoom([adaBook]);
     const session = makeFakeSession({ room, player: ada, error: null });
 
-    render(WritingDrawing, { props: { session } });
+    const { container } = render(WritingDrawing, { props: { session } });
 
     expect(screen.getByLabelText(/your phrase/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /submit/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /present your contribution/i })).toBeInTheDocument();
+    expect(container.querySelector('.gilt-frame')).not.toBeNull();
   });
 
   it('shows a drawing canvas when it is the player’s turn to draw', () => {
@@ -143,7 +144,7 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByText(/waiting/i)).toBeInTheDocument();
+    expect(screen.getByText(/awaiting your next commission/i)).toBeInTheDocument();
   });
 
   it('shows a distinct "waiting for the round to finish" message when the player finished their part of the round but has an incomplete book of their own elsewhere', () => {
@@ -197,7 +198,7 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByText(/waiting for the round to finish/i)).toBeInTheDocument();
+    expect(screen.getByText(/awaiting the round.s conclusion/i)).toBeInTheDocument();
   });
 
   it('shows a countdown to the deadline when Room.turnTimerMinutes is set', () => {
@@ -254,11 +255,13 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByText(/ada still hasn.t submitted/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /full turn/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /half turn/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /15 minutes/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /force empty/i })).toBeInTheDocument();
+    expect(
+      screen.getByText(/ada has yet to present their contribution to the salon/i),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /grant a full turn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /grant a half turn/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /grant fifteen minutes/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /declare the turn forfeit/i })).toBeInTheDocument();
   });
 
   it('emits castTimeoutVote with the chosen option', async () => {
@@ -289,7 +292,7 @@ describe('Writing/Drawing view', () => {
     const session = makeFakeSession({ room, player: grace, error: null });
 
     render(WritingDrawing, { props: { session } });
-    await fireEvent.click(screen.getByRole('button', { name: /full turn/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /grant a full turn/i }));
 
     expect(session.castTimeoutVote).toHaveBeenCalledWith('full');
   });
@@ -314,7 +317,7 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.queryByRole('button', { name: /force empty/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /declare the turn forfeit/i })).not.toBeInTheDocument();
   });
 
   it('submits the written phrase to the session store', async () => {
@@ -326,7 +329,7 @@ describe('Writing/Drawing view', () => {
     await fireEvent.input(screen.getByLabelText(/your phrase/i), {
       target: { value: 'a spoonful of sugar' },
     });
-    await fireEvent.click(screen.getByRole('button', { name: /submit/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /present your contribution/i }));
 
     expect(session.submitEntry).toHaveBeenCalledWith('book-ada', 'a spoonful of sugar');
   });
@@ -338,8 +341,8 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/can't continue/i);
-    expect(screen.getByRole('alert')).toHaveTextContent(/waiting on the host/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/cannot continue/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/awaits the host.s restaging/i);
   });
 
   it('does not show the "game can\'t continue" notice when Room.nonContinuable is false', () => {

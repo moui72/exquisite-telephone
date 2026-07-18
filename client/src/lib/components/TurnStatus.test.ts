@@ -35,7 +35,7 @@ revealStartedAt: null,
     // Ada is due to write the origin phrase for her own book; the others
     // have nothing pending yet.
     expect(screen.getByText('Ada')).toBeInTheDocument();
-    expect(screen.getByText(/still working/i)).toBeInTheDocument();
+    expect(screen.getByText(/at their easel/i)).toBeInTheDocument();
   });
 
   it('shows a player with no pending entry as done, without revealing any content', () => {
@@ -73,7 +73,7 @@ revealStartedAt: null,
 
     render(TurnStatus, { props: { room } });
 
-    expect(screen.getAllByText(/done/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/piece presented/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/a very secret phrase/i)).not.toBeInTheDocument();
   });
 });

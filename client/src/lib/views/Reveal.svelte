@@ -6,8 +6,10 @@
   import type { SessionStore } from '../stores/session.js';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import ModerationPanel from '../components/ModerationPanel.svelte';
+  import GiltFrame from '../components/GiltFrame.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
+  import { prefersReducedMotion } from '../stores/prefersReducedMotion.js';
 
   /**
    * Renders Room.status == 'reveal' (ui.md Reveal View): an animated,
@@ -147,6 +149,11 @@
     return room?.players.find((p) => p.id === authorId)?.name ?? authorId;
   }
 
+  /** Mock-formal exhibit title incorporating the origin author's name (ui.md Reveal View). */
+  function exhibitCaption(book: Book, index: number): string {
+    return `Exhibit No. ${index + 1} — Untitled, Mixed Media, ${playerName(book.originAuthorId)}`;
+  }
+
   function handleSave(bookId: string) {
     if (!room) return;
     const book = room.books.find((b) => b.id === bookId);
@@ -189,17 +196,17 @@
           class="rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
           on:click={handleEndGame}
         >
-          End game
+          Close the Exhibition
         </button>
         <button
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+          class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
           on:click={handlePlayAgain}
         >
-          Play again
+          Stage an Encore
         </button>
         <span class="text-sm text-slate-500">
-          {room.playAgainVotes.length} of {room.players.length} ready
+          {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
         </span>
       {:else}
         <button
@@ -207,66 +214,71 @@
           class="rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
           on:click={handleLeaveGame}
         >
-          Leave game
+          Depart the Salon
         </button>
         <button
           type="button"
-          class="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+          class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
           on:click={handleVoteToPlayAgain}
         >
-          Vote to play again
+          Vote for an Encore
         </button>
       {/if}
     </div>
 
     {#if !showEverything && currentBook}
-      <section class="flex flex-col gap-4 border-b border-slate-200 pb-8">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-medium text-slate-500">
-            {playerName(currentBook.originAuthorId)}'s book
-          </h2>
-          <button
-            type="button"
-            class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
-            on:click={() => handleSave(currentBook.id)}
-          >
-            Save as PNG
-          </button>
-        </div>
-
-        {#if revealedCount === 0}
-          <div class="flex flex-col items-center gap-4 py-8">
-            <svg
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label="cover art"
-              class="h-48 w-48 rounded-lg bg-slate-100"
+      <section
+        class="flex flex-col gap-4 border-b border-slate-200 pb-8"
+        class:reveal-spotlight={!$prefersReducedMotion}
+      >
+        <GiltFrame caption={exhibitCaption(currentBook, currentBookIndex)}>
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-medium text-slate-500">
+              {playerName(currentBook.originAuthorId)}'s book
+            </h2>
+            <button
+              type="button"
+              class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+              on:click={() => handleSave(currentBook.id)}
             >
-              {#if coverArt}
-                {#each coverArt.shapes as shape, i (i)}
-                  <circle
-                    cx={shape.cx}
-                    cy={shape.cy}
-                    r={shape.r}
-                    fill="hsl({shape.hue}, {shape.saturation}%, {shape.lightness}%)"
-                    opacity="0.85"
-                  />
-                {/each}
-              {/if}
-            </svg>
+              Preserve as Keepsake
+            </button>
           </div>
-        {:else}
-          {#each visibleEntries as entry (entry.id)}
-            <div class="flex flex-col gap-1">
-              <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
-              {#if entry.type === 'text'}
-                <p class="text-lg text-slate-900">{entry.content}</p>
-              {:else}
-                <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
-              {/if}
+
+          {#if revealedCount === 0}
+            <div class="flex flex-col items-center gap-4 py-8">
+              <svg
+                viewBox="0 0 100 100"
+                role="img"
+                aria-label="cover art"
+                class="h-48 w-48 rounded-lg bg-slate-100"
+              >
+                {#if coverArt}
+                  {#each coverArt.shapes as shape, i (i)}
+                    <circle
+                      cx={shape.cx}
+                      cy={shape.cy}
+                      r={shape.r}
+                      fill="hsl({shape.hue}, {shape.saturation}%, {shape.lightness}%)"
+                      opacity="0.85"
+                    />
+                  {/each}
+                {/if}
+              </svg>
             </div>
-          {/each}
-        {/if}
+          {:else}
+            {#each visibleEntries as entry (entry.id)}
+              <div class="flex flex-col gap-1">
+                <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
+                {#if entry.type === 'text'}
+                  <p class="text-lg text-slate-900">{entry.content}</p>
+                {:else}
+                  <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
+                {/if}
+              </div>
+            {/each}
+          {/if}
+        </GiltFrame>
       </section>
 
       <div class="flex flex-wrap gap-3">
@@ -295,30 +307,32 @@
         </button>
       </div>
     {:else}
-      {#each room.books as book (book.id)}
+      {#each room.books as book, index (book.id)}
         <section class="flex flex-col gap-4 border-b border-slate-200 pb-8">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-medium text-slate-500">
-              {playerName(book.originAuthorId)}'s book
-            </h2>
-            <button
-              type="button"
-              class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
-              on:click={() => handleSave(book.id)}
-            >
-              Save as PNG
-            </button>
-          </div>
-          {#each [...book.entries].sort((a, b) => a.position - b.position) as entry (entry.id)}
-            <div class="flex flex-col gap-1">
-              <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
-              {#if entry.type === 'text'}
-                <p class="text-lg text-slate-900">{entry.content}</p>
-              {:else}
-                <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
-              {/if}
+          <GiltFrame caption={exhibitCaption(book, index)}>
+            <div class="flex items-center justify-between">
+              <h2 class="text-sm font-medium text-slate-500">
+                {playerName(book.originAuthorId)}'s book
+              </h2>
+              <button
+                type="button"
+                class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+                on:click={() => handleSave(book.id)}
+              >
+                Preserve as Keepsake
+              </button>
             </div>
-          {/each}
+            {#each [...book.entries].sort((a, b) => a.position - b.position) as entry (entry.id)}
+              <div class="flex flex-col gap-1">
+                <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
+                {#if entry.type === 'text'}
+                  <p class="text-lg text-slate-900">{entry.content}</p>
+                {:else}
+                  <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
+                {/if}
+              </div>
+            {/each}
+          </GiltFrame>
         </section>
       {/each}
     {/if}

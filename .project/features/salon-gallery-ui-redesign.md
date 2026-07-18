@@ -1,6 +1,6 @@
 ---
 slug: salon-gallery-ui-redesign
-status: tasked
+status: implemented
 logged: 2026-07-18
 plan: plan-salon-gallery-ui-redesign-2026-07-18-885b.md
 tasks: tasks-salon-gallery-ui-redesign-7729.md
