@@ -47,7 +47,7 @@ status: in-progress
   theme's Tailwind classes. Purely visual — no behavior change, no test
   addition; existing `DrawingCanvas.test.ts` coverage must continue to
   pass unmodified.
-- [ ] T006 [artifacts: ui] [parallel] Write a failing test in
+- [x] T006 [artifacts: ui] [parallel] Write a failing test in
   `TurnStatus.test.ts` asserting its copy has been updated to the
   docent voice. Confirm failure, then implement.
 
