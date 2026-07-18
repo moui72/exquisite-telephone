@@ -1,6 +1,32 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-plan salon-gallery-ui-redesign` ran:
+_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-salon-gallery-ui-
+redesign-7729.md` end to end: delegated to a worktree subagent (solo
+mode, `delegation: eager`), all 11 tasks completed and committed
+(Tailwind salon/gallery tokens + webfonts, `GiltFrame.svelte` signature
+component, docent-voice reskin of Lobby/WritingDrawing/Reveal/
+ModerationPanel/App terminal states, a new `prefersReducedMotion`
+store), tasks file flipped `completed`, feature flipped `implemented`.
+Merged clean to `main` (`merge_policy: auto`, no conflicts, 22 files
+changed), worktree reaped. Post-merge typecheck reconfirmed clean (216
+files, 0 errors). Full suite per the subagent's own T011 run: 135 tests
+green (shared 18 + server 112 + client 105), lint clean. `ui.md`'s
+`diagram_status` is `stale` (expected — a Visual Identity section was
+added; run `/ardd-diagram ui`). **Two implementer judgment calls
+flagged for review, not yet resolved:** (1) `ModerationPanel.svelte` now
+also renders the "game can't continue" notice inside the panel (T009),
+matching `ui.md`'s literal description, but the notice was already
+shown in `WritingDrawing.svelte` too — a host with the panel open during
+a non-continuable game now sees it twice; presentational only. (2) T010
+left the **Error** and **Empty** terminal states without docent-voice
+copy: `Lobby.svelte` renders raw server error codes
+(`room-not-found`/`not-host`/etc.) verbatim with no human-readable copy
+layer to translate, a pre-existing gap this redesign didn't introduce
+and no task authorized building an error-code-to-copy mapping; Empty is
+just Lobby with one player, already covered. Neither was decided
+unilaterally — both are surfaced here for the user to route via
+`/ardd-feedback` if they want either tracked as follow-up work. Prior
+entry: `/ardd-plan salon-gallery-ui-redesign` ran:
 designed and applied the feature's `ui.md` changes — a new "Visual
 Identity" section (color tokens, Fraunces/Rubik/Space Mono type
 pairing, the reusable Gilt Frame signature component, the Docent Voice
@@ -111,18 +137,23 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 1 tasked · 7 implemented — see
+0 backlogged · 0 planned · 0 tasked · 8 implemented — see
 `.project/features/`.
 
-- `salon-gallery-ui-redesign` (**tasked**) — "tongue-in-cheek
+- `salon-gallery-ui-redesign` (**implemented**) — "tongue-in-cheek
   exquisite" salon/gallery UI redesign (gilt-frame signature component,
   Fraunces/Rubik/Space Mono type, candy-bright color tokens, docent-
   voiced copy) across Lobby, WritingDrawing, Reveal, the Moderation
   Panel, and terminal states, replacing the current unbranded
-  default-Tailwind look. `ui.md` already reflects the design. Plan:
-  `plan-salon-gallery-ui-redesign-2026-07-18-885b.md` (approved, 6
-  phases). Tasks: `tasks-salon-gallery-ui-redesign-7729.md` (`ready`,
-  0/11) — not yet implemented.
+  default-Tailwind look. Plan: `plan-salon-gallery-ui-redesign-2026-07-
+  18-885b.md` (approved, 6 phases). Tasks:
+  `tasks-salon-gallery-ui-redesign-7729.md` (**completed**, 11/11) —
+  delegated to a worktree subagent, merged to `main` clean (no
+  conflicts), worktree reaped. Verified post-merge: typecheck 0 errors
+  (216 files), full suite 135 tests passing (shared 18 + server 112 +
+  client 105), lint clean. Two implementer judgment calls flagged for
+  the user, not yet routed to feedback — see the entry at the top of
+  this file.
 
 - `fly-io-deployment` (implemented) — deployed at
   https://exquisite-telephone.fly.dev/. Plan:
@@ -287,11 +318,11 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-0 backlogged, 0 planned, 1 tasked feature (`salon-gallery-ui-redesign`
-— plan approved and tasked this pass, not yet implemented), 7
-implemented. No cross-artifact conflicts or constitution violations.
-`ui.md` diagram is stale pending a post-implementation `/ardd-diagram
-ui` pass.
+0 backlogged, 0 planned, 0 tasked, 8 implemented features —
+`salon-gallery-ui-redesign` implemented and merged this pass. No
+cross-artifact conflicts or constitution violations. `ui.md` diagram is
+stale pending `/ardd-diagram ui`. Two implementer judgment calls
+flagged for the user's routing decision (not yet in feedback).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -316,9 +347,9 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-implement` to execute
-`tasks-salon-gallery-ui-redesign-7729.md` (11 tasks, ready). After it
-merges, run `/ardd-diagram ui` to refresh the now-stale UI diagram. Also
-worth doing at some point: a look through `.project/audit.md`'s open
-findings (5 questions, 3 risks) to decide which merit a refine or
-backlog entry.
+Nothing blocking. `/ardd-diagram ui` to refresh the now-stale UI
+diagram. Decide whether the two flagged implementer judgment calls
+(ModerationPanel double-render notice; Error/Empty states left without
+docent-voice copy) warrant `/ardd-feedback` entries. Also worth doing at
+some point: a look through `.project/audit.md`'s open findings (5
+questions, 3 risks) to decide which merit a refine or backlog entry.
