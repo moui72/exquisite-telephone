@@ -23,7 +23,7 @@ status: in-progress
 
 ## Phase 2: Implementation
 
-- [ ] T003 [artifacts: ui] Write a failing test in
+- [x] T003 [artifacts: ui] Write a failing test in
   `WritingDrawing.test.ts` asserting the "game can't continue" alert
   does NOT render when the current player is the host (even though
   `Room.nonContinuable` is true), and DOES still render for a non-host
