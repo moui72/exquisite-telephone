@@ -341,8 +341,8 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByRole('alert')).toHaveTextContent(/can't continue/i);
-    expect(screen.getByRole('alert')).toHaveTextContent(/waiting on the host/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/cannot continue/i);
+    expect(screen.getByRole('alert')).toHaveTextContent(/awaits the host.s restaging/i);
   });
 
   it('does not show the "game can\'t continue" notice when Room.nonContinuable is false', () => {

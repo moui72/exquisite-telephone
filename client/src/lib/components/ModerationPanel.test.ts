@@ -86,10 +86,10 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     await fireEvent.click(screen.getByText('Moderation'));
 
     expect(screen.getByText('Grace')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Kick' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Escort from the Salon' })).toBeInTheDocument();
   });
 
-  it('calls session.kickPlayer with the target player id when Kick is clicked', async () => {
+  it('calls session.kickPlayer with the target player id when Escort from the Salon is clicked', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -99,7 +99,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session } });
     await fireEvent.click(screen.getByText('Moderation'));
-    await fireEvent.click(screen.getByRole('button', { name: 'Kick' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Escort from the Salon' }));
 
     expect(session.kickPlayer).toHaveBeenCalledWith(grace.id);
   });
@@ -120,7 +120,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     expect(screen.queryByRole('button', { name: 'Kicked' })).not.toBeInTheDocument();
   });
 
-  it('shows "Restart game" only when Room.nonContinuable is true', async () => {
+  it('shows "Restage the Salon" only when Room.nonContinuable is true', async () => {
     const session = makeFakeSession({
       room: makeRoom({ nonContinuable: false }),
       player: ada,
@@ -131,10 +131,10 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     render(ModerationPanel, { props: { session } });
     await fireEvent.click(screen.getByText('Moderation'));
 
-    expect(screen.queryByRole('button', { name: 'Restart game' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Restage the Salon' })).not.toBeInTheDocument();
   });
 
-  it('calls session.restartGame when Restart game is clicked', async () => {
+  it('calls session.restartGame when Restage the Salon is clicked', async () => {
     const session = makeFakeSession({
       room: makeRoom({ nonContinuable: true }),
       player: ada,
@@ -144,12 +144,12 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session } });
     await fireEvent.click(screen.getByText('Moderation'));
-    await fireEvent.click(screen.getByRole('button', { name: 'Restart game' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Restage the Salon' }));
 
     expect(session.restartGame).toHaveBeenCalled();
   });
 
-  it('calls session.endGame when End game is clicked', async () => {
+  it('calls session.endGame when Close the Exhibition is clicked', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -159,8 +159,36 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session } });
     await fireEvent.click(screen.getByText('Moderation'));
-    await fireEvent.click(screen.getByRole('button', { name: 'End game' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Close the Exhibition' }));
 
     expect(session.endGame).toHaveBeenCalled();
+  });
+
+  it('shows a "this salon cannot continue" notice alongside Restage the Salon when Room.nonContinuable is true', async () => {
+    const session = makeFakeSession({
+      room: makeRoom({ nonContinuable: true }),
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(ModerationPanel, { props: { session } });
+    await fireEvent.click(screen.getByText('Moderation'));
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/this salon cannot continue/i);
+  });
+
+  it('does not show the "cannot continue" notice when Room.nonContinuable is false', async () => {
+    const session = makeFakeSession({
+      room: makeRoom({ nonContinuable: false }),
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(ModerationPanel, { props: { session } });
+    await fireEvent.click(screen.getByText('Moderation'));
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });

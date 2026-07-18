@@ -121,11 +121,11 @@
 
     {#if state.room.nonContinuable}
       <p role="alert" class="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800">
-        This game can't continue — the host removed a player mid-round.
+        This salon cannot continue — a guest was removed mid-round.
         {#if state.player?.id === state.room.hostPlayerId}
-          Use the Moderation panel above to restart.
+          Use the Moderation panel above to Restage the Salon.
         {:else}
-          Waiting on the host to restart or end the game.
+          The house awaits the host's restaging.
         {/if}
       </p>
     {/if}

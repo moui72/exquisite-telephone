@@ -71,7 +71,7 @@ status: in-progress
 
 ## Phase 5: Moderation Panel & terminal states
 
-- [ ] T009 [artifacts: ui] [parallel] Write failing tests in
+- [x] T009 [artifacts: ui] [parallel] Write failing tests in
   `ModerationPanel.test.ts` asserting its copy (kick, end game, restart
   game, "this game can't continue" notice) has been updated to the
   docent voice. Confirm failures, then implement.
