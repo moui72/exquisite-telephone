@@ -1,6 +1,19 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-feedback` logged `feedback-main-8da5.md`:
+_Updated: 2026-07-18 (`/ardd-diagram ui` then `/ardd-plan` ran: `ui.md`'s
+diagram regenerated (`graph TD`, `README.md` UI section) and stamped
+`current`. Then a no-feature-slug `/ardd-plan` consumed the one open
+feedback file, `feedback-main-8da5.md` — both F001 and F002 accepted by
+the user and incorporated into a new 3-phase plan,
+`plan-7c63-2026-07-18-f55f.md` (approved): Phase 1 clarifies `ui.md`
+(single-visibility rule for the "can't continue" notice; error-code-
+mapping rule for Lobby's Error state), Phase 2 implements both fixes
+test-first, Phase 3 full-suite verification. Tasks file
+`tasks-7c63-355f.md` generated and `ready` (5 tasks; no bound features —
+`features: []`). `feedback-main-8da5.md` flipped `open` -> `planned`,
+stamped with the consuming plan. No unsurfaced defects, no existing
+approved plan superseded (none in scope overlap). Prior entry:
+`/ardd-feedback` logged `feedback-main-8da5.md`:
 the two implementer judgment calls flagged after
 `salon-gallery-ui-redesign`'s implementation, filed at the user's
 request — F001 (Bug, `[artifacts: ui]`): `ModerationPanel` and
@@ -83,7 +96,7 @@ resolved._
 | constitution.md | stable ✅ | — |
 | datamodel.md | stable ✅ | — |
 | infrastructure.md | stable ✅ | — |
-| ui.md | stable ✅ | — (diagram stale, see below) |
+| ui.md | stable ✅ | — |
 
 ## Open Questions
 
@@ -103,8 +116,7 @@ a plan.)_
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Visual Identity section
-  added by `salon-gallery-ui-redesign`'s plan)
+- ui.md — current ✅
 
 ## Code-vs-Artifact Defects
 
@@ -118,10 +130,12 @@ in code and dropped from the file).
 
 ## Feedback
 
-1 open feedback file — `feedback-main-8da5.md` (2 items: F001 bug —
+0 open feedback files. `feedback-main-8da5.md` (F001 bug —
 `ModerationPanel`/`WritingDrawing` double-render the "game can't
 continue" notice; F002 UX — Error/Empty states show raw error codes
-instead of docent-voice copy), queued for the next `/ardd-plan`. All
+instead of docent-voice copy) is now `planned` via
+`plan-7c63-2026-07-18-f55f.md` (`tasks-7c63-355f.md`, `ready`, 0/5) —
+not yet implemented. All
 seven prior items are `planned`, and every one is now fixed and merged
 to `main`: `feedback-main-296e.md`
 (mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
@@ -331,11 +345,11 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-0 backlogged, 0 planned, 0 tasked, 8 implemented features —
-`salon-gallery-ui-redesign` implemented and merged. No cross-artifact
-conflicts or constitution violations. `ui.md` diagram is stale pending
-`/ardd-diagram ui`. 1 open feedback file (2 items) from this pass's
-implementer judgment calls, queued for the next `/ardd-plan`.
+0 backlogged, 0 planned, 0 tasked, 8 implemented features. No
+cross-artifact conflicts or constitution violations. All diagrams
+current. 0 open feedback files — `feedback-main-8da5.md` planned into
+`plan-7c63-2026-07-18-f55f.md` (approved, tasked, `tasks-7c63-355f.md`
+ready, 0/5, not yet implemented).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -360,9 +374,8 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-diagram ui` to refresh the now-stale UI
-diagram. `/ardd-plan feedback-main-8da5.md` when ready to plan the two
-open feedback items (or fold them into a future UI-touching plan).
+Nothing blocking. `/ardd-implement` to execute
+`tasks-7c63-355f.md` (5 tasks, ready) — the two feedback-item fixes.
 Also worth doing at some point: a look through `.project/audit.md`'s
 open findings (5 questions, 3 risks) to decide which merit a refine or
 backlog entry.

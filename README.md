@@ -84,33 +84,26 @@ graph TD
 
 ```mermaid
 graph TD
-    App[App]
-    Lobby[Lobby View]
-    WritingDrawing[Writing / Drawing View]
-    DrawingCanvas[Drawing Canvas]
-    ModerationPanel[Moderation Panel<br/>kick / end game / restart]
-    Reveal[Reveal View<br/>synced via Room.revealStartedAt]
-    Kicked[Kicked State]
-    Ended[Ended State]
-    ErrorState[Error State]
+  App[App.svelte]
 
-    App --> Lobby
-    App --> WritingDrawing
-    App --> Reveal
-    App --> Kicked
-    App --> Ended
-    App --> ErrorState
+  App --> Lobby[Lobby View]
+  App --> WD["Writing / Drawing View"]
+  App --> Reveal[Reveal View]
+  App --> States["States: Empty / Ended / Error / Kicked"]
 
-    WritingDrawing --> DrawingCanvas
-    WritingDrawing --> ModerationPanel
-    Reveal --> ModerationPanel
-    Lobby --> ModerationPanel
+  Lobby --> LobbyFrame[GiltFrame] -->|room code + player list| LobbyPlaque[plaque caption]
+  Lobby --> Mod[Moderation Panel]
 
-    Lobby -- "Room.status, players[]" --> Lobby
-    WritingDrawing -- "Entry.type, roundStartedAt, pendingTimeoutVote" --> WritingDrawing
-    DrawingCanvas -- "draw ops: stroke, fill" --> DrawingCanvas
-    ModerationPanel -- "Player.kicked, Room.nonContinuable" --> ModerationPanel
-    Reveal -- "books[], entries[], revealStartedAt" --> Reveal
-    Kicked -- "own Player.kicked === true" --> Kicked
+  WD --> WDFrame[GiltFrame] -->|canvas or text prompt, the 'easel'| WDPlaque[plaque caption]
+  WD --> Canvas[Drawing Canvas]
+  WD --> Turn[Turn Status]
+  Canvas -->|Entry.type draw ops, Room.monochromeOnly| WDFrame
+  WD --> Mod
+
+  Reveal --> RevealFrame[GiltFrame] -->|per-book chain + exhibit title| RevealPlaque[plaque caption]
+  RevealFrame -->|prefersReducedMotion| Spotlight[spotlight / curtain flourish]
+  Reveal --> Mod
+
+  States -->|Room.status, Player.kicked| App
 ```
 
