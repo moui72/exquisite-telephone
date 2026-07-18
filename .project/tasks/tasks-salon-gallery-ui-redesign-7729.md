@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Design tokens & signature component
 
-- [ ] T001 [artifacts: ui] Extend `client/tailwind.config.js`'s
+- [x] T001 [artifacts: ui] Extend `client/tailwind.config.js`'s
   `theme.extend` with the six color tokens (Ink `#241B2F`, Velvet
   `#2E1A47`, Marigold `#F5A623`, Bubblegum `#FF6F91`, Butter `#FFF3D6`,
   Grass `#2FA88A`) and three font-family roles (`display`: Fraunces,
