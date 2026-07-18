@@ -1,11 +1,11 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-17 (`/ardd-update` ran: ArDD skills updated from
-v0.10.0 to v0.10.1, no pending migrations, no new frontmatter fields to
-backfill — this project already had `next_step_prompt`/`delegation`/
-`merge_policy` set. Also re-confirmed: no cross-artifact issues, no
-orphaned completion flips, nothing in flight, no documented-but-untracked
-capabilities. `tasks-5ef1-9eea.md` is now fully `completed`
+_Updated: 2026-07-18 (`/ardd-update --beta` ran: project deliberately
+switched from the `stable` to the `beta` channel and updated to v0.10.2,
+no pending migrations, no frontmatter backfill needed. Re-confirmed: no
+cross-artifact issues, no orphaned completion flips, nothing in flight,
+no open feedback, no documented-but-untracked capabilities, no epic
+grouping. `tasks-5ef1-9eea.md` is fully `completed`
 (8/8): after the user supplied missing context on the two previously-
 open questions, `datamodel.md`/`ui.md` were refined with the resolved
 decisions (server-synchronized `Room.revealStartedAt` for Reveal
