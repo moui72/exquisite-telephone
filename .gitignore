@@ -6,3 +6,4 @@ build/
 .vite/
 coverage/
 .project/.lock
+.claude/skills/ardd-*/
