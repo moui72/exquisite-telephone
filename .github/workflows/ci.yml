@@ -12,7 +12,7 @@ jobs:
     if: github.ref != 'refs/heads/release'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: pnpm/action-setup@v4
         with:
           version: 10
@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-beta
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --config fly.staging.toml --remote-only
         env:
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-prod
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --config fly.toml --remote-only
         env:
