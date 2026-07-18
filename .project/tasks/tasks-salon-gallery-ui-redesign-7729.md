@@ -1,7 +1,7 @@
 ---
 plan: plan-salon-gallery-ui-redesign-2026-07-18-885b.md
 generated: 2026-07-18
-status: ready
+status: in-progress
 ---
 
 # Tasks
