@@ -4,6 +4,8 @@
 # create` assigns the real app name.
 app = "exquisite-telephone"
 primary_region = "iad"
+# Custom domain: ex-tel.ty-pe.com (cert managed via `fly certs`, DNS in
+# Namecheap on ty-pe.com — not tracked here).
 
 [build]
 

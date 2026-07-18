@@ -4,6 +4,8 @@
 # once — same in-memory room-state reasoning as fly.toml (see its comments).
 app = "exquisite-telephone-beta"
 primary_region = "iad"
+# Custom domain: beta-ex-tel.ty-pe.com (cert managed via `fly certs`, DNS
+# in Namecheap on ty-pe.com — not tracked here).
 
 [build]
 
