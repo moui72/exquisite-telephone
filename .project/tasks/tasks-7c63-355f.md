@@ -8,14 +8,14 @@ status: in-progress
 
 ## Phase 1: Artifact clarifications
 
-- [ ] T001 [artifacts: ui] In `ui.md`'s Moderation Panel section,
+- [x] T001 [artifacts: ui] In `ui.md`'s Moderation Panel section,
   clarify that the "this game can't continue" notice is visible to the
   host via the panel only — the page-body broadcast copy (described in
   Writing / Drawing View) is suppressed for the host specifically, to
   avoid showing it twice; non-host players (who never see the panel)
   still see it via the page body. Addresses feedback F001 in
   `.project/feedback/feedback-main-8da5.md`.
-- [ ] T002 [artifacts: ui] [parallel] In `ui.md`'s States section (Error
+- [x] T002 [artifacts: ui] [parallel] In `ui.md`'s States section (Error
   bullet), record that every server error code reaching Lobby's error
   state is translated to docent-voice copy via a mapping (never shown
   raw), with a generic fallback line for any unmapped code. Addresses
