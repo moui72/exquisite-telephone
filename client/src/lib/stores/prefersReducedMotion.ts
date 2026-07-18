@@ -16,6 +16,12 @@ export function createPrefersReducedMotionStore(): Readable<boolean> {
     (set) => {
       if (typeof matchMedia !== 'function') return;
       const mql = matchMedia(REDUCED_MOTION_QUERY);
+      // Re-read the live value on every new subscription (rather than
+      // trusting the value snapshotted when this store was created) — a
+      // module-level singleton store is created once at import time, but
+      // the user's motion preference (or a test's mocked matchMedia) may
+      // be established later, before the first component subscribes.
+      set(mql.matches);
       const handler = (event: { matches: boolean }) => set(event.matches);
       mql.addEventListener('change', handler);
       return () => mql.removeEventListener('change', handler);

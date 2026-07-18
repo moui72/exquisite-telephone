@@ -149,11 +149,16 @@ describe('Reveal view', () => {
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
-    render(Reveal, { props: { session } });
+    const { container } = render(Reveal, { props: { session } });
     await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
     expect(screen.getByText('phrase A')).toBeInTheDocument();
     expect(screen.getByText('phrase B')).toBeInTheDocument();
+
+    const frames = container.querySelectorAll('.gilt-frame');
+    expect(frames.length).toBe(2);
+    expect(frames[0]?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/ada/i);
+    expect(frames[1]?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/grace/i);
   });
 
   it('has a save control per book that calls the export pipeline with that book', async () => {
@@ -209,7 +214,7 @@ describe('Reveal view', () => {
     render(Reveal, { props: { session, exportFn } });
     await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
 
-    const saveButtons = screen.getAllByRole('button', { name: /save/i });
+    const saveButtons = screen.getAllByRole('button', { name: /preserve as keepsake/i });
     expect(saveButtons).toHaveLength(2);
 
     await fireEvent.click(saveButtons[0]!);
@@ -243,10 +248,10 @@ describe('Reveal view', () => {
 
     render(Reveal, { props: { session } });
 
-    const leaveButton = screen.getByRole('button', { name: /leave game/i });
-    const voteButton = screen.getByRole('button', { name: /vote to play again/i });
-    expect(screen.queryByRole('button', { name: /^end game$/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^play again$/i })).not.toBeInTheDocument();
+    const leaveButton = screen.getByRole('button', { name: /depart the salon/i });
+    const voteButton = screen.getByRole('button', { name: /vote for an encore/i });
+    expect(screen.queryByRole('button', { name: /^close the exhibition$/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^stage an encore$/i })).not.toBeInTheDocument();
 
     await fireEvent.click(leaveButton);
     expect(session.leaveGame).toHaveBeenCalled();
@@ -261,10 +266,10 @@ describe('Reveal view', () => {
 
     render(Reveal, { props: { session } });
 
-    const endButton = screen.getByRole('button', { name: /^end game$/i });
-    const playAgainButton = screen.getByRole('button', { name: /^play again$/i });
-    expect(screen.queryByRole('button', { name: /leave game/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /vote to play again/i })).not.toBeInTheDocument();
+    const endButton = screen.getByRole('button', { name: /^close the exhibition$/i });
+    const playAgainButton = screen.getByRole('button', { name: /^stage an encore$/i });
+    expect(screen.queryByRole('button', { name: /depart the salon/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /vote for an encore/i })).not.toBeInTheDocument();
 
     await fireEvent.click(endButton);
     expect(session.endGame).toHaveBeenCalled();
@@ -278,12 +283,12 @@ describe('Reveal view', () => {
 
     const hostSession = makeFakeSession({ room, player: ada, error: null });
     render(Reveal, { props: { session: hostSession } });
-    expect(screen.getByText(/1 of 2 ready/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 of 2 guests ready for an encore/i)).toBeInTheDocument();
     cleanup();
 
     const nonHostSession = makeFakeSession({ room, player: grace, error: null });
     render(Reveal, { props: { session: nonHostSession } });
-    expect(screen.queryByText(/1 of 2 ready/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/1 of 2 guests ready for an encore/i)).not.toBeInTheDocument();
   });
 });
 
@@ -425,10 +430,60 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
     render(Reveal, { props: { session, exportFn } });
     await tick();
 
-    const saveButton = screen.getByRole('button', { name: /save/i });
+    const saveButton = screen.getByRole('button', { name: /preserve as keepsake/i });
     await fireEvent.click(saveButton);
 
     expect(exportFn).toHaveBeenCalledWith(room.books[0], room.players);
+  });
+
+  it("renders the current book inside a GiltFrame with a plaque caption naming the origin author", async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { container } = render(Reveal, { props: { session } });
+    await tick();
+
+    const frame = container.querySelector('.gilt-frame');
+    expect(frame).not.toBeNull();
+    expect(frame?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/ada/i);
+  });
+
+  it('shows the decorative spotlight/curtain flourish class by default (motion not reduced)', async () => {
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { container } = render(Reveal, { props: { session } });
+    await tick();
+
+    expect(container.querySelector('.reveal-spotlight')).not.toBeNull();
+  });
+
+  it('omits the decorative spotlight/curtain flourish class when prefers-reduced-motion is set, without affecting auto-advance pacing', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: true,
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      })),
+    );
+    const room = makeTwoBookRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { container } = render(Reveal, { props: { session } });
+    await tick();
+
+    expect(container.querySelector('.reveal-spotlight')).toBeNull();
+
+    // Auto-advance pacing itself is unaffected by the motion preference.
+    vi.advanceTimersByTime(2500 + 4000);
+    await tick();
+    expect(screen.getByText('a0')).toBeInTheDocument();
+    expect(screen.getByText('a1')).toBeInTheDocument();
+    expect(screen.queryByText('a2')).not.toBeInTheDocument();
+
+    vi.unstubAllGlobals();
   });
 });
 

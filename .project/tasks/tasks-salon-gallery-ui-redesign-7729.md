@@ -58,7 +58,7 @@ status: in-progress
   `client/src/lib/stores/prefersReducedMotion.ts`) reflects
   `matchMedia('(prefers-reduced-motion: reduce)').matches` and updates
   on the media query's `change` event. Confirm failure, then implement.
-- [ ] T008 [artifacts: ui] Write failing tests in `Reveal.test.ts`
+- [x] T008 [artifacts: ui] Write failing tests in `Reveal.test.ts`
   asserting: (a) each book renders inside `GiltFrame` (from T002) with a
   plaque caption (mock-formal exhibit title incorporating the origin
   author's name), (b) the spotlight/curtain flourish class is present
