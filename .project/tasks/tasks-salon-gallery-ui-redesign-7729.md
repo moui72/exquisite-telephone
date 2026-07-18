@@ -82,6 +82,6 @@ status: in-progress
 
 ## Phase 6: Full-suite verification
 
-- [ ] T011 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [x] T011 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace; confirm all green with no
   regressions to existing (non-copy, non-styling) test assertions.
