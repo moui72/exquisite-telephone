@@ -14,6 +14,24 @@
   /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
   const MINIMUM_RECOMMENDED_PLAYERS = 3;
 
+  /**
+   * ui.md States — Error: every server error code reaching this view is
+   * translated to docent-voice copy, never shown raw (F002,
+   * .project/feedback/feedback-main-8da5.md). Covers every code
+   * reachable from a Lobby-triggered action (create room, join room,
+   * start game, rejoin); a generic fallback covers any unmapped code.
+   */
+  const ERROR_COPY: Record<string, string> = {
+    'room-not-found': "The house has no salon by that code — check the code and try again.",
+    'not-host': 'Only the host may do that.',
+    'too-few-players': 'The salon needs a few more guests before the exhibition can begin.',
+    'room-not-in-lobby': 'This salon has already begun — late arrivals cannot be seated.',
+    'invalid-token': 'Your invitation has expired — please reconnect to rejoin the salon.',
+    'game-ended': 'This salon has already ended.',
+  };
+  const FALLBACK_ERROR_COPY = 'Something went awry at the salon — please try again.';
+  $: errorCopy = state.error ? (ERROR_COPY[state.error] ?? FALLBACK_ERROR_COPY) : null;
+
   $: state = $session;
   $: isHost =
     state.room !== null && state.player !== null && state.player.id === state.room.hostPlayerId;
@@ -106,8 +124,8 @@
         </label>
       {/if}
 
-      {#if state.error}
-        <p role="alert" class="text-sm text-red-600">{state.error}</p>
+      {#if errorCopy}
+        <p role="alert" class="text-sm text-red-600">{errorCopy}</p>
       {/if}
 
       <button

@@ -56,8 +56,14 @@ shown to non-host players:
 - **Per-player "kick"** control next to each entry in the player list.
   Kicking sets `Player.kicked` and, if the room is `writing`, also sets
   `Room.nonContinuable` — the panel then surfaces a "this game can't
-  continue" notice to the host (and, via the room-wide broadcast, to
-  every player) alongside the "restart game" control below. A kicked
+  continue" notice to the host alongside the "restart game" control
+  below. The room-wide broadcast also carries `Room.nonContinuable` to
+  every other player, but the host sees the notice via this panel only
+  — the page-body copy described in Writing / Drawing View is
+  suppressed specifically for the host, to avoid showing the same
+  notice twice in one client (fixed 2026-07-18, feedback F001
+  `.project/feedback/feedback-main-8da5.md`); non-host players, who
+  never see this panel, still see the notice in the page body. A kicked
   player is removed entirely from the visible roster shown to the host
   and other players (reversed 2026-07-17, feedback F001
   `.project/feedback/feedback-main-e2ff.md`, from the original
@@ -191,7 +197,12 @@ game controls):
   has left `lobby`), or connection lost with reconnect in progress
   (distinct from a hard error — reconnect shows a "reconnecting..." state
   per [[infrastructure]] Session Store, not a failure state, until it
-  times out).
+  times out). Every server error code reaching Lobby's error state is
+  translated to docent-voice copy via a code-to-copy mapping — never
+  rendered as the raw code string — with a generic fallback line for
+  any unmapped code, so an unrecognized code degrades gracefully
+  instead of leaking server-internal text (fixed 2026-07-18, feedback
+  F002 `.project/feedback/feedback-main-8da5.md`).
 - **Kicked**: shown only to the player who was just kicked, the instant
   their own client observes `Player.kicked === true` on itself via a
   `roomUpdated` broadcast, regardless of `Room.status` at the time.

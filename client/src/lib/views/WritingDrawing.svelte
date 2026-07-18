@@ -119,14 +119,10 @@
   {#if state.room}
     <ModerationPanel {session} />
 
-    {#if state.room.nonContinuable}
+    {#if state.room.nonContinuable && state.player?.id !== state.room.hostPlayerId}
       <p role="alert" class="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800">
-        This salon cannot continue — a guest was removed mid-round.
-        {#if state.player?.id === state.room.hostPlayerId}
-          Use the Moderation panel above to Restage the Salon.
-        {:else}
-          The house awaits the host's restaging.
-        {/if}
+        This salon cannot continue — a guest was removed mid-round. The house awaits the host's
+        restaging.
       </p>
     {/if}
 

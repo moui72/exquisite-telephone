@@ -345,6 +345,21 @@ describe('Writing/Drawing view', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/awaits the host.s restaging/i);
   });
 
+  it('does not show the page-body "game can\'t continue" notice to the host, since the Moderation Panel already shows it (F001)', async () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room = { ...makeRoom([adaBook]), nonContinuable: true };
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    // Expand the Moderation Panel, which surfaces its own copy of the
+    // notice for the host. The page body must not also render a second,
+    // duplicate alert on top of it.
+    await fireEvent.click(screen.getByRole('button', { name: /moderation/i }));
+
+    expect(screen.getAllByRole('alert')).toHaveLength(1);
+  });
+
   it('does not show the "game can\'t continue" notice when Room.nonContinuable is false', () => {
     const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
     const room = makeRoom([adaBook]);
