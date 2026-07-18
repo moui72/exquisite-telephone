@@ -1,7 +1,7 @@
 ---
 plan: plan-7c63-2026-07-18-f55f.md
 generated: 2026-07-18
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -41,6 +41,6 @@ status: in-progress
 
 ## Phase 3: Full-suite verification
 
-- [ ] T005 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [x] T005 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace; confirm all green with no
   regressions.
