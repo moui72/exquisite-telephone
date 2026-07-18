@@ -53,7 +53,7 @@ status: in-progress
 
 ## Phase 4: Reveal View
 
-- [ ] T007 [artifacts: ui] Write a failing test asserting a new
+- [x] T007 [artifacts: ui] Write a failing test asserting a new
   `prefersReducedMotion` derived store (new file, e.g.
   `client/src/lib/stores/prefersReducedMotion.ts`) reflects
   `matchMedia('(prefers-reduced-motion: reduce)').matches` and updates
