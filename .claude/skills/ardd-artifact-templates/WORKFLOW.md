@@ -1,8 +1,8 @@
 # Project Workflow Guide
 
-This project uses [artifact-driven-dev (ARDD)](https://github.com/moui72/artifact-driven-dev).
+This project uses [artifact-driven-dev (ArDD)](https://github.com/moui72/artifact-driven-dev).
 This file is a static reference generated from the installed skill set —
-regenerate by re-running install.sh after an ARDD upgrade.
+regenerate by re-running install.sh after an ArDD upgrade.
 
 ## Skills
 
@@ -16,12 +16,12 @@ regenerate by re-running install.sh after an ARDD upgrade.
 | `/ardd-implement` | Execute tasks sequentially — offers worktree delegation; all state rides the work branch and lands on merge. --reconcile <file> re-syncs an interrupted tasks file with the codebase first (absorbs ardd-converge). |
 | `/ardd-status` | Full cross-artifact consistency check — reads every artifact, plan, tasks file, and the register — and writes STATUS.md (its single writer); auto-runs after most state-changing skills. |
 | `/ardd-lint` | Fast, deterministic check of .project/ frontmatter schemas and [artifacts: ...] references — no LLM judgment. |
-| `/ardd-defects` | Check artifacts against the actual codebase and record drift in .project/DEFECTS.md (its single writer); the next plan run offers each recorded defect as a fix task. Takes no observation input — report what you saw with /ardd-feedback instead. |
+| `/ardd-defects` | Check artifacts against the actual codebase and record drift in .project/DEFECTS.md (its single writer); the next plan run offers each recorded defect as a fix task. Takes no observation input — report what the user saw with /ardd-feedback instead. |
 | `/ardd-audit` | Challenge artifact decisions — simplicity, failure modes, robustness, semantics — and write the findings checklist to .project/audit.md. Takes no proposal input — vet new ideas with /ardd-research instead. |
 | `/ardd-research` | Targeted investigation or proposal vetting, written to .project/plans/ — one-off output with no lifecycle; substantial or decision-reversing ideas get vetted here before they reach the backlog or a plan. |
 | `/ardd-diagram` | Generate a Mermaid diagram from any artifact that declares a diagram_type and upsert it into a configurable destination — README.md by default. |
 | `/ardd-tracker` | Mirror the feature register (.project/features/) to and from an external issue tracker — GitHub Issues today — and report divergence in .project/TRACKER.md. |
-| `/ardd-update` | Update this project's ARDD install from its recorded source — resolve the release channel (dev-mode checkouts warned), check standing, re-run install.sh, and relay its output. |
+| `/ardd-update` | Update this project's ArDD install from its recorded source — resolve the release channel (dev-mode checkouts warned), check standing, re-run install.sh, and relay its output. |
 
 ## Operating mode
 

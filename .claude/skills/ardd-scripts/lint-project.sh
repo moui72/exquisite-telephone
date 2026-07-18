@@ -58,10 +58,10 @@ report() {
 }
 
 # Appended to every unknown-enum finding: an unrecognized status may be a
-# typo, or a file written by a newer ARDD whose widened enum this install's
+# typo, or a file written by a newer ArDD whose widened enum this install's
 # validator predates (the 1.0-compatible version-skew mechanism — a real
 # Schema-Version marker is explicitly deferred post-1.0).
-SKEW_HINT=" (or written by a newer ARDD than this install — run /ardd-update)"
+SKEW_HINT=" (or written by a newer ArDD than this install — run /ardd-update)"
 
 # --- Schema of record -------------------------------------------------
 ARTIFACT_STATUS_ENUM="draft stable"
@@ -74,6 +74,7 @@ WORKFLOW_MODE_ENUM="solo collaborative"
 NEXT_STEP_PROMPT_ENUM="true false"
 DELEGATION_ENUM="eager ask inline"
 MERGE_POLICY_ENUM="auto ask"
+PLAN_PREVIEW_ENUM="always-browser always-console ask"
 # -----------------------------------------------------------------------
 
 in_enum() {
@@ -171,6 +172,14 @@ if [ -d "$PROJECT_DIR/artifacts" ]; then
         report "$f: merge_policy '$val' not in {$MERGE_POLICY_ENUM}$SKEW_HINT"
       fi
     fi
+    # plan_preview is an optional workflow field (absent = ask — today's
+    # prompting behavior); when present it must be in its enum.
+    if [ "$name" = "constitution" ] && frontmatter_has "$f" plan_preview; then
+      val="$(frontmatter_field "$f" plan_preview)"
+      if ! in_enum "$val" $PLAN_PREVIEW_ENUM; then
+        report "$f: plan_preview '$val' not in {$PLAN_PREVIEW_ENUM}$SKEW_HINT"
+      fi
+    fi
 
     # update_check_max_age_days is optional (absent = the update check never
     # fetches); when present it must be a positive integer.
@@ -196,7 +205,7 @@ if [ -d "$PROJECT_DIR/artifacts" ]; then
         if [ -n "$footer_amended" ] && [ -n "$fm_updated" ] && [ "$footer_amended" != "$fm_updated" ]; then
           report "$f: footer Last Amended '$footer_amended' != frontmatter last_updated '$fm_updated' — governance bookkeeping drift"
         fi
-        sir_ver="$(grep -E '^Version change:' "$f" | head -1 | sed -E 's/.*→[[:space:]]*([0-9.]+).*/\1/' || true)"
+        sir_ver="$(grep -E '^Version change:' "$f" | head -1 | sed -E 's/.*(→|->|-->)[[:space:]]*([0-9.]+).*/\2/' || true)"
         if [ -n "$sir_ver" ] && [ "$sir_ver" != "$footer_ver" ]; then
           report "$f: Sync Impact Report targets version '$sir_ver' but footer says '$footer_ver' — governance bookkeeping drift"
         fi
@@ -285,6 +294,14 @@ if [ -d "$PROJECT_DIR/artifacts" ]; then
         case "$val" in
           ''|*[!0-9]*) report "$f: gh_issue '$val' is not a number" ;;
         esac
+      fi
+      # epic is a free-text slug (no enum) — only checked for the same
+      # non-empty-when-present shape as the artifact render fields above.
+      if frontmatter_has "$f" epic; then
+        val="$(frontmatter_field "$f" epic)"
+        if [ -z "$val" ]; then
+          report "$f: epic is present but empty — give it a value or remove the field"
+        fi
       fi
     done
   elif [ -f "$FEATURES_FILE" ]; then

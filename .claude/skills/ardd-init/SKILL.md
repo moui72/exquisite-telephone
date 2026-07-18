@@ -6,7 +6,7 @@ description: "One-time initialization of .project/ — detects greenfield vs exi
 
 # /ardd-init
 
-One-time initialization. Brings a project under ARDD by creating
+One-time initialization. Brings a project under ArDD by creating
 `.project/artifacts/` and the workflow files around it, by whichever of two
 paths fits the project — detected, then confirmed with one question:
 
@@ -32,7 +32,7 @@ with `/ardd-refine` before planning new work.
    - **Guard: is the install complete?** If `.claude/skills/ardd-scripts/`
      doesn't exist, the skill files are present but `install.sh` never ran
      (e.g. copied by hand). Stop and tell the user to complete the install:
-     run `install.sh` from an ARDD checkout against this project, or, from
+     run `install.sh` from an ArDD checkout against this project, or, from
      inside the project directory, the one-command bootstrap
      `curl -fsSL <ardd-repo>/raw/release/new.sh | sh -s -- --existing`. Every
      later step here shells out to `ardd-scripts`, so continuing would fail
@@ -66,12 +66,12 @@ with `/ardd-refine` before planning new work.
    **Design interview** (thin-context greenfield only). Cover the seven
    topics below, roughly in order — data before infrastructure, since
    storage and sync strategy should follow the schema rather than constrain
-   it. Ask about one topic at a time, in your own words, following up where
+   it. Ask about one topic at a time, in the agent's own words, following up where
    an answer opens a real question. This is a conversation, not a form:
    skip what plainly doesn't apply (a CLI tool has no UI topic), and go
    deeper where the user has clearly already made decisions.
 
-   | Topic | What you're trying to surface |
+   | Topic | What the agent is trying to surface |
    |---|---|
    | What it does | The problem it solves, in a sentence or two |
    | Who uses it | Role, technical level, how often |
@@ -99,9 +99,9 @@ with `/ardd-refine` before planning new work.
    moment. Duplicating that from memory produces worse suggestions and a
    confusing double-ask.
 
-   **Reflect the design back** before synthesizing. Summarize what you
+   **Reflect the design back** before synthesizing. Summarize what the agent
    heard, grouped roughly the way artifacts will be (principles, data,
-   infrastructure, interface), and list every `[OPEN: ...]` item you're
+   infrastructure, interface), and list every `[OPEN: ...]` item it's
    carrying. Ask the user to confirm or correct it. This is the last cheap
    moment to fix a misunderstanding — after the artifacts are written it
    takes an `/ardd-refine` pass.
@@ -122,6 +122,17 @@ with `/ardd-refine` before planning new work.
    Read broadly but stop before reading every file — the goal is coverage,
    not exhaustion. When a directory is clearly implementation detail (e.g.
    `dist/`, `node_modules/`, `__pycache__/`), skip it.
+
+   **Cross-check entity completeness with at least two independent
+   signals**, where the codebase offers them — don't rely on a single
+   structural convention (e.g. "every entity has a colocated Zod schema")
+   to enumerate entities, since that misses anything that doesn't follow
+   the convention. Cross-reference whichever of these the detected stack
+   actually has: ORM/schema files, database migration files, route
+   handlers, and type definitions. An entity found via only one signal is
+   a lower-confidence claim — flag it explicitly (see step 4) rather than
+   presenting it with the same certainty as an entity confirmed by two or
+   more.
 
 3. **Determine which artifacts to create.** There is no required set — an
    artifact exists only if the project has the concern it owns (a project
@@ -168,6 +179,11 @@ with `/ardd-refine` before planning new work.
    - Where the code is clear, write definitive statements.
    - Where intent is ambiguous (e.g. a field exists but its purpose isn't
      obvious), use `[OPEN: <question>]` rather than guessing.
+   - For `datamodel.md`: any entity the step-2 survey found via only one
+     independent signal (see step 2) gets an `[OPEN: <entity> was found
+     via <signal> only — confirm it's complete/accurate]` note, so the
+     user's second look is targeted at exactly the lower-confidence
+     claims, not the whole artifact.
    - Do not invent decisions not evident in the code.
    - For `constitution.md`: infer principles from observed patterns (e.g.
      "REST over RPC" if only REST routes exist; "SQLite for storage" if
@@ -205,8 +221,16 @@ with `/ardd-refine` before planning new work.
      for the Test-First signal). When a signal is ambiguous, keep the
      entry — bias toward offering it and having it rejected over not
      offering it at all.
+   - **Scale check first**: before applying the filter above, check for a
+     "trivial project" signal — fewer than roughly a dozen source files, no
+     dependency manifest, or a single source file. When present, default to
+     offering only the catalog's "Always" tier rather than the full
+     stack-matched set, and say so ("this looks like a small project, so
+     I'm only offering the always-relevant suggestions — ask if you'd like
+     to see the full catalog"). Leave the full-catalog behavior above
+     unchanged for anything not detected as trivial.
    - **Dedupe**: drop any entry whose concern is already substantively
-     covered by a principle you're about to synthesize or infer — don't
+     covered by a principle the agent is about to synthesize or infer — don't
      offer a generic duplicate of something the user already stated (or the
      code already shows) in its own words.
    - **Present** the remaining entries via `AskUserQuestion`, multiSelect
@@ -219,7 +243,7 @@ with `/ardd-refine` before planning new work.
      accepted here are numbered sequentially, immediately after any
      principles already synthesized/inferred, in the catalog's own order
      for ties. Quality Standard entries become bullets (or the named
-     subsection, for Pre-commit Enforcement). Project Scope notes are
+     subsection, for Deterministic Gates). Project Scope notes are
      appended to Project Scope & Intent. Leave wording refinement to a
      later `/ardd-refine constitution` pass — don't rewrite the suggested
      text here.
@@ -229,10 +253,17 @@ with `/ardd-refine` before planning new work.
      If so, append `[VIOLATED: <one-line evidence from the survey>]` to the
      inserted text, the same way other inferred content is marked for the
      user to see and correct. Never write to `DEFECTS.md` or the feature
-     register here — report the violated count in step 9 instead,
+     register here — report the violated count in step 10 instead,
      recommending `/ardd-defects` (to log each gap in `DEFECTS.md`)
      followed by `/ardd-backlog` to backlog closing it. This preserves
      those files' existing single-writer ownership.
+
+   The next four questions set workflow fields in the constitution's
+   frontmatter, not constitution content: `workflow_mode` is written
+   inline into the frontmatter here, directly, at this creation; the
+   other three (`next_step_prompt`, `delegation`, `merge_policy`) are
+   written via `ardd-state.sh stamp` after the file exists (see each
+   below) — never hand-edited.
 
    **Set `workflow_mode` in the constitution's frontmatter.** Ask the user
    once which mode this project runs in — `solo` (state rides local
@@ -304,7 +335,7 @@ with `/ardd-refine` before planning new work.
    - **Survey the codebase for capability signals**, in this priority
      order — earlier sources give the clearest feature names and dates,
      later ones fill gaps. This complements the step-2 structural survey,
-     which you can reuse: (1) **git log** (`git log --format="%ad %s"
+     which the agent can reuse: (1) **git log** (`git log --format="%ad %s"
      --date=short` — `feat:` commits and PR merge titles are most
      reliable); (2) **changelog** (`CHANGELOG.md`, a `## Changelog`/`##
      What's New` README section, or `gh release list` / `glab release list`
@@ -347,7 +378,7 @@ with `/ardd-refine` before planning new work.
      of any uncertain entry.
 
 8. **Install `.project/WORKFLOW.md` and seed `.project/STATUS.md`.**
-   WORKFLOW.md is a static skill reference shipped with ARDD, not
+   WORKFLOW.md is a static skill reference shipped with ArDD, not
    transcribed by hand:
    `cp .claude/skills/ardd-artifact-templates/WORKFLOW.md .project/WORKFLOW.md`.
    If the template is missing (older install), note it in the final report
@@ -356,7 +387,46 @@ with `/ardd-refine` before planning new work.
    using the structure below. STATUS.md changes frequently; WORKFLOW.md
    does not.
 
-9. **Report:**
+9. **Capture newly documented capabilities — both paths.** The
+   just-written artifacts may describe capabilities that don't exist yet
+   and aren't tracked anywhere — documented scope that would otherwise
+   sit in limbo, in no register and no plan. This step is distinct from
+   step 7's register extraction: that step reads the *code* to backfill
+   already-shipped history; this one reads the *artifacts* just written
+   to catch described-but-unbuilt scope. On the greenfield path (where
+   step 7 never runs) this is the only register seeding `/ardd-init`
+   does.
+
+   - **Enumerate candidates.** The agent re-reads the artifacts written
+     in step 6 and lists each capability they describe that has (a) no
+     entry in `.project/features/` — checked against every status,
+     including `implemented` and `retired`, not just `backlogged` — and
+     (b) no existing implementation (on the greenfield path there is
+     none, so every described capability qualifies; on the
+     existing-codebase path, reuse the step-2 survey to exclude what the
+     code already does). Name candidates at the capability level, as in
+     step 7 — what a capability *is* versus a design note or constraint
+     is the agent's judgment call; when unsure, offer it and let the
+     user decline.
+   - **Confirm in one batched prompt.** If any candidates exist, present
+     them in ONE grouped prompt (AskUserQuestion, multiSelect on) with
+     per-item accept/decline — never N sequential prompts (the same
+     pattern as `/ardd-feedback`'s re-file step). If there are no
+     candidates, skip silently.
+   - **Create accepted entries.** For each accepted item: derive a slug
+     (`.claude/skills/ardd-scripts/ardd-state.sh slug "<item>"`), then
+     create the register entry:
+
+     ```
+     printf '%s\n' "<one-sentence description>" \
+       | .claude/skills/ardd-scripts/ardd-state.sh feature-create <slug>
+     ```
+
+     These stay `backlogged` — unlike step 7's extracted history, they
+     are genuinely unbuilt work. Declined items are simply not created;
+     the user's judgment is final for this run.
+
+10. **Report:**
    - Which path ran (greenfield or existing codebase) and what was created
    - How many open questions exist per artifact (`[OPEN: ...]` count)
    - Which constitution suggestions (if any) were accepted — and, on the
@@ -366,11 +436,22 @@ with `/ardd-refine` before planning new work.
    - If the register was extracted: how many features, which sources were
      most useful, and the count of `[REVIEW: ...]` entries with a brief
      note on each
+   - How many documented-but-unbuilt capabilities step 9 offered, and how
+     many the user accepted into the register
    - Existing-codebase path: one sentence on what the survey found that was
      most surprising or ambiguous
    - Recommended next step (usually `/ardd-refine` on whichever draft
      artifact has the most open questions, then `/ardd-status` when all are
      resolved)
+   - **Existing-codebase path only:** explicitly recommend running
+     `/ardd-defects` next, in this same session, before treating the
+     reverse-engineered artifacts as ready to plan against — freshly
+     reverse-engineered artifacts are exactly the case where a
+     code-vs-artifact drift check is most likely to catch a survey
+     mistake. This is a plain-text recommendation, not a next-step prompt:
+     `/ardd-init` doesn't participate in the `next_step_prompt`
+     AskUserQuestion mechanism (only `/ardd-status` and `/ardd-plan` do —
+     see CLAUDE.md), and this task doesn't widen that scope.
 
 ## STATUS.md structure
 

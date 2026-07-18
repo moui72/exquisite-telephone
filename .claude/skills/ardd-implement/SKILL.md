@@ -18,6 +18,16 @@ hotfix work that landed without ever being tasked, overlapping the file's
 tasks); the offered reconcile in step 1 only triggers for `in-progress`
 files.
 
+`/ardd-implement --list` is a **read-only side door**: run
+`.claude/skills/ardd-scripts/tasks-list.sh` (installed copy; if absent,
+fall back to the source repo path `scripts/tasks-list.sh`), filter its
+tab-separated output to rows whose status column (column 2) is `ready` or
+`in-progress`, print the filtered result, and stop. This runs before step
+1's `inflight-worktrees.sh` call and pick-list presentation — no
+in-flight cross-reference, no interactive pick, and no writes of any
+kind. Use it for a quick "what's executable right now" glance without
+entering the normal flow.
+
 ## Steps
 
 1. **Pick a tasks file.** Run
@@ -127,14 +137,54 @@ files.
    branches from `<default>` and is fast-forwarded onto local `<default>` by
    `worktree-align.sh`, so it can only see run state that has reached local
    `<default>`:
+
+   **Pre-flight: verify the chosen tasks file and its bound plan are
+   committed before launching — runs before the fold step below, so an
+   uncommitted file gets committed before the fold's dirty-tree check runs
+   against it.** A worktree subagent only sees state that
+   has reached local `<default>` (via `worktree-align.sh`'s fast-forward);
+   an uncommitted plan or tasks file on this branch is invisible to it, and
+   the gap otherwise surfaces only after the subagent is already running.
+   Read the tasks file's `plan:` frontmatter to resolve its bound plan's
+   filename, and **first confirm that resolved plan file actually exists on
+   disk** — `git status --short` on a nonexistent path prints nothing and
+   exits 0, indistinguishable from "clean," so skipping this existence
+   check would silently miss a stale or typo'd `plan:` reference. If the
+   plan file is missing, stop and surface this to the user (in both
+   modes) rather than proceeding into the `git status` check below. Once
+   existence is confirmed, run `git status --short <plan-file>
+   <tasks-file>` for both paths. If either is untracked or shows
+   modifications relative to HEAD:
+   - **solo mode** (`workflow_mode` absent or `solo`, read from
+     `.project/artifacts/constitution.md` frontmatter) — auto-commit them
+     directly, no prompt: `git add <plan-file> <tasks-file>` (the exact
+     paths only, never a sweep), then a signed commit per this repo's
+     `CLAUDE.md` signing convention (the on-disk `~/.ssh/id_claude_signing`
+     key):
+     ```
+     git -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen \
+         -c user.signingkey="$HOME/.ssh/id_claude_signing.pub" \
+         commit -S -m "chore(delegation): auto-commit <slug> plan/tasks before delegating"
+     ```
+     using the tasks file's slug in the message. After committing, print
+     the committed paths and the resulting `git rev-parse --short HEAD` so
+     the action is visible, not silent.
+   - **collaborative mode** — unchanged: surface this to the user before
+     delegating, offer to commit them now, or block delegation with an
+     explicit message naming the uncommitted file(s) — never launch a
+     worktree subagent while the gap exists.
+
    - If `on_default` is `false` — a recovery path now that solo
      `/ardd-plan` no longer creates a branch (a resumed older run, or a
      branch made by hand) — **fold that
      branch into local `<default>` and return the focused session to it**:
-     run `.claude/skills/ardd-scripts/fold-to-main.sh`. On `folded=true` you
-     are now on `<default>` with the branch's state fast-forwarded in — a
+     run `.claude/skills/ardd-scripts/fold-to-main.sh`. On `folded=true` the
+     agent is now on `<default>` with the branch's state fast-forwarded in — a
      fast-forward authors no new commit, so the "nothing is committed in this
-     step" note above still holds — proceed to delegate. On `folded=false`,
+     step" note above still holds (the pre-flight auto-commit just above is
+     the one deliberate exception, and it runs before this fold precisely so
+     the fold's dirty-tree check sees a clean tree) — proceed to delegate. On
+     `folded=false`,
      **stop and surface the `reason=` verbatim; never resolve** (a `dirty`,
      `detached`, or `diverged` tree is the user's to sort out). At this gate
      the tasks file is still `ready` (step 4 does the `ready→in-progress`
@@ -261,7 +311,10 @@ files.
    unsigned when 1Password is locked and must not be pushed silently). There
    is no eager local merge in collaborative mode — merging happens through
    the PR, and the register flip rides the branch and lands when the PR
-   merges, atomically.
+   merges, atomically. If `gh pr create` fails (no GitHub remote, no `gh`
+   auth, etc.), report the `gh` error verbatim — the push already
+   succeeded, so the branch and its state are safe — and let the user open
+   the PR by hand or retry once `gh` is usable.
 
 4. **Flip to `in-progress` (if needed), then find the next uncompleted
    task.** If the file's status is still `ready` (a first-task run on the
@@ -283,7 +336,14 @@ files.
      state.
    - For test tasks under a TDD paradigm: write the test first, confirm it
      fails, then stop at the red state. Mark the test task complete. The
-     paired implementation task follows.
+     paired implementation task follows. When `constitution.md`'s Quality
+     Standards declare a full-suite pre-commit hook (the Deterministic
+     Gates suggestion or equivalent), apply the test framework's
+     expected-failure marker (e.g. pytest `@pytest.mark.xfail(strict=True)`,
+     Vitest `test.fails`) on the red commit so it passes the hook, and
+     remove the marker on the paired implementation task's commit —
+     mirroring the Test-First Development catalog note at the execution
+     level.
    - For test tasks under a test-after paradigm (or no paradigm stated):
      implement first, then write the test and confirm it passes.
    - For implementation tasks: implement the minimum code to satisfy the task

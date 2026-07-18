@@ -23,7 +23,7 @@ when that set changes.
 Manual invocation is still the right call after `/ardd-init`
 (deliberately deferred until after a `/ardd-refine` pass — running it
 immediately would just report a wall of expected draft-state noise) or
-anytime you want a fresh check outside those flows.
+anytime the user wants a fresh check outside those flows.
 
 **Run only from the primary checkout, never inside a delegated worktree.**
 `/ardd-status` is the sole writer of `STATUS.md`; running it inside a
@@ -64,13 +64,16 @@ the coordinator or the inline path.
 
    Also run `.claude/skills/ardd-scripts/ardd-update-check.sh` (the
    installed copy; coordinator's absolute path as fallback, same
-   present-or-fallback rule as other ardd-scripts calls). On
-   `behind installed=<x> source-tip=<y>`, the report and STATUS.md each
-   gain one line: "ARDD update available: installed <x>, source at <y> —
-   run /ardd-update." On `source-missing`, a gentler line: "ARDD source
-   checkout not found at its recorded path — run /ardd-update to
-   re-record it." `no-version-file`, `no-source-path`, `up-to-date`, and
-   `self-hosted` (this repo is its own ARDD source — the tip comparison
+   present-or-fallback rule as other ardd-scripts calls). On the common
+   `behind installed=<x> latest-release=<y>` (a tagged release exists), or
+   the no-releases fallback `behind installed=<x> source-tip=<y>
+   note=no-releases` (the source has no tags yet, so the comparison falls
+   back to its tip) — either shape means "behind" — the report and
+   STATUS.md each gain one line: "ArDD update available: installed <x>,
+   source at <y> — run /ardd-update." On `source-missing`, a gentler line:
+   "ArDD source checkout not found at its recorded path — run /ardd-update
+   to re-record it." `no-version-file`, `no-source-path`, `up-to-date`, and
+   `self-hosted` (this repo is its own ArDD source — the tip comparison
    is meaningless there) stay silent.
 
    Also glob `.project/feedback/feedback-*.md` and read frontmatter. Count
@@ -83,6 +86,29 @@ the coordinator or the inline path.
    (`backlogged`/`planned`/`tasked`/`implemented`) — read-only visibility;
    `/ardd-status` never writes to the register except the one narrow,
    explicit exception in step 5a below.
+
+   Also check whether any feature carries a non-empty `epic`: run
+   `.claude/skills/ardd-scripts/feature-list.sh --all` (installed copy; if
+   absent, fall back to the source repo path `scripts/feature-list.sh`) and
+   inspect the fifth tab-separated column. If at least one entry has a
+   non-empty `epic`, group the backlogged/planned/tasked counts by that
+   `epic` value for the "by epic" breakdown below (omit `implemented`/
+   `retired` entries from the grouping — same "actionable at a glance"
+   framing as the plain status counts). If no feature carries `epic`, skip
+   this grouping entirely — nothing to collect.
+
+   Also compare each `status: stable` artifact's described capabilities
+   against the feature register and the codebase: the agent lists any
+   capability a stable artifact describes that has no register entry
+   (checked against every status, including `implemented` and `retired`)
+   and no existing implementation. Skip `status: draft` artifacts — draft
+   scope isn't settled enough to nag about. Collect the unmatched
+   capabilities for the "Documented but untracked" report section and
+   STATUS.md line below (omit both when nothing is untracked). This is
+   detection and visibility ONLY: `/ardd-status` never writes the register
+   here — creating entries belongs to `/ardd-backlog --from-artifacts`,
+   which the section points at (the step-7 orphaned-flip confirmation
+   remains this skill's sole register-write exception).
 
    Also glob `.project/tasks/tasks-*.md` for files at `status: completed`.
    For each, run `.claude/skills/ardd-scripts/completion-flip-check.sh
@@ -155,6 +181,16 @@ the coordinator or the inline path.
    - <N> backlogged · <N> planned · <N> tasked · <N> implemented — see
      `.project/features/`. Target a backlogged slug with
      `/ardd-plan <slug>`. (Omit this section if the register doesn't exist.)
+   - By epic: `<epic-slug>` — <N> backlogged · <N> planned · <N> tasked
+     (one line per epic value seen). (Omit this "by epic" breakdown entirely
+     if no feature carries a non-empty `epic` — same "omit if none"
+     convention as every other optional section here.)
+
+   ## Documented but Untracked
+   - `<artifact>.md` describes <capability> — no register entry, no
+     implementation. Backlog it with `/ardd-backlog --from-artifacts`.
+   (Advisory only — `/ardd-status` never creates register entries. Stable
+   artifacts only; omit this section entirely if step 1 found none.)
 
    ## Orphaned Completion Flips
    - Slug `<slug>` — tasks file `<file>`'s plan branch `<branch>` is merged
@@ -182,6 +218,9 @@ the coordinator or the inline path.
    - A line surfacing the open feedback count from step 1 (omit if zero)
    - A line surfacing the feature backlog counts from step 1 (omit if
      the register doesn't exist)
+   - A "Documented but untracked" line surfacing the count of
+     documented-but-untracked capabilities from step 1, pointing at
+     `/ardd-backlog --from-artifacts` (omit if none)
    - A line surfacing any orphaned completion flips found in step 1 (omit
      if none)
    - An "In flight" line/section surfacing the `inflight-worktrees.sh`

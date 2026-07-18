@@ -40,7 +40,7 @@ diagram_status: unrendered            # required once diagram_type is present
   `flowchart LR`, `gantt`, `pie`, `journey`, `mindmap`, `timeline`, …). It is
   used **verbatim as the first line** of the ```` ```mermaid ```` fence, so a
   flowchart value carries its own direction (`graph TD`) and needs no
-  orientation guesswork. ARDD keeps no enumerated list of valid values and
+  orientation guesswork. ArDD keeps no enumerated list of valid values and
   does not lint against one; the value must nonetheless be a real Mermaid type
   (not an English label like `entity-relationship`). A typo'd or unsupported
   value surfaces here, at render time, not at lint. See
@@ -104,7 +104,10 @@ When `render_target` and `render_section` are both absent, a diagram lands in
 
 5. **Ensure the resolved target file exists.** Using the target from step 2
    (`README.md` unless overridden): if it's missing, `mkdir -p` its parent
-   directory and create the file empty (the upsert step appends the section).
+   directory and create the file empty (the upsert step appends the
+   section). When the target didn't already exist, note that explicitly in
+   step 8's report — e.g. "creating README.md (none existed)" — instead of
+   silently originating it via the upsert path.
 
 6. **Upsert the section — script-performed** (constitution Principle II;
    generating the Mermaid content is judgment, splicing it into the target
@@ -124,4 +127,6 @@ When `render_target` and `render_section` are both absent, a diagram lands in
    .project/artifacts/<name>.md diagram_status current`. If the bare form
    ran (all renderable artifacts), do this for each rendered artifact.
 
-8. **Report** in one sentence what was generated and where it was written.
+8. **Report** in one sentence what was generated and where it was written —
+   including the "creating <file> (none existed)" note from step 5 when it
+   applies.

@@ -18,6 +18,8 @@ erDiagram
         boolean monochromeOnly
         number turnTimerMinutes
         timestamp roundStartedAt
+        timestamp revealStartedAt
+        boolean nonContinuable
         string playAgainVotes
     }
     PLAYER {
@@ -26,6 +28,7 @@ erDiagram
         string name
         boolean connected
         string sessionToken
+        boolean kicked
     }
     BOOK {
         string id
@@ -49,21 +52,20 @@ erDiagram
     }
 ```
 
-
 ## Infrastructure
 
 ```mermaid
 graph TD
     Client[Svelte Client<br/>served as static dist/]
     Server[Node/TypeScript Server<br/>single process]
-    SocketIO[Socket.IO Realtime Layer]
+    SocketIO[Socket.IO Realtime Layer<br/>incl. onKickPlayer/onRestartGame]
     RoomStore[In-Memory Room/Game Store]
     SessionStore[In-Memory Session Store<br/>reconnect tolerance]
     TimerSweep[Turn Timer Sweep<br/>30s interval]
     ExportPipeline[Client-Side PNG Export]
     Fly[Fly.io<br/>single machine deployment]
 
-    Client -- "user actions (join, submit, draw)" --> SocketIO
+    Client -- "user actions (join, submit, draw, kick, restart)" --> SocketIO
     SocketIO -- "room/game state broadcasts" --> Client
     SocketIO --> Server
     Server --> RoomStore
@@ -76,7 +78,6 @@ graph TD
     Fly -- "hosts" --> Server
 ```
 
-
 ## UI
 
 ```mermaid
@@ -85,21 +86,29 @@ graph TD
     Lobby[Lobby View]
     WritingDrawing[Writing / Drawing View]
     DrawingCanvas[Drawing Canvas]
-    Reveal[Reveal View]
+    ModerationPanel[Moderation Panel<br/>kick / end game / restart]
+    Reveal[Reveal View<br/>synced via Room.revealStartedAt]
+    Kicked[Kicked State]
     Ended[Ended State]
     ErrorState[Error State]
 
     App --> Lobby
     App --> WritingDrawing
     App --> Reveal
+    App --> Kicked
     App --> Ended
     App --> ErrorState
 
     WritingDrawing --> DrawingCanvas
+    WritingDrawing --> ModerationPanel
+    Reveal --> ModerationPanel
+    Lobby --> ModerationPanel
 
     Lobby -- "Room.status, players[]" --> Lobby
     WritingDrawing -- "Entry.type, roundStartedAt, pendingTimeoutVote" --> WritingDrawing
     DrawingCanvas -- "draw ops: stroke, fill" --> DrawingCanvas
-    Reveal -- "books[], entries[]" --> Reveal
+    ModerationPanel -- "Player.kicked, Room.nonContinuable" --> ModerationPanel
+    Reveal -- "books[], entries[], revealStartedAt" --> Reveal
+    Kicked -- "own Player.kicked === true" --> Kicked
 ```
 

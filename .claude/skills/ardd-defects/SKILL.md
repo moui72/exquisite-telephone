@@ -1,7 +1,7 @@
 ---
 name: ardd-defects
 tier: extension
-description: "Check artifacts against the actual codebase and record drift in .project/DEFECTS.md (its single writer); the next plan run offers each recorded defect as a fix task. Takes no observation input — report what you saw with /ardd-feedback instead."
+description: "Check artifacts against the actual codebase and record drift in .project/DEFECTS.md (its single writer); the next plan run offers each recorded defect as a fix task. Takes no observation input — report what the user saw with /ardd-feedback instead."
 ---
 
 # /ardd-defects
@@ -24,7 +24,7 @@ log.
 0. **Reject freeform arguments** (mirrors `/ardd-plan`'s argument
 disambiguation, as an explicit early step). This skill takes no
 observation or scope input: it always runs its own full artifact-vs-code
-pass. If the invocation carries any argument (e.g. a bug you noticed, a
+pass. If the invocation carries any argument (e.g. a bug the user noticed, a
 file path, a description of drift), stop and redirect: an observation
 about the implementation belongs in `/ardd-feedback <observation>`, which
 captures it for the next plan — this skill would either duplicate it or
@@ -56,6 +56,14 @@ lose it. Do not silently ignore the argument and run anyway.
    severity/confidence note if useful (e.g., cosmetic drift vs. a broken
    contract).
 
+   **Routing note — documented-but-never-built scope is not drift.** A
+   capability an artifact describes that was never implemented at all is
+   backlog territory, not a defect: the agent should route it to
+   `/ardd-backlog --from-artifacts` (mention it in the step 6 report)
+   rather than recording it in `DEFECTS.md`. Reserve `DEFECTS.md` for
+   genuine code-vs-artifact divergence in *built* behavior — code that
+   exists but does something other than what the artifact claims.
+
 4. **Never write findings into artifact bodies.** This is the core rule —
    defects are recorded only in `.project/DEFECTS.md`, never as edits,
    annotations, or `[OPEN: ...]` items inside `.project/artifacts/*.md`.
@@ -69,7 +77,9 @@ lose it. Do not silently ignore the argument and run anyway.
    ```markdown
    # Defects
 
-   _Last verified: YYYY-MM-DD_
+   _Last verified: YYYY-MM-DD_ — a point-in-time snapshot; any claim below
+   can be invalidated by a subsequent commit, and a stale-looking report is
+   expected, not a bug, until the next `/ardd-defects` run.
 
    ## <artifact>.md
    - **Claim:** <what the artifact says>
@@ -85,7 +95,9 @@ lose it. Do not silently ignore the argument and run anyway.
    ```markdown
    # Defects
 
-   _Last verified: YYYY-MM-DD_
+   _Last verified: YYYY-MM-DD_ — a point-in-time snapshot; any claim below
+   can be invalidated by a subsequent commit, and a stale-looking report is
+   expected, not a bug, until the next `/ardd-defects` run.
 
    No defects found — artifacts match the codebase as of this run.
    ```

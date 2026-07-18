@@ -47,9 +47,9 @@ a plan.)_
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` — `kicked`/`nonContinuable` fields plus the new `revealStartedAt` field aren't reflected yet)
-- infrastructure.md — stale ⚠️ (run `/ardd-diagram infrastructure` — `onKickPlayer`/`onRestartGame` handlers added)
-- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Moderation Panel added, plus this session's roster-removal/Kicked-state/synchronized-reveal-clock changes)
+- datamodel.md — current ✅
+- infrastructure.md — current ✅
+- ui.md — current ✅
 
 ## Code-vs-Artifact Defects
 
@@ -254,8 +254,10 @@ host-races-ahead bug), and the kicked-player flow (own-client ejection
 to a new terminal state + full roster removal on the host's side,
 reversing the prior struck-through-but-visible design). `datamodel.md`
 and `ui.md` were both refined 2026-07-17 with these decisions before
-implementation — both `stable`, both `diagram_status: stale` pending a
-fresh `/ardd-diagram` pass. 0 backlogged/planned/tasked features — every
+implementation — both `stable`, and all three renderable artifacts
+(datamodel, infrastructure, ui) now have `diagram_status: current`
+after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
+0 backlogged/planned/tasked features — every
 feature in the register is `implemented` (neither bug-fix plan binds
 features). No cross-artifact conflicts or constitution violations.
 Working tree clean on `main`; no worktrees in flight — all three
@@ -282,8 +284,6 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. Worth doing at some point: `/ardd-diagram` on
-datamodel, infrastructure, and ui to bring the now-stale diagrams back
-in sync (datamodel/ui doubly so, given this session's fresh changes),
-and a look through `.project/audit.md`'s open findings (5 questions, 3
-risks) to decide which merit a refine or backlog entry.
+Nothing blocking. Worth doing at some point: a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
+which merit a refine or backlog entry.

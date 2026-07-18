@@ -20,6 +20,15 @@ idea's artifact design work actually happens (`/ardd-backlog` only logs the
 idea; it doesn't touch artifacts). Substantial or decision-reversing ideas:
 vet with `/ardd-research` first, before planning them.
 
+`/ardd-plan --list` is a **read-only side door**: run
+`.claude/skills/ardd-scripts/feature-list.sh` (installed copy; if absent,
+fall back to the source repo path `scripts/feature-list.sh`) with no
+arguments (its default filter — `backlogged`), print its output verbatim,
+and stop. This runs before step 1's branch check and before every other
+step — no artifact discovery, no feedback load, no interactive pick, and
+no writes of any kind. Use it for a quick "what's actionable to plan
+right now" glance without entering the normal flow.
+
 `/ardd-plan --from <plan-file>` is the **re-task mode**: it skips planning
 entirely and re-enters at the tasking half (step 11) for the named,
 already-written plan — regenerating a fresh tasks file without re-drafting the
@@ -46,6 +55,17 @@ disambiguates a defect scope from feature slugs and feedback filenames in
 the same argument list — a plain kebab-case argument is always a feature
 slug, `feedback-*.md` is always a feedback scope.
 
+`/ardd-plan --slate` is a **read-only advisory mode**: like `--list`, it
+runs before step 1's branch check and before every other step — no
+artifact discovery, no feedback load, no interactive pick, and no writes
+of any kind — but instead of a bare backlog printout it computes a
+"defrag" grouping over the open backlog (bundles that should plan
+together, parallel sets safe to fan out, solo-deferred items) and reports
+a recommended `/ardd-plan <slug> [<slug> ...]` invocation. Entering
+`--slate` skips steps 1–15 entirely and runs the separate "Slate mode"
+procedure defined at the end of this file. Never combine `--slate` with
+any other argument form — it takes no scope.
+
 ## Shape of a run
 
 Steps 1–10 draft and write the plan and stop at the **approval checkpoint**
@@ -53,7 +73,10 @@ Steps 1–10 draft and write the plan and stop at the **approval checkpoint**
 generate its tasks file. This restores a real approve/revise/stop gate
 between planning and tasking — selecting a plan is a decision, not a
 keystroke. **Re-task mode (`--from <plan-file>`) skips straight to step 11**
-for the named plan; steps 2–10 do not run.
+for the named plan; steps 2–10 do not run. **Slate mode (`--slate`) skips
+steps 1–15 entirely** and runs the separate procedure in "Slate mode"
+below, ending in a report and, optionally, a next-step prompt — it never
+drafts or writes a plan.
 
 ## Steps
 
@@ -74,8 +97,8 @@ for the named plan; steps 2–10 do not run.
    truth, already accepted there (decision record 0005). Set `<slug>` to the
    first feature-slug argument if any were passed, else a freshly generated
    short arbitrary slug (4 hex chars, e.g. `openssl rand -hex 2` → `f2ed`).
-   A worktree still works if you want isolation — set one up yourself and
-   re-run from there; this skill never delegates to a worktree subagent:
+   A worktree still works if the user wants isolation — set one up manually
+   and re-run from there; this skill never delegates to a worktree subagent:
    the draft plan and tasks file this run produces are themselves the state
    the next steps need to see, and isolating them in a worktree would trap
    them there until a manual merge.
@@ -133,7 +156,7 @@ for the named plan; steps 2–10 do not run.
 
 3. **If feature slugs were passed as arguments**, design and apply their
    artifact changes now — this absorbs what `/ardd-backlog` used to do
-   eagerly, deferred to the moment you actually choose to work an idea:
+   eagerly, deferred to the moment the user actually chooses to work an idea:
 
    a. **Look up each slug** in the feature register — read
       `.project/features/<slug>.md` and its frontmatter `status`. If the
@@ -210,7 +233,7 @@ for the named plan; steps 2–10 do not run.
       violations, report new `[OPEN: ...]` items. This keeps the artifact set
       internally consistent before the plan itself is drafted against it.
 
-   Remember which feature slugs were targeted here — you'll record them in
+   Remember which feature slugs were targeted here — the agent records them in
    the plan's frontmatter (step 9). Their `Status` flips from `backlogged`
    to `planned` at the tasking half (step 11), when this plan is approved —
    not here.
@@ -283,7 +306,7 @@ for the named plan; steps 2–10 do not run.
 
    For each printed defect: present it
    to the user and ask whether to include a fix task for it in this plan. Whether accepted or declined, record its
-   identifier in the `surfaced-defects:` list of the plan you're drafting
+   identifier in the `surfaced-defects:` list of the plan being drafted
    (written in step 9) — declining still counts as "surfaced," which is what
    stops it from being re-prompted on every future run. If accepted, the fix
    task is added to the Phase Breakdown in step 8, tagged `[defect:
@@ -294,14 +317,14 @@ for the named plan; steps 2–10 do not run.
    planned pattern that violates, or needs justification under, one of those
    declared principles. In particular, only if the constitution declares a
    simplicity / complexity-justification principle (e.g. Simplicity/YAGNI with a
-   Complexity Tracking requirement) do you flag patterns that would need a
+   Complexity Tracking requirement) does the agent flag patterns that would need a
    Complexity Tracking entry; if it declares no such principle, there is nothing
    to flag at that site. Mirror `/ardd-status`'s "act only on the principles
    present" shape rather than presuming a particular principle exists.
 
 7. **Check for existing approved plans.** List `.project/plans/plan-*.md` and
    read frontmatter. If any have `status: approved`, ask the user whether the
-   plan you're about to draft supersedes one of them. On confirmation, flip
+   plan about to be drafted supersedes one of them. On confirmation, flip
    that plan's status to `superseded` immediately via `.claude/skills/ardd-scripts/ardd-state.sh plan-flip <file> superseded`. A
    superseded-by-a-draft-that's-never-approved plan is an acceptable outcome,
    not a bug: `/ardd-status`/`STATUS.md` surface open draft counts either
@@ -346,10 +369,45 @@ for the named plan; steps 2–10 do not run.
    ---
    ```
 
-10. **Approval checkpoint.** Present a summary to the user — phases, key
-    decisions, open questions — and note the plan is saved at
-    `.project/plans/plan-<slug>-<YYYY-MM-DD>-<hex4>.md` as `status: draft`. Then
-    **pause and ask which of three the user wants** (use `AskUserQuestion`):
+10. **Approval checkpoint.** Present a bounded, faithful skeleton of the
+    plan drawn **verbatim from the plan the agent just wrote** — not a freehand
+    re-summary. Show exactly these four elements, in order:
+
+    1. **Goal** — reproduce the plan's **Goal** sentence verbatim and
+       **bolded**. Never paraphrase it; this is the one line the user is
+       approving.
+    2. **Phase table** — a markdown table with columns `Phase | Delivers |
+       Depends on`, one row per phase in the plan's **Phase Breakdown**
+       (`Delivers` = that phase's described increment; `Depends on` = its
+       stated dependency, or `—`). This checkpoint runs **before tasking**
+       (step 12), so there are **no `T###` IDs or task counts yet** — do
+       **not** add a task-count column or invent one. (You may add an
+       optional count of a phase's enumerated Phase Breakdown work-items
+       *only* where the draft listed them, and label it as plan items,
+       never tasks.)
+    3. **Open Questions** — reproduce the plan's **Open Questions** list
+       verbatim (not summarized); these are exactly what the user weighs
+       before approving.
+    4. **File pointer** — note the plan is saved at
+       `.project/plans/plan-<slug>-<YYYY-MM-DD>-<hex4>.md` as `status: draft`,
+       and **invite the user to open that `.md` in their editor or markdown
+       preview** for the full plan (Scope, Technical Approach, Complexity
+       Tracking, etc.). Frame the terminal view as the decision-relevant
+       skeleton and the on-disk file as the full-fidelity source — keep this
+       a summary-plus-pointer, never a full inline dump of the plan.
+
+    Before that three-way question, ask a one-time preliminary question:
+    **view the plan in the browser first?** (use `AskUserQuestion`, yes/no).
+    On yes: publish the plan file
+    (`.project/plans/plan-<slug>-<YYYY-MM-DD>-<hex4>.md`, Markdown — no HTML
+    skeleton needed) via the `Artifact` tool, open it, and display the
+    resulting URL to the user; then proceed to the three-way question below
+    unchanged. On no: proceed straight to the three-way question. This offer
+    re-fires each time a Revise loop brings the run back to this checkpoint —
+    a later redeploy of the same plan file (same path) targets the same
+    artifact URL, so the preview always reflects the latest draft.
+
+    Then **pause and ask which of three the user wants** (use `AskUserQuestion`):
 
     - **Approve** — proceed to step 11: approve the plan and generate its
       tasks file, in this same run.
@@ -421,6 +479,12 @@ for the named plan; steps 2–10 do not run.
 
     Mark parallelism with `[parallel]` on tasks that touch different files and
     have no shared dependencies.
+
+    Phrase a task as *creating* a file/function, not extending or modifying
+    it, whenever the target doesn't exist yet — there's nothing to modify.
+    This is the common case for a project's very first feature: don't write
+    "update `src/index.ts` to add the entry point" when `src/index.ts`
+    doesn't exist yet.
 
 13. **Write the tasks file.** Mint its filename from the chosen plan's
     slug — `.claude/skills/ardd-scripts/ardd-state.sh mint tasks <slug>` —
@@ -501,3 +565,150 @@ for the named plan; steps 2–10 do not run.
     first. Only if this run ends the turn itself without handing off to
     analyze does the offer fire here. Recommendations that are not a concrete
     runnable `/ardd-*` invocation always stay plain text.
+
+## Slate mode (`--slate`)
+
+Entered instead of steps 1–15 when the run's sole argument is `--slate`
+(see Usage). This is a **read-only advisory mode**: it computes an
+ephemeral "defrag" grouping over the open feature backlog — grounded in
+real codebase evidence, never free-associated from register prose alone —
+and ends in a report plus a recommended next `/ardd-plan` invocation. It
+never drafts a plan, never writes a plan or tasks file, and never touches
+the feature register. Its own steps:
+
+1. **Enumerate the backlog.** Run
+   `.claude/skills/ardd-scripts/feature-list.sh --status backlogged`
+   (installed copy; if absent, fall back to the source repo path
+   `scripts/feature-list.sh --status backlogged`) and read its tab-separated
+   output verbatim — this is the same register-direct-read discipline
+   `--list` already uses: never trust `STATUS.md`'s assembled counts, even
+   when they happen to already be correct. Let N be the number of lines
+   printed.
+
+2. **N=0/N=1 branch.** These are degenerate cases — a slate is a relation
+   *between* items, and with N≤1 the relation set is empty by
+   construction, so don't manufacture one:
+   - **N=0**: report "nothing to defrag — the backlog is empty" and stop.
+   - **N=1**: report "nothing to defrag — single open item: `<slug>`" and
+     recommend `/ardd-plan <that slug>` directly, then stop.
+
+   Only continue to step 3 when N≥2.
+
+3. **Per-item footprint confidence grading (N≥2).** For each backlogged
+   item, read its register entry (the description and any `Why:` line)
+   and ground a footprint estimate in real greps/reads of the codebase —
+   never free-associated from the register's prose alone. Grade a
+   confidence:
+   - **`high`** — a concrete existing seam was found (a file, interface,
+     or abstraction the feature would extend or plug into). Example:
+     `wasm-hunspell-backend` grades `high` because a grep turns up a
+     37-line, already-abstracted spellcheck-backend interface the new
+     backend would implement — the seam already exists in code.
+   - **`medium`** — a seam exists but a real unknown remains (e.g. the
+     work is gated on a non-code decision, or the seam only partially
+     covers the described scope).
+   - **`low`** — greenfield (no seam exists yet), or the item's own
+     artifact language explicitly flags it as speculative or a later
+     phase. Example: `llm-assistance` grades `low` because
+     `infrastructure.md` itself calls it a later phase with an open
+     question — there is nothing in the codebase yet to ground a
+     footprint against.
+
+   Grading is agent judgment, not a rigid rubric — these two worked
+   examples anchor what "grounded in real greps" means in practice; don't
+   grade purely from how confident the register's own prose sounds.
+
+4. **Pairwise relations (N≥2), two axes, computed separately.** For every
+   pair of backlogged items, determine two independent judgments — never
+   collapse them into one:
+   - **File-set overlap** — do the two items' footprints share any file?
+   - **Ordering dependency** — does one item need to land before the
+     other regardless of file overlap (e.g. an interface one item would
+     consume that the other edits, or a shared code path one transforms
+     and the other reads)?
+
+   Overlap without dependency is a **safe parallel pair**, even when the
+   items are topically related. Example: a `project-scoped-personal-
+   dictionary` item and a `spellcheck-backend` item might both carry the
+   "spellcheck" label, but if their footprints are actually disjoint
+   (one touches a dictionary-storage file, the other `speller.ts`), the
+   shared label is a false signal — they're safe to plan and implement in
+   parallel.
+
+   Dependency without full file overlap still forces sequencing. Example:
+   a `smart-typography-substitution` item feeding into `{docx-export,
+   epub-pdf-export}` items — they don't necessarily share a file, but
+   typography substitution has to land first because both export paths
+   read through the same render/export path it transforms. Ordered
+   through a shared code *path*, not a shared file set — still a
+   dependency edge, not a safe parallel pair.
+
+   Compute both axes for every pair before classifying anything in
+   step 5.
+
+5. **Classify and present.** Using the confidence grade (step 3) and the
+   two relations (step 4), bucket every backlogged item into exactly one
+   of:
+   - **Bundle** — items connected by a dependency edge, or sharing files
+     with no safe reordering. Sequenced; recommended as one multi-slug
+     `/ardd-plan <slug1> <slug2> ...` call, in dependency order.
+   - **Parallel set** — items that are pairwise file-disjoint, have no
+     dependency edge between them, and are *not* `low` confidence.
+     Recommended as separate `/ardd-plan <slug>` calls, one per item,
+     safe to fan out to worktrees. A `low`-confidence item is never
+     placed in a parallel set even when no overlap was found — a wrong
+     "disjoint" call is the expensive failure (it green-lights a fan-out
+     that then merge-conflicts), so low confidence always routes to
+     solo-deferred instead.
+   - **Solo-deferred** — `low`/speculative confidence, or explicitly
+     gated on a non-code decision per the artifact. Recommended as its
+     own single-slug `/ardd-plan <slug>` call on its own timeline; never
+     bundled or fanned out.
+
+   **Report format**: present the full grouping — every bucket, the
+   items in it, and the rationale (for a bundle, name the specific
+   shared file or the dependency; for a parallel set, note the
+   confidence and disjointness; for solo-deferred, name the confidence
+   grade or the non-code gate) — followed by the recommended next
+   command(s), one per bucket:
+
+   ```
+   Bundle: typography-substitution, docx-export, epub-pdf-export
+     (typography-substitution must land first — both export items read
+     through the same render/export path it transforms)
+     -> /ardd-plan typography-substitution docx-export epub-pdf-export
+
+   Parallel set: spellcheck-backend, personal-dictionary
+     (disjoint footprints — speller.ts vs. dictionary-storage.ts — despite
+     sharing the "spellcheck" label; both high confidence)
+     -> /ardd-plan spellcheck-backend
+     -> /ardd-plan personal-dictionary
+
+   Solo-deferred: llm-assistance
+     (low confidence — infrastructure.md flags this as a later phase with
+     an open question; no seam exists yet to ground a footprint against)
+     -> /ardd-plan llm-assistance (on its own timeline)
+   ```
+
+   If `next_step_prompt: true` (see below), the single top-priority
+   recommendation is then offered via `AskUserQuestion`; otherwise this
+   report is the run's final output and the run stops here.
+
+**Next-step prompt (opt-in).** If `.project/artifacts/constitution.md`
+frontmatter has `next_step_prompt: true` (grep the frontmatter block;
+absent or `false` = stay plain text, unchanged), offer the single
+top-priority recommendation from step 5's report via a one-keypress
+`AskUserQuestion` — the same mechanism `/ardd-plan`'s and `/ardd-status`'s
+own next-step prompts already use (see step 15 above). "Top-priority"
+means: a bundle beats a parallel set beats a solo-deferred item (bundles
+resolve an ordering constraint, so they're the most time-sensitive to
+act on), and among same-tier buckets, prefer the first one enumerated.
+Offer as option 1 "Yes — run `<recommendation>` now", option 2 "No — stop
+here" (Esc = option 2); on yes, invoke `/ardd-plan` with the recommended
+slug(s) by name (the existing terminal-handoff mechanism, no value passed
+back). **Exactly one prompt per user-visible turn end** — slate mode never
+hands off to `/ardd-status` (it makes no writes for `/ardd-status` to
+reflect), so this is the only prompt in play, never deferred to another
+skill. This prompt is wired only for step 5's N≥2 report; the N=0/N=1
+degenerate branch (step 2) stops before reaching step 5 and stays
+plain-text there, same as `--list`.
