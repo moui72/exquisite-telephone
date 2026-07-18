@@ -75,7 +75,7 @@ status: in-progress
   `ModerationPanel.test.ts` asserting its copy (kick, end game, restart
   game, "this game can't continue" notice) has been updated to the
   docent voice. Confirm failures, then implement.
-- [ ] T010 [artifacts: ui] [parallel] Write failing tests covering
+- [x] T010 [artifacts: ui] [parallel] Write failing tests covering
   `App.svelte`'s terminal states (Empty, Ended, Error, Kicked,
   Reconnecting) asserting their copy has been updated to the docent
   voice. Confirm failures, then implement.

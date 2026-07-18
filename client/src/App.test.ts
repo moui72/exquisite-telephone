@@ -60,10 +60,10 @@ describe('App (top-level state routing per ui.md States)', () => {
 
     render(App, { props: { session } });
 
-    expect(screen.getByText(/reconnecting/i)).toBeInTheDocument();
+    expect(screen.getByText(/retrieving your ticket/i)).toBeInTheDocument();
   });
 
-  it('shows a "this game has ended" state distinct from a generic error', () => {
+  it('shows a "the exhibition has closed" state distinct from a generic error', () => {
     const session = makeFakeSession({
       room: null,
       player: null,
@@ -73,10 +73,10 @@ describe('App (top-level state routing per ui.md States)', () => {
 
     render(App, { props: { session } });
 
-    expect(screen.getByText(/this game has ended/i)).toBeInTheDocument();
+    expect(screen.getByText(/the exhibition has closed/i)).toBeInTheDocument();
   });
 
-  it('shows a distinct "ended" state (Room.status === \'ended\') with a Return to home control that calls leaveGame', async () => {
+  it('shows a distinct "ended" state (Room.status === \'ended\') with a Return to the Foyer control that calls leaveGame', async () => {
     const session = makeFakeSession({
       room: makeRoom('ended'),
       player: ada,
@@ -86,8 +86,8 @@ describe('App (top-level state routing per ui.md States)', () => {
 
     render(App, { props: { session } });
 
-    expect(screen.getByText(/this game has ended/i)).toBeInTheDocument();
-    const returnButton = screen.getByRole('button', { name: /return to home/i });
+    expect(screen.getByText(/the exhibition has closed/i)).toBeInTheDocument();
+    const returnButton = screen.getByRole('button', { name: /return to the foyer/i });
     await fireEvent.click(returnButton);
 
     expect(session.leaveGame).toHaveBeenCalled();
@@ -119,10 +119,10 @@ describe('App (top-level state routing per ui.md States)', () => {
 
     render(App, { props: { session } });
 
-    expect(screen.getByText(/you were removed from this game/i)).toBeInTheDocument();
-    expect(screen.queryByText(/this game has ended/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/you have been asked to leave the salon/i)).toBeInTheDocument();
+    expect(screen.queryByText(/the exhibition has closed/i)).not.toBeInTheDocument();
 
-    const returnButton = screen.getByRole('button', { name: /return to home/i });
+    const returnButton = screen.getByRole('button', { name: /return to the foyer/i });
     await fireEvent.click(returnButton);
 
     expect(session.leaveGame).toHaveBeenCalled();
@@ -141,7 +141,7 @@ describe('App (top-level state routing per ui.md States)', () => {
 
     render(App, { props: { session } });
 
-    expect(screen.getByText(/you were removed from this game/i)).toBeInTheDocument();
+    expect(screen.getByText(/you have been asked to leave the salon/i)).toBeInTheDocument();
   });
 
   it('shows the Writing/Drawing view once the room is in progress', () => {
