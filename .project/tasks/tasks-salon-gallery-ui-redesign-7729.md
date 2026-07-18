@@ -15,7 +15,7 @@ status: in-progress
   `body`: Rubik, `mono`: Space Mono per Tailwind's `fontFamily` key), and
   load the three webfonts in `client/index.html`. Configuration only, no
   test.
-- [ ] T002 [artifacts: ui] [parallel] Write a failing component test for
+- [x] T002 [artifacts: ui] [parallel] Write a failing component test for
   a new `client/src/lib/components/GiltFrame.svelte` asserting: (a) it
   renders its default slot content, (b) it renders a `caption` prop as
   visible plaque text, (c) with `matchMedia` mocked to match
