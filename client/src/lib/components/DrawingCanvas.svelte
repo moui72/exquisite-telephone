@@ -184,14 +184,14 @@
 </script>
 
 {#if !readOnly}
-  <div class="mb-2 flex flex-wrap items-center gap-3">
+  <div class="mb-2 flex flex-wrap items-center gap-3 rounded-md border-2 border-marigold/50 bg-butter/60 p-2 font-body">
     {#if !monochromeOnly}
       <div class="flex gap-1" role="group" aria-label="Stroke color">
         {#each PALETTE_COLORS as color (color)}
           <button
             type="button"
             class="h-6 w-6 rounded-full border-2"
-            class:border-slate-900={activeColor === color}
+            class:border-velvet={activeColor === color}
             class:border-transparent={activeColor !== color}
             style="background-color: {color};"
             aria-label="Color {color}"
@@ -206,10 +206,10 @@
       {#each WIDTH_PRESETS as preset (preset.label)}
         <button
           type="button"
-          class="rounded-md border px-2 py-1 text-xs font-medium"
-          class:bg-slate-800={activeWidth === preset.width}
-          class:text-white={activeWidth === preset.width}
-          class:text-slate-700={activeWidth !== preset.width}
+          class="rounded-md border border-marigold/60 px-2 py-1 text-xs font-medium"
+          class:bg-velvet={activeWidth === preset.width}
+          class:text-butter={activeWidth === preset.width}
+          class:text-ink={activeWidth !== preset.width}
           aria-pressed={activeWidth === preset.width}
           on:click={() => selectWidth(preset.width)}
         >
@@ -220,10 +220,10 @@
 
     <button
       type="button"
-      class="rounded-md border px-2 py-1 text-xs font-medium"
-      class:bg-slate-800={tool === 'fill'}
-      class:text-white={tool === 'fill'}
-      class:text-slate-700={tool !== 'fill'}
+      class="rounded-md border border-marigold/60 px-2 py-1 text-xs font-medium"
+      class:bg-velvet={tool === 'fill'}
+      class:text-butter={tool === 'fill'}
+      class:text-ink={tool !== 'fill'}
       aria-pressed={tool === 'fill'}
       on:click={toggleFillTool}
     >
@@ -239,7 +239,7 @@
   bind:this={canvasEl}
   width="320"
   height="240"
-  class="touch-none rounded-md border border-slate-300 bg-white"
+  class="touch-none rounded-md border-2 border-marigold/70 bg-white"
   role="img"
   aria-label={readOnly ? 'Drawing preview' : 'Drawing canvas'}
 ></canvas>

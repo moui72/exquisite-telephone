@@ -42,7 +42,7 @@ status: in-progress
   been updated to the docent voice, preserving every existing
   event/prop contract. Confirm failures, then implement in
   `WritingDrawing.svelte`.
-- [ ] T005 [artifacts: ui] [parallel] Restyle `DrawingCanvas.svelte`'s
+- [x] T005 [artifacts: ui] [parallel] Restyle `DrawingCanvas.svelte`'s
   toolbar (color palette, width presets, fill tool) with the new
   theme's Tailwind classes. Purely visual — no behavior change, no test
   addition; existing `DrawingCanvas.test.ts` coverage must continue to
