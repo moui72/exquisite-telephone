@@ -1,6 +1,23 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-diagram ui` then `/ardd-plan` ran: `ui.md`'s
+_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-7c63-355f.md` end to
+end: delegated to a worktree subagent (solo mode, `delegation: eager`),
+all 5 tasks completed and committed — `ui.md` clarified (host-only
+notice suppression rule, error-code-mapping rule), the duplicate
+"game can't continue" notice fixed in `WritingDrawing.svelte`
+(host-excluded, non-host still sees it), and an `ERROR_COPY`/
+`FALLBACK_ERROR_COPY` lookup added to `Lobby.svelte` replacing the raw
+`{state.error}` render — both test-first, both confirmed failing before
+the fix. Tasks file flipped `completed`; no bound features (`features:
+[]`) so nothing to flip to `implemented`. Merged clean to `main`
+(`merge_policy: auto`, no conflicts, 6 files changed), worktree reaped.
+Post-merge typecheck reconfirmed clean (216 files, 0 errors). Full
+suite per the subagent's own T005 run: 243 tests green (shared 18 +
+server 112 + client 113), lint clean. `feedback-main-8da5.md` (F001,
+F002) is now fully resolved and merged — nothing further tracked from
+it. All diagrams remain current (the `ui.md` edits were textual
+clarifications, no new component nodes). Prior entry: `/ardd-diagram
+ui` then `/ardd-plan` ran: `ui.md`'s
 diagram regenerated (`graph TD`, `README.md` UI section) and stamped
 `current`. Then a no-feature-slug `/ardd-plan` consumed the one open
 feedback file, `feedback-main-8da5.md` — both F001 and F002 accepted by
@@ -133,9 +150,9 @@ in code and dropped from the file).
 0 open feedback files. `feedback-main-8da5.md` (F001 bug —
 `ModerationPanel`/`WritingDrawing` double-render the "game can't
 continue" notice; F002 UX — Error/Empty states show raw error codes
-instead of docent-voice copy) is now `planned` via
-`plan-7c63-2026-07-18-f55f.md` (`tasks-7c63-355f.md`, `ready`, 0/5) —
-not yet implemented. All
+instead of docent-voice copy) is `planned` via
+`plan-7c63-2026-07-18-f55f.md`, and both items are now **fixed and
+merged to `main`** (`tasks-7c63-355f.md`, **completed 5/5**). All
 seven prior items are `planned`, and every one is now fixed and merged
 to `main`: `feedback-main-296e.md`
 (mouse-drawing cursor bug) and `feedback-main-4af4.md` (round-gated
@@ -347,9 +364,10 @@ implementation — both `stable`, and all three renderable artifacts
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
 0 backlogged, 0 planned, 0 tasked, 8 implemented features. No
 cross-artifact conflicts or constitution violations. All diagrams
-current. 0 open feedback files — `feedback-main-8da5.md` planned into
-`plan-7c63-2026-07-18-f55f.md` (approved, tasked, `tasks-7c63-355f.md`
-ready, 0/5, not yet implemented).
+current. 0 open feedback files — `feedback-main-8da5.md`'s two items
+(F001, F002) fixed and merged via `plan-7c63-2026-07-18-f55f.md` /
+`tasks-7c63-355f.md` (completed 5/5). Nothing blocking; nothing in
+flight.
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -374,8 +392,6 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-implement` to execute
-`tasks-7c63-355f.md` (5 tasks, ready) — the two feedback-item fixes.
-Also worth doing at some point: a look through `.project/audit.md`'s
-open findings (5 questions, 3 risks) to decide which merit a refine or
-backlog entry.
+Nothing blocking. Worth doing at some point: a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
+which merit a refine or backlog entry.
