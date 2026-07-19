@@ -1,6 +1,31 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-plan configurable-book-laps-per-gam` ran:
+_Updated: 2026-07-18 (`/ardd-implement` ran
+`tasks-configurable-book-laps-per-gam-2b08.md` end to end: delegated to
+a worktree subagent (solo mode, `delegation: eager`), all 7 tasks
+completed — `Room.lapsPerBook: number | null` added (shared type +
+`createRoom`/`replayRoom` defaults), a new `defaultLapsPerBook`
+shared helper, `computeNextEntry`'s completion check now multiplies
+`players.length` by the resolved laps value (author rotation/entry-type
+alternation confirmed unchanged, as the plan predicted), a new
+host-only/lobby-only `onSetLapsPerBook` handler + `set_laps_per_book`
+event, `onStartGame` resolving a still-`null` value at start time, a
+new `setLapsPerBook` session-store method, and a new Lobby control
+showing the live default until the host picks a value. One expected
+ripple, not a scope deviation: several pre-existing tests assumed
+single-rotation completion for small rooms (now 2 laps by default under
+5 players) and were pinned to `lapsPerBook: 1` since they test unrelated
+mechanics. Tasks file flipped `completed`; feature flipped
+`implemented`. Merged clean to `main` (`merge_policy: auto`, no
+conflicts, 23 files changed), worktree reaped. Post-merge typecheck
+clean (327 files, 0 errors). Full suite per the subagent's own T007 run:
+269 tests green (25 shared + 119 server + 125 client), lint clean.
+Both `datamodel.md` and `ui.md` diagrams refreshed: `datamodel.md`'s ER
+diagram gained the `lapsPerBook` field on `ROOM`; `ui.md`'s diagram is
+component-structure-level and the laps control is a plain form field on
+the existing Lobby node (no new component), so its diagram content is
+unchanged — both now `diagram_status: current`. Prior entry: `/ardd-plan
+configurable-book-laps-per-gam` ran:
 designed and applied the feature's artifact changes — `datamodel.md`
 gains `Room.lapsPerBook: number | null` plus a new Normalization Rule
 ("Laps per book": book completion becomes `players.length * resolved
@@ -206,11 +231,9 @@ a plan.)_
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` —
-  `Room.lapsPerBook` added by `configurable-book-laps-per-gam`'s plan)
+- datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Lobby's new laps control
-  added by the same plan)
+- ui.md — current ✅
 
 ## Code-vs-Artifact Defects
 
@@ -262,17 +285,19 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 1 tasked · 8 implemented — see
+0 backlogged · 0 planned · 0 tasked · 9 implemented — see
 `.project/features/`.
 
-- `configurable-book-laps-per-gam` (**tasked**) — game-creation setting
-  for how many laps each book takes before the game ends and Reveal
-  begins (default 2 laps under 5 players, 1 lap otherwise, max 3).
-  `datamodel.md`/`ui.md` already reflect the design. Plan:
-  `plan-configurable-book-laps-per-gam-2026-07-18-37ca.md` (approved, 4
-  phases). Tasks:
-  `tasks-configurable-book-laps-per-gam-2b08.md` (`ready`, 0/7) — not
-  yet implemented.
+- `configurable-book-laps-per-gam` (**implemented**) — game-creation
+  setting for how many laps each book takes before the game ends and
+  Reveal begins (default 2 laps under 5 players, 1 lap otherwise, max
+  3). Plan: `plan-configurable-book-laps-per-gam-2026-07-18-37ca.md`
+  (approved, 4 phases). Tasks:
+  `tasks-configurable-book-laps-per-gam-2b08.md` (**completed**, 7/7) —
+  delegated to a worktree subagent, merged to `main` clean (no
+  conflicts), worktree reaped. Verified post-merge: typecheck 0 errors
+  (327 files), full suite 269 tests passing (25 shared + 119 server +
+  125 client), lint clean.
 - `salon-gallery-ui-redesign` (**implemented**) — "tongue-in-cheek
   exquisite" salon/gallery UI redesign (gilt-frame signature component,
   Fraunces/Rubik/Space Mono type, candy-bright color tokens, docent-
@@ -451,11 +476,10 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-0 backlogged, 0 planned, 1 tasked (`configurable-book-laps-per-gam` —
-plan approved, tasks ready, not yet implemented), 8 implemented
-features. No cross-artifact conflicts or constitution violations.
-`datamodel.md`/`ui.md` diagrams stale pending `/ardd-diagram` (no
-argument). 0 open feedback files — `feedback-main-5fdc.md`'s F001
+0 backlogged, 0 planned, 0 tasked, 9 implemented features —
+`configurable-book-laps-per-gam` implemented and merged this pass. No
+cross-artifact conflicts or constitution violations. All diagrams
+current. 0 open feedback files — `feedback-main-5fdc.md`'s F001
 (theme not applied broadly) fixed and merged via
 `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md` (completed 9/9).
 Nothing in flight. ArDD update available (beta channel,
@@ -484,13 +508,12 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-implement` to execute
-`tasks-configurable-book-laps-per-gam-2b08.md` (7 tasks, ready). After
-it merges, run `/ardd-diagram` (no argument) to refresh both
-`datamodel.md` and `ui.md`'s now-stale diagrams in one pass. `/ardd-
-update` when convenient (beta channel has a newer release). Also worth
-doing at some point: a look through `.project/audit.md`'s open findings
-(5 questions, 3 risks) to decide which merit a refine or backlog entry.
+Nothing blocking. `/ardd-update` when convenient (beta channel has a
+newer release). Also worth doing at some point: a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
+which merit a refine or backlog entry, and a quick manual look at the
+new laps-per-book control in the lobby to confirm it reads right beyond
+what automated tests can check.
 Also worth a quick manual look at the app now that the reskin is
 complete, to confirm it reads right beyond what automated tests can
 check.

@@ -19,6 +19,7 @@ erDiagram
         timestamp createdAt
         boolean monochromeOnly
         number turnTimerMinutes
+        number lapsPerBook
         timestamp roundStartedAt
         timestamp revealStartedAt
         boolean nonContinuable
