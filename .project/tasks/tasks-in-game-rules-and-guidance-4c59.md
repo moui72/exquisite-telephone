@@ -1,7 +1,7 @@
 ---
 plan: plan-in-game-rules-and-guidance-2026-07-19-5540.md
 generated: 2026-07-19
-status: ready
+status: in-progress
 ---
 
 # Tasks
