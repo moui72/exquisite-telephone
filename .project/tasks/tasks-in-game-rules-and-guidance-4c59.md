@@ -41,7 +41,7 @@ status: in-progress
   implement.
 
 ## Phase 3: Host-setting info affordances
-- [ ] T004 [artifacts: ui] [parallel] Create
+- [x] T004 [artifacts: ui] [parallel] Create
   `client/src/lib/components/InfoTooltip.svelte`: takes `label` and
   `explanation` string props, renders a small `(?)` control that
   reveals the explanation on click/tap (toggle, not hover-only, for
