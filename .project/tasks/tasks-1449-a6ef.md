@@ -57,7 +57,7 @@ status: in-progress
   `App.svelte`'s terminal-state `<main>` blocks (Reconnecting,
   game-ended, Kicked, Ended) — currently all `text-slate-600` — plus a
   source-scan test added to `App.test.ts`.
-- [ ] T008 [artifacts: ui] [parallel] Check `TurnStatus.svelte` and
+- [x] T008 [artifacts: ui] [parallel] Check `TurnStatus.svelte` and
   `DrawingCanvas.svelte`'s toolbar for any remaining slate/plain-gray
   classes (both were mostly handled by the prior plan; `TurnStatus.svelte`
   showed zero slate matches in a pre-plan grep, so this may be a no-op
