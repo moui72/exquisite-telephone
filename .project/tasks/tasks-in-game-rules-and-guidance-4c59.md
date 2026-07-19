@@ -7,7 +7,7 @@ status: in-progress
 # Tasks
 
 ## Phase 1: Rules Overview Panel
-- [ ] T001 [artifacts: ui] Create
+- [x] T001 [artifacts: ui] Create
   `client/src/lib/components/RulesOverview.svelte`: a dismissible panel
   rendering the core game loop in docent voice — a player writes a
   phrase, the next player draws it having never seen the original
