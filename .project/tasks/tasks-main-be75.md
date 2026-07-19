@@ -1,7 +1,7 @@
 ---
 plan: plan-main-2026-07-19-05fb.md
 generated: 2026-07-19
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -35,7 +35,7 @@ status: in-progress
   fails before the change and passes after.
 
 ## Phase 3: Full-suite verification
-- [ ] T004 Run the full test suite, typecheck, and lint across the
+- [x] T004 Run the full test suite, typecheck, and lint across the
   monorepo (shared/server/client workspaces). Confirm everything is
   green, including all existing `DrawingCanvas.test.ts` and
   `WritingDrawing.test.ts` coverage — no regressions from T002/T003.
