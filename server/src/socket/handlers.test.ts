@@ -18,6 +18,7 @@ import {
   onEndGame,
   onKickPlayer,
   onRestartGame,
+  onSetLapsPerBook,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -471,6 +472,68 @@ describe('onSetTurnTimer', () => {
 
     expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
     expect(room.turnTimerMinutes).toBeNull();
+  });
+});
+
+describe('onSetLapsPerBook', () => {
+  it('lets the host set Room.lapsPerBook to 1, 2, or 3 while the room is in lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetLapsPerBook(socket, store, { roomId: room.id, playerId: adaId, lapsPerBook: 3 }, ack);
+
+    expect(room.lapsPerBook).toBe(3);
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('rejects an invalid lapsPerBook value with invalid-laps-per-book', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetLapsPerBook(
+      socket,
+      store,
+      // @ts-expect-error intentionally invalid input for this test
+      { roomId: room.id, playerId: adaId, lapsPerBook: 4 },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-laps-per-book' });
+    expect(room.lapsPerBook).toBeNull();
+  });
+
+  it('rejects a non-host caller with not-host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetLapsPerBook(socket, store, { roomId: room.id, playerId: graceId, lapsPerBook: 2 }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(room.lapsPerBook).toBeNull();
+  });
+
+  it('rejects setting laps per book once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetLapsPerBook(socket, store, { roomId: room.id, playerId: adaId, lapsPerBook: 2 }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.lapsPerBook).toBeNull();
   });
 });
 

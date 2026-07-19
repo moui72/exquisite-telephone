@@ -29,7 +29,7 @@ status: in-progress
 
 ## Phase 2: Server: setter + start-game resolution
 
-- [ ] T003 [artifacts: datamodel] Write a failing server test in
+- [x] T003 [artifacts: datamodel] Write a failing server test in
   `handlers.test.ts` for a new `onSetLapsPerBook` handler: accepted
   (updates `Room.lapsPerBook` and broadcasts) only when the caller is
   host and `Room.status === 'lobby'`, and only for input `1 | 2 | 3`

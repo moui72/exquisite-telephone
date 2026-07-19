@@ -199,6 +199,52 @@ export function onSetTurnTimer(
   ack({ room });
 }
 
+export interface SetLapsPerBookInput {
+  roomId: string;
+  playerId: string;
+  lapsPerBook: 1 | 2 | 3;
+}
+
+export interface SetLapsPerBookAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.lapsPerBook` (ui.md Lobby View
+ * laps control), mirroring onSetTurnTimer's exact guard shape. Only
+ * `1 | 2 | 3` are accepted; anything else is rejected with
+ * `invalid-laps-per-book`.
+ */
+export function onSetLapsPerBook(
+  socket: Socket,
+  store: RoomStore,
+  input: SetLapsPerBookInput,
+  ack: (response: SetLapsPerBookAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+  if (input.lapsPerBook !== 1 && input.lapsPerBook !== 2 && input.lapsPerBook !== 3) {
+    ack({ error: 'invalid-laps-per-book' });
+    return;
+  }
+
+  room.lapsPerBook = input.lapsPerBook;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface SetMonochromeInput {
   roomId: string;
   playerId: string;
