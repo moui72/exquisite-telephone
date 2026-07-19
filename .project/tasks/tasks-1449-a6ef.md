@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: ui.md clarification
 
-- [ ] T001 [artifacts: ui] In `ui.md`'s Visual Identity section, add:
+- [x] T001 [artifacts: ui] In `ui.md`'s Visual Identity section, add:
   (a) an explicit statement that the color tokens and type pairing
   apply to every view's chrome globally — page backgrounds, headings,
   body text, borders, and controls — not solely to the `GiltFrame`

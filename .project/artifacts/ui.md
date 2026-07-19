@@ -249,6 +249,32 @@ artifact appears in the game: the room card (Lobby View), the
 canvas/text-entry surface (Writing / Drawing View, "the easel"), and
 each book (Reveal View, "the gallery wall").
 
+**Applies globally, not just to GiltFrame:** the color tokens and type
+pairing above are the theme for every view's chrome — page backgrounds,
+headings, body text, labels, borders, and controls — not solely the
+`GiltFrame` component. Any screen or element still using Tailwind's
+default slate-gray/white palette is a gap to close, not an accepted
+exception (see F001 in `.project/feedback/feedback-main-5fdc.md`).
+
+**Slate-to-token mapping** (the concrete rule for replacing leftover
+default-Tailwind styling with theme tokens):
+
+| Current | Replace with |
+|---|---|
+| `text-slate-900` / `text-slate-800` | `text-ink` |
+| `text-slate-700` | `text-ink/90` |
+| `text-slate-600` | `text-ink/75` |
+| `text-slate-500` | `text-ink/60` |
+| `text-slate-400` | `text-ink/45` |
+| `border-slate-200` (decorative dividers/card borders) | `border-marigold/30` |
+| `bg-slate-800` (primary buttons) | `bg-bubblegum` |
+| `bg-slate-100` (placeholder/cover boxes) | `bg-butter` |
+| plain unstyled/gray secondary buttons (`border` with no color) | `border-marigold/60 bg-butter text-ink` |
+
+Functional status colors (error/red, timeout-warning/amber,
+success/grass) are excluded from this mapping — they encode meaning,
+not leftover default styling.
+
 **Docent Voice — copy register:** all UI copy (labels, button text,
 errors, empty states) is written in a mock-formal salon/gallery
 register — overly formal to the point of silliness — rather than plain
