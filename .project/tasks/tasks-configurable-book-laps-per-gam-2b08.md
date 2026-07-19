@@ -49,7 +49,7 @@ status: in-progress
 
 ## Phase 3: Client: Lobby control
 
-- [ ] T005 [artifacts: ui] Write a failing test in `session.test.ts`
+- [x] T005 [artifacts: ui] Write a failing test in `session.test.ts`
   (or wherever `setTurnTimer`/`setMonochrome` are tested) asserting a
   new `setLapsPerBook` method emits the `set_laps_per_book` event with
   the given value. Confirm failure, then implement in

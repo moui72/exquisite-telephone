@@ -26,6 +26,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     submitEntry: vi.fn(async () => {}),
     setMonochrome: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
+    setLapsPerBook: vi.fn(async () => {}),
     castTimeoutVote: vi.fn(async () => {}),
     endGame: vi.fn(async () => {}),
     leaveGame: vi.fn(),
