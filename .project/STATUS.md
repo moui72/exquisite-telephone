@@ -1,6 +1,23 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-refine ui` ran: documented this session's
+_Updated: 2026-07-19 (`/ardd-plan in-game-rules-and-guidance` ran:
+designed and applied the feature's `ui.md` changes — a new "Rules
+Overview Panel" section (core-loop explanation, reachable from both
+the Foyer and Lobby via a "How this salon works" link), a docent-voice
+turn hint added to the Writing/Drawing View (distinct per `Entry.type`),
+and an info-affordance convention (`(?)` tooltip) applied to all three
+host settings (force monochrome, turn timer, laps per book). Pure
+client-side content/UI — no `datamodel.md`/`infrastructure.md` changes
+needed. `ui.md` stays `stable`, `diagram_status` stale (textual only,
+no new top-level component nodes worth diagramming differently — this
+is content inside existing views). Plan
+`plan-in-game-rules-and-guidance-2026-07-19-5540.md` approved (4
+phases: Rules Overview Panel, turn hints, host-setting tooltips,
+full-suite verification); tasks file
+`tasks-in-game-rules-and-guidance-4c59.md` generated and `ready` (6
+tasks, every task except the final verification carries a
+failing-test-first requirement). Feature flipped `backlogged` ->
+`planned` -> `tasked`. Prior entry: `/ardd-refine ui` ran: documented this session's
 two design changes that had shipped ahead of the artifact — the Foyer
 (pre-room hero heading + tagline, create/join form wrapped in a
 `GiltFrame` captioned "The Foyer — RSVP Required") added to the Lobby
@@ -410,15 +427,15 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 0 tasked · 9 implemented — see
-`.project/features/`. Target a backlogged slug with `/ardd-plan <slug>`.
+0 backlogged · 0 planned · 1 tasked · 9 implemented — see
+`.project/features/`.
 
-- `in-game-rules-and-guidance` (**backlogged**) — a rules-overview
-  panel, explanatory text on the write/draw turn interface, and
-  tooltips/info links for every host-configurable setting (turn timer,
-  laps per book, monochrome toggle, minimum-player override), plus any
-  other spots that turn out to need guiding text. The game currently has
-  no onboarding/explanation surface at all.
+- `in-game-rules-and-guidance` (**tasked**) — a rules-overview panel,
+  explanatory text on the write/draw turn interface, and tooltips/info
+  links for every host-configurable setting. Plan:
+  `plan-in-game-rules-and-guidance-2026-07-19-5540.md` (approved, 4
+  phases). Tasks: `tasks-in-game-rules-and-guidance-4c59.md` (`ready`,
+  0/6).
 
 - `configurable-book-laps-per-gam` (**implemented**) — game-creation
   setting for how many laps each book takes before the game ends and
@@ -644,11 +661,11 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. Worth doing: `/ardd-plan in-game-rules-and-guidance`
-whenever ready to design the rules/guidance feature, a fresh
-`/ardd-defects` pass to clear the now-fixed `62ab502f` entry from
-`DEFECTS.md`'s snapshot, `/ardd-diagram ui` to clear the diagram's
-`stale` stamp (no content change expected), and a look through
+Run `/ardd-implement` to execute `tasks-in-game-rules-and-guidance-4c59.md`
+(Rules Overview Panel, turn hints, host-setting tooltips). Separately
+worth doing: a fresh `/ardd-defects` pass to clear the now-fixed
+`62ab502f` entry from `DEFECTS.md`'s snapshot, `/ardd-diagram ui` to
+clear the diagram's `stale` stamp, and a look through
 `.project/audit.md`'s open findings (5 questions, 3 risks — one, the
 Performance Budgets question, is now moot per this session's
 constitution trim) to decide which of the rest merit a refine or

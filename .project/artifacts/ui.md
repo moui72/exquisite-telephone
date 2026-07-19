@@ -29,7 +29,9 @@ one-line docent-voice tagline) above a create/join form, itself wrapped
 in a Gilt Frame captioned "The Foyer — RSVP Required" — the same
 signature component used everywhere else an artifact appears, so the
 very first screen already reads as part of the salon rather than a
-bare utility form.
+bare utility form. A "How this salon works" link opens the Rules
+Overview Panel (see below) — a new player's first chance to understand
+the game before committing to a room.
 
 Once a room exists, it's framed as an RSVP/guest-list card (see Visual
 Identity below) — the room code and player list read like names
@@ -38,11 +40,15 @@ shareable room code); other players join by entering the code and a
 display name. Shows connected players and a "start game" control
 visible only to the host. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
-state. The host also
+state. The "How this salon works" link from the Foyer (see above) stays
+available here too. The host also
 sees a "force monochrome" toggle (default off) that sets
 `Room.monochromeOnly`, hiding the color palette for everyone's drawing
 tool for the whole game (see Writing / Drawing View below) — not
-visible or editable once the game has started.
+visible or editable once the game has started. An info affordance next
+to the toggle explains what it does before the host picks a value (see
+Rules Overview Panel below for the info-affordance convention shared by
+all three host settings here).
 
 The host sees player-count guidance ("recommend 4+ players, minimum
 3") next to the player list. Below 3 players, an "I know this won't
@@ -54,7 +60,9 @@ The host also sees a per-turn timer selector (off / 15m / 30m / 1hr /
 4hr / 12hr — off by default) that sets `Room.turnTimerMinutes`. Off
 means the room waits indefinitely for the current round (see Writing /
 Drawing View); a duration means the room can advance a stalled round
-via the timeout-vote flow described there.
+via the timeout-vote flow described there. An info affordance next to
+the selector explains the timeout-vote consequence of picking a
+duration.
 
 The host also sees a "laps per book" control (1 / 2 / 3) that sets
 `Room.lapsPerBook`. Until the host explicitly picks a value, it shows a
@@ -62,7 +70,29 @@ live-derived default that recalculates as players join or leave (2
 under 5 players, 1 otherwise — see [[datamodel]] Normalization Rules —
 Laps per book); the moment the host touches the control, it locks to
 their choice and stops tracking player count for the rest of the
-room's life.
+room's life. An info affordance next to the control explains what a
+"lap" means in terms of how many times the book passes around the
+circle before Reveal.
+
+## Rules Overview Panel
+
+A dismissible panel explaining the core game loop in docent voice: a
+player writes a phrase, the next player draws it having never seen the
+original text, the next player writes a new phrase from only the
+drawing, and so on around the circle — Reveal then shows the whole
+chain, phrase to drawing to phrase, so everyone sees how far it
+drifted. Opened via a "How this salon works" link/button, available
+from both the Foyer (before any room exists) and the Lobby (once in a
+room) — the same panel content either way, just reachable from two
+points in the flow. Not shown automatically; a player who already
+knows the game is never interrupted by it.
+
+The same lightweight info-affordance pattern (a small `(?)` control
+that reveals a short explanation on tap/click, docent voice, no
+separate modal) is reused for every host-configurable setting in the
+Lobby View above — the force-monochrome toggle, the turn timer
+selector, and the laps-per-book control — so a host understands a
+setting's consequence before choosing a value, not just its label.
 
 ## Moderation Panel
 
@@ -108,7 +138,13 @@ piece for the salon" framing is consistent turn to turn. The core
 gameplay loop. Each player sees either a text-entry prompt
 (write a phrase) or a canvas (draw the previous phrase), depending on
 `Entry.type` for their current turn, driven entirely by server-broadcast
-room state (Principle VI — no client-side authoritative state). The
+room state (Principle VI — no client-side authoritative state). A short
+docent-voice hint above the prompt/canvas states the turn's actual job,
+distinct per `Entry.type` — the write turn's hint makes clear the
+player is writing blind from only the drawing before them (never told
+the original phrase), and the draw turn's hint makes clear they should
+draw exactly what the phrase says, no more and no less — since a new
+player can't infer either rule just from seeing an empty input. The
 canvas uses pointer events for mobile-friendly touch drawing (Principle
 II / touch cleanup quality standard), with listeners registered and torn
 down across Svelte's component lifecycle. Pointer coordinates are
