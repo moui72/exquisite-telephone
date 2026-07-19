@@ -16,6 +16,7 @@
     '#22c55e',
     '#3b82f6',
     '#8b5cf6',
+    '#ffffff',
   ];
 
   /** 3 line-width presets (thin/medium/thick), in canvas pixels. */
@@ -190,9 +191,11 @@
         {#each PALETTE_COLORS as color (color)}
           <button
             type="button"
-            class="h-6 w-6 rounded-full border-2"
-            class:border-velvet={activeColor === color}
-            class:border-transparent={activeColor !== color}
+            class="h-6 w-6 rounded-full border-2 {activeColor === color
+              ? 'border-velvet'
+              : color === '#ffffff'
+                ? 'border-marigold/30'
+                : 'border-transparent'}"
             style="background-color: {color};"
             aria-label="Color {color}"
             aria-pressed={activeColor === color}

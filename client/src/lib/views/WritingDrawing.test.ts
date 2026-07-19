@@ -339,6 +339,47 @@ describe('Writing/Drawing view', () => {
     expect(session.submitEntry).toHaveBeenCalledWith('book-ada', 'a spoonful of sugar');
   });
 
+  it('disables the drawing submit button until a stroke has been drawn (T001 regression: empty-canvas click was a silent no-op with no user feedback)', async () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+      ],
+    };
+    const room = makeRoom([adaBook]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    const { container } = render(WritingDrawing, { props: { session } });
+
+    const submitButton = screen.getByRole('button', { name: /present your contribution/i });
+    expect(submitButton).toBeDisabled();
+
+    const canvas = container.querySelector('canvas')!;
+    const down = new MouseEvent('pointerdown', { clientX: 0, clientY: 0, bubbles: true });
+    Object.defineProperty(down, 'pointerId', { value: 1 });
+    const move = new MouseEvent('pointermove', { clientX: 10, clientY: 10, bubbles: true });
+    Object.defineProperty(move, 'pointerId', { value: 1 });
+    const up = new MouseEvent('pointerup', { clientX: 10, clientY: 10, bubbles: true });
+    Object.defineProperty(up, 'pointerId', { value: 1 });
+    await fireEvent(canvas, down);
+    await fireEvent(canvas, move);
+    await fireEvent(canvas, up);
+
+    expect(submitButton).not.toBeDisabled();
+
+    await fireEvent.click(submitButton);
+    expect(session.submitEntry).toHaveBeenCalledWith('book-ada', expect.any(String));
+  });
+
   it('shows a "game can\'t continue" notice to every player when Room.nonContinuable is true', () => {
     const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
     const room = { ...makeRoom([adaBook]), nonContinuable: true };

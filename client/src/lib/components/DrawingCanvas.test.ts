@@ -240,6 +240,32 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     vi.restoreAllMocks();
   });
 
+  it('includes a white swatch in the palette, with a visible default border, and uses it for new strokes once selected (F002)', async () => {
+    const onOpsChange = vi.fn();
+    const { container, getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange },
+    });
+
+    const whiteSwatch = getByLabelText('Color #ffffff');
+    expect(whiteSwatch).toBeInTheDocument();
+    // Visible by default (not selected yet) against the butter/60 toolbar
+    // background -- distinct from border-transparent, which the other
+    // swatches use when inactive.
+    expect(whiteSwatch.className).toMatch(/border-marigold\/30/);
+
+    const canvas = container.querySelector('canvas')!;
+    await fireEvent.click(whiteSwatch);
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointerup', 10, 10);
+
+    expect(onOpsChange).toHaveBeenCalled();
+    const calls = onOpsChange.mock.calls;
+    const ops = calls[calls.length - 1][0];
+    expect(ops[ops.length - 1].color).toBe('#ffffff');
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;
