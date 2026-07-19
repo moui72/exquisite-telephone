@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-18
-plan: null
+plan: plan-1449-2026-07-18-2ce0.md
 ---
 
 # Feedback
 
 ## UX
 
-- [ ] F001 The `salon-gallery-ui-redesign` implementation only actually
+- [x] F001 The `salon-gallery-ui-redesign` implementation only actually
   reskinned the `GiltFrame` component itself (`bg-butter`,
   `border-marigold`, `text-ink`/`font-mono` plaque caption) — everywhere
   else in the app is still stock default Tailwind slate-gray/white with
