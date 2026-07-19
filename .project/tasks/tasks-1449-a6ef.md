@@ -53,7 +53,7 @@ status: in-progress
 - [x] T006 [artifacts: ui] [parallel] Same treatment for
   `ModerationPanel.svelte` (source-scan test added to
   `ModerationPanel.test.ts`).
-- [ ] T007 [artifacts: ui] [parallel] Same treatment for
+- [x] T007 [artifacts: ui] [parallel] Same treatment for
   `App.svelte`'s terminal-state `<main>` blocks (Reconnecting,
   game-ended, Kicked, Ended) — currently all `text-slate-600` — plus a
   source-scan test added to `App.test.ts`.
