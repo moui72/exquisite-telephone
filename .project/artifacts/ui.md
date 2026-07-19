@@ -23,11 +23,20 @@ display name entered at join time.
 
 ## Lobby View
 
-Framed as an RSVP/guest-list card (see Visual Identity below) — the
-room code and player list read like names checked in at the door of a
-salon. Host creates a room (gets a shareable room code); other players
-join by entering the code and a display name. Shows connected players
-and a "start game" control visible only to the host. Reflects
+Before any room exists, players land on the Foyer: a centered hero
+(the app's gilded title treatment — see Visual Identity — plus a
+one-line docent-voice tagline) above a create/join form, itself wrapped
+in a Gilt Frame captioned "The Foyer — RSVP Required" — the same
+signature component used everywhere else an artifact appears, so the
+very first screen already reads as part of the salon rather than a
+bare utility form.
+
+Once a room exists, it's framed as an RSVP/guest-list card (see Visual
+Identity below) — the room code and player list read like names
+checked in at the door of a salon. Host creates a room (gets a
+shareable room code); other players join by entering the code and a
+display name. Shows connected players and a "start game" control
+visible only to the host. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
 state. The host also
 sees a "force monochrome" toggle (default off) that sets
@@ -141,7 +150,10 @@ instead.
 
 ## Reveal View
 
-Framed as a gallery opening (see Visual Identity below) — each book is
+Opens on its own title-page moment — "The Gallery Opens" in the app's
+gilded title treatment (see Visual Identity below) plus a one-line
+docent-voice tagline ("Every book, unveiled.") — before the book grid
+itself. Framed as a gallery opening (see Visual Identity below) — each book is
 presented inside the Gilt Frame component with an engraved plaque
 caption underneath (mock-formal exhibit title, e.g. "Exhibit No. 3 —
 Untitled, Mixed Media, Anonymous"), unveiled one at a time under a
@@ -254,12 +266,24 @@ axis, used sparingly for titles and plaque captions) paired with Rubik
 (utility — room codes, timers, plaque numbers; reads like a stamped
 ticket).
 
+**Gilded title treatment:** the app's two title-page moments — the
+Foyer's splash heading ("Exquisite Telephone") and the Reveal View's
+opening header ("The Gallery Opens") — use a fourth face, Uncial
+Antiqua (an uncial script modeled on real illuminated-manuscript
+lettering), set in a gold gradient clipped to the text with a soft ink
+drop-shadow for an embossed, gilt-leaf feel. Reserved for exactly these
+two moments — never applied to body copy, plaque captions, or any
+other heading — so the effect stays a deliberate, occasional flourish
+rather than diluting into the everyday type system.
+
 **Signature element — the Gilt Frame:** a reusable component, an ornate
 CSS-drawn gold frame with a small engraved plaque underneath bearing a
 mock-formal caption. It is the one visual element reused everywhere an
-artifact appears in the game: the room card (Lobby View), the
+artifact appears in the game — the room card (Lobby View), the
 canvas/text-entry surface (Writing / Drawing View, "the easel"), and
-each book (Reveal View, "the gallery wall").
+each book (Reveal View, "the gallery wall") — plus the Foyer's
+create/join form itself, so the game's very first screen already
+carries the same signature before any artifact exists yet.
 
 **Applies globally, not just to GiltFrame:** the color tokens and type
 pairing above are the theme for every view's chrome — page backgrounds,

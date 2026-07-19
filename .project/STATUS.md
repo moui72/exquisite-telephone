@@ -1,6 +1,25 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-plan` ran (no feature slug — artifacts/
+_Updated: 2026-07-19 (`/ardd-refine ui` ran: documented this session's
+two design changes that had shipped ahead of the artifact — the Foyer
+(pre-room hero heading + tagline, create/join form wrapped in a
+`GiltFrame` captioned "The Foyer — RSVP Required") added to the Lobby
+View section, and Reveal's "The Gallery Opens" title moment added to
+the Reveal View section. Visual Identity gained a new "Gilded title
+treatment" paragraph documenting the `font-title`/Uncial Antiqua token
+(reserved for exactly these two title-page moments, never applied
+elsewhere) and the Gilt Frame description now notes its fourth usage
+site (the Foyer form). Pure documentation catch-up — no new capability
+introduced, nothing routed to the feature register. `last_updated`
+stamped, `diagram_status` flipped `stale` (textual only, no new
+component nodes). Prior entry: `/ardd-implement` ran `tasks-main-1f13.md` end to
+end, inline (not delegated — a trivial one-line doc fix, lower overhead
+than a full worktree subagent): T001 added `onSetLapsPerBook` to
+`infrastructure.md`'s Realtime Sync handler list, verified via
+`git diff`. Tasks file flipped `completed` (1/1); no bound features.
+Committed directly to `main` (`9364dee`, pre-commit hook green: lint/
+typecheck/full suite). `DEFECTS.md`'s one open defect (`62ab502f`) is
+now fixed. Prior entry: `/ardd-plan` ran (no feature slug — artifacts/
 feedback/defects only): surfaced the one unsurfaced defect
 (`62ab502f`, `onSetLapsPerBook` missing from `infrastructure.md`'s
 handler list), accepted. Plan `plan-main-2026-07-19-b1d5.md` approved
@@ -326,23 +345,24 @@ a plan.)_
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — stale ⚠️ (run /ardd-diagram ui)
+- ui.md — stale ⚠️ (run /ardd-diagram ui — textual-only change, no new
+  component nodes, so the diagram content itself won't actually change,
+  just its `current` stamp)
 
 ## Code-vs-Artifact Defects
 
-1 defect on file — see `.project/DEFECTS.md`, last checked 2026-07-19
-(fresh full pass). The prior performance-budget drift entry is gone
-(its underlying Quality Standard was trimmed this session as
-non-load-bearing — no claim left to check).
-- **cosmetic** (`infrastructure.md`, Realtime Sync): the handler list
-  is missing `onSetLapsPerBook` — it exists and works
-  (`server/src/socket/handlers.ts:221`), just isn't enumerated in the
-  doc. Likely missed when `configurable-book-laps-per-gam` shipped.
+0 defects on file as of the last full pass (2026-07-15) plus this
+session's targeted fix — `.project/DEFECTS.md` itself still shows its
+2026-07-19 snapshot (1 defect, `62ab502f`) since fixing the underlying
+issue doesn't retroactively rewrite that file; it will read clean on
+the next full `/ardd-defects` pass. The prior performance-budget drift
+entry is also gone (its Quality Standard was trimmed this session as
+non-load-bearing).
 
-Also flagged (not a defect — code ahead of docs, routed to a future
-`/ardd-refine ui` pass): `ui.md`'s Visual Identity section doesn't yet
-describe this session's `font-title`/Uncial Antiqua gilded treatment or
-the pre-room "Foyer" `GiltFrame` wrap.
+The previously-flagged code-ahead-of-docs gap (`ui.md`'s Visual Identity
+section missing the `font-title`/Uncial Antiqua treatment and the Foyer
+`GiltFrame` wrap) is now closed — `/ardd-refine ui` documented both this
+session.
 
 ## Feedback
 
@@ -624,12 +644,12 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Run `/ardd-implement` to execute `tasks-main-1f13.md` (documents
-`onSetLapsPerBook` in `infrastructure.md`). Separately worth doing:
-`/ardd-refine ui` to document this session's `font-title`/Foyer changes
-in `ui.md`'s Visual Identity section, `/ardd-plan
-in-game-rules-and-guidance` whenever ready to design the rules/guidance
-feature, and a look through `.project/audit.md`'s open findings (5
-questions, 3 risks — one, the Performance Budgets question, is now moot
-per this session's constitution trim) to decide which of the rest merit
-a refine or backlog entry.
+Nothing blocking. Worth doing: `/ardd-plan in-game-rules-and-guidance`
+whenever ready to design the rules/guidance feature, a fresh
+`/ardd-defects` pass to clear the now-fixed `62ab502f` entry from
+`DEFECTS.md`'s snapshot, `/ardd-diagram ui` to clear the diagram's
+`stale` stamp (no content change expected), and a look through
+`.project/audit.md`'s open findings (5 questions, 3 risks — one, the
+Performance Budgets question, is now moot per this session's
+constitution trim) to decide which of the rest merit a refine or
+backlog entry.
