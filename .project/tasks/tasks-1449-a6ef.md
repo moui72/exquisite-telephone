@@ -33,7 +33,7 @@ status: in-progress
 
 ## Phase 3: Per-view reskin
 
-- [ ] T003 [artifacts: ui] [parallel] In `Lobby.svelte`, replace every
+- [x] T003 [artifacts: ui] [parallel] In `Lobby.svelte`, replace every
   `text-slate-*`/`bg-slate-800`/plain-gray-border class with its mapped
   token per T001's table (the "start game" button becomes
   `bg-bubblegum`; the page heading gets `font-display`). Add a

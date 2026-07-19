@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { describe, expect, it, vi } from 'vitest';
@@ -352,6 +354,13 @@ describe('Lobby view', () => {
       const alert = screen.getByRole('alert');
       expect(alert.textContent).not.toContain('some-unmapped-code');
       expect(alert.textContent?.length ?? 0).toBeGreaterThan(0);
+    });
+  });
+
+  describe('theme regression guard (plan-1449)', () => {
+    it('contains no leftover default-Tailwind slate- classes', () => {
+      const source = readFileSync(resolve(__dirname, './Lobby.svelte'), 'utf-8');
+      expect(source).not.toMatch(/slate-/);
     });
   });
 });

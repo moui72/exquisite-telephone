@@ -71,7 +71,7 @@
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
-  <h1 class="text-2xl font-semibold text-slate-800">Exquisite Telephone</h1>
+  <h1 class="text-2xl font-semibold font-display text-ink">Exquisite Telephone</h1>
 
   {#if !state.room}
     <div role="tablist" aria-label="Join or create a room" class="flex gap-2">
@@ -79,9 +79,11 @@
         type="button"
         role="tab"
         aria-selected={mode === 'create'}
-        class="flex-1 rounded-md border px-4 py-2 text-sm font-medium"
-        class:bg-slate-800={mode === 'create'}
+        class="flex-1 rounded-md border border-marigold/60 px-4 py-2 text-sm font-medium"
+        class:bg-bubblegum={mode === 'create'}
         class:text-white={mode === 'create'}
+        class:bg-butter={mode !== 'create'}
+        class:text-ink={mode !== 'create'}
         on:click={() => (mode = 'create')}
       >
         Create room
@@ -90,9 +92,11 @@
         type="button"
         role="tab"
         aria-selected={mode === 'join'}
-        class="flex-1 rounded-md border px-4 py-2 text-sm font-medium"
-        class:bg-slate-800={mode === 'join'}
+        class="flex-1 rounded-md border border-marigold/60 px-4 py-2 text-sm font-medium"
+        class:bg-bubblegum={mode === 'join'}
         class:text-white={mode === 'join'}
+        class:bg-butter={mode !== 'join'}
+        class:text-ink={mode !== 'join'}
         on:click={() => (mode = 'join')}
       >
         Join room
@@ -100,10 +104,10 @@
     </div>
 
     <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
-      <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+      <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
         Display name
         <input
-          class="rounded-md border px-3 py-2 text-base"
+          class="rounded-md border border-marigold/30 px-3 py-2 text-base"
           type="text"
           required
           bind:value={displayName}
@@ -112,10 +116,10 @@
       </label>
 
       {#if mode === 'join'}
-        <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+        <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
           Room code
           <input
-            class="rounded-md border px-3 py-2 text-base uppercase tracking-widest"
+            class="rounded-md border border-marigold/30 px-3 py-2 text-base uppercase tracking-widest"
             type="text"
             required
             bind:value={roomCodeInput}
@@ -130,7 +134,7 @@
 
       <button
         type="submit"
-        class="rounded-md bg-slate-800 px-4 py-2 text-base font-medium text-white"
+        class="rounded-md bg-bubblegum px-4 py-2 text-base font-medium text-white"
       >
         {mode === 'create' ? 'Create room' : 'Join room'}
       </button>
@@ -140,15 +144,15 @@
       <ModerationPanel {session} />
 
       <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
-        <p class="text-sm text-slate-600">Room code</p>
-        <p class="text-3xl font-bold tracking-widest text-slate-900">{state.room.id}</p>
+        <p class="text-sm text-ink/75">Room code</p>
+        <p class="text-3xl font-bold tracking-widest text-ink">{state.room.id}</p>
 
         <ul class="flex flex-col gap-2">
           {#each state.room.players as player (player.id)}
-            <li class="rounded-md border px-3 py-2 text-base">
+            <li class="rounded-md border border-marigold/30 px-3 py-2 text-base">
               {player.name}
               {#if player.id === state.room.hostPlayerId}
-                <span class="text-xs text-slate-500">(host)</span>
+                <span class="text-xs text-ink/60">(host)</span>
               {/if}
             </li>
           {/each}
@@ -156,7 +160,7 @@
       </GiltFrame>
 
       {#if isHost}
-        <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+        <label class="flex items-center gap-2 text-sm font-medium text-ink/90">
           <input
             type="checkbox"
             checked={state.room.monochromeOnly}
@@ -165,10 +169,10 @@
           Enforce a Monochrome Decree
         </label>
 
-        <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+        <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
           Allotted Contemplation Period
           <select
-            class="rounded-md border px-3 py-2 text-base"
+            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
             value={state.room.turnTimerMinutes ?? ''}
             on:change={handleTurnTimerChange}
           >
@@ -178,12 +182,12 @@
           </select>
         </label>
 
-        <p class="text-xs text-slate-500">
+        <p class="text-xs text-ink/60">
           Player count: recommend 4+ players, minimum 3.
         </p>
 
         {#if belowMinimumPlayers}
-          <label class="flex items-start gap-2 text-sm text-slate-700">
+          <label class="flex items-start gap-2 text-sm text-ink/90">
             <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
             I am aware this salon is intimately attended (fewer than three guests) and wish to proceed
             nonetheless
