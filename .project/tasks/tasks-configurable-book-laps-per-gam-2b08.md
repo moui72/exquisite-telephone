@@ -1,7 +1,7 @@
 ---
 plan: plan-configurable-book-laps-per-gam-2026-07-18-37ca.md
 generated: 2026-07-18
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -66,6 +66,6 @@ status: in-progress
 
 ## Phase 4: Full-suite verification
 
-- [ ] T007 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
+- [x] T007 Run `pnpm run lint`, `pnpm run typecheck`, and `pnpm run
   test` across the whole workspace; confirm all green with no
   regressions.
