@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -190,5 +192,12 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     await fireEvent.click(screen.getByText('Moderation'));
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});
+
+describe('theme regression guard (plan-1449)', () => {
+  it('contains no leftover default-Tailwind slate- classes', () => {
+    const source = readFileSync(resolve(__dirname, './ModerationPanel.svelte'), 'utf-8');
+    expect(source).not.toMatch(/slate-/);
   });
 });

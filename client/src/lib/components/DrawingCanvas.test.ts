@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DrawingCanvas from './DrawingCanvas.svelte';
@@ -247,5 +249,24 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(removeSpy).toHaveBeenCalledWith('pointerdown', expect.any(Function));
     expect(removeSpy).toHaveBeenCalledWith('pointermove', expect.any(Function));
     expect(removeSpy).toHaveBeenCalledWith('pointerup', expect.any(Function));
+  });
+});
+
+describe('theme regression guard (plan-1449)', () => {
+  it('the toolbar template contains no leftover slate- or bg-white classes (the canvas element\'s own bg-white is correct and out of scope)', () => {
+    const source = readFileSync(resolve(__dirname, './DrawingCanvas.svelte'), 'utf-8');
+
+    // Scope the scan to the toolbar's template region only: from the
+    // `{#if !readOnly}` wrapper up to (but not including) the `<canvas`
+    // element, so the canvas's own intentional `bg-white` "page" surface
+    // is never part of this assertion (plan-1449 explicit carve-out).
+    const toolbarStart = source.indexOf('{#if !readOnly}');
+    const canvasStart = source.indexOf('<canvas');
+    expect(toolbarStart).toBeGreaterThan(-1);
+    expect(canvasStart).toBeGreaterThan(toolbarStart);
+
+    const toolbarTemplate = source.slice(toolbarStart, canvasStart);
+    expect(toolbarTemplate).not.toMatch(/slate-/);
+    expect(toolbarTemplate).not.toMatch(/bg-white/);
   });
 });

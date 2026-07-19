@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, render, screen } from '@testing-library/svelte';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
@@ -75,5 +77,12 @@ revealStartedAt: null,
 
     expect(screen.getAllByText(/piece presented/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/a very secret phrase/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('theme regression guard (plan-1449)', () => {
+  it('contains no leftover default-Tailwind slate- classes', () => {
+    const source = readFileSync(resolve(__dirname, './TurnStatus.svelte'), 'utf-8');
+    expect(source).not.toMatch(/slate-/);
   });
 });

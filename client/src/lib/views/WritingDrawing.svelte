@@ -137,35 +137,35 @@
 
   {#if canVoteOnTimeout}
     <div class="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4">
-      <p class="text-sm text-slate-700">
+      <p class="text-sm text-ink/90">
         {stalledPlayerNames} has yet to present their contribution to the salon. How shall the house
         proceed?
       </p>
       <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('full')}
         >
           Grant a Full Turn
         </button>
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('half')}
         >
           Grant a Half Turn
         </button>
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('15m')}
         >
           Grant Fifteen Minutes
         </button>
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('force-empty')}
         >
           Declare the Turn Forfeit
@@ -176,17 +176,17 @@
 
   {#if !myTurn}
     {#if waitingForRoundToFinish}
-      <p class="text-lg text-slate-600">Awaiting the round's conclusion…</p>
+      <p class="text-lg text-ink/75">Awaiting the round's conclusion…</p>
     {:else}
-      <p class="text-lg text-slate-600">Awaiting your next commission…</p>
+      <p class="text-lg text-ink/75">Awaiting your next commission…</p>
     {/if}
   {:else}
     <GiltFrame caption="The Easel — Work in Progress">
       {#if previousEntry}
         <div class="flex flex-col gap-2">
-          <p class="text-sm text-slate-500">What the last player made:</p>
+          <p class="text-sm text-ink/60">What the last player made:</p>
           {#if previousEntry.type === 'text'}
-            <p class="text-xl font-medium text-slate-900">{previousEntry.content}</p>
+            <p class="text-xl font-medium text-ink">{previousEntry.content}</p>
           {:else}
             <DrawingCanvas ops={parseDrawOps(previousEntry.content)} readOnly />
           {/if}
@@ -195,7 +195,7 @@
 
       {#if myTurn.type === 'text'}
         <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitText}>
-          <label class="flex flex-col gap-1 text-sm font-medium text-slate-700">
+          <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
             Your phrase
             <input
               class="rounded-md border px-3 py-2 text-base"

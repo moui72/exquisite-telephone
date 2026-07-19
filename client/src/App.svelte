@@ -18,15 +18,15 @@
 
 {#if state.reconnecting}
   <main class="flex min-h-screen items-center justify-center p-6">
-    <p class="text-lg text-slate-600">Retrieving your ticket…</p>
+    <p class="text-lg text-ink/75">Retrieving your ticket…</p>
   </main>
 {:else if state.error === 'game-ended'}
   <main class="flex min-h-screen items-center justify-center p-6">
-    <p class="text-lg text-slate-600">The Exhibition has Closed.</p>
+    <p class="text-lg text-ink/75">The Exhibition has Closed.</p>
   </main>
 {:else if isKicked}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-slate-600">You have been asked to leave the salon by the host.</p>
+    <p class="text-lg text-ink/75">You have been asked to leave the salon by the host.</p>
     <button
       type="button"
       class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
@@ -43,7 +43,7 @@
   <Reveal {session} />
 {:else if state.room.status === 'ended'}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-slate-600">The Exhibition has Closed.</p>
+    <p class="text-lg text-ink/75">The Exhibition has Closed.</p>
     <button
       type="button"
       class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
