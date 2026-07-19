@@ -23,7 +23,7 @@ status: in-progress
   test fails before the fix and passes after. Depends on T001.
 
 ## Phase 2: Add white as a palette color (F002)
-- [ ] T003 [artifacts: ui] [parallel] In
+- [x] T003 [artifacts: ui] [parallel] In
   `client/src/lib/components/DrawingCanvas.svelte`, add `'#ffffff'` to
   the `PALETTE_COLORS` array. Give the white swatch a visible default
   border (e.g. `border-marigold/30` when not active, alongside the
