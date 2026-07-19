@@ -1,6 +1,55 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-implement` ran `tasks-main-be75.md` end to
+_Updated: 2026-07-19 (`/ardd-plan` ran (no feature slug — artifacts/
+feedback/defects only): surfaced the one unsurfaced defect
+(`62ab502f`, `onSetLapsPerBook` missing from `infrastructure.md`'s
+handler list), accepted. Plan `plan-main-2026-07-19-b1d5.md` approved
+(1 phase, pure documentation fix — no code changes, the handler already
+works correctly); tasks file `tasks-main-1f13.md` generated and `ready`
+(1 task; no bound features). `in-game-rules-and-guidance` stays
+`backlogged` — not targeted by slug this run, still available via
+`/ardd-plan in-game-rules-and-guidance`. Prior entry: `/ardd-backlog`
+logged `in-game-rules-and-guidance`:
+a rules-overview panel, explanatory text on the turn interface, and
+tooltips/info links for every host setting — the game currently has no
+onboarding/explanation surface at all. Backlogged, not yet planned.
+Prior entry: `/ardd-defects` ran a fresh full pass — **1 defect** found
+(down from 1, but a different one): `infrastructure.md`'s Realtime Sync
+handler list is missing `onSetLapsPerBook` (exists and works in
+`server/src/socket/handlers.ts:221`/`server.ts:16`, just undocumented —
+cosmetic, likely missed when laps-per-book shipped). `constitution.md`,
+`datamodel.md`, `ui.md` all clean (0 defects each). The prior
+standing-drift entry (no artifact states a performance budget) dropped
+out entirely — the Quality Standard it tracked was trimmed as
+non-load-bearing in this session's `/ardd-refine constitution --review`
+pass, so there's no longer a claim to check it against. `ui.md`'s survey
+also flagged 2 documented-but-undocumented-scope gaps (not defects — code
+ahead of docs): this session's `font-title`/Uncial Antiqua gilded
+treatment and the pre-room "Foyer" GiltFrame wrap aren't yet described in
+`ui.md`'s Visual Identity/Lobby View sections; routed to a future
+`/ardd-refine ui` pass, not tracked in `DEFECTS.md`. Prior entry:
+`/ardd-refine constitution --review` ran: audited
+all 10 Core Principles plus the 5 Quality Standards against the other
+artifacts and a codebase grep, not against their own prose. All 10
+Core Principles and 3 of 5 Quality Standards confirmed load-bearing
+(notably Principle IX/Observability, which the standing `audit.md`
+question flagged as undocumented in `infrastructure.md`/`datamodel.md` —
+but `server/src/observability/logger.ts` actually implements it
+faithfully; that's a docs gap, not a dead principle, left for a future
+non-review `/ardd-refine constitution` pass to close). Two Quality
+Standards trimmed on user confirmation: **Performance Budgets** (never
+satisfied across 5+ shipped features; a prior plan explicitly declined
+to fix it, carried as standing drift in `DEFECTS.md` — decorative, not
+enforced) and **No Vendored Dependency With a Nested `.git`** (zero
+vendored dependencies exist anywhere in the repo; never once invoked
+against a real decision). Version bumped 1.0.1 -> 1.1.0 (MINOR — removes
+governance surface), Sync Impact Report prepended, `last_updated`
+stamped. **Note**: this makes the standing `DEFECTS.md` performance-budget
+drift entry and the corresponding `audit.md` constitution question both
+moot — neither file was touched here (single-writer rule: `/ardd-defects`
+and `/ardd-audit` own them respectively), so both will keep reporting a
+now-nonexistent claim until their owning skill next runs and re-derives
+against the trimmed constitution. Prior entry: `/ardd-implement` ran `tasks-main-be75.md` end to
 end: delegated to a worktree subagent (solo mode, `delegation: eager`),
 all 4 tasks completed. **T001's live reproduction found the real bug**:
 the drawing submit button isn't disabled and isn't broken on a normal
@@ -281,13 +330,19 @@ a plan.)_
 
 ## Code-vs-Artifact Defects
 
-1 defect on file — see `.project/DEFECTS.md`, last checked 2026-07-15
-(fresh full pass; the two previously-recorded fixes reconfirmed clean
-in code and dropped from the file).
-- **drift** (`constitution.md`, Quality Standards): no artifact states
-  a performance budget for any real-time operation. Still deliberately
-  declined (`plan-4401-2026-07-14-7cf3.md`) — carried forward each
-  pass since declining the fix doesn't make the underlying claim true.
+1 defect on file — see `.project/DEFECTS.md`, last checked 2026-07-19
+(fresh full pass). The prior performance-budget drift entry is gone
+(its underlying Quality Standard was trimmed this session as
+non-load-bearing — no claim left to check).
+- **cosmetic** (`infrastructure.md`, Realtime Sync): the handler list
+  is missing `onSetLapsPerBook` — it exists and works
+  (`server/src/socket/handlers.ts:221`), just isn't enumerated in the
+  doc. Likely missed when `configurable-book-laps-per-gam` shipped.
+
+Also flagged (not a defect — code ahead of docs, routed to a future
+`/ardd-refine ui` pass): `ui.md`'s Visual Identity section doesn't yet
+describe this session's `font-title`/Uncial Antiqua gilded treatment or
+the pre-room "Foyer" `GiltFrame` wrap.
 
 ## Feedback
 
@@ -335,8 +390,15 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 0 tasked · 9 implemented — see
-`.project/features/`.
+1 backlogged · 0 planned · 0 tasked · 9 implemented — see
+`.project/features/`. Target a backlogged slug with `/ardd-plan <slug>`.
+
+- `in-game-rules-and-guidance` (**backlogged**) — a rules-overview
+  panel, explanatory text on the write/draw turn interface, and
+  tooltips/info links for every host-configurable setting (turn timer,
+  laps per book, monochrome toggle, minimum-player override), plus any
+  other spots that turn out to need guiding text. The game currently has
+  no onboarding/explanation surface at all.
 
 - `configurable-book-laps-per-gam` (**implemented**) — game-creation
   setting for how many laps each book takes before the game ends and
@@ -562,10 +624,12 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. Also worth doing at some point: run `/ardd-diagram ui`
-to refresh the stale `ui.md` diagram (no structural change, just to
-clear the flag), commit the still-pending `.project/ardd-version.md`
-from the earlier `/ardd-update`, and a look through `.project/audit.md`'s open findings (5
-questions, 3 risks) to decide which merit a refine or backlog entry, and
-a quick manual look at the new laps-per-book control in the lobby to
-confirm it reads right beyond what automated tests can check.
+Run `/ardd-implement` to execute `tasks-main-1f13.md` (documents
+`onSetLapsPerBook` in `infrastructure.md`). Separately worth doing:
+`/ardd-refine ui` to document this session's `font-title`/Foyer changes
+in `ui.md`'s Visual Identity section, `/ardd-plan
+in-game-rules-and-guidance` whenever ready to design the rules/guidance
+feature, and a look through `.project/audit.md`'s open findings (5
+questions, 3 risks — one, the Performance Budgets question, is now moot
+per this session's constitution trim) to decide which of the rest merit
+a refine or backlog entry.

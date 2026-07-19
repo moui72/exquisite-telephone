@@ -1,7 +1,18 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.0 → 1.0.1
+Version change: 1.0.1 → 1.1.0
+Modified sections: Quality Standards — removed two standards found
+non-load-bearing on /ardd-refine --review: "Performance Budgets" (never
+satisfied across 5+ features shipped since it was written; a prior plan
+explicitly declined to fix it, carried as standing drift in
+DEFECTS.md — decorative, not enforced) and "No Vendored Dependency With
+a Nested .git" (the project has zero vendored dependencies anywhere in
+the repo; the standard has never been invoked against a real decision).
+Removing a governance requirement is at least MINOR-worthy even though
+no principle was redefined.
+
+Prior: Version change: 1.0.0 → 1.0.1
 Modified sections: Project Scope & Intent (resolved the public
 matchmaking/leaderboards open question as an explicit v1 scope
 exclusion, not a design gap)
@@ -10,7 +21,7 @@ exclusion, not a design gap)
 ---
 name: constitution
 status: stable
-last_updated: 2026-07-13
+last_updated: 2026-07-19
 workflow_mode: solo
 next_step_prompt: true
 delegation: eager
@@ -117,16 +128,9 @@ responsibility, imported by the entry point — never defined inline in it.
   perfect vision — logical tab order, readable contrast, labeled form
   controls. Full WCAG 2.1 AA compliance is not required; this project is
   scoped to this baseline only.
-- Performance Budgets: any user-observable real-time operation (stroke
-  sync latency, turn-passing, reconnect time) has a stated performance
-  budget, defined per feature when the operation is added.
 - Manifest/Script Hygiene: `package.json`'s declared name, dependencies,
   and scripts match the actual package and files on disk. A stale script
   entry or unused dependency is treated as a bug, not background noise.
-- No Vendored Dependency With a Nested `.git`: no vendored third-party
-  code carries its own nested `.git` directory. If a dependency must be
-  vendored, its provenance is recorded in a README note and it is
-  committed as plain files, or added as a real git submodule.
 
 ### Pre-commit Enforcement
 
@@ -170,4 +174,4 @@ repository. Amendments require:
    for clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 1.0.1 | **Ratified**: 2026-07-13 | **Last Amended**: 2026-07-13
+**Version**: 1.1.0 | **Ratified**: 2026-07-13 | **Last Amended**: 2026-07-19
