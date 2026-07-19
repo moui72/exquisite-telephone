@@ -35,10 +35,10 @@
 </script>
 
 {#if isHost && room}
-  <div class="rounded-md border border-slate-200 p-3">
+  <div class="rounded-md border border-marigold/30 p-3">
     <button
       type="button"
-      class="flex w-full min-h-11 items-center justify-between text-sm font-medium text-slate-700"
+      class="flex w-full min-h-11 items-center justify-between text-sm font-medium text-ink/90"
       aria-expanded={expanded}
       on:click={() => (expanded = !expanded)}
     >
@@ -76,7 +76,7 @@
       <div class="mt-3 flex flex-wrap gap-2">
         <button
           type="button"
-          class="min-h-11 rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
+          class="min-h-11 rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
           on:click={handleEndGame}
         >
           Close the Exhibition
