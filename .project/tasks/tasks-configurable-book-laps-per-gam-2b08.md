@@ -1,7 +1,7 @@
 ---
 plan: plan-configurable-book-laps-per-gam-2026-07-18-37ca.md
 generated: 2026-07-18
-status: ready
+status: in-progress
 ---
 
 # Tasks
