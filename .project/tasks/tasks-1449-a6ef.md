@@ -46,7 +46,7 @@ status: in-progress
   timeout-vote alert boxes (red/amber) are functional status colors
   and stay as-is; only the neutral slate text/labels/borders around
   them are in scope.
-- [ ] T005 [artifacts: ui] [parallel] Same treatment for
+- [x] T005 [artifacts: ui] [parallel] Same treatment for
   `Reveal.svelte` (source-scan test added to `Reveal.test.ts`),
   including the `bg-slate-100` cover-art placeholder box ->
   `bg-butter`, and the page heading -> `font-display`.

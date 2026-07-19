@@ -184,16 +184,16 @@
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 p-6">
-  <h1 class="text-2xl font-semibold text-slate-800">Reveal</h1>
+  <h1 class="text-2xl font-semibold font-display text-ink">Reveal</h1>
 
   {#if room}
     <ModerationPanel {session} />
 
-    <div class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-6">
+    <div class="flex flex-wrap items-center gap-3 border-b border-marigold/30 pb-6">
       {#if isHost}
         <button
           type="button"
-          class="rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
+          class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
           on:click={handleEndGame}
         >
           Close the Exhibition
@@ -205,13 +205,13 @@
         >
           Stage an Encore
         </button>
-        <span class="text-sm text-slate-500">
+        <span class="text-sm text-ink/60">
           {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
         </span>
       {:else}
         <button
           type="button"
-          class="rounded-md border px-4 py-2 text-sm font-medium text-slate-700"
+          class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
           on:click={handleLeaveGame}
         >
           Depart the Salon
@@ -228,17 +228,17 @@
 
     {#if !showEverything && currentBook}
       <section
-        class="flex flex-col gap-4 border-b border-slate-200 pb-8"
+        class="flex flex-col gap-4 border-b border-marigold/30 pb-8"
         class:reveal-spotlight={!$prefersReducedMotion}
       >
         <GiltFrame caption={exhibitCaption(currentBook, currentBookIndex)}>
           <div class="flex items-center justify-between">
-            <h2 class="text-sm font-medium text-slate-500">
+            <h2 class="text-sm font-medium text-ink/60">
               {playerName(currentBook.originAuthorId)}'s book
             </h2>
             <button
               type="button"
-              class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+              class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
               on:click={() => handleSave(currentBook.id)}
             >
               Preserve as Keepsake
@@ -251,7 +251,7 @@
                 viewBox="0 0 100 100"
                 role="img"
                 aria-label="cover art"
-                class="h-48 w-48 rounded-lg bg-slate-100"
+                class="h-48 w-48 rounded-lg bg-butter"
               >
                 {#if coverArt}
                   {#each coverArt.shapes as shape, i (i)}
@@ -269,9 +269,9 @@
           {:else}
             {#each visibleEntries as entry (entry.id)}
               <div class="flex flex-col gap-1">
-                <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
+                <p class="text-xs text-ink/45">{playerName(entry.authorId)}</p>
                 {#if entry.type === 'text'}
-                  <p class="text-lg text-slate-900">{entry.content}</p>
+                  <p class="text-lg text-ink">{entry.content}</p>
                 {:else}
                   <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
                 {/if}
@@ -284,7 +284,7 @@
       <div class="flex flex-wrap gap-3">
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
           disabled={currentBookIndex === 0}
           on:click={handlePrevious}
         >
@@ -292,7 +292,7 @@
         </button>
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
           disabled={currentBookIndex >= room.books.length - 1}
           on:click={handleNext}
         >
@@ -300,7 +300,7 @@
         </button>
         <button
           type="button"
-          class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
           on:click={handleShowEverything}
         >
           Show everything
@@ -308,15 +308,15 @@
       </div>
     {:else}
       {#each room.books as book, index (book.id)}
-        <section class="flex flex-col gap-4 border-b border-slate-200 pb-8">
+        <section class="flex flex-col gap-4 border-b border-marigold/30 pb-8">
           <GiltFrame caption={exhibitCaption(book, index)}>
             <div class="flex items-center justify-between">
-              <h2 class="text-sm font-medium text-slate-500">
+              <h2 class="text-sm font-medium text-ink/60">
                 {playerName(book.originAuthorId)}'s book
               </h2>
               <button
                 type="button"
-                class="rounded-md border px-3 py-1 text-sm font-medium text-slate-700"
+                class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
                 on:click={() => handleSave(book.id)}
               >
                 Preserve as Keepsake
@@ -324,9 +324,9 @@
             </div>
             {#each [...book.entries].sort((a, b) => a.position - b.position) as entry (entry.id)}
               <div class="flex flex-col gap-1">
-                <p class="text-xs text-slate-400">{playerName(entry.authorId)}</p>
+                <p class="text-xs text-ink/45">{playerName(entry.authorId)}</p>
                 {#if entry.type === 'text'}
-                  <p class="text-lg text-slate-900">{entry.content}</p>
+                  <p class="text-lg text-ink">{entry.content}</p>
                 {:else}
                   <DrawingCanvas ops={parseDrawOps(entry.content)} readOnly />
                 {/if}

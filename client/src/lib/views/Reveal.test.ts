@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
@@ -614,5 +616,12 @@ describe('Reveal view — position derived from Room.revealStartedAt, independen
 
     expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
     expect(screen.queryByText('a0')).not.toBeInTheDocument();
+  });
+});
+
+describe('theme regression guard (plan-1449)', () => {
+  it('contains no leftover default-Tailwind slate- classes', () => {
+    const source = readFileSync(resolve(__dirname, './Reveal.svelte'), 'utf-8');
+    expect(source).not.toMatch(/slate-/);
   });
 });
