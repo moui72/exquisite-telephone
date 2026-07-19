@@ -3,6 +3,7 @@ import {
   computeNextEntries,
   computeNextEntry,
   currentRoundFor,
+  defaultLapsPerBook,
   type Entry,
   type Player,
   type Room,
@@ -150,6 +151,7 @@ export function onStartGame(
   }
 
   room.status = 'writing';
+  room.lapsPerBook = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
   room.books = createBooksForRoom(room);
   room.roundStartedAt = Date.now();
   room.timerExtensions = {};

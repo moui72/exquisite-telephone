@@ -409,6 +409,49 @@ describe('minimum player count (onStartGame)', () => {
   });
 });
 
+describe('onStartGame resolves Room.lapsPerBook (datamodel.md Normalization Rules — Laps per book)', () => {
+  it('resolves lapsPerBook to defaultLapsPerBook(players.length) when still null at start time', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    const adaId = room.players[0]!.id;
+    expect(room.lapsPerBook).toBeNull();
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      ack,
+    );
+
+    // 3 players -> defaultLapsPerBook(3) === 2.
+    expect(room.lapsPerBook).toBe(2);
+  });
+
+  it('leaves an explicitly-host-set lapsPerBook value untouched', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    const adaId = room.players[0]!.id;
+    room.lapsPerBook = 3;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      ack,
+    );
+
+    expect(room.lapsPerBook).toBe(3);
+  });
+});
+
 describe('onSetTurnTimer', () => {
   it('lets the host set Room.turnTimerMinutes while the room is in lobby', () => {
     const store = createRoomStore();

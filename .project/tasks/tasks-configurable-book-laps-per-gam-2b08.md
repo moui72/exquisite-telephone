@@ -40,7 +40,7 @@ status: in-progress
   wire a `set_laps_per_book` event to it in
   `server/src/socket/server.ts`'s dispatch table (constitution
   Principle VIII — one named handler per event).
-- [ ] T004 [artifacts: datamodel] Write a failing server test in
+- [x] T004 [artifacts: datamodel] Write a failing server test in
   `handlers.test.ts` asserting `onStartGame` resolves
   `room.lapsPerBook` to `defaultLapsPerBook(room.players.length)` when
   it was `null` at start time, and leaves an explicitly-host-set value
