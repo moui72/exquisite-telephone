@@ -321,6 +321,9 @@ describe('onSubmitEntry reveal pacing (Room.revealStartedAt)', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     room.status = 'writing';
+    // Pin to a single lap: this test is about reveal-pacing timestamps,
+    // not laps-per-book behavior.
+    room.lapsPerBook = 1;
     room.books = createBooksForRoom(room);
     const adaId = room.players[0]!.id;
     const adaBook = room.books[0]!;

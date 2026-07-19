@@ -22,6 +22,20 @@ function entryTypeForPosition(position: number): EntryType {
 }
 
 /**
+ * The default number of full rotations through the room each book
+ * completes before the game ends, derived from live player count
+ * (datamodel.md Normalization Rules — Laps per book): 2 when fewer
+ * than 5 players, 1 otherwise. Used both by the client (to display the
+ * live default while `Room.lapsPerBook` is `null`) and by the server
+ * (to resolve a concrete value at `onStartGame`, and as the fallback
+ * in `computeNextEntry`'s completion check before that resolution
+ * happens).
+ */
+export function defaultLapsPerBook(playerCount: number): 1 | 2 {
+  return playerCount < 5 ? 2 : 1;
+}
+
+/**
  * The room-wide current round: the minimum `entries.length` across all
  * of `Room.books`. Turns are round-gated, not asynchronous (datamodel.md
  * Normalization Rules, reversed 2026-07-14 per feedback F001) — a book
@@ -44,7 +58,8 @@ export function currentRoundFor(room: Room): number {
  */
 export function computeNextEntry(room: Room, book: Book): NextEntry | null {
   const position = book.entries.length;
-  if (position >= room.players.length) {
+  const laps = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
+  if (position >= room.players.length * laps) {
     return null;
   }
   if (position > currentRoundFor(room)) {

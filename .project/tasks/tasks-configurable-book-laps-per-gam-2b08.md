@@ -14,7 +14,7 @@ status: in-progress
   `turnTimerMinutes`'s shape exactly. Write a failing server test in
   `roomStore.test.ts` asserting `createRoom` returns `lapsPerBook: null`
   by default; confirm it fails, then implement.
-- [ ] T002 [artifacts: datamodel] [parallel] In `shared/src/
+- [x] T002 [artifacts: datamodel] [parallel] In `shared/src/
   turnAdvancement.ts`, write failing tests in `turnAdvancement.test.ts`
   asserting: (a) `defaultLapsPerBook(4)` returns `2`,
   `defaultLapsPerBook(5)` returns `1`; (b) with `Room.lapsPerBook` set

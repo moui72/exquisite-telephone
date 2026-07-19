@@ -213,6 +213,10 @@ describe('onSubmitEntry', () => {
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinAck.player!.id;
 
+    // Pin to a single lap: this helper is used by tests exercising
+    // submission/completion/reconnect flows, not laps-per-book behavior.
+    store.getRoom(roomId)!.lapsPerBook = 1;
+
     const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
       roomId,
       playerId: adaId,
@@ -518,6 +522,10 @@ describe('observability (structured log events)', () => {
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinAck.player!.id;
+
+    // Pin to a single lap: this test is about observability logging, not
+    // laps-per-book behavior.
+    store.getRoom(roomId)!.lapsPerBook = 1;
 
     const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
       roomId,
