@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-17
-diagram_status: current
+last_updated: 2026-07-18
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -43,6 +43,7 @@ to survive a server restart.
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
 | revealStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `reveal`; `null` otherwise. Gives every client a shared reference point to derive the Reveal page's animated pacing (current book index, revealed-entry count) as a pure function of `now - revealStartedAt`, rather than each client running its own independent local timer — see [[ui]] Reveal View and Normalization Rules below. |
+| lapsPerBook | number \| null | Host-configurable, set before `status` leaves `lobby`; `null` means the host hasn't explicitly chosen a value yet — see Normalization Rules for the live-default-until-overridden behavior. When non-`null`, one of `1 \| 2 \| 3`. Governs how many full rotations through `Room.players` each book completes before the game ends (see Normalization Rules — Laps per book). |
 
 ### Player
 
@@ -133,6 +134,26 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   which — combined with round-gating above — lets the round advance
   normally. `Room.timerExtensions` and `Room.pendingTimeoutVote` reset
   to empty/`null` whenever the current round advances.
+- **Laps per book.** A book completes after `Room.players.length *
+  <resolved lapsPerBook>` entries rather than a single rotation through
+  the room — i.e. `computeNextEntry`'s completion check
+  (`position >= room.players.length`) and `computeNextEntries`'
+  room-wide completion check both multiply the player count by the
+  resolved laps value. Author rotation
+  (`(originIndex + position) % players.length`) and entry-type
+  alternation (`position % 2` → text/drawing) are unchanged and
+  continue correctly across multiple laps with no special-casing —
+  `position` simply keeps counting up past one full rotation. While
+  `Room.lapsPerBook` is `null` (the host hasn't explicitly chosen a
+  value), the Lobby derives and displays a *live* default from the
+  current player count — 2 when fewer than 5 players, 1 otherwise —
+  recalculating as players join or leave; the moment the host sets an
+  explicit value (1–3), it locks to that number for the room's
+  remaining life and no longer tracks player count. `onStartGame`
+  resolves `Room.lapsPerBook` to a concrete number the same way (using
+  player count at start time) if it's still `null` when the game
+  starts, so `computeNextEntry`/`computeNextEntries` never have to
+  handle a `null` value themselves.
 - **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
   stamped the instant `status` transitions to `reveal` (the same
   transition already logged as `game_completed` in `onSubmitEntry`).

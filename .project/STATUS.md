@@ -1,6 +1,24 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-1449-a6ef.md` end to
+_Updated: 2026-07-18 (`/ardd-plan configurable-book-laps-per-gam` ran:
+designed and applied the feature's artifact changes — `datamodel.md`
+gains `Room.lapsPerBook: number | null` plus a new Normalization Rule
+("Laps per book": book completion becomes `players.length * resolved
+laps`, author rotation/entry-type alternation unchanged; `null` means
+the Lobby shows a live-derived default — 2 under 5 players, 1 otherwise
+— that locks the moment the host explicitly picks a value);
+`ui.md`'s Lobby View gains a "laps per book" (1/2/3) control describing
+that same live-default-until-overridden behavior. Both `stable`, both
+`diagram_status: stale` pending a fresh `/ardd-diagram` pass. No
+changes needed to infrastructure/constitution. Plan
+`plan-configurable-book-laps-per-gam-2026-07-18-37ca.md` approved (4
+phases: shared round-math helper, server setter + start-game
+resolution, client Lobby control, full-suite verification); tasks file
+`tasks-configurable-book-laps-per-gam-2b08.md` generated and `ready` (7
+tasks, every task except the final verification carries a
+failing-test-first requirement). Feature flipped `backlogged` ->
+`planned` -> `tasked`. Prior entry: `/ardd-implement` ran
+`tasks-1449-a6ef.md` end to
 end: delegated to a worktree subagent, all 9 tasks completed —
 `ui.md` clarified (theme applies globally + slate-to-token mapping
 table), a global `@layer base` added to `app.css` (body bg/color/font,
@@ -188,9 +206,11 @@ a plan.)_
 
 ## Diagrams
 
-- datamodel.md — current ✅
+- datamodel.md — stale ⚠️ (run `/ardd-diagram datamodel` —
+  `Room.lapsPerBook` added by `configurable-book-laps-per-gam`'s plan)
 - infrastructure.md — current ✅
-- ui.md — current ✅
+- ui.md — stale ⚠️ (run `/ardd-diagram ui` — Lobby's new laps control
+  added by the same plan)
 
 ## Code-vs-Artifact Defects
 
@@ -242,13 +262,17 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 0 tasked · 8 implemented — see
+0 backlogged · 0 planned · 1 tasked · 8 implemented — see
 `.project/features/`.
 
-- `configurable-book-laps-per-gam` (**backlogged**) — game-creation
-  setting for how many laps each book takes before the game ends and
-  Reveal begins (default 2 laps under 5 players, 1 lap otherwise, max
-  3). Not yet targeted by `/ardd-plan`.
+- `configurable-book-laps-per-gam` (**tasked**) — game-creation setting
+  for how many laps each book takes before the game ends and Reveal
+  begins (default 2 laps under 5 players, 1 lap otherwise, max 3).
+  `datamodel.md`/`ui.md` already reflect the design. Plan:
+  `plan-configurable-book-laps-per-gam-2026-07-18-37ca.md` (approved, 4
+  phases). Tasks:
+  `tasks-configurable-book-laps-per-gam-2b08.md` (`ready`, 0/7) — not
+  yet implemented.
 - `salon-gallery-ui-redesign` (**implemented**) — "tongue-in-cheek
   exquisite" salon/gallery UI redesign (gilt-frame signature component,
   Fraunces/Rubik/Space Mono type, candy-bright color tokens, docent-
@@ -427,13 +451,15 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-1 backlogged (`configurable-book-laps-per-gam`), 0 planned, 0 tasked,
-8 implemented features. No cross-artifact conflicts or constitution
-violations. All diagrams current. 0 open feedback files —
-`feedback-main-5fdc.md`'s F001 (theme not applied broadly) fixed and
-merged via `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md`
-(completed 9/9). Nothing in flight. ArDD update available (beta
-channel, `v0.10.3-beta.3`).
+0 backlogged, 0 planned, 1 tasked (`configurable-book-laps-per-gam` —
+plan approved, tasks ready, not yet implemented), 8 implemented
+features. No cross-artifact conflicts or constitution violations.
+`datamodel.md`/`ui.md` diagrams stale pending `/ardd-diagram` (no
+argument). 0 open feedback files — `feedback-main-5fdc.md`'s F001
+(theme not applied broadly) fixed and merged via
+`plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md` (completed 9/9).
+Nothing in flight. ArDD update available (beta channel,
+`v0.10.3-beta.3`).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -458,11 +484,13 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-plan configurable-book-laps-per-gam` when
-ready to design the new book-laps setting. `/ardd-update` when
-convenient (beta channel has a newer release). Also worth doing at
-some point: a look through `.project/audit.md`'s open findings (5
-questions, 3 risks) to decide which merit a refine or backlog entry.
+Nothing blocking. `/ardd-implement` to execute
+`tasks-configurable-book-laps-per-gam-2b08.md` (7 tasks, ready). After
+it merges, run `/ardd-diagram` (no argument) to refresh both
+`datamodel.md` and `ui.md`'s now-stale diagrams in one pass. `/ardd-
+update` when convenient (beta channel has a newer release). Also worth
+doing at some point: a look through `.project/audit.md`'s open findings
+(5 questions, 3 risks) to decide which merit a refine or backlog entry.
 Also worth a quick manual look at the app now that the reskin is
 complete, to confirm it reads right beyond what automated tests can
 check.

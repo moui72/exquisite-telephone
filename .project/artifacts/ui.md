@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-18
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -46,6 +46,14 @@ The host also sees a per-turn timer selector (off / 15m / 30m / 1hr /
 means the room waits indefinitely for the current round (see Writing /
 Drawing View); a duration means the room can advance a stalled round
 via the timeout-vote flow described there.
+
+The host also sees a "laps per book" control (1 / 2 / 3) that sets
+`Room.lapsPerBook`. Until the host explicitly picks a value, it shows a
+live-derived default that recalculates as players join or leave (2
+under 5 players, 1 otherwise — see [[datamodel]] Normalization Rules —
+Laps per book); the moment the host touches the control, it locks to
+their choice and stops tracking player count for the rest of the
+room's life.
 
 ## Moderation Panel
 
