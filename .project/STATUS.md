@@ -1,6 +1,32 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-implement` ran
+_Updated: 2026-07-19 (`/ardd-plan` ran: consumed `feedback-main-7922.md`
+(F001 drawing submit button unclickable, F002 palette needs a white
+erase/undo option), both accepted. `ui.md` amended — the drawing
+toolbar's palette now documents a white swatch as the erase/undo-fill
+mechanism (paint back over the white canvas background instead of a
+dedicated eraser); `diagram_status` flipped to `stale` (textual change
+only, no new component nodes, so a diagram refresh isn't strictly
+needed but the flag stands per convention). Plan
+`plan-main-2026-07-19-05fb.md` approved (3 phases: reproduce+fix the
+submit button, add the white swatch, full-suite verify) — F001's root
+cause wasn't determinable from static reading (no `disabled`, no
+overlay/`pointer-events` issue, no z-index conflict found in
+`WritingDrawing.svelte`/`DrawingCanvas.svelte`/`GiltFrame.svelte`), so
+T001 is a live-reproduction task ahead of the test-first fix. Tasks file
+`tasks-main-be75.md` generated and `ready` (4 tasks; no bound features).
+`feedback-main-7922.md` flipped `open` -> `planned`. No unsurfaced
+defects, no existing approved plan superseded. Prior entry: `/ardd-update` ran: switched channel stayed
+`beta`, updated installed skills from `c5ce6e9` (`v0.10.3-beta.1`) to
+`c7cb703` (`v1.0.1-beta.1`) — no pending migrations, all already
+applied; four workflow fields (`workflow_mode`/`next_step_prompt`/
+`delegation`/`merge_policy`) already present, no backfill needed.
+Project is now up-to-date on the beta channel. Prior entry:
+`/ardd-feedback` logged `feedback-main-7922.md`:
+F001 (Bug, `[artifacts: ui]`) — the drawing submit button doesn't work
+(can't be clicked); F002 (Bug, `[artifacts: ui]`) — the color palette
+needs to offer white as a way to erase/undo a fill. Both open, queued
+for the next `/ardd-plan`. Prior entry: `/ardd-implement` ran
 `tasks-configurable-book-laps-per-gam-2b08.md` end to end: delegated to
 a worktree subagent (solo mode, `delegation: eager`), all 7 tasks
 completed — `Room.lapsPerBook: number | null` added (shared type +
@@ -233,7 +259,7 @@ a plan.)_
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅
+- ui.md — stale ⚠️ (run /ardd-diagram ui)
 
 ## Code-vs-Artifact Defects
 
@@ -247,7 +273,12 @@ in code and dropped from the file).
 
 ## Feedback
 
-0 open feedback files. `feedback-main-5fdc.md` (F001, UX: the
+0 open feedback files. `feedback-main-7922.md` (F001 Bug — drawing
+submit button unclickable; F002 Bug — palette needs a white erase/undo
+option) is `planned` via `plan-main-2026-07-19-05fb.md`
+(`tasks-main-be75.md`, `ready`, 0/4) — not yet implemented.
+
+`feedback-main-5fdc.md` (F001, UX: the
 salon-gallery-ui-redesign theme was only ever applied to `GiltFrame`,
 not broadly across the app) is `planned` via
 `plan-1449-2026-07-18-2ce0.md` (`tasks-1449-a6ef.md`, `ready`, 0/9) —
@@ -479,11 +510,15 @@ after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
 0 backlogged, 0 planned, 0 tasked, 9 implemented features —
 `configurable-book-laps-per-gam` implemented and merged this pass. No
 cross-artifact conflicts or constitution violations. All diagrams
-current. 0 open feedback files — `feedback-main-5fdc.md`'s F001
-(theme not applied broadly) fixed and merged via
+current except `ui.md` (stale — pending a fresh `/ardd-diagram ui`
+pass after this session's textual palette change). 0 open feedback
+files — `feedback-main-7922.md` (F001 drawing submit button
+unclickable, F002 palette needs a white erase/undo option) is now
+`planned` via `plan-main-2026-07-19-05fb.md` / `tasks-main-be75.md`
+(`ready`, 0/4) — not yet implemented. `feedback-main-5fdc.md`'s
+F001 (theme not applied broadly) fixed and merged via
 `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md` (completed 9/9).
-Nothing in flight. ArDD update available (beta channel,
-`v0.10.3-beta.3`).
+Nothing in flight. ArDD is up-to-date on the beta channel (`v1.0.1-beta.1`).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -508,12 +543,9 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. `/ardd-update` when convenient (beta channel has a
-newer release). Also worth doing at some point: a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry, and a quick manual look at the
-new laps-per-book control in the lobby to confirm it reads right beyond
-what automated tests can check.
-Also worth a quick manual look at the app now that the reskin is
-complete, to confirm it reads right beyond what automated tests can
-check.
+Run `/ardd-implement` to execute `tasks-main-be75.md` (fix the drawing
+submit button, add the white palette swatch, verify). Also worth doing
+at some point: a look through `.project/audit.md`'s open findings (5
+questions, 3 risks) to decide which merit a refine or backlog entry, and
+a quick manual look at the new laps-per-book control in the lobby to
+confirm it reads right beyond what automated tests can check.

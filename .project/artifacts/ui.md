@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-18
-diagram_status: current
+last_updated: 2026-07-19
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -108,15 +108,19 @@ before being recorded, so drawn lines track the pointer accurately
 regardless of how the canvas is laid out (e.g. stretched to fill a flex
 container).
 
-The drawing canvas has a small toolbar: an 8-color preset palette
-(hidden entirely when `Room.monochromeOnly` is `true`, in which case
-all strokes use the default ink color), 3 line-width presets (thin /
-medium / thick), and a fill tool. Selecting the fill tool and tapping
-an enclosed region flood-fills it with the current color, seeded from
-the tapped point (see [[datamodel]] Entry — a `fill` draw op, replayed
-in sequence alongside `stroke` ops). The active color/width selection
-applies to new strokes only; it does not retroactively change strokes
-already drawn.
+The drawing canvas has a small toolbar: a preset color palette (hidden
+entirely when `Room.monochromeOnly` is `true`, in which case all
+strokes use the default ink color), 3 line-width presets (thin / medium
+/ thick), and a fill tool. The palette includes white alongside its
+other presets, since the canvas background is white — selecting white
+and stroking or filling over a mistake (including undoing an unwanted
+fill) paints it back to blank rather than requiring a separate
+eraser/undo mechanism. Selecting the fill tool and tapping an enclosed
+region flood-fills it with the current color, seeded from the tapped
+point (see [[datamodel]] Entry — a `fill` draw op, replayed in sequence
+alongside `stroke` ops). The active color/width selection applies to
+new strokes only; it does not retroactively change strokes already
+drawn.
 
 A simple turn-status indicator shows who's still working, without
 revealing content — mirrors the "pass the folded paper" mechanic. Turn
