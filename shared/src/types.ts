@@ -104,6 +104,17 @@ export interface Room {
    */
   turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
   /**
+   * Host-configurable, set before `status` leaves `lobby`; `null` means
+   * the host hasn't explicitly chosen a value yet — the Lobby derives
+   * and displays a live default from the current player count instead
+   * (see datamodel.md Normalization Rules — Laps per book), and
+   * `onStartGame` resolves it to a concrete number the same way if
+   * still `null` when the game starts. When non-`null`, one of
+   * `1 | 2 | 3`. Governs how many full rotations through `Room.players`
+   * each book completes before the game ends.
+   */
+  lapsPerBook: number | null;
+  /**
    * Epoch ms marking when the current round began; `null` while
    * `status === 'lobby'`. Reset whenever the room-wide current round
    * advances. Only meaningful when `turnTimerMinutes` is set.

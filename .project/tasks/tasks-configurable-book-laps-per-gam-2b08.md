@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Shared round-math extension
 
-- [ ] T001 [artifacts: datamodel] Add `lapsPerBook: number | null` to
+- [x] T001 [artifacts: datamodel] Add `lapsPerBook: number | null` to
   the `Room` type in `shared/src/types.ts`, defaulting to `null` in
   `createRoom` (`server/src/domain/roomStore.ts`) — mirror
   `turnTimerMinutes`'s shape exactly. Write a failing server test in

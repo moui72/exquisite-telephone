@@ -21,6 +21,7 @@ function makeRoom(overrides: Partial<Room> & { books: Book[] }): Room {
     createdAt: Date.now(),
     monochromeOnly: false,
     turnTimerMinutes: 30,
+    lapsPerBook: null,
     roundStartedAt: Date.now() - 40 * 60_000,
     timerExtensions: {},
     pendingTimeoutVote: null,

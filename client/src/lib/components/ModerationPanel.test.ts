@@ -50,6 +50,7 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     createdAt: Date.now(),
     monochromeOnly: false,
     turnTimerMinutes: null,
+    lapsPerBook: null,
     roundStartedAt: null,
     timerExtensions: {},
     pendingTimeoutVote: null,
