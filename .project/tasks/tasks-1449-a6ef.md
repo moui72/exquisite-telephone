@@ -24,7 +24,7 @@ status: in-progress
 
 ## Phase 2: Global base layer
 
-- [ ] T002 [artifacts: ui] Write a failing test asserting
+- [x] T002 [artifacts: ui] Write a failing test asserting
   `client/src/app.css` contains a `@layer base` rule setting `body`'s
   background to the `butter` token, text color to `ink`, and font to
   the `body` family, plus a rule applying `font-display` to `h1`/`h2`.
