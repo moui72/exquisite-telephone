@@ -7,7 +7,7 @@ status: in-progress
 # Tasks
 
 ## Phase 1: Reproduce and fix the submit button (F001)
-- [ ] T001 [artifacts: ui] Reproduce the drawing-submit-button click
+- [x] T001 [artifacts: ui] Reproduce the drawing-submit-button click
   failure live (via `/run`, in a real browser) — get to the drawing step,
   attempt to click "Present your contribution" under the canvas
   (`client/src/lib/views/WritingDrawing.svelte`), and record the actual
@@ -15,7 +15,7 @@ status: in-progress
   the handler being a no-op, a thrown exception, an element overlapping
   and intercepting the click, etc.). Report the finding — it determines
   what T002 tests and fixes.
-- [ ] T002 [artifacts: ui] Based on T001's finding, write a failing
+- [x] T002 [artifacts: ui] Based on T001's finding, write a failing
   regression test in `client/src/lib/views/WritingDrawing.test.ts` or
   `client/src/lib/components/DrawingCanvas.test.ts` that reproduces the
   bug, then fix it in `client/src/lib/views/WritingDrawing.svelte`

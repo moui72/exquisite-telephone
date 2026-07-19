@@ -218,7 +218,8 @@
           />
           <button
             type="button"
-            class="rounded-md bg-bubblegum px-4 py-2 text-base text-white"
+            class="rounded-md bg-bubblegum px-4 py-2 text-base text-white disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={drawnOps.length === 0}
             on:click={handleSubmitDrawing}
           >
             Present your contribution
