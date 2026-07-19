@@ -5,6 +5,7 @@
   import ModerationPanel from '../components/ModerationPanel.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
   import RulesOverview from '../components/RulesOverview.svelte';
+  import InfoTooltip from '../components/InfoTooltip.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -207,18 +208,34 @@
       </GiltFrame>
 
       {#if isHost}
-        <label class="flex items-center gap-2 text-sm font-medium text-ink/90">
-          <input
-            type="checkbox"
-            checked={state.room.monochromeOnly}
-            on:change={handleToggleMonochrome}
+        <div class="flex items-center gap-2">
+          <label for="monochrome-toggle" class="flex items-center gap-2 text-sm font-medium text-ink/90">
+            <input
+              id="monochrome-toggle"
+              type="checkbox"
+              checked={state.room.monochromeOnly}
+              on:change={handleToggleMonochrome}
+            />
+            Enforce a Monochrome Decree
+          </label>
+          <InfoTooltip
+            label="About force monochrome"
+            explanation="Hides the color palette from everyone's drawing tool, for the whole game."
           />
-          Enforce a Monochrome Decree
-        </label>
+        </div>
 
-        <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
-          Allotted Contemplation Period
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <label for="turn-timer-select" class="text-sm font-medium text-ink/90">
+              Allotted Contemplation Period
+            </label>
+            <InfoTooltip
+              label="About turn timer"
+              explanation="Sets a duration for each turn; once it elapses, the room can advance a stalled round via a timeout vote."
+            />
+          </div>
           <select
+            id="turn-timer-select"
             class="rounded-md border border-marigold/30 px-3 py-2 text-base"
             value={state.room.turnTimerMinutes ?? ''}
             on:change={handleTurnTimerChange}
@@ -227,11 +244,20 @@
               <option value={option.value ?? ''}>{option.label}</option>
             {/each}
           </select>
-        </label>
+        </div>
 
-        <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
-          Laps Per Book
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <label for="laps-per-book-select" class="text-sm font-medium text-ink/90">
+              Laps Per Book
+            </label>
+            <InfoTooltip
+              label="What's a lap?"
+              explanation="A lap is one full trip of a book around the circle. This sets how many laps happen before Reveal."
+            />
+          </div>
           <select
+            id="laps-per-book-select"
             class="rounded-md border border-marigold/30 px-3 py-2 text-base"
             value={lapsPerBookValue}
             on:change={handleLapsPerBookChange}
@@ -240,7 +266,7 @@
               <option value={option.value}>{option.label}</option>
             {/each}
           </select>
-        </label>
+        </div>
 
         <p class="text-xs text-ink/60">
           Player count: recommend 4+ players, minimum 3.

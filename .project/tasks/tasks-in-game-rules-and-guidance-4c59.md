@@ -49,7 +49,7 @@ status: in-progress
   test first in `InfoTooltip.test.ts` asserting the explanation is
   absent by default and appears after a click; confirm it fails, then
   implement.
-- [ ] T005 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`'s
+- [x] T005 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`'s
   host-only branch, add an `InfoTooltip` next to each of the three
   host settings: force monochrome (explaining it hides the color
   palette for everyone's drawing tool for the whole game), the turn

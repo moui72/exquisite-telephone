@@ -522,4 +522,38 @@ describe('Lobby view', () => {
       expect(screen.getByRole('button', { name: /how this salon works/i })).toBeInTheDocument();
     });
   });
+
+  describe('host setting info tooltips (plan-in-game-rules-and-guidance)', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    };
+
+    it('reveals an explanation for force monochrome, turn timer, and laps per book', async () => {
+      const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+      render(Lobby, { props: { session } });
+
+      await fireEvent.click(screen.getByRole('button', { name: /force monochrome|monochrome decree/i }));
+      expect(screen.getByText(/hides the color palette/i)).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByRole('button', { name: /turn timer|contemplation period/i }));
+      expect(screen.getByText(/timeout vote/i)).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByRole('button', { name: /what's a lap/i }));
+      expect(screen.getByText(/around the circle/i)).toBeInTheDocument();
+    });
+  });
 });
