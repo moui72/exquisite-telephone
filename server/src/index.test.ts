@@ -47,6 +47,7 @@ describe('startTimerSweep (30s background sweep)', () => {
       createdAt: Date.now(),
       monochromeOnly: false,
       turnTimerMinutes: 15,
+      lapsPerBook: null,
       roundStartedAt: Date.now() - 60 * 60_000,
       timerExtensions: {},
       pendingTimeoutVote: null,

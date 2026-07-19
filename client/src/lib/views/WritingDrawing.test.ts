@@ -23,6 +23,7 @@ function makeFakeSession(
     submitEntry: vi.fn(async () => {}),
     setMonochrome: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
+    setLapsPerBook: vi.fn(async () => {}),
     castTimeoutVote: vi.fn(async () => {}),
     endGame: vi.fn(async () => {}),
     leaveGame: vi.fn(),
@@ -48,6 +49,7 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     createdAt: Date.now(),
     monochromeOnly: false,
     turnTimerMinutes: null,
+    lapsPerBook: null,
     roundStartedAt: null,
     timerExtensions: {},
     pendingTimeoutVote: null,
@@ -209,6 +211,7 @@ describe('Writing/Drawing view', () => {
     const room: Room = {
       ...makeRoom([adaBook]),
       turnTimerMinutes: 30,
+      lapsPerBook: null,
       roundStartedAt,
     };
     const session = makeFakeSession({ room, player: ada, error: null });

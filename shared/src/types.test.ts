@@ -68,6 +68,7 @@ describe('datamodel types (datamodel.md)', () => {
       createdAt: Date.now(),
       monochromeOnly: false,
       turnTimerMinutes: null,
+      lapsPerBook: null,
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,

@@ -44,6 +44,7 @@ const sampleRoom: Room = {
   createdAt: Date.now(),
   monochromeOnly: false,
   turnTimerMinutes: null,
+  lapsPerBook: null,
   roundStartedAt: null,
   timerExtensions: {},
   pendingTimeoutVote: null,
@@ -194,6 +195,22 @@ describe('session store (client single source of state)', () => {
       payload: { roomId: 'ABCDE', playerId: 'p1' },
     });
     expect(get(session).room?.status).toBe('ended');
+  });
+
+  it('setLapsPerBook emits set_laps_per_book with roomId/playerId/lapsPerBook', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, lapsPerBook: 3 } });
+    await session.setLapsPerBook(3);
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_laps_per_book',
+      payload: { roomId: 'ABCDE', playerId: 'p1', lapsPerBook: 3 },
+    });
+    expect(get(session).room?.lapsPerBook).toBe(3);
   });
 
   it('voteToPlayAgain emits voteToPlayAgain with roomId/playerId', async () => {

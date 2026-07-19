@@ -59,6 +59,7 @@ export interface SessionStore extends Readable<SessionState> {
   submitEntry(bookId: string, content: string): Promise<void>;
   setMonochrome(monochromeOnly: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
+  setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
   castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
   endGame(): Promise<void>;
   /** Host-only moderation control (host-game-moderation-controls plan). */
@@ -170,6 +171,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         turnTimerMinutes,
+      });
+    },
+    setLapsPerBook(lapsPerBook: 1 | 2 | 3) {
+      const state = get(store);
+      return emitWithAck('set_laps_per_book', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        lapsPerBook,
       });
     },
     castTimeoutVote(choice: TimeoutVoteChoice) {

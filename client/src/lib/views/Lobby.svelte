@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { defaultLapsPerBook } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import ModerationPanel from '../components/ModerationPanel.svelte';
@@ -67,6 +68,23 @@
   async function handleToggleMonochrome(event: Event) {
     const checked = (event.currentTarget as HTMLInputElement).checked;
     await session.setMonochrome(checked);
+  }
+
+  const LAPS_PER_BOOK_OPTIONS: { value: 1 | 2 | 3; label: string }[] = [
+    { value: 1, label: '1 lap' },
+    { value: 2, label: '2 laps' },
+    { value: 3, label: '3 laps' },
+  ];
+
+  // Live default while the host hasn't explicitly chosen a value (ui.md
+  // Lobby View, datamodel.md Normalization Rules — Laps per book): tracks
+  // player count until the host's own selection locks it in.
+  $: lapsPerBookValue =
+    state.room?.lapsPerBook ?? defaultLapsPerBook(state.room?.players.length ?? 0);
+
+  async function handleLapsPerBookChange(event: Event) {
+    const raw = (event.target as HTMLSelectElement).value;
+    await session.setLapsPerBook(Number(raw) as 1 | 2 | 3);
   }
 </script>
 
@@ -178,6 +196,19 @@
           >
             {#each TURN_TIMER_OPTIONS as option (option.value)}
               <option value={option.value ?? ''}>{option.label}</option>
+            {/each}
+          </select>
+        </label>
+
+        <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
+          Laps Per Book
+          <select
+            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+            value={lapsPerBookValue}
+            on:change={handleLapsPerBookChange}
+          >
+            {#each LAPS_PER_BOOK_OPTIONS as option (option.value)}
+              <option value={option.value}>{option.label}</option>
             {/each}
           </select>
         </label>

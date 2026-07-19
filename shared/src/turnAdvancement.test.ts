@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { Book, Entry, Player, Room } from './types.js';
-import { computeNextEntry, computeNextEntries, currentRoundFor } from './turnAdvancement.js';
+import {
+  computeNextEntry,
+  computeNextEntries,
+  currentRoundFor,
+  defaultLapsPerBook,
+} from './turnAdvancement.js';
 
 function makePlayer(id: string, roomId: string): Player {
   return { id, roomId, name: id, connected: true, sessionToken: `${id}-token`, kicked: false };
@@ -34,6 +39,10 @@ describe('turn advancement (round-robin per book)', () => {
       createdAt: Date.now(),
       monochromeOnly: false,
       turnTimerMinutes: null,
+      // Pinned to a single lap: this block tests round-robin authoring/
+      // completion mechanics, not laps-per-book defaults (see the
+      // dedicated 'laps per book' describe below for that).
+      lapsPerBook: 1,
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,
@@ -151,6 +160,7 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
       createdAt: Date.now(),
       monochromeOnly: false,
       turnTimerMinutes: null,
+      lapsPerBook: null,
       roundStartedAt: null,
       timerExtensions: {},
       pendingTimeoutVote: null,
@@ -223,5 +233,121 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
     const room = makeRoom([]);
 
     expect(currentRoundFor(room)).toBe(0);
+  });
+});
+
+describe('defaultLapsPerBook (datamodel.md Normalization Rules — Laps per book)', () => {
+  it('returns 2 when the player count is under 5', () => {
+    expect(defaultLapsPerBook(4)).toBe(2);
+  });
+
+  it('returns 1 when the player count is 5 or more', () => {
+    expect(defaultLapsPerBook(5)).toBe(1);
+  });
+});
+
+describe('laps per book (multi-lap completion math)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+  const players = [ada, grace, lin];
+
+  function makeRoom(books: Book[], lapsPerBook: number | null): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players,
+      status: 'writing',
+      books,
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    };
+  }
+
+  it('with lapsPerBook 2 and 3 players, a book does not complete after 3 entries', () => {
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        makeEntry('bookA', ada.id, 0),
+        makeEntry('bookA', grace.id, 1),
+        makeEntry('bookA', lin.id, 2),
+      ],
+    };
+    const room = makeRoom([bookA], 2);
+
+    expect(computeNextEntry(room, bookA)).not.toBeNull();
+  });
+
+  it('with lapsPerBook 2 and 3 players, author rotation continues correctly into the second lap', () => {
+    const entries = [
+      makeEntry('bookA', ada.id, 0),
+      makeEntry('bookA', grace.id, 1),
+      makeEntry('bookA', lin.id, 2),
+    ];
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries };
+    const room = makeRoom([bookA], 2);
+
+    const next = computeNextEntry(room, bookA);
+
+    // position 3's author should equal position 0's author (ada).
+    expect(next).toEqual({ authorId: ada.id, type: 'drawing', position: 3 });
+  });
+
+  it('with lapsPerBook 2 and 3 players, position 4 author equals position 1 author', () => {
+    const entries = [
+      makeEntry('bookA', ada.id, 0),
+      makeEntry('bookA', grace.id, 1),
+      makeEntry('bookA', lin.id, 2),
+      makeEntry('bookA', ada.id, 3),
+    ];
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries };
+    const room = makeRoom([bookA], 2);
+
+    const next = computeNextEntry(room, bookA);
+
+    expect(next).toEqual({ authorId: grace.id, type: 'text', position: 4 });
+  });
+
+  it('with lapsPerBook 2 and 3 players, the book completes after 6 entries', () => {
+    const entries = [
+      makeEntry('bookA', ada.id, 0),
+      makeEntry('bookA', grace.id, 1),
+      makeEntry('bookA', lin.id, 2),
+      makeEntry('bookA', ada.id, 3),
+      makeEntry('bookA', grace.id, 4),
+      makeEntry('bookA', lin.id, 5),
+    ];
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries };
+    const room = makeRoom([bookA], 2);
+
+    expect(computeNextEntry(room, bookA)).toBeNull();
+  });
+
+  it('with lapsPerBook null, completion math falls back to defaultLapsPerBook(players.length)', () => {
+    // 3 players -> defaultLapsPerBook(3) === 2, so 3 entries should not complete the book.
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        makeEntry('bookA', ada.id, 0),
+        makeEntry('bookA', grace.id, 1),
+        makeEntry('bookA', lin.id, 2),
+      ],
+    };
+    const room = makeRoom([bookA], null);
+
+    expect(computeNextEntry(room, bookA)).not.toBeNull();
   });
 });

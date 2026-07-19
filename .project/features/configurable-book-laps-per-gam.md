@@ -1,6 +1,6 @@
 ---
 slug: configurable-book-laps-per-gam
-status: tasked
+status: implemented
 logged: 2026-07-18
 plan: plan-configurable-book-laps-per-gam-2026-07-18-37ca.md
 tasks: tasks-configurable-book-laps-per-gam-2b08.md

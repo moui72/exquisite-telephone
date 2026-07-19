@@ -13,6 +13,7 @@ import {
   onRejoin,
   onPlayAgain,
   onRestartGame,
+  onSetLapsPerBook,
   onSetMonochrome,
   onSetTurnTimer,
   onStartGame,
@@ -34,6 +35,8 @@ import {
   type RejoinInput,
   type RestartGameAck,
   type RestartGameInput,
+  type SetLapsPerBookAck,
+  type SetLapsPerBookInput,
   type SetMonochromeAck,
   type SetMonochromeInput,
   type SetTurnTimerAck,
@@ -100,6 +103,13 @@ export function createSocketServer(
       'setTurnTimer',
       (input: SetTurnTimerInput, ack: (response: SetTurnTimerAck) => void) => {
         onSetTurnTimer(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_laps_per_book',
+      (input: SetLapsPerBookInput, ack: (response: SetLapsPerBookAck) => void) => {
+        onSetLapsPerBook(socket, store, input, ack);
       },
     );
 

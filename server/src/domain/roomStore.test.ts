@@ -30,6 +30,7 @@ function makeRoomWithPlayers(players: Player[]): Room {
     createdAt: Date.now(),
     monochromeOnly: false,
     turnTimerMinutes: null,
+    lapsPerBook: null,
     roundStartedAt: null,
     timerExtensions: {},
     pendingTimeoutVote: null,
@@ -62,6 +63,12 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 
     expect(room.monochromeOnly).toBe(false);
+  });
+
+  it('create room defaults lapsPerBook to null', () => {
+    const room = createRoom(store, { hostName: 'Ada' });
+
+    expect(room.lapsPerBook).toBeNull();
   });
 
   it('player join adds to room.players', () => {
