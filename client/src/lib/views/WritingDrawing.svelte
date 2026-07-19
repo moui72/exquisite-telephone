@@ -194,6 +194,10 @@
       {/if}
 
       {#if myTurn.type === 'text'}
+        <p class="text-sm italic text-ink/60">
+          Write blind: you have never been told the original phrase, only what you see drawn
+          above. Guess the phrase that inspired it.
+        </p>
         <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitText}>
           <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
             Your phrase
@@ -210,6 +214,10 @@
           </button>
         </form>
       {:else}
+        <p class="text-sm italic text-ink/60">
+          Draw exactly what the phrase says — no more, no less. Resist the urge to add anything
+          the words didn't ask for.
+        </p>
         <div class="flex flex-col gap-4">
           <DrawingCanvas
             ops={drawnOps}

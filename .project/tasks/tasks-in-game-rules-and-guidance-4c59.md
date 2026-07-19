@@ -29,7 +29,7 @@ status: in-progress
   then implement.
 
 ## Phase 2: Writing/Drawing turn hints
-- [ ] T003 [artifacts: ui] [parallel] In
+- [x] T003 [artifacts: ui] [parallel] In
   `client/src/lib/views/WritingDrawing.svelte`, add a short
   docent-voice hint rendered above the prompt/canvas, keyed off the
   existing `myTurn.type` conditional: for a write turn, text making
