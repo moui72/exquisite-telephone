@@ -97,6 +97,62 @@ describe('Writing/Drawing view', () => {
     expect(screen.getByRole('img', { name: /drawing canvas/i })).toBeInTheDocument();
   });
 
+  it('shows a docent-voice hint clarifying a write turn is blind to the original phrase', () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+        {
+          id: 'e1',
+          bookId: 'book-ada',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: serializeDrawOps([]),
+        },
+      ],
+    };
+    const room = makeRoom([adaBook], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player: lin, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/never (been )?told the original phrase|never seen the original phrase/i)).toBeInTheDocument();
+  });
+
+  it('shows a docent-voice hint clarifying a draw turn should depict the phrase exactly', () => {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+      ],
+    };
+    const room = makeRoom([adaBook]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/exactly what the phrase says|no more.*no less/i)).toBeInTheDocument();
+  });
+
   it('shows the previous drawing as reference when writing a guess', () => {
     const strokes = serializeDrawOps([
       {

@@ -1,6 +1,6 @@
 ---
 slug: in-game-rules-and-guidance
-status: tasked
+status: implemented
 logged: 2026-07-19
 plan: plan-in-game-rules-and-guidance-2026-07-19-5540.md
 tasks: tasks-in-game-rules-and-guidance-4c59.md

@@ -1,13 +1,13 @@
 ---
 plan: plan-in-game-rules-and-guidance-2026-07-19-5540.md
 generated: 2026-07-19
-status: ready
+status: completed
 ---
 
 # Tasks
 
 ## Phase 1: Rules Overview Panel
-- [ ] T001 [artifacts: ui] Create
+- [x] T001 [artifacts: ui] Create
   `client/src/lib/components/RulesOverview.svelte`: a dismissible panel
   rendering the core game loop in docent voice — a player writes a
   phrase, the next player draws it having never seen the original
@@ -18,7 +18,7 @@ status: ready
   failing test first in `RulesOverview.test.ts` asserting the
   explanation text renders and a dismiss control calls `onClose`;
   confirm it fails, then implement.
-- [ ] T002 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`, add
+- [x] T002 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`, add
   a "How this salon works" link/button (visible in both the pre-room
   Foyer branch and the in-room branch — both already render from this
   same component) that toggles local visibility state and renders
@@ -29,7 +29,7 @@ status: ready
   then implement.
 
 ## Phase 2: Writing/Drawing turn hints
-- [ ] T003 [artifacts: ui] [parallel] In
+- [x] T003 [artifacts: ui] [parallel] In
   `client/src/lib/views/WritingDrawing.svelte`, add a short
   docent-voice hint rendered above the prompt/canvas, keyed off the
   existing `myTurn.type` conditional: for a write turn, text making
@@ -41,7 +41,7 @@ status: ready
   implement.
 
 ## Phase 3: Host-setting info affordances
-- [ ] T004 [artifacts: ui] [parallel] Create
+- [x] T004 [artifacts: ui] [parallel] Create
   `client/src/lib/components/InfoTooltip.svelte`: takes `label` and
   `explanation` string props, renders a small `(?)` control that
   reveals the explanation on click/tap (toggle, not hover-only, for
@@ -49,7 +49,7 @@ status: ready
   test first in `InfoTooltip.test.ts` asserting the explanation is
   absent by default and appears after a click; confirm it fails, then
   implement.
-- [ ] T005 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`'s
+- [x] T005 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`'s
   host-only branch, add an `InfoTooltip` next to each of the three
   host settings: force monochrome (explaining it hides the color
   palette for everyone's drawing tool for the whole game), the turn
@@ -61,7 +61,7 @@ status: ready
   confirm it fails, then implement. Depends on T004.
 
 ## Phase 4: Full-suite verification
-- [ ] T006 Run the full test suite, typecheck, and lint across the
+- [x] T006 Run the full test suite, typecheck, and lint across the
   monorepo (shared/server/client workspaces). Confirm everything is
   green, including all existing `Lobby.test.ts` and
   `WritingDrawing.test.ts` coverage — no regressions from T002/T003/T005.
