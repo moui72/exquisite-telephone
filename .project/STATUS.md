@@ -1,6 +1,15 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-plan` ran: consumed `feedback-main-5fdc.md`'s
+_Updated: 2026-07-18 (`/ardd-backlog` logged
+`configurable-book-laps-per-gam`: a game-creation setting for how many
+laps each book takes before Reveal — default 2 laps under 5 players,
+1 lap otherwise, max 3. Backlog entry only; target with `/ardd-plan
+configurable-book-laps-per-gam` when ready to design. Meanwhile, the
+full-app theme reskin (`tasks-1449-a6ef.md`) is running in a delegated
+worktree — see In Flight below; its plan/tasks/feedback bookkeeping
+already reflects the pre-delegation state described in the prior entry
+and isn't re-narrated here. Prior entry: `/ardd-plan` ran: consumed
+`feedback-main-5fdc.md`'s
 F001 (accepted) into a new 4-phase plan, `plan-1449-2026-07-18-2ce0.md`
 (approved) — Phase 1 clarifies `ui.md` (theme applies globally, not just
 to `GiltFrame`, plus a slate-to-token mapping table), Phase 2 adds a
@@ -211,9 +220,13 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 0 tasked · 8 implemented — see
+1 backlogged · 0 planned · 0 tasked · 8 implemented — see
 `.project/features/`.
 
+- `configurable-book-laps-per-gam` (**backlogged**) — game-creation
+  setting for how many laps each book takes before the game ends and
+  Reveal begins (default 2 laps under 5 players, 1 lap otherwise, max
+  3). Not yet targeted by `/ardd-plan`.
 - `salon-gallery-ui-redesign` (**implemented**) — "tongue-in-cheek
   exquisite" salon/gallery UI redesign (gilt-frame signature component,
   Fraunces/Rubik/Space Mono type, candy-bright color tokens, docent-
@@ -323,8 +336,11 @@ merged — see Feature Backlog.
 
 ## In Flight
 
-_(none — both delegated worktrees from this session reported back,
-merged clean, and were reaped)_
+- Worktree `.claude/worktrees/agent-a89f514d842a0d93b` (branch
+  `worktree-agent-a89f514d842a0d93b`) — `tasks-1449-a6ef.md`
+  in-progress, 1/9. The full-app salon/gallery theme reskin (feedback
+  F001 in `feedback-main-5fdc.md`, plan
+  `plan-1449-2026-07-18-2ce0.md`).
 
 ## fly-io-deployment: shipped
 
@@ -392,12 +408,13 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-0 backlogged, 0 planned, 0 tasked, 8 implemented features. No
-cross-artifact conflicts or constitution violations. All diagrams
-current. 0 open feedback files — `feedback-main-5fdc.md` planned into
-`plan-1449-2026-07-18-2ce0.md` (approved, tasked, `tasks-1449-a6ef.md`
-ready, 0/9, not yet implemented). Nothing in flight. ArDD update
-available (beta channel, `v0.10.3-beta.3`).
+1 backlogged (`configurable-book-laps-per-gam`, logged this pass), 0
+planned, 0 tasked, 8 implemented features. No cross-artifact conflicts
+or constitution violations. All diagrams current. 0 open feedback
+files — `feedback-main-5fdc.md` planned into
+`plan-1449-2026-07-18-2ce0.md`, now in flight on a delegated worktree
+(`tasks-1449-a6ef.md`, 1/9). ArDD update available (beta channel,
+`v0.10.3-beta.3`).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -422,8 +439,10 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-`/ardd-implement` to execute `tasks-1449-a6ef.md` (9 tasks, ready) —
-the full-app theme reskin. `/ardd-update` when convenient (beta channel
-has a newer release). Also worth doing at some point: a look through
+Nothing blocking. The full-app theme reskin is already running in a
+delegated worktree (see In Flight) — check back for it to merge. When
+ready, `/ardd-plan configurable-book-laps-per-gam` to design the new
+book-laps setting. `/ardd-update` when convenient (beta channel has a
+newer release). Also worth doing at some point: a look through
 `.project/audit.md`'s open findings (5 questions, 3 risks) to decide
 which merit a refine or backlog entry.
