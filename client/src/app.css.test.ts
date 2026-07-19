@@ -10,11 +10,12 @@ describe('app.css global base layer', () => {
 
     expect(source).toMatch(/@layer\s+base/);
 
-    // body: butter background, ink text, body font family
+    // body: butter background (via theme() token, an atmospheric
+    // vignette layered on top), ink text, body font family
     const bodyRuleMatch = source.match(/body\s*\{([^}]*)\}/);
     expect(bodyRuleMatch, 'expected a `body { ... }` rule in app.css').not.toBeNull();
     const bodyRule = bodyRuleMatch![1];
-    expect(bodyRule).toMatch(/bg-butter/);
+    expect(bodyRule).toMatch(/colors\.butter/);
     expect(bodyRule).toMatch(/text-ink/);
     expect(bodyRule).toMatch(/font-body/);
 

@@ -4,7 +4,17 @@
 
 @layer base {
   body {
-    @apply bg-butter text-ink font-body;
+    @apply text-ink font-body;
+    /* A soft velvet vignette at the edges — the sense of a lit room
+       around every framed piece, echoing the Gilt Frame's spotlight
+       rather than a flat fill. */
+    background-color: theme('colors.butter');
+    background-image: radial-gradient(
+      ellipse at 50% -10%,
+      rgba(46, 26, 71, 0.08),
+      transparent 60%
+    );
+    background-attachment: fixed;
   }
 
   h1,

@@ -184,7 +184,16 @@
 </script>
 
 <div class="mx-auto flex min-h-screen max-w-2xl flex-col gap-10 p-6">
-  <h1 class="text-2xl font-semibold font-display text-ink">Reveal</h1>
+  <div class="flex flex-col items-center gap-1 text-center">
+    <h1
+      class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
+        font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+        sm:text-5xl"
+    >
+      The Gallery Opens
+    </h1>
+    <p class="text-sm text-ink/60">Every book, unveiled.</p>
+  </div>
 
   {#if room}
     <ModerationPanel {session} />

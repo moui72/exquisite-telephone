@@ -1,6 +1,24 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-plan` ran: consumed `feedback-main-7922.md`
+_Updated: 2026-07-19 (`/ardd-implement` ran `tasks-main-be75.md` end to
+end: delegated to a worktree subagent (solo mode, `delegation: eager`),
+all 4 tasks completed. **T001's live reproduction found the real bug**:
+the drawing submit button isn't disabled and isn't broken on a normal
+click — it silently no-ops when clicked with an empty canvas
+(`drawnOps.length === 0` in `handleSubmitDrawing`), giving zero
+feedback and reading as "the button doesn't work." **T002** fixed it by
+disabling the button until a stroke/fill exists (`disabled={drawnOps.length
+=== 0}`, matching the text-entry form's existing disabled-until-valid
+pattern), test-first. **T003** added `'#ffffff'` to `DrawingCanvas.svelte`'s
+`PALETTE_COLORS` with a `border-marigold/30` default border so the white
+swatch stays visible against the toolbar before selection, test-first.
+**T004** full-suite verification: 271 tests green (25 shared + 119 server
++ 127 client), lint clean, typecheck clean. Tasks file flipped
+`completed`; no bound features (`features: []`). Merged clean to `main`
+(`merge_policy: auto`, no conflicts, 5 files changed), worktree reaped.
+Post-merge typecheck reconfirmed clean (327 files, 0 errors).
+`feedback-main-7922.md` (F001, F002) is now fully resolved and merged —
+nothing further tracked from it. Prior entry: `/ardd-plan` ran: consumed `feedback-main-7922.md`
 (F001 drawing submit button unclickable, F002 palette needs a white
 erase/undo option), both accepted. `ui.md` amended — the drawing
 toolbar's palette now documents a white swatch as the erase/undo-fill
@@ -275,8 +293,9 @@ in code and dropped from the file).
 
 0 open feedback files. `feedback-main-7922.md` (F001 Bug — drawing
 submit button unclickable; F002 Bug — palette needs a white erase/undo
-option) is `planned` via `plan-main-2026-07-19-05fb.md`
-(`tasks-main-be75.md`, `ready`, 0/4) — not yet implemented.
+option) is `planned` via `plan-main-2026-07-19-05fb.md`, and both items
+are now **fixed and merged to `main`** (`tasks-main-be75.md`,
+**completed 4/4**).
 
 `feedback-main-5fdc.md` (F001, UX: the
 salon-gallery-ui-redesign theme was only ever applied to `GiltFrame`,
@@ -511,11 +530,11 @@ after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
 `configurable-book-laps-per-gam` implemented and merged this pass. No
 cross-artifact conflicts or constitution violations. All diagrams
 current except `ui.md` (stale — pending a fresh `/ardd-diagram ui`
-pass after this session's textual palette change). 0 open feedback
-files — `feedback-main-7922.md` (F001 drawing submit button
-unclickable, F002 palette needs a white erase/undo option) is now
-`planned` via `plan-main-2026-07-19-05fb.md` / `tasks-main-be75.md`
-(`ready`, 0/4) — not yet implemented. `feedback-main-5fdc.md`'s
+pass; this session's changes were textual, no new component nodes).
+0 open feedback files — `feedback-main-7922.md` (F001 drawing submit
+button unclickable, F002 palette needs a white erase/undo option) is
+fixed and merged to `main` via `plan-main-2026-07-19-05fb.md` /
+`tasks-main-be75.md` (**completed 4/4**). `feedback-main-5fdc.md`'s
 F001 (theme not applied broadly) fixed and merged via
 `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md` (completed 9/9).
 Nothing in flight. ArDD is up-to-date on the beta channel (`v1.0.1-beta.1`).
@@ -543,9 +562,10 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Run `/ardd-implement` to execute `tasks-main-be75.md` (fix the drawing
-submit button, add the white palette swatch, verify). Also worth doing
-at some point: a look through `.project/audit.md`'s open findings (5
+Nothing blocking. Also worth doing at some point: run `/ardd-diagram ui`
+to refresh the stale `ui.md` diagram (no structural change, just to
+clear the flag), commit the still-pending `.project/ardd-version.md`
+from the earlier `/ardd-update`, and a look through `.project/audit.md`'s open findings (5
 questions, 3 risks) to decide which merit a refine or backlog entry, and
 a quick manual look at the new laps-per-book control in the lobby to
 confirm it reads right beyond what automated tests can check.

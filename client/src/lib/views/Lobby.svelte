@@ -88,75 +88,89 @@
   }
 </script>
 
-<div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
-  <h1 class="text-2xl font-semibold font-display text-ink">Exquisite Telephone</h1>
-
+<div class="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-6 p-4 sm:p-6">
   {#if !state.room}
-    <div role="tablist" aria-label="Join or create a room" class="flex gap-2">
-      <button
-        type="button"
-        role="tab"
-        aria-selected={mode === 'create'}
-        class="flex-1 rounded-md border border-marigold/60 px-4 py-2 text-sm font-medium"
-        class:bg-bubblegum={mode === 'create'}
-        class:text-white={mode === 'create'}
-        class:bg-butter={mode !== 'create'}
-        class:text-ink={mode !== 'create'}
-        on:click={() => (mode = 'create')}
+    <div class="flex flex-col items-center gap-1 text-center">
+      <h1
+        class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
+          font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+          sm:text-6xl"
       >
-        Create room
-      </button>
-      <button
-        type="button"
-        role="tab"
-        aria-selected={mode === 'join'}
-        class="flex-1 rounded-md border border-marigold/60 px-4 py-2 text-sm font-medium"
-        class:bg-bubblegum={mode === 'join'}
-        class:text-white={mode === 'join'}
-        class:bg-butter={mode !== 'join'}
-        class:text-ink={mode !== 'join'}
-        on:click={() => (mode = 'join')}
-      >
-        Join room
-      </button>
+        Exquisite Telephone
+      </h1>
+      <p class="max-w-sm text-sm text-ink/60">
+        A salon game of drawings whispered down the line. Gather your guests, then write, draw,
+        and reveal.
+      </p>
     </div>
 
-    <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
-      <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
-        Display name
-        <input
-          class="rounded-md border border-marigold/30 px-3 py-2 text-base"
-          type="text"
-          required
-          bind:value={displayName}
-          autocomplete="name"
-        />
-      </label>
+    <GiltFrame caption="The Foyer — RSVP Required">
+      <div role="tablist" aria-label="Join or create a room" class="flex gap-2">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'create'}
+          class="flex-1 rounded-md border border-marigold/60 px-4 py-3 text-sm font-medium sm:py-2"
+          class:bg-bubblegum={mode === 'create'}
+          class:text-white={mode === 'create'}
+          class:bg-butter={mode !== 'create'}
+          class:text-ink={mode !== 'create'}
+          on:click={() => (mode = 'create')}
+        >
+          Create room
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'join'}
+          class="flex-1 rounded-md border border-marigold/60 px-4 py-3 text-sm font-medium sm:py-2"
+          class:bg-bubblegum={mode === 'join'}
+          class:text-white={mode === 'join'}
+          class:bg-butter={mode !== 'join'}
+          class:text-ink={mode !== 'join'}
+          on:click={() => (mode = 'join')}
+        >
+          Join room
+        </button>
+      </div>
 
-      {#if mode === 'join'}
+      <form class="mt-4 flex flex-col gap-4" on:submit|preventDefault={handleSubmit}>
         <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
-          Room code
+          Display name
           <input
-            class="rounded-md border border-marigold/30 px-3 py-2 text-base uppercase tracking-widest"
+            class="rounded-md border border-marigold/30 px-3 py-3 text-base sm:py-2"
             type="text"
             required
-            bind:value={roomCodeInput}
-            maxlength="6"
+            bind:value={displayName}
+            autocomplete="name"
           />
         </label>
-      {/if}
 
-      {#if errorCopy}
-        <p role="alert" class="text-sm text-red-600">{errorCopy}</p>
-      {/if}
+        {#if mode === 'join'}
+          <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
+            Room code
+            <input
+              class="rounded-md border border-marigold/30 px-3 py-3 text-base uppercase tracking-widest sm:py-2"
+              type="text"
+              required
+              bind:value={roomCodeInput}
+              maxlength="6"
+            />
+          </label>
+        {/if}
 
-      <button
-        type="submit"
-        class="rounded-md bg-bubblegum px-4 py-2 text-base font-medium text-white"
-      >
-        {mode === 'create' ? 'Create room' : 'Join room'}
-      </button>
-    </form>
+        {#if errorCopy}
+          <p role="alert" class="text-sm text-red-600">{errorCopy}</p>
+        {/if}
+
+        <button
+          type="submit"
+          class="rounded-md bg-bubblegum px-4 py-3 text-base font-medium text-white sm:py-2"
+        >
+          {mode === 'create' ? 'Create room' : 'Join room'}
+        </button>
+      </form>
+    </GiltFrame>
   {:else}
     <div class="flex flex-col gap-4">
       <ModerationPanel {session} />
