@@ -1,7 +1,7 @@
 ---
 plan: plan-in-game-rules-and-guidance-2026-07-19-5540.md
 generated: 2026-07-19
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -61,7 +61,7 @@ status: in-progress
   confirm it fails, then implement. Depends on T004.
 
 ## Phase 4: Full-suite verification
-- [ ] T006 Run the full test suite, typecheck, and lint across the
+- [x] T006 Run the full test suite, typecheck, and lint across the
   monorepo (shared/server/client workspaces). Confirm everything is
   green, including all existing `Lobby.test.ts` and
   `WritingDrawing.test.ts` coverage — no regressions from T002/T003/T005.
