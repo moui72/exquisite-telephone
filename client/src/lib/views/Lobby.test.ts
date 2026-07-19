@@ -266,6 +266,115 @@ describe('Lobby view', () => {
     expect(hostSession.setTurnTimer).toHaveBeenCalledWith(60);
   });
 
+  it("shows the live default laps-per-book value when Room.lapsPerBook is null, tracking player count", async () => {
+    const makeRoom = (playerCount: number): Room => ({
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: Array.from({ length: playerCount }, (_, i) => ({
+        id: `p${i + 1}`,
+        roomId: 'ABCDE',
+        name: `Player${i + 1}`,
+        connected: true,
+        sessionToken: `t${i + 1}`,
+        kicked: false,
+      })),
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    });
+
+    // 4 players (< 5) -> defaultLapsPerBook(4) === 2.
+    const fourPlayerRoom = makeRoom(4);
+    const hostSession = makeFakeSession({
+      room: fourPlayerRoom,
+      player: fourPlayerRoom.players[0]!,
+      error: null,
+    });
+    const { unmount } = render(Lobby, { props: { session: hostSession } });
+    let select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    expect(select.value).toBe('2');
+    unmount();
+
+    // 5 players (>= 5) -> defaultLapsPerBook(5) === 1.
+    const fivePlayerRoom = makeRoom(5);
+    const hostSession2 = makeFakeSession({
+      room: fivePlayerRoom,
+      player: fivePlayerRoom.players[0]!,
+      error: null,
+    });
+    render(Lobby, { props: { session: hostSession2 } });
+    select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    expect(select.value).toBe('1');
+  });
+
+  it('emits setLapsPerBook with the selected value when the host changes the laps control', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    await fireEvent.change(select, { target: { value: '3' } });
+
+    expect(hostSession.setLapsPerBook).toHaveBeenCalledWith(3);
+  });
+
+  it('shows the host-set laps-per-book value regardless of player count once non-null', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: 3,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    expect(select.value).toBe('3');
+  });
+
   it('lets a guest join a room by code', async () => {
     const session = makeFakeSession({ room: null, player: null, error: null });
     render(Lobby, { props: { session } });

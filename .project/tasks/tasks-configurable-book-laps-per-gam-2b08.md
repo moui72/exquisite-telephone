@@ -54,7 +54,7 @@ status: in-progress
   new `setLapsPerBook` method emits the `set_laps_per_book` event with
   the given value. Confirm failure, then implement in
   `client/src/lib/stores/session.ts`.
-- [ ] T006 [artifacts: ui] Write failing tests in `Lobby.test.ts`
+- [x] T006 [artifacts: ui] Write failing tests in `Lobby.test.ts`
   asserting: (a) the laps control shows
   `defaultLapsPerBook(state.room.players.length)` when
   `Room.lapsPerBook` is `null`, and that this value changes as the test
