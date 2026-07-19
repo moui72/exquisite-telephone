@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { writable, type Writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -431,5 +433,12 @@ describe('Writing/Drawing view', () => {
     await Promise.resolve();
 
     expect(screen.getByLabelText(/your phrase/i)).toHaveValue('a partially typed guess');
+  });
+});
+
+describe('theme regression guard (plan-1449)', () => {
+  it('contains no leftover default-Tailwind slate- classes', () => {
+    const source = readFileSync(resolve(__dirname, './WritingDrawing.svelte'), 'utf-8');
+    expect(source).not.toMatch(/slate-/);
   });
 });

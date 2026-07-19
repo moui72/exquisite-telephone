@@ -40,7 +40,7 @@ status: in-progress
   source-scan test to `Lobby.test.ts` asserting the file's source
   contains no `slate-` substring; confirm it fails first, then apply
   the fix until it passes.
-- [ ] T004 [artifacts: ui] [parallel] Same treatment for
+- [x] T004 [artifacts: ui] [parallel] Same treatment for
   `WritingDrawing.svelte` (source-scan test added to
   `WritingDrawing.test.ts`) — note the existing `nonContinuable`/
   timeout-vote alert boxes (red/amber) are functional status colors
