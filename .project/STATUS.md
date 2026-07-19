@@ -1,6 +1,28 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-18 (`/ardd-backlog` logged
+_Updated: 2026-07-18 (`/ardd-implement` ran `tasks-1449-a6ef.md` end to
+end: delegated to a worktree subagent, all 9 tasks completed —
+`ui.md` clarified (theme applies globally + slate-to-token mapping
+table), a global `@layer base` added to `app.css` (body bg/color/font,
+heading font), and every remaining view (`Lobby`, `WritingDrawing`,
+`Reveal`, `ModerationPanel`, `App` terminal states, plus a
+confirmation pass on `TurnStatus`/`DrawingCanvas`'s toolbar) reskinned
+to the theme tokens, each verified via a source-scan regression test
+plus a manual `grep -c "slate-"` returning 0 — the mechanism designed
+specifically to prevent a repeat of the prior pass's "looked plausible
+but only half-landed" gap. Merge hit one snag: this repo's global
+`commit.gpgsign=true` uses the user's 1Password-backed key, which was
+locked, so the plain `git merge --no-ff -m` failed
+(`1Password: failed to fill whole buffer`) — resolved by finishing the
+already-staged, conflict-free merge with an explicit
+`-c user.signingkey=...id_claude_signing.pub` override, this repo's
+established on-disk-key convention for Claude-made commits. Merged
+clean to `main`, worktree reaped. Post-merge typecheck reconfirmed
+clean (327 files, 0 errors — the file count jumped from 216 because
+the subagent also fixed `client/tsconfig.app.json` missing `"node"` in
+its `types` array, needed once the new source-scan tests used
+`node:fs`/`node:path`/`__dirname`). `feedback-main-5fdc.md`'s F001 is
+now fully resolved and merged. Prior entry: `/ardd-backlog` logged
 `configurable-book-laps-per-gam`: a game-creation setting for how many
 laps each book takes before Reveal — default 2 laps under 5 players,
 1 lap otherwise, max 3. Backlog entry only; target with `/ardd-plan
@@ -336,11 +358,8 @@ merged — see Feature Backlog.
 
 ## In Flight
 
-- Worktree `.claude/worktrees/agent-a89f514d842a0d93b` (branch
-  `worktree-agent-a89f514d842a0d93b`) — `tasks-1449-a6ef.md`
-  in-progress, 1/9. The full-app salon/gallery theme reskin (feedback
-  F001 in `feedback-main-5fdc.md`, plan
-  `plan-1449-2026-07-18-2ce0.md`).
+_(none — the full-app reskin worktree reported back, merged clean,
+and was reaped)_
 
 ## fly-io-deployment: shipped
 
@@ -408,13 +427,13 @@ and `ui.md` were both refined 2026-07-17 with these decisions before
 implementation — both `stable`, and all three renderable artifacts
 (datamodel, infrastructure, ui) now have `diagram_status: current`
 after a fresh `/ardd-diagram` pass regenerated all three into `README.md`.
-1 backlogged (`configurable-book-laps-per-gam`, logged this pass), 0
-planned, 0 tasked, 8 implemented features. No cross-artifact conflicts
-or constitution violations. All diagrams current. 0 open feedback
-files — `feedback-main-5fdc.md` planned into
-`plan-1449-2026-07-18-2ce0.md`, now in flight on a delegated worktree
-(`tasks-1449-a6ef.md`, 1/9). ArDD update available (beta channel,
-`v0.10.3-beta.3`).
+1 backlogged (`configurable-book-laps-per-gam`), 0 planned, 0 tasked,
+8 implemented features. No cross-artifact conflicts or constitution
+violations. All diagrams current. 0 open feedback files —
+`feedback-main-5fdc.md`'s F001 (theme not applied broadly) fixed and
+merged via `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md`
+(completed 9/9). Nothing in flight. ArDD update available (beta
+channel, `v0.10.3-beta.3`).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the
@@ -439,10 +458,11 @@ yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
 ## Recommended Next Step
 
-Nothing blocking. The full-app theme reskin is already running in a
-delegated worktree (see In Flight) — check back for it to merge. When
-ready, `/ardd-plan configurable-book-laps-per-gam` to design the new
-book-laps setting. `/ardd-update` when convenient (beta channel has a
-newer release). Also worth doing at some point: a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks) to decide
-which merit a refine or backlog entry.
+Nothing blocking. `/ardd-plan configurable-book-laps-per-gam` when
+ready to design the new book-laps setting. `/ardd-update` when
+convenient (beta channel has a newer release). Also worth doing at
+some point: a look through `.project/audit.md`'s open findings (5
+questions, 3 risks) to decide which merit a refine or backlog entry.
+Also worth a quick manual look at the app now that the reskin is
+complete, to confirm it reads right beyond what automated tests can
+check.
