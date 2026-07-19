@@ -1,7 +1,7 @@
 ---
 plan: plan-1449-2026-07-18-2ce0.md
 generated: 2026-07-18
-status: ready
+status: in-progress
 ---
 
 # Tasks
