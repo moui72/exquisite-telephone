@@ -482,4 +482,44 @@ describe('Lobby view', () => {
       expect(source).not.toMatch(/slate-/);
     });
   });
+
+  describe('rules overview (plan-in-game-rules-and-guidance)', () => {
+    it('shows a "How this salon works" link before a room exists, and opens/dismisses the panel', async () => {
+      const session = makeFakeSession({ room: null, player: null, error: null });
+      render(Lobby, { props: { session } });
+
+      const link = screen.getByRole('button', { name: /how this salon works/i });
+      expect(link).toBeInTheDocument();
+
+      await fireEvent.click(link);
+      expect(screen.getByRole('dialog', { name: /how this salon works/i })).toBeInTheDocument();
+
+      await fireEvent.click(screen.getByRole('button', { name: /close|dismiss/i }));
+      expect(screen.queryByRole('dialog', { name: /how this salon works/i })).not.toBeInTheDocument();
+    });
+
+    it('shows the same link after joining/creating a room', () => {
+      const room: Room = {
+        id: 'ABCDE',
+        hostPlayerId: 'p1',
+        players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+        status: 'lobby',
+        books: [],
+        createdAt: Date.now(),
+        monochromeOnly: false,
+        turnTimerMinutes: null,
+        lapsPerBook: null,
+        roundStartedAt: null,
+        timerExtensions: {},
+        pendingTimeoutVote: null,
+        playAgainVotes: [],
+        nonContinuable: false,
+        revealStartedAt: null,
+      };
+      const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+      render(Lobby, { props: { session } });
+
+      expect(screen.getByRole('button', { name: /how this salon works/i })).toBeInTheDocument();
+    });
+  });
 });

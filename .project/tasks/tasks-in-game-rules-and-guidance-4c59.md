@@ -18,7 +18,7 @@ status: in-progress
   failing test first in `RulesOverview.test.ts` asserting the
   explanation text renders and a dismiss control calls `onClose`;
   confirm it fails, then implement.
-- [ ] T002 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`, add
+- [x] T002 [artifacts: ui] In `client/src/lib/views/Lobby.svelte`, add
   a "How this salon works" link/button (visible in both the pre-room
   Foyer branch and the in-room branch — both already render from this
   same component) that toggles local visibility state and renders

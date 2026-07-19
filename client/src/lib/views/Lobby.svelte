@@ -4,8 +4,11 @@
   import type { SessionStore } from '../stores/session.js';
   import ModerationPanel from '../components/ModerationPanel.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
+  import RulesOverview from '../components/RulesOverview.svelte';
 
   export let session: SessionStore = defaultSession;
+
+  let showRulesOverview = false;
 
   let mode: 'create' | 'join' = 'create';
   let displayName = '';
@@ -89,6 +92,18 @@
 </script>
 
 <div class="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-6 p-4 sm:p-6">
+  <button
+    type="button"
+    class="min-h-11 self-center text-sm font-medium text-ink/70 underline"
+    on:click={() => (showRulesOverview = true)}
+  >
+    How this salon works
+  </button>
+
+  {#if showRulesOverview}
+    <RulesOverview onClose={() => (showRulesOverview = false)} />
+  {/if}
+
   {#if !state.room}
     <div class="flex flex-col items-center gap-1 text-center">
       <h1
