@@ -1,6 +1,25 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-plan in-game-rules-and-guidance` ran:
+_Updated: 2026-07-19 (`/ardd-implement` ran
+`tasks-in-game-rules-and-guidance-4c59.md` end to end: delegated to a
+worktree subagent (solo mode, `delegation: eager`), all 6 tasks
+completed — a dismissible `RulesOverview.svelte` panel explaining the
+core game loop, reachable via a "How this salon works" toggle in both
+the Foyer and in-room `Lobby.svelte` branches; docent-voice turn hints
+in `WritingDrawing.svelte` keyed off `Entry.type`; a new
+`InfoTooltip.svelte` `(?)` affordance (click-to-reveal, mobile-friendly
+per Principle II) applied to all three host settings (force
+monochrome, turn timer, laps per book). **One real bug found and fixed
+along the way**: nesting the tooltip's `<button>` inside each setting's
+`<label>` broke implicit label association (a `<button>` is itself
+labelable, so the wrapping picked the wrong control) — fixed with
+explicit `id`/`for` association and distinct accessible names per
+tooltip. Tasks file flipped `completed`; feature flipped `implemented`.
+Merged clean to `main` (`merge_policy: auto`, no conflicts, 10 files
+changed), worktree reaped. Post-merge typecheck reconfirmed clean (331
+files, 0 errors — up from 327, the 4 new component/test files). Full
+suite per the subagent's own T006 run: 136 tests green, lint clean.
+Prior entry: `/ardd-plan in-game-rules-and-guidance` ran:
 designed and applied the feature's `ui.md` changes — a new "Rules
 Overview Panel" section (core-loop explanation, reachable from both
 the Foyer and Lobby via a "How this salon works" link), a docent-voice
@@ -427,15 +446,21 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 1 tasked · 9 implemented — see
+0 backlogged · 0 planned · 0 tasked · 10 implemented — see
 `.project/features/`.
 
-- `in-game-rules-and-guidance` (**tasked**) — a rules-overview panel,
-  explanatory text on the write/draw turn interface, and tooltips/info
-  links for every host-configurable setting. Plan:
-  `plan-in-game-rules-and-guidance-2026-07-19-5540.md` (approved, 4
-  phases). Tasks: `tasks-in-game-rules-and-guidance-4c59.md` (`ready`,
-  0/6).
+- `in-game-rules-and-guidance` (**implemented**) — a dismissible Rules
+  Overview panel (Foyer + Lobby), docent-voice turn hints on the
+  Writing/Drawing view, and `(?)` info tooltips on all three host
+  settings. Plan: `plan-in-game-rules-and-guidance-2026-07-19-5540.md`
+  (approved, 4 phases). Tasks:
+  `tasks-in-game-rules-and-guidance-4c59.md` (**completed**, 6/6) —
+  delegated to a worktree subagent, merged to `main` clean (no
+  conflicts), worktree reaped. Verified post-merge: typecheck 0 errors
+  (331 files), full suite 136 tests passing, lint clean. Found and
+  fixed a real label-association a11y bug along the way (a labelable
+  `<button>` nested inside a settings `<label>` stole the implicit
+  association).
 
 - `configurable-book-laps-per-gam` (**implemented**) — game-creation
   setting for how many laps each book takes before the game ends and
@@ -659,14 +684,12 @@ and fixed. A separate `/ardd-audit` full pass wrote 8 findings (0
 suggestions, 5 questions, 3 risks) to `.project/audit.md` — open, not
 yet resolved; unrelated to this session's bug fixes. Safe to /plan: yes.
 
-## Recommended Next Step
-
-Run `/ardd-implement` to execute `tasks-in-game-rules-and-guidance-4c59.md`
-(Rules Overview Panel, turn hints, host-setting tooltips). Separately
-worth doing: a fresh `/ardd-defects` pass to clear the now-fixed
-`62ab502f` entry from `DEFECTS.md`'s snapshot, `/ardd-diagram ui` to
-clear the diagram's `stale` stamp, and a look through
-`.project/audit.md`'s open findings (5 questions, 3 risks — one, the
-Performance Budgets question, is now moot per this session's
-constitution trim) to decide which of the rest merit a refine or
-backlog entry.
+Nothing blocking. Worth doing: a fresh `/ardd-defects` pass to clear
+the now-fixed `62ab502f` entry from `DEFECTS.md`'s snapshot,
+`/ardd-diagram ui` to clear the diagram's `stale` stamp, a manual look
+at the new Rules Overview panel / info tooltips in a real browser to
+confirm they read right beyond what automated tests can check, and a
+look through `.project/audit.md`'s open findings (5 questions, 3 risks
+— one, the Performance Budgets question, is now moot per this
+session's constitution trim) to decide which of the rest merit a
+refine or backlog entry.
