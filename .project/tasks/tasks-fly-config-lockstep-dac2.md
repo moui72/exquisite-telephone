@@ -103,7 +103,7 @@ status: in-progress
 
 ## Phase 3: Release promotion workflow
 
-- [ ] T011 [artifacts: infrastructure] Resolve Open Question 2 before writing
+- [x] T011 [artifacts: infrastructure] Resolve Open Question 2 before writing
   the workflow: determine whether a push made with the default `GITHUB_TOKEN`
   triggers the existing `deploy-prod` job on `release`. GitHub suppresses
   workflow runs triggered by `GITHUB_TOKEN` pushes, which would make promotion
@@ -111,6 +111,25 @@ status: in-progress
   finding and, if suppression applies, the chosen alternative (PAT or deploy
   key) and the secret name it needs. Research/decision task — no test
   requirement; the answer gates T012.
+
+  **Finding (2026-07-20, resolves Open Question 2): suppression applies.**
+  GitHub Docs (Triggering a workflow): "When a workflow run pushes code
+  using the repository's `GITHUB_TOKEN`, a new workflow will not run even
+  when the repository contains a workflow configured to run when `push`
+  events occur." This is GitHub's recursion guard. A promotion workflow
+  pushing `main` -> `release` with the default `GITHUB_TOKEN` would
+  therefore update the branch but never fire `deploy-prod` — a silent
+  no-op deploy, strictly worse than the manual push it replaces.
+
+  **Decision:** authenticate the promotion push with a fine-grained
+  Personal Access Token stored as the repo secret `PROMOTE_TOKEN`
+  (scope: Contents read/write on this repo only). A PAT-authenticated
+  push is an ordinary actor push and does trigger `deploy-prod`. Like the
+  two Fly API tokens, this secret must be created by hand once — see
+  infrastructure.md Deployment for the manual-step convention. A GitHub
+  App installation token would also work but needs an app registration
+  plus two secrets; the PAT is the simpler option that satisfies the
+  requirement (constitution Principle I).
 
 - [ ] T012 [artifacts: infrastructure] Add `.github/workflows/promote.yml`: a
   `workflow_dispatch`-only workflow that checks out the repo at full depth
