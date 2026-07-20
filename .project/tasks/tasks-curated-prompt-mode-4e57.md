@@ -1,7 +1,7 @@
 ---
 plan: plan-curated-prompt-mode-2026-07-19-cfab.md
 generated: 2026-07-19
-status: ready
+status: in-progress
 ---
 
 # Tasks
