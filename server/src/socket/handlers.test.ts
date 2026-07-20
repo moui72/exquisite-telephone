@@ -18,7 +18,10 @@ import {
   type PromptRatingValue,
   type Room,
 } from '@exquisite-telephone/shared';
-import type { CurationStore } from '../domain/curationStore.js';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createCurationStore, type CurationStore } from '../domain/curationStore.js';
 import { createLogger } from '../observability/logger.js';
 import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
@@ -1893,5 +1896,127 @@ describe('onSubmitEntry prompt rating', () => {
 
     expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
     expect(ack).not.toHaveBeenCalledWith(expect.objectContaining({ error: expect.anything() }));
+  });
+});
+
+/**
+ * The integration point between T013's origin resolution and T006's
+ * routing, exercised through the REAL curation store rather than a fake —
+ * so a mismatch between what the handler passes and what the store does
+ * with it cannot hide behind a stub.
+ *
+ * Note what is NOT asserted here: `Room.promptMode`. Mode correlates with
+ * origin but never determines it — the destination is decided by set
+ * membership alone, which is why a free-form phrase that happens to be in
+ * the bank lands in the bank tally.
+ */
+describe('onSubmitEntry rating routing (real curation store)', () => {
+  const logger = createLogger(() => {});
+  const STROKE_DATA = '{"ops":[{"type":"stroke","points":[[0,0],[9,9]]}]}';
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'curation-e2e-'));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  function submitRatedDrawing(openingContent: string, rating: PromptRatingValue) {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const players = room.players as [Player, Player, Player];
+    onStartGame(
+      makeFakeSocket(),
+      store,
+      { roomId: room.id, playerId: players[0].id, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+
+    for (const player of players) {
+      const book = room.books.find((b) => b.originAuthorId === player.id)!;
+      onSubmitEntry(
+        makeFakeSocket(),
+        store,
+        logger,
+        {
+          roomId: room.id,
+          playerId: player.id,
+          bookId: book.id,
+          content: player.id === players[0].id ? openingContent : 'another opening phrase',
+        },
+        vi.fn(),
+      );
+    }
+
+    const adasBook = room.books.find((b) => b.originAuthorId === players[0].id)!;
+    const drawer = computeNextEntry(room, adasBook)!;
+    const curation = createCurationStore(join(dir, 'c.json'), logger, { debounceMs: 60_000 });
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: drawer.authorId,
+        bookId: adasBook.id,
+        content: STROKE_DATA,
+        rating,
+      },
+      vi.fn(),
+      curation,
+    );
+
+    return curation;
+  }
+
+  it('routes a curated-bank opening phrase to the bank tally', () => {
+    const phrase = CURATED_PHRASE_BANK[0]!;
+
+    const curation = submitRatedDrawing(phrase, 'up');
+
+    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 1, down: 0 });
+    expect(curation.snapshot().candidates).toEqual([]);
+  });
+
+  it('routes a player-written opening phrase to the candidate pool', () => {
+    const written = 'a moose reading the evening news aloud to nobody';
+
+    const curation = submitRatedDrawing(written, 'up');
+
+    expect(curation.snapshot().candidates).toEqual([
+      { phrase: written, votes: 1, firstLoggedAt: expect.any(Number) },
+    ]);
+    expect(curation.snapshot().ratings).toEqual({});
+  });
+
+  it('records a thumbs-down on a bank phrase against the bank tally', () => {
+    const phrase = CURATED_PHRASE_BANK[1]!;
+
+    const curation = submitRatedDrawing(phrase, 'down');
+
+    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 0, down: 1 });
+  });
+
+  it('records a thumbs-down on a player-written phrase NOWHERE', () => {
+    const written = 'a moose reading the evening news aloud to nobody';
+
+    const curation = submitRatedDrawing(written, 'down');
+
+    expect(curation.snapshot()).toEqual({ ratings: {}, candidates: [] });
+  });
+
+  it('never tallies stroke data — nothing in the store resembles the drawing payload', () => {
+    const phrase = CURATED_PHRASE_BANK[0]!;
+
+    const curation = submitRatedDrawing(phrase, 'up');
+
+    const serialized = JSON.stringify(curation.snapshot());
+    expect(serialized).not.toContain('ops');
+    expect(serialized).not.toContain('stroke');
   });
 });
