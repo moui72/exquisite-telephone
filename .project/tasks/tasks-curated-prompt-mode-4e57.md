@@ -50,7 +50,7 @@ status: in-progress
 
 ## Phase 2: Server — host settings, deal, and submission validation
 
-- [ ] T004 [artifacts: datamodel] Add three host-only setting handlers
+- [x] T004 [artifacts: datamodel] Add three host-only setting handlers
   to `server/src/socket/handlers.ts`, each mirroring the existing
   `onSetLapsPerBook` shape (host-only guard, `status === 'lobby'`
   guard, `roomUpdated` broadcast) and registered as separate named

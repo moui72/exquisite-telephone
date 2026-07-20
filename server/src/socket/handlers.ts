@@ -846,3 +846,135 @@ export function onDisconnect(socket: Socket, store: RoomStore, logger: Logger): 
   logger.log({ event: 'player_left', outcome: 'success', roomId, playerId });
   socket.to(roomId).emit('roomUpdated', { room });
 }
+
+export interface SetPromptModeInput {
+  roomId: string;
+  playerId: string;
+  promptMode: 'free-form' | 'curated';
+}
+
+export interface SetPromptModeAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.promptMode` (ui.md Lobby View
+ * prompt-mode control), mirroring onSetLapsPerBook's exact guard shape.
+ * Kept a separate named handler from the two dependent curated settings
+ * per Principle VIII.
+ */
+export function onSetPromptMode(
+  socket: Socket,
+  store: RoomStore,
+  input: SetPromptModeInput,
+  ack: (response: SetPromptModeAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+  if (input.promptMode !== 'free-form' && input.promptMode !== 'curated') {
+    ack({ error: 'invalid-prompt-mode' });
+    return;
+  }
+
+  room.promptMode = input.promptMode;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
+export interface SetCuratedPromptCountInput {
+  roomId: string;
+  playerId: string;
+  curatedPromptCount: 2 | 3 | 4 | 5;
+}
+
+export interface SetCuratedPromptCountAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.curatedPromptCount` (ui.md Lobby
+ * View). Only `2 | 3 | 4 | 5` are accepted; anything else is rejected with
+ * `invalid-curated-prompt-count`. The value is a *request* — the deal clamps
+ * it to what the bank can cover (datamodel.md Normalization Rules).
+ */
+export function onSetCuratedPromptCount(
+  socket: Socket,
+  store: RoomStore,
+  input: SetCuratedPromptCountInput,
+  ack: (response: SetCuratedPromptCountAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+  if (![2, 3, 4, 5].includes(input.curatedPromptCount)) {
+    ack({ error: 'invalid-curated-prompt-count' });
+    return;
+  }
+
+  room.curatedPromptCount = input.curatedPromptCount;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
+export interface SetAllowPromptWriteInInput {
+  roomId: string;
+  playerId: string;
+  allowPromptWriteIn: boolean;
+}
+
+export interface SetAllowPromptWriteInAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only control for `Room.allowPromptWriteIn` (ui.md Lobby
+ * View), mirroring onSetMonochrome's boolean-toggle shape.
+ */
+export function onSetAllowPromptWriteIn(
+  socket: Socket,
+  store: RoomStore,
+  input: SetAllowPromptWriteInInput,
+  ack: (response: SetAllowPromptWriteInAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+
+  room.allowPromptWriteIn = input.allowPromptWriteIn;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}

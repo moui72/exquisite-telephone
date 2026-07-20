@@ -18,7 +18,10 @@ import {
   onEndGame,
   onKickPlayer,
   onRestartGame,
+  onSetAllowPromptWriteIn,
+  onSetCuratedPromptCount,
   onSetLapsPerBook,
+  onSetPromptMode,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -1142,5 +1145,212 @@ describe('onRestartGame', () => {
         roomId: room.id,
       }),
     );
+  });
+});
+
+/**
+ * The three curated-prompt host settings (datamodel.md Room), each a separate
+ * named handler per Principle VIII rather than one multi-field setter, and
+ * each mirroring onSetLapsPerBook's guard shape.
+ */
+describe('onSetPromptMode', () => {
+  it("lets the host set Room.promptMode to 'curated' while the room is in lobby", () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetPromptMode(socket, store, { roomId: room.id, playerId: adaId, promptMode: 'curated' }, ack);
+
+    expect(room.promptMode).toBe('curated');
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('rejects an invalid promptMode with invalid-prompt-mode', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetPromptMode(
+      socket,
+      store,
+      // @ts-expect-error intentionally invalid input for this test
+      { roomId: room.id, playerId: adaId, promptMode: 'freeform' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-prompt-mode' });
+    expect(room.promptMode).toBe('free-form');
+  });
+
+  it('rejects a non-host caller with not-host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetPromptMode(
+      socket,
+      store,
+      { roomId: room.id, playerId: graceId, promptMode: 'curated' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(room.promptMode).toBe('free-form');
+  });
+
+  it('rejects setting the prompt mode once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetPromptMode(socket, store, { roomId: room.id, playerId: adaId, promptMode: 'curated' }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.promptMode).toBe('free-form');
+  });
+});
+
+describe('onSetCuratedPromptCount', () => {
+  it('lets the host set Room.curatedPromptCount to 2, 3, 4, or 5 while in lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetCuratedPromptCount(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, curatedPromptCount: 4 },
+      ack,
+    );
+
+    expect(room.curatedPromptCount).toBe(4);
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('rejects an out-of-range count with invalid-curated-prompt-count', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetCuratedPromptCount(
+      socket,
+      store,
+      // @ts-expect-error intentionally invalid input for this test
+      { roomId: room.id, playerId: adaId, curatedPromptCount: 6 },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-curated-prompt-count' });
+    expect(room.curatedPromptCount).toBeNull();
+  });
+
+  it('rejects a non-host caller with not-host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetCuratedPromptCount(
+      socket,
+      store,
+      { roomId: room.id, playerId: graceId, curatedPromptCount: 3 },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(room.curatedPromptCount).toBeNull();
+  });
+
+  it('rejects setting the count once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetCuratedPromptCount(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, curatedPromptCount: 3 },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.curatedPromptCount).toBeNull();
+  });
+});
+
+describe('onSetAllowPromptWriteIn', () => {
+  it('lets the host turn write-in off while the room is in lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetAllowPromptWriteIn(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, allowPromptWriteIn: false },
+      ack,
+    );
+
+    expect(room.allowPromptWriteIn).toBe(false);
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('rejects a non-host caller with not-host', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetAllowPromptWriteIn(
+      socket,
+      store,
+      { roomId: room.id, playerId: graceId, allowPromptWriteIn: false },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-host' });
+    expect(room.allowPromptWriteIn).toBe(true);
+  });
+
+  it('rejects setting write-in once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetAllowPromptWriteIn(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, allowPromptWriteIn: false },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.allowPromptWriteIn).toBe(true);
   });
 });

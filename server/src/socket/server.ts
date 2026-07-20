@@ -13,8 +13,11 @@ import {
   onRejoin,
   onPlayAgain,
   onRestartGame,
+  onSetAllowPromptWriteIn,
+  onSetCuratedPromptCount,
   onSetLapsPerBook,
   onSetMonochrome,
+  onSetPromptMode,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -35,10 +38,16 @@ import {
   type RejoinInput,
   type RestartGameAck,
   type RestartGameInput,
+  type SetAllowPromptWriteInAck,
+  type SetAllowPromptWriteInInput,
+  type SetCuratedPromptCountAck,
+  type SetCuratedPromptCountInput,
   type SetLapsPerBookAck,
   type SetLapsPerBookInput,
   type SetMonochromeAck,
   type SetMonochromeInput,
+  type SetPromptModeAck,
+  type SetPromptModeInput,
   type SetTurnTimerAck,
   type SetTurnTimerInput,
   type StartGameAck,
@@ -110,6 +119,27 @@ export function createSocketServer(
       'set_laps_per_book',
       (input: SetLapsPerBookInput, ack: (response: SetLapsPerBookAck) => void) => {
         onSetLapsPerBook(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_prompt_mode',
+      (input: SetPromptModeInput, ack: (response: SetPromptModeAck) => void) => {
+        onSetPromptMode(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_curated_prompt_count',
+      (input: SetCuratedPromptCountInput, ack: (response: SetCuratedPromptCountAck) => void) => {
+        onSetCuratedPromptCount(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_allow_prompt_write_in',
+      (input: SetAllowPromptWriteInInput, ack: (response: SetAllowPromptWriteInAck) => void) => {
+        onSetAllowPromptWriteIn(socket, store, input, ack);
       },
     );
 
