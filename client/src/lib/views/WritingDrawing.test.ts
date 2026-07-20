@@ -676,3 +676,73 @@ describe('Writing/Drawing turn hint', () => {
     expect(screen.getByText(/never been told the original phrase/i)).toBeInTheDocument();
   });
 });
+
+/**
+ * The prompt-rating control (ui.md Writing/Drawing View). Shown on the
+ * ONE drawing turn whose source is a book's opening phrase — the drawer
+ * at `Entry.position === 1` is the only player who had to work with that
+ * phrase, so the only useful judge of it.
+ */
+describe('prompt rating control', () => {
+  /** A book with `entryCount` entries already in, so the next turn is at `entryCount`. */
+  function bookWithEntries(entryCount: number): Book {
+    const authors = [ada, grace, lin];
+    return {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: Array.from({ length: entryCount }, (_, position) => ({
+        id: `e${position}`,
+        bookId: 'book-ada',
+        authorId: authors[position % authors.length]!.id,
+        position,
+        type: position % 2 === 0 ? ('text' as const) : ('drawing' as const),
+        content: position === 0 ? 'a spoonful of sugar' : serializeDrawOps([]),
+      })),
+    };
+  }
+
+  function renderAtPosition(position: number, player = grace) {
+    const room = makeRoom([bookWithEntries(position)], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player, error: null });
+    return { ...render(WritingDrawing, { props: { session } }), session };
+  }
+
+  it('renders both thumbs on the position-1 drawing turn', () => {
+    renderAtPosition(1);
+
+    expect(screen.getByRole('button', { name: /^thumbs up/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^thumbs down/i })).toBeInTheDocument();
+  });
+
+  it('asks about the phrase, not the drawing', () => {
+    renderAtPosition(1);
+
+    expect(screen.getByText(/was this fun to draw/i)).toBeInTheDocument();
+  });
+
+  it('renders NO rating control on the position-0 writing turn', () => {
+    renderAtPosition(0, ada);
+
+    expect(screen.queryByRole('button', { name: /^thumbs up/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/was this fun to draw/i)).not.toBeInTheDocument();
+  });
+
+  it('renders NO rating control on the position-2 writing turn', () => {
+    renderAtPosition(2, lin);
+
+    expect(screen.queryByRole('button', { name: /^thumbs up/i })).not.toBeInTheDocument();
+  });
+
+  /**
+   * Position 3 is a drawing turn like position 1, which is exactly why
+   * this is asserted separately: "is a drawing turn" is the wrong
+   * condition, and only this test tells the two apart.
+   */
+  it('renders NO rating control on the position-3 DRAWING turn — it draws a guess, not a prompt', () => {
+    renderAtPosition(3, ada);
+
+    expect(screen.getByRole('img', { name: /drawing canvas/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^thumbs up/i })).not.toBeInTheDocument();
+  });
+});

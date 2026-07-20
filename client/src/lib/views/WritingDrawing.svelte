@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { computeNextEntries, parseDrawOps, serializeDrawOps } from '@exquisite-telephone/shared';
-  import type { DrawOps } from '@exquisite-telephone/shared';
+  import type { DrawOps, PromptRatingValue } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
-  import { Send, Timer } from '@lucide/svelte';
+  import { Send, ThumbsDown, ThumbsUp, Timer } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
@@ -62,6 +62,7 @@
       textValue = '';
       drawnOps = [];
       selectedPrompt = null;
+      promptRating = null;
     }
   }
 
@@ -108,6 +109,17 @@
     if (!myTurn || !textValue.trim()) return;
     await session.submitEntry(myTurn.bookId, textValue.trim());
   }
+
+  // Prompt rating (ui.md Writing/Drawing View, datamodel.md
+  // Normalization Rules -- Prompt rating). Position 1 ONLY: that is the
+  // single drawing turn whose source is a book's opening phrase. Later
+  // drawing turns depict a mid-chain guess, which is not a prompt and has
+  // nothing to curate -- so "is a drawing turn" is deliberately NOT the
+  // condition here.
+  $: isOpeningPhraseDrawTurn = myTurn?.position === 1;
+
+  /** null until the player touches the control -- untouched is the normal path. */
+  let promptRating: PromptRatingValue | null = null;
 
   async function handleSubmitDrawing() {
     if (!myTurn || drawnOps.length === 0) return;
@@ -319,6 +331,38 @@
             onOpsChange={handleOpsChange}
             monochromeOnly={state.room?.monochromeOnly ?? false}
           />
+          {#if isOpeningPhraseDrawTurn}
+            <!--
+              Optional and unobtrusive: submitting without touching it is
+              the normal path, and it never gates the submit button. Both
+              thumbs render regardless of where the phrase came from --
+              branching by origin would leak which mode produced a phrase
+              the player is not otherwise told about (ui.md).
+            -->
+            <fieldset class="flex items-center gap-3 border-0 p-0">
+              <legend class="text-sm italic text-ink/60">Was this fun to draw?</legend>
+              <button
+                type="button"
+                aria-label="Thumbs up — fun to draw"
+                aria-pressed={promptRating === 'up'}
+                class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
+                class:bg-butter={promptRating === 'up'}
+                on:click={() => (promptRating = promptRating === 'up' ? null : 'up')}
+              >
+                <ThumbsUp size={16} aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                aria-label="Thumbs down — not fun to draw"
+                aria-pressed={promptRating === 'down'}
+                class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
+                class:bg-butter={promptRating === 'down'}
+                on:click={() => (promptRating = promptRating === 'down' ? null : 'down')}
+              >
+                <ThumbsDown size={16} aria-hidden="true" />
+              </button>
+            </fieldset>
+          {/if}
           <button
             type="button"
             class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
