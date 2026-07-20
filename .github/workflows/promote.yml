@@ -35,6 +35,34 @@ jobs:
           set -euo pipefail
 
           # A plain, non-force push. Git itself rejects a non-fast-forward
-          # update — never a merge, never a force push.
-          git push origin main:release
-          echo "release fast-forwarded to $(git rev-parse --short main)"
+          # update, which is exactly the behaviour we want: divergence means
+          # release holds a commit main does not have, and that commit never
+          # passed `checks` on main. That invariant is what lets release skip
+          # CI, so a human must resolve it — this workflow must never merge
+          # and never force-push.
+          if git push origin main:release; then
+            echo "release fast-forwarded to $(git rev-parse --short main)"
+            exit 0
+          fi
+
+          echo "::error::Promotion aborted: release could not be fast-forwarded from main."
+          cat >&2 <<'MSG'
+
+          release has diverged from main — it holds at least one commit that
+          main does not.
+
+          This is not something this workflow may repair. It will never merge
+          and never force-push: prod deploys from release WITHOUT re-running
+          checks, and that is only safe because every commit on release
+          already passed checks on main. A merge or force-push here would
+          deploy code that never did.
+
+          Resolve it by hand, then re-run this workflow:
+
+            git fetch origin
+            git log --oneline origin/main..origin/release   # what release has that main doesn't
+
+          Get those commits onto main (cherry-pick or revert them there) so
+          that release becomes a strict ancestor of main again.
+          MSG
+          exit 1

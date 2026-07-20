@@ -137,7 +137,7 @@ status: in-progress
   pushes `main` to `release` with a plain non-force push, using the credential
   decided in T011. Concurrency-group it so two dispatches can't race.
 
-- [ ] T013 [artifacts: infrastructure] Make a non-fast-forward rejection a hard,
+- [x] T013 [artifacts: infrastructure] Make a non-fast-forward rejection a hard,
   explicit failure with an actionable message — never a merge, never a force
   push. Divergence means `release` holds a commit `main` doesn't have, which
   never passed `checks` on `main`; that is exactly the invariant letting
