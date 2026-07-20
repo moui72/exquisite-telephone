@@ -1,0 +1,40 @@
+name: Promote main to release
+
+# Manual promotion only: prod (fly.toml, exquisite-telephone) deploys from
+# `release`, and `release` only ever receives a fast-forward of `main`.
+# This workflow replaces the remembered `git push origin main:release`.
+on:
+  workflow_dispatch:
+
+# Two dispatches must not race each other onto the same branch.
+concurrency:
+  group: promote-release
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Fast-forward release to main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          # A shallow clone cannot compute fast-forwardness — git needs the
+          # full history of both branches to know whether release is an
+          # ancestor of main.
+          fetch-depth: 0
+          # NOT the default GITHUB_TOKEN: a push authenticated with it does
+          # not trigger further workflow runs (GitHub's recursion guard),
+          # so deploy-prod would never fire and promotion would silently
+          # deploy nothing. PROMOTE_TOKEN is a fine-grained PAT with
+          # Contents read/write, created by hand — see infrastructure.md.
+          token: ${{ secrets.PROMOTE_TOKEN }}
+
+      - name: Push main to release (fast-forward only)
+        run: |
+          set -euo pipefail
+
+          # A plain, non-force push. Git itself rejects a non-fast-forward
+          # update — never a merge, never a force push.
+          git push origin main:release
+          echo "release fast-forwarded to $(git rev-parse --short main)"

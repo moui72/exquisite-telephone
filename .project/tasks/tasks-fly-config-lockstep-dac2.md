@@ -131,7 +131,7 @@ status: in-progress
   plus two secrets; the PAT is the simpler option that satisfies the
   requirement (constitution Principle I).
 
-- [ ] T012 [artifacts: infrastructure] Add `.github/workflows/promote.yml`: a
+- [x] T012 [artifacts: infrastructure] Add `.github/workflows/promote.yml`: a
   `workflow_dispatch`-only workflow that checks out the repo at full depth
   (`fetch-depth: 0` — a shallow clone cannot compute fast-forwardness) and
   pushes `main` to `release` with a plain non-force push, using the credential
