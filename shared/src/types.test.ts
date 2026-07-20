@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { Book, Entry, Player, Room } from './index.js';
+import type {
+  Book,
+  CandidatePhrase,
+  Entry,
+  Player,
+  PromptRating,
+  PromptRatingValue,
+  Room,
+} from './index.js';
 
 describe('datamodel types (datamodel.md)', () => {
   it('Entry requires id, bookId, authorId, position, type, content', () => {
@@ -119,5 +127,33 @@ describe('datamodel types (datamodel.md)', () => {
 
     const curated: Room = { ...room, promptMode: 'curated', curatedPromptCount: 3 };
     expect(curated.curatedPromptCount).toBe(3);
+  });
+});
+
+describe('persisted curation types (datamodel.md Persisted Entities)', () => {
+  it('PromptRating requires phrase, up, down', () => {
+    const rating: PromptRating = { phrase: 'a bear on a unicycle', up: 3, down: 1 };
+
+    expect(rating.phrase).toBe('a bear on a unicycle');
+    expect(rating.up).toBe(3);
+    expect(rating.down).toBe(1);
+  });
+
+  it('CandidatePhrase requires phrase, votes, firstLoggedAt', () => {
+    const candidate: CandidatePhrase = {
+      phrase: 'a moose reading the news',
+      votes: 2,
+      firstLoggedAt: 1_700_000_000_000,
+    };
+
+    expect(candidate.phrase).toBe('a moose reading the news');
+    expect(candidate.votes).toBe(2);
+    expect(candidate.firstLoggedAt).toBeGreaterThan(0);
+  });
+
+  it('PromptRatingValue is exactly up | down', () => {
+    const values: PromptRatingValue[] = ['up', 'down'];
+
+    expect(values).toEqual(['up', 'down']);
   });
 });

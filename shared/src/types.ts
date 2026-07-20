@@ -182,3 +182,47 @@ export interface Room {
    */
   revealStartedAt: number | null;
 }
+
+/**
+ * A player's verdict on a book's opening phrase, cast on the
+ * `Entry.position === 1` drawing turn. See datamodel.md Normalization
+ * Rules — Prompt rating.
+ */
+export type PromptRatingValue = 'up' | 'down';
+
+/**
+ * Running tally for one curated-bank phrase.
+ *
+ * PERSISTED. Along with {@link CandidatePhrase}, this is one of only two
+ * shapes in this app that outlive the server process — everything else
+ * (Room, Player, Book, Entry) is in-memory and dies with a restart. It
+ * lives in the Curation Store's JSON file, not the room store, and
+ * carries no link back to the rater or the phrase's author.
+ */
+export interface PromptRating {
+  /** Verbatim text from `CURATED_PHRASE_BANK`; the record key. */
+  phrase: string;
+  /** Count of thumbs-up, across all games ever played. */
+  up: number;
+  /** Count of thumbs-down, across all games ever played. */
+  down: number;
+}
+
+/**
+ * A distinct player-written opening phrase that has received at least
+ * one thumbs-up — the mining path for new bank entries. There is no
+ * negative counterpart: a thumbs-down on a player-written phrase is
+ * recorded nowhere (datamodel.md Persisted Entities).
+ *
+ * PERSISTED. Like {@link PromptRating}, one of only two shapes in this
+ * app that outlive the server process, and the only one holding
+ * player-authored text past the life of its room.
+ */
+export interface CandidatePhrase {
+  /** Verbatim player-written text; the record key. Never normalized or lowercased. */
+  phrase: string;
+  /** How many times this exact text has been thumbs-upped, across all games. */
+  votes: number;
+  /** Epoch ms of the first thumbs-up. */
+  firstLoggedAt: number;
+}
