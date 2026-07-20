@@ -42,7 +42,7 @@ const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1
 const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
 const lin = { id: 'lin', roomId, name: 'Lin', connected: true, sessionToken: 't3', kicked: false };
 
-function makeRoom(books: Book[], players = [ada, grace]): Room {
+function makeRoom(books: Book[], players = [ada, grace], overrides: Partial<Room> = {}): Room {
   return {
     id: roomId,
     hostPlayerId: ada.id,
@@ -63,6 +63,7 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     curatedPromptCount: null,
     allowPromptWriteIn: true,
     dealtPrompts: {},
+    ...overrides,
   };
 }
 
@@ -545,5 +546,85 @@ describe('theme regression guard (plan-1449)', () => {
   it('contains no leftover default-Tailwind slate- classes', () => {
     const source = readFileSync(resolve(__dirname, './WritingDrawing.svelte'), 'utf-8');
     expect(source).not.toMatch(/slate-/);
+  });
+});
+
+/**
+ * Curated opening turns (ui.md Writing/Drawing View). Applies to
+ * `myTurn.position === 0` only; later text turns stay free-form in both
+ * modes. A player only ever sees their own hand.
+ */
+describe('Writing/Drawing curated opening turn', () => {
+  const curatedRoom = (overrides: Partial<Room> = {}) =>
+    makeRoom([{ id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] }], [ada, grace], {
+      promptMode: 'curated',
+      curatedPromptCount: 3,
+      dealtPrompts: {
+        ada: ['A shark knitting', 'A giraffe in an elevator', 'A whale wearing a hat'],
+        grace: ['A frog giving a presentation'],
+      },
+      ...overrides,
+    });
+
+  it("renders the player's own dealt hand as selectable choices", () => {
+    const room = curatedRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByLabelText('A shark knitting')).toBeInTheDocument();
+    expect(screen.getByLabelText('A giraffe in an elevator')).toBeInTheDocument();
+    expect(screen.getByLabelText('A whale wearing a hat')).toBeInTheDocument();
+  });
+
+  it("never renders another player's hand", () => {
+    const room = curatedRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByText('A frog giving a presentation')).not.toBeInTheDocument();
+  });
+
+  it('submits the selected phrase', async () => {
+    const room = curatedRoom();
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    await fireEvent.click(screen.getByLabelText('A giraffe in an elevator'));
+    await fireEvent.click(screen.getByRole('button', { name: /present your contribution/i }));
+
+    expect(session.submitEntry).toHaveBeenCalledWith('book-ada', 'A giraffe in an elevator');
+  });
+
+  it('offers a write-your-own option revealing a free-text field when write-in is allowed', async () => {
+    const room = curatedRoom({ allowPromptWriteIn: true });
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    const writeOwn = screen.getByLabelText(/write my own/i);
+    expect(writeOwn).toBeInTheDocument();
+
+    await fireEvent.click(writeOwn);
+    const field = screen.getByLabelText(/your own phrase/i);
+    await fireEvent.input(field, { target: { value: 'A badger doing taxes' } });
+    await fireEvent.click(screen.getByRole('button', { name: /present your contribution/i }));
+
+    expect(session.submitEntry).toHaveBeenCalledWith('book-ada', 'A badger doing taxes');
+  });
+
+  it('omits the write-your-own option when write-in is off', () => {
+    const room = curatedRoom({ allowPromptWriteIn: false });
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByLabelText(/write my own/i)).not.toBeInTheDocument();
+  });
+
+  it('leaves free-form mode showing the plain text input', () => {
+    const room = makeRoom([{ id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] }]);
+    const session = makeFakeSession({ room, player: ada, error: null });
+    const { container } = render(WritingDrawing, { props: { session } });
+
+    expect(container.querySelector('input[type="text"]')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/write my own/i)).not.toBeInTheDocument();
   });
 });

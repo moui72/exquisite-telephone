@@ -61,6 +61,7 @@
     if (turnKey !== null) {
       textValue = '';
       drawnOps = [];
+      selectedPrompt = null;
     }
   }
 
@@ -79,6 +80,28 @@
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // Curated opening turn (ui.md Writing/Drawing View, datamodel.md
+  // Normalization Rules -- Curated prompts). Applies to position 0 only:
+  // every later text turn is a blind guess and stays free-form in both
+  // modes. Only ever this player's own hand -- never anyone else's.
+  $: isCuratedOpeningTurn =
+    myTurn?.position === 0 && state.room?.promptMode === 'curated';
+  $: myDealtPrompts =
+    isCuratedOpeningTurn && state.player ? (state.room?.dealtPrompts[state.player.id] ?? []) : [];
+  $: allowWriteIn = state.room?.allowPromptWriteIn ?? false;
+
+  /** The chosen dealt phrase, or the WRITE_IN sentinel. Reset per turn. */
+  const WRITE_IN = '\u0000write-in';
+  let selectedPrompt: string | null = null;
+
+  $: curatedContent =
+    selectedPrompt === WRITE_IN ? textValue.trim() : (selectedPrompt ?? '');
+
+  async function handleSubmitCuratedPrompt() {
+    if (!myTurn || !curatedContent) return;
+    await session.submitEntry(myTurn.bookId, curatedContent);
   }
 
   async function handleSubmitText() {
@@ -195,7 +218,63 @@
         </div>
       {/if}
 
-      {#if myTurn.type === 'text'}
+      {#if isCuratedOpeningTurn}
+        <p class="text-sm italic text-ink/60">
+          Choose the phrase your book will chase. Yours alone — no other guest was offered
+          these.
+        </p>
+        <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitCuratedPrompt}>
+          <fieldset class="flex flex-col gap-2">
+            <legend class="text-sm font-medium text-ink/90">Your hand</legend>
+            {#each myDealtPrompts as phrase (phrase)}
+              <label class="flex items-center gap-2 text-base text-ink/90">
+                <input
+                  type="radio"
+                  name="curated-prompt"
+                  value={phrase}
+                  bind:group={selectedPrompt}
+                />
+                {phrase}
+              </label>
+            {/each}
+            {#if allowWriteIn}
+              <label class="flex items-center gap-2 text-base text-ink/90">
+                <input
+                  type="radio"
+                  name="curated-prompt"
+                  value={WRITE_IN}
+                  bind:group={selectedPrompt}
+                />
+                Write my own instead
+              </label>
+            {/if}
+          </fieldset>
+
+          {#if selectedPrompt === WRITE_IN}
+            <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
+              Your own phrase
+              <input
+                class="rounded-md border px-3 py-2 text-base"
+                type="text"
+                required
+                bind:value={textValue}
+                autocomplete="off"
+              />
+            </label>
+          {/if}
+
+          <button
+            type="submit"
+            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!curatedContent}
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <Send size={16} aria-hidden="true" />
+              Present your contribution
+            </span>
+          </button>
+        </form>
+      {:else if myTurn.type === 'text'}
         <p class="text-sm italic text-ink/60">
           Write blind: you have never been told the original phrase, only what you see drawn
           above. Guess the phrase that inspired it.

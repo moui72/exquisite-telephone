@@ -108,7 +108,7 @@ status: in-progress
 
 ## Phase 4: Client — opening-turn selection and hint correction
 
-- [ ] T009 [artifacts: ui] Add the opening-turn branch to
+- [x] T009 [artifacts: ui] Add the opening-turn branch to
   `client/src/lib/views/WritingDrawing.svelte`. When `myTurn.position
   === 0` and the room is in curated mode, present that player's own
   `Room.dealtPrompts` hand as a selectable choice (one selection,
