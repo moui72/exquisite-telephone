@@ -1,7 +1,7 @@
 ---
 plan: plan-25a0-2026-07-20-1822.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
