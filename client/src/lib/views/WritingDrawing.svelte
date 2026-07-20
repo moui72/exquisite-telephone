@@ -275,10 +275,21 @@
           </button>
         </form>
       {:else if myTurn.type === 'text'}
-        <p class="text-sm italic text-ink/60">
-          Write blind: you have never been told the original phrase, only what you see drawn
-          above. Guess the phrase that inspired it.
-        </p>
+        <!-- The hint splits three ways (ui.md Writing/Drawing View). The
+             blind-guess copy below is only true from position 1 onward; on
+             the opening turn there is no preceding entry to guess from, so
+             it gets its own framing. -->
+        {#if myTurn.position === 0}
+          <p class="text-sm italic text-ink/60">
+            Set the phrase the rest of the circle will chase. Write something worth drawing —
+            everything that follows begins here.
+          </p>
+        {:else}
+          <p class="text-sm italic text-ink/60">
+            Write blind: you have never been told the original phrase, only what you see drawn
+            above. Guess the phrase that inspired it.
+          </p>
+        {/if}
         <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitText}>
           <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
             Your phrase

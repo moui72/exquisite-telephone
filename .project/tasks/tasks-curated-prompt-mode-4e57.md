@@ -120,7 +120,7 @@ status: in-progress
   rendering the hand, the write-in option appearing only when allowed,
   and free-form mode being unchanged.
 
-- [ ] T010 [artifacts: ui] Split the turn hint three ways in
+- [x] T010 [artifacts: ui] Split the turn hint three ways in
   `client/src/lib/views/WritingDrawing.svelte`, replacing the current
   two-way `Entry.type` branch: the draw-turn hint (unchanged), the
   later-text hint for `position > 0` (the existing blind-guess copy),

@@ -628,3 +628,51 @@ describe('Writing/Drawing curated opening turn', () => {
     expect(screen.queryByLabelText(/write my own/i)).not.toBeInTheDocument();
   });
 });
+
+/**
+ * The turn hint splits three ways (ui.md Writing/Drawing View): the draw-turn
+ * hint, the later-text blind-guess hint for position > 0, and an opening-turn
+ * hint for position 0. The blind-guess copy claims the player was never told
+ * the original phrase and points at "what you see drawn above" -- both false
+ * on the opening turn, where no preceding entry exists.
+ */
+describe('Writing/Drawing turn hint', () => {
+  it('does not render the blind-guess copy on a free-form opening turn', () => {
+    const room = makeRoom([{ id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] }]);
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByText(/never been told the original phrase/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/what you see drawn above/i)).not.toBeInTheDocument();
+  });
+
+  it('renders an origin-turn hint framing the player as setting the phrase', () => {
+    const room = makeRoom([{ id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] }]);
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/the rest of the circle will chase/i)).toBeInTheDocument();
+  });
+
+  it('still renders the blind-guess copy on a later text turn', () => {
+    const strokes = serializeDrawOps([
+      { type: 'stroke', points: [{ x: 0, y: 0 }, { x: 4, y: 4 }], color: '#1e293b', width: 3 },
+    ]);
+    // Ada's book: her opening phrase, then Grace's drawing. Position 2 is a
+    // text turn -- a genuine blind guess.
+    const book: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        { id: 'e0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'a phrase' },
+        { id: 'e1', bookId: 'book-ada', authorId: grace.id, position: 1, type: 'drawing', content: strokes },
+      ],
+    };
+    const room = makeRoom([book], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player: lin, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/never been told the original phrase/i)).toBeInTheDocument();
+  });
+});
