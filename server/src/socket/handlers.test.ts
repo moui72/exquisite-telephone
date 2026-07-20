@@ -1604,3 +1604,36 @@ describe('onSubmitEntry curated opening-turn validation', () => {
     expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
   });
 });
+
+/**
+ * datamodel.md Room: `curatedPromptCount` is "null while
+ * `promptMode === 'free-form'`" -- the coupling has to survive a host who
+ * picks a count and then switches back.
+ */
+describe('onSetPromptMode keeps curatedPromptCount coupled to the mode', () => {
+  it('clears curatedPromptCount when the host switches back to free-form', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    const socket = makeFakeSocket();
+
+    onSetPromptMode(socket, store, { roomId: room.id, playerId: adaId, promptMode: 'curated' }, vi.fn());
+    onSetCuratedPromptCount(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, curatedPromptCount: 5 },
+      vi.fn(),
+    );
+    expect(room.curatedPromptCount).toBe(5);
+
+    onSetPromptMode(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, promptMode: 'free-form' },
+      vi.fn(),
+    );
+
+    expect(room.promptMode).toBe('free-form');
+    expect(room.curatedPromptCount).toBeNull();
+  });
+});

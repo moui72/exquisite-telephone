@@ -908,6 +908,12 @@ export function onSetPromptMode(
   }
 
   room.promptMode = input.promptMode;
+  // datamodel.md Room: `curatedPromptCount` is null while the mode is
+  // free-form, so switching back clears a count the host chose earlier
+  // rather than leaving a stale value on the room.
+  if (input.promptMode === 'free-form') {
+    room.curatedPromptCount = null;
+  }
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }
