@@ -1,6 +1,6 @@
 ---
 slug: player-prompt-rating
-status: tasked
+status: implemented
 logged: 2026-07-20
 plan: plan-curated-phrase-bank-2026-07-20-4eeb.md
 tasks: tasks-curated-phrase-bank-e335.md

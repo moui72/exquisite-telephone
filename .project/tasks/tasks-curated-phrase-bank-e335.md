@@ -1,7 +1,7 @@
 ---
 plan: plan-curated-phrase-bank-2026-07-20-4eeb.md
 generated: 2026-07-20
-status: in-progress
+status: completed
 ---
 
 # Tasks
