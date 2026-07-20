@@ -1,7 +1,7 @@
 ---
 plan: plan-help-text-accuracy-2026-07-20-e6e1.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
