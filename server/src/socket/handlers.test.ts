@@ -1354,3 +1354,111 @@ describe('onSetAllowPromptWriteIn', () => {
     expect(room.allowPromptWriteIn).toBe(true);
   });
 });
+
+/**
+ * Dealing curated prompts at game start and restart (datamodel.md
+ * Normalization Rules — Curated prompts).
+ */
+describe('curated prompt dealing on start and restart', () => {
+  it('deals a hand to every non-kicked player when the room is in curated mode', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const adaId = room.players[0]!.id;
+    room.promptMode = 'curated';
+    room.curatedPromptCount = 3;
+
+    const socket = makeFakeSocket();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+
+    expect(Object.keys(room.dealtPrompts).sort()).toEqual(room.players.map((p) => p.id).sort());
+    for (const player of room.players) {
+      expect(room.dealtPrompts[player.id]).toHaveLength(3);
+    }
+    // Structural distinctness: partitioning one shuffle, never sampling.
+    const all = Object.values(room.dealtPrompts).flat();
+    expect(new Set(all).size).toBe(all.length);
+  });
+
+  it('leaves dealtPrompts empty in free-form mode', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+
+    expect(room.dealtPrompts).toEqual({});
+  });
+
+  it('excludes kicked players from the deal', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const adaId = room.players[0]!.id;
+    const linusId = room.players[2]!.id;
+    room.players[2]!.kicked = true;
+    room.promptMode = 'curated';
+    room.curatedPromptCount = 2;
+
+    const socket = makeFakeSocket();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+
+    expect(room.dealtPrompts[linusId]).toBeUndefined();
+    expect(Object.keys(room.dealtPrompts)).toHaveLength(2);
+  });
+
+  it('re-deals a fresh hand on restart', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const adaId = room.players[0]!.id;
+    room.promptMode = 'curated';
+    room.curatedPromptCount = 3;
+
+    const socket = makeFakeSocket();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+    const firstDeal = JSON.stringify(room.dealtPrompts);
+
+    room.nonContinuable = true;
+    onRestartGame(
+      socket,
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId },
+      vi.fn(),
+    );
+
+    expect(Object.keys(room.dealtPrompts)).toHaveLength(3);
+    for (const player of room.players) {
+      expect(room.dealtPrompts[player.id]).toHaveLength(3);
+    }
+    // A re-deal, not the same hands carried over. With a 74-phrase bank and
+    // 9 phrases dealt, an identical shuffle result is vanishingly unlikely.
+    expect(JSON.stringify(room.dealtPrompts)).not.toBe(firstDeal);
+  });
+});

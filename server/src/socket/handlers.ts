@@ -2,7 +2,9 @@ import { randomUUID } from 'node:crypto';
 import {
   computeNextEntries,
   computeNextEntry,
+  CURATED_PHRASE_BANK,
   currentRoundFor,
+  dealPrompts,
   defaultLapsPerBook,
   type Entry,
   type Player,
@@ -153,6 +155,7 @@ export function onStartGame(
   room.status = 'writing';
   room.lapsPerBook = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
   room.books = createBooksForRoom(room);
+  dealCuratedPrompts(room);
   room.roundStartedAt = Date.now();
   room.timerExtensions = {};
   room.pendingTimeoutVote = null;
@@ -433,6 +436,7 @@ export function onRestartGame(
   }
 
   room.books = createBooksForRoom(room);
+  dealCuratedPrompts(room);
   room.timerExtensions = {};
   room.pendingTimeoutVote = null;
   room.status = 'writing';
@@ -977,4 +981,30 @@ export function onSetAllowPromptWriteIn(
   room.allowPromptWriteIn = input.allowPromptWriteIn;
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
+}
+
+/**
+ * Populate `Room.dealtPrompts` for the room's non-kicked players, or clear it
+ * in free-form mode (datamodel.md Normalization Rules — Curated prompts).
+ * Called from both game-start paths; *Restart game* re-deals a fresh hand
+ * alongside the regenerated books.
+ */
+function dealCuratedPrompts(room: Room): void {
+  if (room.promptMode !== 'curated') {
+    room.dealtPrompts = {};
+    return;
+  }
+  const playerIds = room.players.filter((player) => !player.kicked).map((player) => player.id);
+  // PRODUCTION ANNOTATION: ui.md documents the count selector's options
+  // (2/3/4/5) but not a default for `Room.curatedPromptCount` when the host
+  // switches to curated without touching the selector. The Lobby sets 3
+  // explicitly on that switch, so this fallback should be unreachable; it
+  // exists so a null can never reach `dealPrompts`. If the artifact later
+  // names a default, replace this constant with it.
+  const DEFAULT_CURATED_PROMPT_COUNT = 3;
+  room.dealtPrompts = dealPrompts(
+    CURATED_PHRASE_BANK,
+    playerIds,
+    room.curatedPromptCount ?? DEFAULT_CURATED_PROMPT_COUNT,
+  );
 }

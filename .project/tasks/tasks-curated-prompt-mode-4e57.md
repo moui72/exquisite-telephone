@@ -61,7 +61,7 @@ status: in-progress
   failing cases for each handler covering the happy path, the non-host
   rejection, and the after-lobby rejection.
 
-- [ ] T005 [artifacts: datamodel] Call the T003 deal from both
+- [x] T005 [artifacts: datamodel] Call the T003 deal from both
   `createBooksForRoom` call sites in `server/src/socket/handlers.ts` —
   `onStartGame` (~line 155) and the restart path (~line 435) — populating
   `Room.dealtPrompts` for non-kicked players only when
