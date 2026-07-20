@@ -253,6 +253,9 @@ export function createCurationStore(
       }
 
       await mkdir(eventsDir, { recursive: true });
+      // The filename's timestamp exists for ORDERING only -- it is not
+      // the rating time. `event.ratedAt` is the rating time, and the fold
+      // reads that, never the name.
       const target = resolveEventPath(eventsDir, generateEventFilename(now(), event.phrase));
       // 'wx' -- EXCLUSIVE create. Never opens an existing file, so an
       // event can never be overwritten or partially rewritten, and a name

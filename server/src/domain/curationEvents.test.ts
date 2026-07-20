@@ -235,8 +235,13 @@ describe('aggregate (read-time fold)', () => {
 
     // The crash case append-only accepts by construction: one truncated
     // trailing file, written when the process died mid-write.
+    // The name must be a VALID generated name -- a real mid-write crash
+    // leaves a properly-named file with truncated contents. A
+    // bad-shaped name would be rejected by resolveEventPath first, and
+    // this test would pass without ever exercising the parse failure it
+    // exists to cover. Sorts last, so it is genuinely the trailing file.
     writeFileSync(
-      join(curationEventsDirFor(dataPath), '9999999999999-partial.json'),
+      join(curationEventsDirFor(dataPath), '9999999999999-deadbeef-dead-beef-dead-beefdeadbeef.json'),
       '{"phrase":"trunca',
       'utf8',
     );
