@@ -162,6 +162,36 @@ describe('App (top-level state routing per ui.md States)', () => {
   });
 });
 
+describe('salon footer rules overview (plan-in-game-rules-and-guidance)', () => {
+  it('shows a "How this salon works" button in the footer before a room exists, and opens/dismisses the overlay', async () => {
+    const session = makeFakeSession({ room: null, player: null, error: null, reconnecting: false });
+    render(App, { props: { session } });
+
+    const link = screen.getByRole('button', { name: /how this salon works/i });
+    expect(link).toBeInTheDocument();
+
+    await fireEvent.click(link);
+    expect(screen.getByRole('dialog', { name: /how this salon works/i })).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: /close|dismiss/i }));
+    expect(screen.queryByRole('dialog', { name: /how this salon works/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the same button on every game view (lobby with room, writing, reveal)', () => {
+    for (const status of ['lobby', 'writing', 'reveal'] as const) {
+      const session = makeFakeSession({
+        room: makeRoom(status),
+        player: ada,
+        error: null,
+        reconnecting: false,
+      });
+      render(App, { props: { session } });
+      expect(screen.getByRole('button', { name: /how this salon works/i })).toBeInTheDocument();
+      cleanup();
+    }
+  });
+});
+
 describe('theme regression guard (plan-1449)', () => {
   it('contains no leftover default-Tailwind slate- classes', () => {
     const source = readFileSync(resolve(__dirname, './App.svelte'), 'utf-8');

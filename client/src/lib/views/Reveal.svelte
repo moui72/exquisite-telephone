@@ -4,8 +4,8 @@
   import type { Book } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
+  import { ChevronLeft, ChevronRight, DoorOpen, Download, Eye, Repeat } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
-  import ModerationPanel from '../components/ModerationPanel.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
@@ -188,6 +188,7 @@
     <h1
       class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
         font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+        [-webkit-text-stroke:1.5px_theme(colors.ink)] [paint-order:stroke_fill]
         sm:text-5xl"
     >
       The Gallery Opens
@@ -196,8 +197,6 @@
   </div>
 
   {#if room}
-    <ModerationPanel {session} />
-
     <div class="flex flex-wrap items-center gap-3 border-b border-marigold/30 pb-6">
       {#if isHost}
         <button
@@ -205,14 +204,20 @@
           class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
           on:click={handleEndGame}
         >
-          Close the Exhibition
+          <span class="inline-flex items-center gap-1.5">
+            <DoorOpen size={16} aria-hidden="true" />
+            Close the Exhibition
+          </span>
         </button>
         <button
           type="button"
           class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
           on:click={handlePlayAgain}
         >
-          Stage an Encore
+          <span class="inline-flex items-center gap-1.5">
+            <Repeat size={16} aria-hidden="true" />
+            Stage an Encore
+          </span>
         </button>
         <span class="text-sm text-ink/60">
           {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
@@ -223,14 +228,20 @@
           class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
           on:click={handleLeaveGame}
         >
-          Depart the Salon
+          <span class="inline-flex items-center gap-1.5">
+            <DoorOpen size={16} aria-hidden="true" />
+            Depart the Salon
+          </span>
         </button>
         <button
           type="button"
           class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
           on:click={handleVoteToPlayAgain}
         >
-          Vote for an Encore
+          <span class="inline-flex items-center gap-1.5">
+            <Repeat size={16} aria-hidden="true" />
+            Vote for an Encore
+          </span>
         </button>
       {/if}
     </div>
@@ -250,7 +261,10 @@
               class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
               on:click={() => handleSave(currentBook.id)}
             >
-              Preserve as Keepsake
+              <span class="inline-flex items-center gap-1.5">
+                <Download size={14} aria-hidden="true" />
+                Preserve as Keepsake
+              </span>
             </button>
           </div>
 
@@ -297,7 +311,10 @@
           disabled={currentBookIndex === 0}
           on:click={handlePrevious}
         >
-          Previous
+          <span class="inline-flex items-center gap-1">
+            <ChevronLeft size={16} aria-hidden="true" />
+            Previous
+          </span>
         </button>
         <button
           type="button"
@@ -305,14 +322,20 @@
           disabled={currentBookIndex >= room.books.length - 1}
           on:click={handleNext}
         >
-          Next
+          <span class="inline-flex items-center gap-1">
+            Next
+            <ChevronRight size={16} aria-hidden="true" />
+          </span>
         </button>
         <button
           type="button"
           class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
           on:click={handleShowEverything}
         >
-          Show everything
+          <span class="inline-flex items-center gap-1.5">
+            <Eye size={16} aria-hidden="true" />
+            Show everything
+          </span>
         </button>
       </div>
     {:else}
@@ -328,7 +351,10 @@
                 class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
                 on:click={() => handleSave(book.id)}
               >
-                Preserve as Keepsake
+                <span class="inline-flex items-center gap-1.5">
+                  <Download size={14} aria-hidden="true" />
+                  Preserve as Keepsake
+                </span>
               </button>
             </div>
             {#each [...book.entries].sort((a, b) => a.position - b.position) as entry (entry.id)}

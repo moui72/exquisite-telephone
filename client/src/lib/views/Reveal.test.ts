@@ -368,7 +368,11 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
     expect(screen.queryByText('a0')).not.toBeInTheDocument();
     expect(screen.queryByText('b0')).not.toBeInTheDocument();
     const art = generateCoverArt(ada.id);
-    expect(document.querySelectorAll('circle')).toHaveLength(art.shapes.length);
+    // Scoped to the cover-art svg — decorative lucide icons elsewhere in
+    // the view also render <circle> elements.
+    expect(document.querySelectorAll('svg[aria-label="cover art"] circle')).toHaveLength(
+      art.shapes.length,
+    );
   });
 
   it('reveals up to 2 entries after the 2.5s cover delay plus one 4s tick', async () => {

@@ -22,3 +22,89 @@
     @apply font-display;
   }
 }
+
+@layer components {
+  /*
+   * Chamfered double border — cut corners plus an inset second stroke,
+   * echoing the Gilt Frame's engraved-plaque geometry with a crisper,
+   * faceted edge for buttons and other small interactive shapes.
+   *
+   * A plain `border` can't be used here: clip-path only clips whatever
+   * was already painted inside the box's four straight edges, so a
+   * rectangular border clipped to an octagon loses its stroke along
+   * every diagonal cut (no pixels were ever painted there to reveal).
+   * Instead each ring is a filled `currentColor` shape, masked down to
+   * a hollow ring via `content-box` exclusion, THEN clipped to the
+   * chamfer polygon — clipping a filled ring correctly reveals its
+   * diagonal segments, since they're actual painted area, not an
+   * absent rectangular border edge.
+   *
+   * `--chamfer` sets the corner cut size; `--chamfer-color` sets the
+   * ring color (defaults to currentColor) — override either via a
+   * Tailwind arbitrary property, e.g. `[--chamfer-color:theme(colors.marigold)]`.
+   */
+  .chamfer-frame {
+    --chamfer: 10px;
+    position: relative;
+    clip-path: polygon(
+      var(--chamfer) 0,
+      calc(100% - var(--chamfer)) 0,
+      100% var(--chamfer),
+      100% calc(100% - var(--chamfer)),
+      calc(100% - var(--chamfer)) 100%,
+      var(--chamfer) 100%,
+      0 calc(100% - var(--chamfer)),
+      0 var(--chamfer)
+    );
+  }
+
+  .chamfer-frame::before,
+  .chamfer-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--chamfer-color, currentColor);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  .chamfer-frame::before {
+    clip-path: inherit;
+    padding: 2px;
+  }
+
+  /*
+   * Slim variant for small controls (tab buttons, compact actions):
+   * a tighter corner cut and no inset second stroke. At button scale
+   * the double ring reads as clutter, and the inner octagon's offset
+   * math visibly distorts once the control is only a couple of chamfer
+   * widths tall.
+   */
+  .chamfer-slim {
+    --chamfer: 7px;
+  }
+
+  .chamfer-slim::after {
+    display: none;
+  }
+
+  .chamfer-frame::after {
+    inset: 5px;
+    padding: 1px;
+    opacity: 0.45;
+    clip-path: polygon(
+      calc(var(--chamfer) - 5px) 0,
+      calc(100% - var(--chamfer) + 5px) 0,
+      100% calc(var(--chamfer) - 5px),
+      100% calc(100% - var(--chamfer) + 5px),
+      calc(100% - var(--chamfer) + 5px) 100%,
+      calc(var(--chamfer) - 5px) 100%,
+      0 calc(100% - var(--chamfer) + 5px),
+      0 calc(var(--chamfer) - 5px)
+    );
+  }
+}

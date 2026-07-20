@@ -2,14 +2,11 @@
   import { defaultLapsPerBook } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
-  import ModerationPanel from '../components/ModerationPanel.svelte';
+  import { Crown, Sparkles } from '@lucide/svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
-  import RulesOverview from '../components/RulesOverview.svelte';
   import InfoTooltip from '../components/InfoTooltip.svelte';
 
   export let session: SessionStore = defaultSession;
-
-  let showRulesOverview = false;
 
   let mode: 'create' | 'join' = 'create';
   let displayName = '';
@@ -93,23 +90,12 @@
 </script>
 
 <div class="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-6 p-4 sm:p-6">
-  <button
-    type="button"
-    class="min-h-11 self-center text-sm font-medium text-ink/70 underline"
-    on:click={() => (showRulesOverview = true)}
-  >
-    How this salon works
-  </button>
-
-  {#if showRulesOverview}
-    <RulesOverview onClose={() => (showRulesOverview = false)} />
-  {/if}
-
   {#if !state.room}
     <div class="flex flex-col items-center gap-1 text-center">
       <h1
         class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
           font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+          [-webkit-text-stroke:1.5px_theme(colors.ink)] [paint-order:stroke_fill]
           sm:text-6xl"
       >
         Exquisite Telephone
@@ -122,15 +108,19 @@
 
     <GiltFrame caption="The Foyer — RSVP Required">
       <div role="tablist" aria-label="Join or create a room" class="flex gap-2">
+        <!--
+          Both tabs share the same slim chamfered silhouette; only the
+          active one gets the marigold ring and bubblegum fill. Inactive
+          tabs are a quiet tinted cut-corner shape with no outline at
+          all — a stroke on an unselected tab competed with the frame.
+        -->
         <button
           type="button"
           role="tab"
           aria-selected={mode === 'create'}
-          class="flex-1 rounded-md border border-marigold/60 px-4 py-3 text-sm font-medium sm:py-2"
-          class:bg-bubblegum={mode === 'create'}
-          class:text-white={mode === 'create'}
-          class:bg-butter={mode !== 'create'}
-          class:text-ink={mode !== 'create'}
+          class="flex-1 px-4 py-3 text-sm font-medium sm:py-2 {mode === 'create'
+            ? 'chamfer-frame chamfer-slim bg-bubblegum text-white [--chamfer-color:theme(colors.marigold)]'
+            : 'chamfer-frame chamfer-slim bg-marigold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-marigold/25'}"
           on:click={() => (mode = 'create')}
         >
           Create room
@@ -139,11 +129,9 @@
           type="button"
           role="tab"
           aria-selected={mode === 'join'}
-          class="flex-1 rounded-md border border-marigold/60 px-4 py-3 text-sm font-medium sm:py-2"
-          class:bg-bubblegum={mode === 'join'}
-          class:text-white={mode === 'join'}
-          class:bg-butter={mode !== 'join'}
-          class:text-ink={mode !== 'join'}
+          class="flex-1 px-4 py-3 text-sm font-medium sm:py-2 {mode === 'join'
+            ? 'chamfer-frame chamfer-slim bg-bubblegum text-white [--chamfer-color:theme(colors.marigold)]'
+            : 'chamfer-frame chamfer-slim bg-marigold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-marigold/25'}"
           on:click={() => (mode = 'join')}
         >
           Join room
@@ -181,7 +169,7 @@
 
         <button
           type="submit"
-          class="rounded-md bg-bubblegum px-4 py-3 text-base font-medium text-white sm:py-2"
+          class="chamfer-frame bg-bubblegum px-4 py-3 text-base font-medium text-white [--chamfer-color:theme(colors.butter)] sm:py-2"
         >
           {mode === 'create' ? 'Create room' : 'Join room'}
         </button>
@@ -189,8 +177,6 @@
     </GiltFrame>
   {:else}
     <div class="flex flex-col gap-4">
-      <ModerationPanel {session} />
-
       <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
         <p class="text-sm text-ink/75">Room code</p>
         <p class="text-3xl font-bold tracking-widest text-ink">{state.room.id}</p>
@@ -200,7 +186,10 @@
             <li class="rounded-md border border-marigold/30 px-3 py-2 text-base">
               {player.name}
               {#if player.id === state.room.hostPlayerId}
-                <span class="text-xs text-ink/60">(host)</span>
+                <span class="inline-flex items-center gap-1 text-xs text-ink/60">
+                  <Crown size={12} class="text-marigold" aria-hidden="true" />
+                  (host)
+                </span>
               {/if}
             </li>
           {/each}
@@ -208,7 +197,10 @@
       </GiltFrame>
 
       {#if isHost}
-        <div class="flex items-center gap-2">
+        <InfoTooltip
+          label="About force monochrome"
+          explanation="Hides the color palette from everyone's drawing tool, for the whole game."
+        >
           <label for="monochrome-toggle" class="flex items-center gap-2 text-sm font-medium text-ink/90">
             <input
               id="monochrome-toggle"
@@ -218,22 +210,17 @@
             />
             Enforce a Monochrome Decree
           </label>
-          <InfoTooltip
-            label="About force monochrome"
-            explanation="Hides the color palette from everyone's drawing tool, for the whole game."
-          />
-        </div>
+        </InfoTooltip>
 
         <div class="flex flex-col gap-1">
-          <div class="flex items-center gap-2">
+          <InfoTooltip
+            label="About turn timer"
+            explanation="Sets a duration for each turn; once it elapses, the room can advance a stalled round via a timeout vote."
+          >
             <label for="turn-timer-select" class="text-sm font-medium text-ink/90">
               Allotted Contemplation Period
             </label>
-            <InfoTooltip
-              label="About turn timer"
-              explanation="Sets a duration for each turn; once it elapses, the room can advance a stalled round via a timeout vote."
-            />
-          </div>
+          </InfoTooltip>
           <select
             id="turn-timer-select"
             class="rounded-md border border-marigold/30 px-3 py-2 text-base"
@@ -247,15 +234,14 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <div class="flex items-center gap-2">
+          <InfoTooltip
+            label="What's a lap?"
+            explanation="A lap is one full trip of a book around the circle. This sets how many laps happen before Reveal."
+          >
             <label for="laps-per-book-select" class="text-sm font-medium text-ink/90">
               Laps Per Book
             </label>
-            <InfoTooltip
-              label="What's a lap?"
-              explanation="A lap is one full trip of a book around the circle. This sets how many laps happen before Reveal."
-            />
-          </div>
+          </InfoTooltip>
           <select
             id="laps-per-book-select"
             class="rounded-md border border-marigold/30 px-3 py-2 text-base"
@@ -282,11 +268,14 @@
 
         <button
           type="button"
-          class="rounded-md bg-bubblegum px-4 py-2 text-base font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+          class="chamfer-frame bg-bubblegum px-4 py-2 text-base font-medium text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={belowMinimumPlayers && !acknowledgeSmallGame}
           on:click={handleStartGame}
         >
-          Commence the Exhibition
+          <span class="inline-flex items-center gap-1.5">
+            <Sparkles size={18} aria-hidden="true" />
+            Commence the Exhibition
+          </span>
         </button>
       {/if}
     </div>

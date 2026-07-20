@@ -15,9 +15,20 @@
   <div class="gilt-frame-inner rounded border-2 border-marigold/60 p-2">
     <slot />
   </div>
-  <p class="gilt-frame-plaque mt-2 text-center font-mono text-xs text-ink/80">
-    {caption}
-  </p>
+  {#if $$slots['plaque-action']}
+    <div class="mt-2 flex items-center gap-2">
+      <p class="gilt-frame-plaque min-w-0 flex-1 text-left font-mono text-xs text-ink/80">
+        {caption}
+      </p>
+      <!-- Right-aligned action beside the plaque (modals put their
+           Close button here so the whole modal is one framed piece). -->
+      <slot name="plaque-action" />
+    </div>
+  {:else}
+    <p class="gilt-frame-plaque mt-2 text-center font-mono text-xs text-ink/80">
+      {caption}
+    </p>
+  {/if}
 </div>
 
 <style>

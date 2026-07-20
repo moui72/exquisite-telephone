@@ -71,12 +71,12 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
     expect(screen.queryByText('Moderation')).not.toBeInTheDocument();
   });
 
-  it('shows a collapsible panel with a kick button per non-host player for the host', async () => {
+  it('shows a modal with a kick button per non-host player for the host', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -84,10 +84,9 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
-    expect(screen.getByText('Moderation')).toBeInTheDocument();
-    await fireEvent.click(screen.getByText('Moderation'));
+    expect(screen.getByRole('dialog', { name: 'Moderation' })).toBeInTheDocument();
 
     expect(screen.getByText('Grace')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Escort from the Salon' })).toBeInTheDocument();
@@ -101,8 +100,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Escort from the Salon' }));
 
     expect(session.kickPlayer).toHaveBeenCalledWith(grace.id);
@@ -117,8 +115,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
     expect(screen.queryByText('Grace')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Kicked' })).not.toBeInTheDocument();
@@ -132,8 +129,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
     expect(screen.queryByRole('button', { name: 'Restage the Salon' })).not.toBeInTheDocument();
   });
@@ -146,8 +142,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Restage the Salon' }));
 
     expect(session.restartGame).toHaveBeenCalled();
@@ -161,8 +156,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Close the Exhibition' }));
 
     expect(session.endGame).toHaveBeenCalled();
@@ -176,8 +170,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
     expect(screen.getByRole('alert')).toHaveTextContent(/this salon cannot continue/i);
   });
@@ -190,10 +183,24 @@ describe('ModerationPanel (host-only moderation controls)', () => {
       reconnecting: false,
     });
 
-    render(ModerationPanel, { props: { session } });
-    await fireEvent.click(screen.getByText('Moderation'));
+    render(ModerationPanel, { props: { session, onClose: vi.fn() } });
 
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('calls onClose when the Close button is clicked', async () => {
+    const onClose = vi.fn();
+    const session = makeFakeSession({
+      room: makeRoom(),
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(ModerationPanel, { props: { session, onClose } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+
+    expect(onClose).toHaveBeenCalled();
   });
 });
 

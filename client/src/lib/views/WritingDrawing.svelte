@@ -4,9 +4,9 @@
   import type { DrawOps } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
+  import { Send, Timer } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
-  import ModerationPanel from '../components/ModerationPanel.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
 
   export let session: SessionStore = defaultSession;
@@ -117,8 +117,6 @@
 
 <div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
   {#if state.room}
-    <ModerationPanel {session} />
-
     {#if state.room.nonContinuable && state.player?.id !== state.room.hostPlayerId}
       <p role="alert" class="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800">
         This salon cannot continue — a guest was removed mid-round. The house awaits the host's
@@ -130,7 +128,11 @@
   {/if}
 
   {#if countdownLabel !== null}
-    <p data-testid="turn-timer-countdown" class="text-sm font-medium text-amber-700">
+    <p
+      data-testid="turn-timer-countdown"
+      class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700"
+    >
+      <Timer size={16} aria-hidden="true" />
       Time remaining: {countdownLabel}
     </p>
   {/if}
@@ -209,8 +211,11 @@
               autocomplete="off"
             />
           </label>
-          <button type="submit" class="rounded-md bg-bubblegum px-4 py-2 text-base text-white">
-            Present your contribution
+          <button type="submit" class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)]">
+            <span class="inline-flex items-center gap-1.5">
+              <Send size={16} aria-hidden="true" />
+              Present your contribution
+            </span>
           </button>
         </form>
       {:else}
@@ -226,11 +231,14 @@
           />
           <button
             type="button"
-            class="rounded-md bg-bubblegum px-4 py-2 text-base text-white disabled:cursor-not-allowed disabled:opacity-50"
+            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={drawnOps.length === 0}
             on:click={handleSubmitDrawing}
           >
-            Present your contribution
+            <span class="inline-flex items-center gap-1.5">
+              <Send size={16} aria-hidden="true" />
+              Present your contribution
+            </span>
           </button>
         </div>
       {/if}

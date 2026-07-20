@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@exquisite-telephone/shared": "workspace:*",
+    "@lucide/svelte": "^1.25.0",
     "socket.io-client": "^4.8.0"
   },
   "devDependencies": {
