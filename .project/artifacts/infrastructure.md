@@ -183,10 +183,36 @@ runtime.
 
 A Fly **volume** is mounted for the Curation Store (see above) — the
 only persistent disk this app uses. `CURATION_DATA_PATH` points at a
-file inside that mount. The volume is what carries curation data across
-the process restart every deploy causes; without it the file would be
-recreated empty on each release. Game state is deliberately *not* moved
-onto it.
+file inside that mount (`/data/curation.json`). The volume is what
+carries curation data across the process restart every deploy causes;
+without it the file would be recreated empty on each release. Game state
+is deliberately *not* moved onto it.
+
+### One-time volume creation (required before the first deploy)
+
+`fly deploy` does **not** create the volume for you. A deploy whose
+`fly.toml` declares a `[mounts]` entry with no matching volume fails at
+machine start, not at build time — so it looks like a healthy deploy
+right up until nothing comes back up. Create it once, by hand:
+
+```
+fly status                       # read the machine's ACTUAL region
+fly volumes create curation_data --size 1 --region <that region>
+```
+
+**The region must match the machine's**, not necessarily
+`primary_region` in `fly.toml`. A volume in a different region is
+invisible to the machine, which then fails to start with no obviously
+storage-related error. Always read the running machine's region from
+`fly status` rather than assuming it followed `primary_region`.
+
+1GB is Fly's minimum volume size — far beyond what a few hundred
+counters need, but there is no smaller option and no reason to pick a
+larger one.
+
+Because the volume pins the app to the one machine that mounts it, this
+is also why `fly scale count 1` matters (see the note in `fly.toml`): a
+second machine would neither see this volume nor share the file.
 
 ## Production Annotations
 

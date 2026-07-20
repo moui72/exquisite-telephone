@@ -43,4 +43,4 @@ status: in-progress
 ## Phase 6: Deployment
 
 - [x] T020 [artifacts: infrastructure] Add the volume mount to `fly.toml` and point `CURATION_DATA_PATH` at a file inside it. Resolves the plan's Open Question 1: the volume MUST be created in the same region as the running machine or the machine will fail to start — read the machine's actual region (`fly status`) rather than assuming `iad` from the config. Documentation/config change; no test requirement.
-- [ ] T021 [artifacts: infrastructure] Document the one-time `fly volumes create` step in `infrastructure.md`'s Deployment section — a `fly deploy` will NOT create the volume for you, and a deploy against a missing volume fails at machine start. Include the region caveat from T020. Documentation-only; no test requirement.
+- [x] T021 [artifacts: infrastructure] Document the one-time `fly volumes create` step in `infrastructure.md`'s Deployment section — a `fly deploy` will NOT create the volume for you, and a deploy against a missing volume fails at machine start. Include the region caveat from T020. Documentation-only; no test requirement.
