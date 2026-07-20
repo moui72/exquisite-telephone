@@ -14,7 +14,7 @@ status: in-progress
 
 ## Phase 2: Vote membership and roster rendering
 
-- [ ] T004 In `server/src/domain/timerSweep.ts`, exclude kicked players from the timeout-vote membership sets — `stalledPlayerIds` (line ~168) and the derived voter/`submittedPlayerIds` set (line ~177) — by filtering through `activePlayers` from T001 rather than `room.players`. A kicked player must no longer appear as stalled or as an eligible voter. Test: a room with a kicked, turn-due player does not open a vote against them / does not count them toward plurality. [defect: bf503c53] [artifacts: datamodel]
+- [x] T004 In `server/src/domain/timerSweep.ts`, exclude kicked players from the timeout-vote membership sets — `stalledPlayerIds` (line ~168) and the derived voter/`submittedPlayerIds` set (line ~177) — by filtering through `activePlayers` from T001 rather than `room.players`. A kicked player must no longer appear as stalled or as an eligible voter. Test: a room with a kicked, turn-due player does not open a vote against them / does not count them toward plurality. [defect: bf503c53] [artifacts: datamodel]
 - [ ] T005 [parallel] Filter kicked players out of the roster rendering in `client/src/lib/views/Lobby.svelte` (the `{#each state.room.players as player}` at ~line 210) and `client/src/lib/components/TurnStatus.svelte` (`{#each room.players as player}` at ~line 16), so no non-host view lists a kicked player. Test: assert a kicked player is absent from the rendered `Lobby`/`TurnStatus` output — not merely that `ModerationPanel` still filters. [defect: 4de54acc] [artifacts: ui]
 
 ## Phase 3: Timer extensions become additive

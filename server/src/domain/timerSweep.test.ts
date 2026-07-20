@@ -248,6 +248,50 @@ describe('sweepRoom', () => {
     );
   });
 
+  it('excludes a kicked player from both the stalled set and the eligible voters', () => {
+    // lin is kicked: she has no book (restart excludes her) and must
+    // never be swept into eligibleVoterIds via room.players. ada is
+    // turn-due and past deadline; grace has submitted.
+    const kickedLin = { ...lin, kicked: true };
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookB: Book = {
+      id: 'bookB',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        {
+          id: 'b0',
+          bookId: 'bookB',
+          authorId: grace.id,
+          position: 0,
+          type: 'text',
+          content: 'phrase',
+        },
+      ],
+    };
+    const room = makeRoom({ players: [ada, grace, kickedLin], books: [bookA, bookB] });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).not.toBeNull();
+    expect(room.pendingTimeoutVote!.stalledPlayerIds).toEqual([ada.id]);
+    expect(room.pendingTimeoutVote!.eligibleVoterIds).toEqual([grace.id]);
+    expect(room.pendingTimeoutVote!.eligibleVoterIds).not.toContain(kickedLin.id);
+  });
+
+  it('when no active voter has submitted, the fallback eligible set is the active roster (no kicked player)', () => {
+    const kickedLin = { ...lin, kicked: true };
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const bookB: Book = { id: 'bookB', roomId, originAuthorId: grace.id, entries: [] };
+    const room = makeRoom({ players: [ada, grace, kickedLin], books: [bookA, bookB] });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote!.stalledPlayerIds.sort()).toEqual([ada.id, grace.id].sort());
+    expect(room.pendingTimeoutVote!.eligibleVoterIds.sort()).toEqual([ada.id, grace.id].sort());
+    expect(room.pendingTimeoutVote!.eligibleVoterIds).not.toContain(kickedLin.id);
+  });
+
   it("resolves an open vote once its voteDeadline has passed", () => {
     const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
     const pendingTimeoutVote: TimeoutVote = {

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  activePlayers,
   computeNextEntries,
   type Entry,
   type Room,
@@ -165,7 +166,14 @@ export function sweepRoom(room: Room, now: number, logger?: Logger): void {
     return;
   }
 
-  const stalledPlayerIds = [...new Set(nextEntries.map((e) => e.authorId))];
+  // Vote membership is drawn from the active roster only — a kicked
+  // player is neither stalled nor an eligible voter (see datamodel.md
+  // Player.kicked). `computeNextEntries` already skips kicked authors,
+  // but filter explicitly so the guarantee doesn't depend on that.
+  const activeIds = new Set(activePlayers(room).map((p) => p.id));
+  const stalledPlayerIds = [
+    ...new Set(nextEntries.map((e) => e.authorId).filter((id) => activeIds.has(id))),
+  ];
   const allStalledPastDeadline = stalledPlayerIds.every(
     (playerId) => now >= deadlineFor(room, playerId),
   );
@@ -174,10 +182,9 @@ export function sweepRoom(room: Room, now: number, logger?: Logger): void {
   }
 
   const stalledSet = new Set(stalledPlayerIds);
-  const submittedPlayerIds = room.players.map((p) => p.id).filter((id) => !stalledSet.has(id));
-  const eligibleVoterIds = submittedPlayerIds.length > 0
-    ? submittedPlayerIds
-    : room.players.map((p) => p.id);
+  const activePlayerIds = [...activeIds];
+  const submittedPlayerIds = activePlayerIds.filter((id) => !stalledSet.has(id));
+  const eligibleVoterIds = submittedPlayerIds.length > 0 ? submittedPlayerIds : activePlayerIds;
 
   const vote: TimeoutVote = {
     stalledPlayerIds,
