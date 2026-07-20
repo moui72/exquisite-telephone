@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Handler-list correction
 
-- [ ] T001 [artifacts: infrastructure] [defect: c217e21f] Add `onSetPromptMode`, `onSetCuratedPromptCount`, and `onSetAllowPromptWriteIn` to the Realtime Sync handler list in `.project/artifacts/infrastructure.md`. All three are wired in `server/src/socket/server.ts` but absent from the artifact's list, which reads as exhaustive — so an agent consulting it to find the prompt-mode handlers concludes they do not exist. Verify against `server.ts` rather than trusting this description; if further handlers are also missing, add those too and say so. Documentation-only; no test requirement (constitution Principle III exempts documentation changes).
+- [x] T001 [artifacts: infrastructure] [defect: c217e21f] Add `onSetPromptMode`, `onSetCuratedPromptCount`, and `onSetAllowPromptWriteIn` to the Realtime Sync handler list in `.project/artifacts/infrastructure.md`. All three are wired in `server/src/socket/server.ts` but absent from the artifact's list, which reads as exhaustive — so an agent consulting it to find the prompt-mode handlers concludes they do not exist. Verify against `server.ts` rather than trusting this description; if further handlers are also missing, add those too and say so. Documentation-only; no test requirement (constitution Principle III exempts documentation changes).
 
 ## Phase 2: Remove the false opening-phrase claim
 
