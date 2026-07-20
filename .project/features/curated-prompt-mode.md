@@ -1,6 +1,6 @@
 ---
 slug: curated-prompt-mode
-status: tasked
+status: implemented
 logged: 2026-07-19
 plan: plan-curated-prompt-mode-2026-07-19-cfab.md
 tasks: tasks-curated-prompt-mode-4e57.md

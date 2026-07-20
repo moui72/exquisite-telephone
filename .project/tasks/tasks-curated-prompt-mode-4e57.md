@@ -1,7 +1,7 @@
 ---
 plan: plan-curated-prompt-mode-2026-07-19-cfab.md
 generated: 2026-07-19
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -135,7 +135,7 @@ status: in-progress
 
 ## Phase 5: Full-suite verification
 
-- [ ] T011 Run the full verification suite from the repo root — `pnpm
+- [x] T011 Run the full verification suite from the repo root — `pnpm
   lint`, `pnpm typecheck`, `pnpm test` — and confirm all three are green
   across shared, server, and client. No test requirement of its own;
   this task *is* the verification. Report the final test count and any
