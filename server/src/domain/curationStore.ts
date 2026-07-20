@@ -1,4 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { open, rename, unlink } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import type { CandidatePhrase, PromptRating, PromptRatingValue } from '@exquisite-telephone/shared';
 import type { Logger } from '../observability/logger.js';
 
@@ -73,9 +75,25 @@ function loadData(path: string, logger: Logger): CurationData {
   }
 }
 
+/**
+ * A few seconds: long enough that a burst of ratings coalesces into one
+ * write, short enough that an unclean crash loses at most a handful of
+ * counter increments — which is an acceptable loss for curation
+ * telemetry, and why this is debounced rather than written synchronously
+ * on every rating.
+ */
+export const DEFAULT_CURATION_DEBOUNCE_MS = 2_000;
+
 export interface CurationStoreOptions {
   /** Injectable clock, so `firstLoggedAt` is assertable in tests. */
   now?: () => number;
+  debounceMs?: number;
+  /**
+   * Test seam fired after the temp file is written and fsynced but
+   * BEFORE the rename, so a crash in exactly that window can be
+   * simulated (by throwing) without crashing the process.
+   */
+  onBeforeRename?: (contents: string) => void;
 }
 
 /**
@@ -95,6 +113,50 @@ export function createCurationStore(
 ): CurationStore {
   const data = loadData(path, logger);
   const now = options.now ?? Date.now;
+  const debounceMs = options.debounceMs ?? DEFAULT_CURATION_DEBOUNCE_MS;
+  let timer: NodeJS.Timeout | undefined;
+  let inFlight: Promise<void> | undefined;
+
+  /**
+   * Atomic write: serialize to a temp file in the SAME directory (so the
+   * rename is within one filesystem and therefore atomic), fsync it so
+   * the bytes are durable before anything points at them, then rename
+   * over the target. A crash at any point before the rename leaves the
+   * previous good file untouched — a reader never sees a truncated file.
+   */
+  async function writeAtomically(): Promise<void> {
+    const contents = JSON.stringify(data, null, 2);
+    const tempPath = join(dirname(path), `.curation-${process.pid}-${now()}.tmp`);
+    try {
+      const handle = await open(tempPath, 'w');
+      try {
+        await handle.writeFile(contents, 'utf8');
+        await handle.sync();
+      } finally {
+        await handle.close();
+      }
+      options.onBeforeRename?.(contents);
+      await rename(tempPath, path);
+    } catch (error) {
+      // Never throw: losing curation telemetry must not take down a game
+      // in progress (Principle IX — logged, not swallowed silently).
+      logger.log({
+        event: 'curation_store_write',
+        outcome: 'failure',
+        path,
+        message: error instanceof Error ? error.message : String(error),
+      });
+      await unlink(tempPath).catch(() => {});
+    }
+  }
+
+  function scheduleWrite(): void {
+    if (timer) return;
+    timer = setTimeout(() => {
+      timer = undefined;
+      inFlight = writeAtomically();
+    }, debounceMs);
+  }
 
   return {
     snapshot() {
@@ -107,6 +169,7 @@ export function createCurationStore(
           ...existing,
           [value]: existing[value] + 1,
         };
+        scheduleWrite();
         return;
       }
 
@@ -127,9 +190,11 @@ export function createCurationStore(
       const candidate = data.candidates.find((c) => c.phrase === phrase);
       if (candidate) {
         candidate.votes += 1;
+        scheduleWrite();
         return;
       }
       data.candidates.push({ phrase, votes: 1, firstLoggedAt: now() });
+      scheduleWrite();
     },
     flush() {
       throw new Error('createCurationStore.flush: not implemented');

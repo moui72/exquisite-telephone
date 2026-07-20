@@ -1,9 +1,9 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { LogEvent, Logger } from '../observability/logger.js';
-import { createCurationStore } from './curationStore.js';
+import { createCurationStore, type CurationData } from './curationStore.js';
 
 let dir: string;
 
@@ -210,5 +210,125 @@ describe('recordRating discards a thumbs-down on a player-written phrase', () =>
     store.recordRating('a moose reading the news', 'down', false);
 
     expect(JSON.stringify(store.snapshot())).toBe(before);
+  });
+});
+
+/**
+ * Persistence. The write is atomic (temp file in the same directory,
+ * fsync, rename over the target) so a crash mid-write can never leave a
+ * truncated curation file where a good one used to be — rename is the
+ * only step that changes what a reader sees, and it is atomic.
+ *
+ * Uses real timers against real files: the whole point of these tests is
+ * the filesystem sequencing, which a mocked fs would not exercise.
+ */
+describe('debounced atomic flush', () => {
+  const DEBOUNCE = 20;
+  const settle = () => new Promise((r) => setTimeout(r, DEBOUNCE * 5));
+
+  it('coalesces N rapid recordRating calls into a single write', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const writes: string[] = [];
+    const store = createCurationStore(path, logger, {
+      debounceMs: DEBOUNCE,
+      onBeforeRename: (contents) => writes.push(contents),
+    });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    store.recordRating('a bear on a unicycle', 'up', true);
+    store.recordRating('a bear on a unicycle', 'down', true);
+    store.recordRating('a moose reading the news', 'up', false);
+
+    expect(writes).toHaveLength(0);
+    await settle();
+
+    // One write, not four.
+    expect(writes).toHaveLength(1);
+    const written = JSON.parse(writes[0] ?? '{}') as CurationData;
+    expect(written.ratings['a bear on a unicycle']).toEqual({
+      phrase: 'a bear on a unicycle',
+      up: 2,
+      down: 1,
+    });
+    expect(written.candidates).toHaveLength(1);
+  });
+
+  it('writes the file to disk after the debounce window elapses', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const store = createCurationStore(path, logger, { debounceMs: DEBOUNCE });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await settle();
+
+    const onDisk = JSON.parse(readFileSync(path, 'utf8')) as CurationData;
+    expect(onDisk.ratings['a bear on a unicycle']).toEqual({
+      phrase: 'a bear on a unicycle',
+      up: 1,
+      down: 0,
+    });
+  });
+
+  it('writes via a temp file and rename, never in place — no temp file survives a good write', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    let tempSeenDuringWrite: string[] = [];
+    const store = createCurationStore(path, logger, {
+      debounceMs: DEBOUNCE,
+      // Mid-write: the temp file exists and the target does not yet.
+      onBeforeRename: () => {
+        tempSeenDuringWrite = readdirSync(dir);
+      },
+    });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await settle();
+
+    expect(tempSeenDuringWrite.some((f) => f.endsWith('.tmp'))).toBe(true);
+    expect(tempSeenDuringWrite).not.toContain('c.json');
+    // After the rename, only the target remains.
+    expect(readdirSync(dir)).toEqual(['c.json']);
+  });
+
+  it('leaves the PREVIOUS good file intact when a crash lands between write and rename', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const good = createCurationStore(path, logger, { debounceMs: DEBOUNCE });
+    good.recordRating('a bear on a unicycle', 'up', true);
+    await settle();
+    const previousContents = readFileSync(path, 'utf8');
+
+    const crashing = createCurationStore(path, logger, {
+      debounceMs: DEBOUNCE,
+      onBeforeRename: () => {
+        throw new Error('simulated crash between write and rename');
+      },
+    });
+    crashing.recordRating('a moose reading the news', 'up', true);
+    await settle();
+
+    // The previous good file, byte for byte — not truncated, not replaced.
+    expect(readFileSync(path, 'utf8')).toBe(previousContents);
+    // And no orphaned temp file left behind.
+    expect(readdirSync(dir)).toEqual(['c.json']);
+  });
+
+  it('logs a failure event rather than throwing when a write fails', async () => {
+    const path = join(dir, 'c.json');
+    const { logger, events } = makeLogger();
+    const store = createCurationStore(path, logger, {
+      debounceMs: DEBOUNCE,
+      onBeforeRename: () => {
+        throw new Error('simulated crash between write and rename');
+      },
+    });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await settle();
+
+    expect(events).toContainEqual(
+      expect.objectContaining({ event: 'curation_store_write', outcome: 'failure' }),
+    );
   });
 });
