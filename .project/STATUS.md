@@ -1,49 +1,47 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (ArDD updated to `v1.0.2`. Earlier this pass, `/ardd-plan` ran over the last open feedback file
-and two backlogged deploy features. Plan
-`plan-fly-config-lockstep-2026-07-20-8fbb.md` **approved** (3 phases, 3
-open questions); `tasks-fly-config-lockstep-dac2.md` generated and
-`ready` (14 tasks). `fly-config-lockstep` and
-`release-promotion-workflow` both flipped `backlogged` -> `tasked`.
+_Updated: 2026-07-20 (**Both `ready` tasks files are now implemented and
+merged to `main`.** `/ardd-implement` fanned out to two parallel worktree
+subagents — `tasks-help-text-accuracy-9755.md` (13/13) and
+`tasks-fly-config-lockstep-dac2.md` (14/14) — and both merged clean
+(help-text fast-forward, fly-config a clean merge commit) and were
+reaped. `fly-config-lockstep` and `release-promotion-workflow` flipped
+`tasked` -> `implemented`. **Every tasks file in the project is now
+`completed`.**
 
-Two decisions the user made at the checkpoint. **Generation, not a
-lint**, for the Fly configs — the register called generation the
-stronger option and the user took it: drift becomes unexpressible rather
-than merely detected. And **`curation-data-aggregation-pipe` was
-deliberately dropped from the plan** despite being selected: its stated
-purpose is the prompt-injection boundary for untrusted player text and
-its shape is undecided, so it routes to `/ardd-research` rather than
-being designed inline at a plan checkpoint. It stays `backlogged`.
+The `shared-artifact` verdict on the pair proved benign: the only shared
+file was `App.test.ts`, and the fly-config change there was a pure
+append.
 
-Worth noting for whoever implements: the curation fold already exists
-(`aggregateEvents`, `curationStore.ts:127`, plus a reading `aggregate()`
-at L308) and has **no caller at all** — the curator cannot currently read
-the data. That is a smaller gap than the feature implies, and separable
-from the sanitization design.
+**Two follow-ups came out of implementation, both real:**
 
-There are now **two `ready` tasks files sharing `infrastructure` and
-`ui`** — see Work Queue.
+1. **`infrastructure.md` needs a refine.** The new
+   `.github/workflows/promote.yml` requires a hand-created fine-grained
+   PAT secret, `PROMOTE_TOKEN` — a new manual operational step the
+   artifact documents nowhere, even though the workflow's own comments
+   point readers at it. **Promotion will fail until that secret is
+   created.** The implementer resolved the plan's Open Question 2 with a
+   real finding: a `GITHUB_TOKEN` push does not trigger further
+   workflows, so promotion would have silently deployed nothing.
+2. **The root test suite was not wired into `pnpm run test`.** Without
+   it, `scripts/**` tests would never run in pre-commit or CI and would
+   have read as green by never executing. A scoped root `vitest.config.ts`
+   and a `test:root` step were added beyond the task text. Note this
+   introduced a root `vitest` devDependency — a `pnpm install` is needed
+   after pulling, or `test:root` fails with `vitest: command not found`
+   (hit and resolved during the post-merge verification).
 
-Prior pass: `/ardd-plan` over the help-text audit feedback and both
-recorded defects. Plan
-`plan-help-text-accuracy-2026-07-20-e6e1.md` **approved** (5 phases, 3
-open questions); `tasks-help-text-accuracy-9755.md` generated and
-`ready` (13 tasks).
+Verified post-merge on `main`: full suite green (426 client/server/shared
++ 4 root), lint and typecheck clean.
 
-Scope covers F001-F004 from `feedback-help-text-audit-e243.md` plus
-defects `c217e21f` and `f678931d`. `feedback-main-338d.md` was
-deliberately left `open` and untouched — it is a state-broadcast bug
-sharing no files with this work.
-
-Two structural decisions in the plan: the two defects sit in **different
-phases** rather than being batched as "the doc fixes", because
-`f678931d` cannot be corrected until the tooltip question is settled —
-`ui.md`'s claim becomes true or false depending on what the code does;
-and the plan commits to **structural** prose tests (a tooltip exists per
-control; the panel makes no mode-specific claim) rather than assertions
-pinned to exact wording, which would break on every copy edit and get
-deleted.)_
+`curation-data-aggregation-pipe` remains the only backlogged feature and
+still routes to `/ardd-research`, not `/ardd-plan` — its stated purpose
+is the prompt-injection boundary for untrusted player text and its shape
+is undecided. Worth noting for whoever takes it: the curation fold
+already exists (`aggregateEvents`, `curationStore.ts:127`, plus a reading
+`aggregate()` at L308) and has **no caller at all** — the curator cannot
+currently read the data. That is a smaller gap than the feature implies,
+and separable from the sanitization design.)_
 
 ## Artifact Status
 
@@ -80,13 +78,12 @@ a plan.)_
 
 ## Code-vs-Artifact Defects
 
-**2 defects** as of 2026-07-20 — see `.project/DEFECTS.md`.
-`infrastructure.md`'s handler list omits three wired handlers, and
-`ui.md` overclaims tooltip coverage (four tooltips, seven controls).
-Both are now **surfaced and planned** in
-`plan-help-text-accuracy-2026-07-20-e6e1.md` (T001 and T010). They will
-drop out of `DEFECTS.md` on the next `/ardd-defects` run once fixed —
-that file is fully regenerated each run, never hand-edited.
+**2 defects** on file as of 2026-07-20 — see `.project/DEFECTS.md` —
+but **both are now fixed**, so the snapshot is stale. `infrastructure.md`'s
+handler list gained the three missing curated-prompt handlers (T001), and
+`ui.md`'s tooltip-coverage claim is now literally true (T010). They will
+drop out on the next `/ardd-defects` run — that file is fully regenerated
+each run, never hand-edited.
 
 ## Feedback
 
@@ -146,15 +143,23 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 2 tasked · 12 implemented · 1 subsumed — see
-`.project/features/`.
+1 backlogged · 14 implemented · 1 subsumed — see `.project/features/`.
 
-- `fly-config-lockstep` (**tasked**) and `release-promotion-workflow`
-  (**tasked**) — both bound to
+- `fly-config-lockstep` (**implemented**) and `release-promotion-workflow`
+  (**implemented**) — both bound to
   `plan-fly-config-lockstep-2026-07-20-8fbb.md` /
-  `tasks-fly-config-lockstep-dac2.md`. Planned together because they're
+  `tasks-fly-config-lockstep-dac2.md` (**completed**, 14/14), delegated to
+  a worktree subagent and merged. Planned together because they're
   ordered, not merely related: the promotion workflow operates on a
   deploy surface config-generation defines, so generation lands first.
+  Both `fly.toml` and `fly.staging.toml` are now **generated** from
+  `scripts/fly-config/fly.template.toml` — drift is unexpressible rather
+  than merely detected — with `app` the single per-channel key, guarded by
+  an allowlist assertion. The regeneration diff was verified
+  comment-only, parsed values matching the pre-change oracle exactly.
+  **Outstanding:** `promote.yml` needs a hand-created `PROMOTE_TOKEN`
+  secret that `infrastructure.md` documents nowhere — see the entry at the
+  top of this file.
 - `curation-data-aggregation-pipe` (**still backlogged**) — the
   deterministic layer where prompt-injection defense belongs, before any
   agent reads player-written text. Selected for this plan and then
@@ -320,30 +325,20 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-Two `ready` files now, and they are **not** safe to fan out blindly:
+_(empty — no `ready` tasks files. **All 22 tasks files in the project are
+`completed`.**)_
 
-- `tasks-fly-config-lockstep-dac2.md` — plan
-  `plan-fly-config-lockstep-2026-07-20-8fbb.md`, features
-  `fly-config-lockstep`, `release-promotion-workflow` (**ready**, 0/14).
-  - vs `tasks-help-text-accuracy-9755.md`: **shared-artifact**
-    (`infrastructure`, `ui`).
-- `tasks-help-text-accuracy-9755.md` — plan
-  `plan-help-text-accuracy-2026-07-20-e6e1.md`, no bound features
-  (**ready**, 0/13).
-  - vs `tasks-fly-config-lockstep-dac2.md`: **shared-artifact**
-    (`infrastructure`, `ui`).
-
-`shared-artifact` is a declared-overlap signal, not a proven conflict —
-but both files carry `ui` work, and the help-text plan's T010 fixes an
-`ui.md` tooltip-coverage defect while this plan's Phase 1 edits the same
-artifact's Moderation Panel section. Running them sequentially, or at
-least reviewing the `ui` touchpoints before parallelizing, is the safer
-call. `merge_policy` still governs at merge time regardless.
+The prior pair's `shared-artifact` verdict turned out benign in practice:
+they were fanned out in parallel anyway, and the only file both touched
+was `App.test.ts`, where the fly-config change was a pure append. Worth
+remembering as a calibration point — `shared-artifact` is a
+declared-overlap signal on artifact tags, not evidence of code-path
+contact.
 
 ## In Flight
 
-_(none — the full-app reskin worktree reported back, merged clean,
-and was reaped)_
+_(none — both delegated worktrees reported back, merged, and were
+reaped)_
 
 ## fly-io-deployment: shipped
 
@@ -390,29 +385,33 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**Current state (2026-07-20, latest pass):** Safe to plan: **yes**. Safe
-to implement: **yes, with sequencing** — two `ready` tasks files
-(`tasks-fly-config-lockstep-dac2.md` 0/14,
-`tasks-help-text-accuracy-9755.md` 0/13) share the `infrastructure` and
-`ui` artifacts, so they are not a clean parallel fan-out (see Work
-Queue). Artifacts all `stable`, 0 open questions, 0 open feedback files,
-nothing in flight. One feature stays backlogged
+**Current state (2026-07-20, latest pass):** Safe to plan: **yes**.
+Nothing left to implement — **all 22 tasks files are `completed`** and
+nothing is in flight. Artifacts all `stable`, 0 open questions, 0 open
+feedback files. One feature stays backlogged
 (`curation-data-aggregation-pipe`), routed to `/ardd-research` rather
 than a plan.
+
+**One thing genuinely blocks a production promotion:** the
+`PROMOTE_TOKEN` secret does not exist yet and `infrastructure.md`
+documents neither it nor the promote workflow. Create the fine-grained
+PAT and run `/ardd-refine infrastructure` — see the top of this file.
 
 **ArDD is up-to-date** on the beta channel — `v1.0.2`, commit `33ac9ae`
 (updated 2026-07-20 from `v1.0.1`/`9fd6fbb`). No migrations were pending;
 all eight were already applied.
 
-**Three open questions are assigned to tasks rather than left
-floating** — T004 (where the rating explanation lives), T007 (extend the
-curated tooltip or add separate ones), T011 (what the rules panel should
-cover). Each is a decision task whose output a later task depends on, so
-implementation cannot quietly guess.
+**All three of the help-text plan's open questions were settled during
+implementation**, each as a decision task whose output a later task
+consumed: the rating explanation lives **inline at the control** (not in
+the rules panel), each host setting got **its own** tooltip rather than a
+shared cluster, and the rules panel covers what changes a game's *shape*
+(laps, curated mode, timers) while rating stays out to avoid a second
+drifting copy.
 
-**Not yet pushed.** `main` is ~61 commits ahead of `origin/main`.
-Pushing auto-deploys **beta** — the first deploy that will mount the
-volume and persist ratings.
+**Not yet pushed.** `main` is well ahead of `origin/main`. Pushing
+auto-deploys **beta** — the first deploy that will mount the volume and
+persist ratings.
 
 Carried forward, none blocking:
 - All three renderable artifacts are `stale` on diagrams.
@@ -423,13 +422,15 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** `/ardd-implement` — pick one of the two
-`ready` files and finish it before starting the other, given the shared
-`ui`/`infrastructure` surface. `tasks-help-text-accuracy-9755.md` is the
-better first pick: it's the older file, and its T010 settles an `ui.md`
-tooltip claim the other plan doesn't touch.
+**Recommended next step:** `/ardd-refine infrastructure` — document the
+promote workflow and the `PROMOTE_TOKEN` secret it requires. This is the
+one item that leaves a shipped capability unusable and undocumented at
+the same time; the implementer's own comments already point readers at an
+artifact section that doesn't exist. Creating the PAT itself is a manual
+step only you can do.
 
-Then, in no particular order: `/ardd-research` for
+Then, in no particular order: `/ardd-defects` to clear both
+now-fixed entries from the snapshot, `/ardd-research` for
 `curation-data-aggregation-pipe`'s sanitization boundary, and
 `/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
 diagrams whose shape actually changed.
