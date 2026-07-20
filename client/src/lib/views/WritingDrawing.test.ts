@@ -745,4 +745,90 @@ describe('prompt rating control', () => {
     expect(screen.getByRole('img', { name: /drawing canvas/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^thumbs up/i })).not.toBeInTheDocument();
   });
+
+  it('starts with neither thumb selected — untouched is the normal path', () => {
+    renderAtPosition(1);
+
+    expect(screen.getByRole('button', { name: /^thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+    expect(screen.getByRole('button', { name: /^thumbs down/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('shows the chosen thumb as selected once cast', async () => {
+    renderAtPosition(1);
+
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+
+    expect(screen.getByRole('button', { name: /^thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('can be changed until submit — picking the other thumb moves the selection', async () => {
+    renderAtPosition(1);
+
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs down/i }));
+
+    expect(screen.getByRole('button', { name: /^thumbs down/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /^thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  it('can be un-cast by tapping the selected thumb again', async () => {
+    renderAtPosition(1);
+
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+
+    expect(screen.getByRole('button', { name: /^thumbs up/i })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+  });
+
+  /**
+   * The control is never a gate. The submit button's enabled state is a
+   * function of the drawing alone — a player who ignores the rating must
+   * reach exactly the same submit affordance as one who casts it.
+   */
+  it('never gates the submit button — enabled state depends on the drawing alone', async () => {
+    const { container } = renderAtPosition(1);
+    const submit = screen.getByRole('button', { name: /present your contribution/i });
+
+    // No stroke drawn yet: disabled, with or without a rating.
+    expect(submit).toBeDisabled();
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+    expect(submit).toBeDisabled();
+    expect(container).toBeTruthy();
+  });
+
+  /**
+   * Both thumbs render regardless of phrase origin. Branching the control
+   * by origin would leak which mode produced a phrase the player is not
+   * otherwise told about (ui.md) — so this asserts the control is
+   * identical in curated and free-form rooms.
+   */
+  it('renders both thumbs identically in curated and free-form rooms', () => {
+    for (const promptMode of ['free-form', 'curated'] as const) {
+      cleanup();
+      const room = { ...makeRoom([bookWithEntries(1)], [ada, grace, lin]), promptMode };
+      const session = makeFakeSession({ room, player: grace, error: null });
+      render(WritingDrawing, { props: { session } });
+
+      expect(screen.getByRole('button', { name: /^thumbs up/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^thumbs down/i })).toBeInTheDocument();
+    }
+  });
 });
