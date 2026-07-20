@@ -663,3 +663,115 @@ describe('theme regression guard (plan-1449)', () => {
     expect(source).not.toMatch(/slate-/);
   });
 });
+
+/**
+ * Ratings are curation telemetry, not a scoreboard (ui.md, datamodel.md).
+ * They are NEVER surfaced back to any player, in any view — not to the
+ * rater, not to the phrase's author, not on Reveal, where every other
+ * secret in the game is finally revealed. Surfacing one would turn a
+ * party game into a judged one.
+ *
+ * These are absence assertions by design. There is no red phase to have:
+ * the correct implementation is that nothing was ever built. What they
+ * guard against is a future change that adds one.
+ */
+describe('prompt ratings are never surfaced to players', () => {
+  function revealRoom(): Room {
+    const book: Book = {
+      id: 'book-1',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-1',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+        {
+          id: 'e1',
+          bookId: 'book-1',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: serializeDrawOps([]),
+        },
+      ],
+    };
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, grace],
+      status: 'reveal',
+      books: [book],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it('renders no rating data on Reveal — not to the rater, not to the author', async () => {
+    const room = revealRoom();
+    // Both perspectives: Grace rated the phrase, Ada wrote it.
+    for (const viewer of [grace, ada]) {
+      cleanup();
+      const session = makeFakeSession({ room, player: viewer, error: null });
+      const { container } = render(Reveal, { props: { session } });
+      await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
+      await tick();
+
+      const text = container.textContent ?? '';
+      expect(text).not.toMatch(/thumbs|rated|rating|liked|disliked|upvote|downvote/i);
+      expect(container.querySelector('[aria-label*="thumb" i]')).toBeNull();
+      expect(screen.queryByRole('button', { name: /^thumbs/i })).not.toBeInTheDocument();
+    }
+  });
+
+  /**
+   * A structural guard, not a rendering one: the Reveal component must
+   * not so much as reference a rating. A future contributor wiring one in
+   * fails here even if they hide it behind a flag that renders nothing.
+   */
+  it('the Reveal component source references no rating concept at all', () => {
+    const source = readFileSync(
+      resolve(__dirname, './Reveal.svelte'),
+      'utf8',
+    );
+
+    expect(source).not.toMatch(/PromptRating|promptRating|thumbsUp|thumbsDown|ThumbsUp|ThumbsDown/);
+    expect(source).not.toMatch(/\.rating\b/);
+  });
+
+  /**
+   * The deepest guard: a rating can only reach a client if it rides room
+   * state. `Room`, `Book`, and `Entry` carry no rating field, so there is
+   * no channel for one to arrive on — which is what makes the absence
+   * structural rather than merely a rendering choice.
+   */
+  it('no rating field exists on any broadcast game type', () => {
+    const room = revealRoom();
+
+    expect('rating' in room).toBe(false);
+    expect('ratings' in room).toBe(false);
+    for (const book of room.books) {
+      expect('rating' in book).toBe(false);
+      for (const entry of book.entries) {
+        expect('rating' in entry).toBe(false);
+      }
+    }
+    expect(JSON.stringify(room)).not.toMatch(/rating/i);
+  });
+});
