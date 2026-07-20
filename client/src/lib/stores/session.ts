@@ -60,6 +60,10 @@ export interface SessionStore extends Readable<SessionState> {
   setMonochrome(monochromeOnly: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
+  /** Host-only, lobby-only curated-prompt settings (ui.md Lobby View). */
+  setPromptMode(promptMode: 'free-form' | 'curated'): Promise<void>;
+  setCuratedPromptCount(curatedPromptCount: 2 | 3 | 4 | 5): Promise<void>;
+  setAllowPromptWriteIn(allowPromptWriteIn: boolean): Promise<void>;
   castTimeoutVote(choice: TimeoutVoteChoice): Promise<void>;
   endGame(): Promise<void>;
   /** Host-only moderation control (host-game-moderation-controls plan). */
@@ -179,6 +183,30 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         lapsPerBook,
+      });
+    },
+    setPromptMode(promptMode: 'free-form' | 'curated') {
+      const state = get(store);
+      return emitWithAck('set_prompt_mode', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        promptMode,
+      });
+    },
+    setCuratedPromptCount(curatedPromptCount: 2 | 3 | 4 | 5) {
+      const state = get(store);
+      return emitWithAck('set_curated_prompt_count', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        curatedPromptCount,
+      });
+    },
+    setAllowPromptWriteIn(allowPromptWriteIn: boolean) {
+      const state = get(store);
+      return emitWithAck('set_allow_prompt_write_in', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        allowPromptWriteIn,
       });
     },
     castTimeoutVote(choice: TimeoutVoteChoice) {

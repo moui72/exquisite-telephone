@@ -50,6 +50,9 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     setMonochrome: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
     setLapsPerBook: vi.fn(async () => {}),
+    setPromptMode: vi.fn(async () => {}),
+    setCuratedPromptCount: vi.fn(async () => {}),
+    setAllowPromptWriteIn: vi.fn(async () => {}),
     castTimeoutVote: vi.fn(async () => {}),
     endGame: vi.fn(async () => {}),
     leaveGame: vi.fn(),
@@ -571,5 +574,108 @@ describe('Lobby view', () => {
       await fireEvent.click(screen.getByRole('button', { name: /what's a lap/i }));
       expect(screen.getByText(/around the circle/i)).toBeInTheDocument();
     });
+  });
+});
+
+/**
+ * Host prompt-mode controls (ui.md Lobby View). The two curated controls are
+ * hidden entirely in free-form mode rather than shown disabled, since they
+ * have no meaning there.
+ */
+describe('Lobby prompt-mode host controls', () => {
+  function makePromptRoom(overrides: Partial<Room> = {}): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+      ...overrides,
+    };
+  }
+
+  it('shows the prompt-mode control to the host', () => {
+    const room = makePromptRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.getByLabelText(/prompt mode/i)).toBeInTheDocument();
+  });
+
+  it('hides the dependent curated controls entirely in free-form mode', () => {
+    const room = makePromptRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.queryByLabelText(/phrases per player/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/write their own/i)).not.toBeInTheDocument();
+  });
+
+  it('reveals the count selector and write-in toggle in curated mode', () => {
+    const room = makePromptRoom({ promptMode: 'curated', curatedPromptCount: 3 });
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.getByLabelText(/phrases per player/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/write their own/i)).toBeInTheDocument();
+  });
+
+  it('emits setPromptMode when the host switches to curated', async () => {
+    const room = makePromptRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.change(screen.getByLabelText(/prompt mode/i), {
+      target: { value: 'curated' },
+    });
+
+    expect(session.setPromptMode).toHaveBeenCalledWith('curated');
+  });
+
+  it('emits setCuratedPromptCount with the selected value', async () => {
+    const room = makePromptRoom({ promptMode: 'curated', curatedPromptCount: 3 });
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.change(screen.getByLabelText(/phrases per player/i), {
+      target: { value: '5' },
+    });
+
+    expect(session.setCuratedPromptCount).toHaveBeenCalledWith(5);
+  });
+
+  it('emits setAllowPromptWriteIn when the host turns write-in off', async () => {
+    const room = makePromptRoom({ promptMode: 'curated', curatedPromptCount: 3 });
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByLabelText(/write their own/i));
+
+    expect(session.setAllowPromptWriteIn).toHaveBeenCalledWith(false);
+  });
+
+  it('hides the prompt-mode control from non-host players', () => {
+    const room = makePromptRoom();
+    const session = makeFakeSession({ room, player: room.players[1]!, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.queryByLabelText(/prompt mode/i)).not.toBeInTheDocument();
   });
 });

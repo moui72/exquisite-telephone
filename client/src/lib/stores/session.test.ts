@@ -217,6 +217,54 @@ describe('session store (client single source of state)', () => {
     expect(get(session).room?.lapsPerBook).toBe(3);
   });
 
+  it('setPromptMode emits set_prompt_mode with roomId/playerId/promptMode', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, promptMode: 'curated' } });
+    await session.setPromptMode('curated');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_prompt_mode',
+      payload: { roomId: 'ABCDE', playerId: 'p1', promptMode: 'curated' },
+    });
+    expect(get(session).room?.promptMode).toBe('curated');
+  });
+
+  it('setCuratedPromptCount emits set_curated_prompt_count with roomId/playerId/count', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, curatedPromptCount: 5 } });
+    await session.setCuratedPromptCount(5);
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_curated_prompt_count',
+      payload: { roomId: 'ABCDE', playerId: 'p1', curatedPromptCount: 5 },
+    });
+    expect(get(session).room?.curatedPromptCount).toBe(5);
+  });
+
+  it('setAllowPromptWriteIn emits set_allow_prompt_write_in with roomId/playerId/flag', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, allowPromptWriteIn: false } });
+    await session.setAllowPromptWriteIn(false);
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_allow_prompt_write_in',
+      payload: { roomId: 'ABCDE', playerId: 'p1', allowPromptWriteIn: false },
+    });
+    expect(get(session).room?.allowPromptWriteIn).toBe(false);
+  });
+
   it('voteToPlayAgain emits voteToPlayAgain with roomId/playerId', async () => {
     const fake = makeFakeSocket();
     fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });

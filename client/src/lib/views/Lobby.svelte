@@ -87,6 +87,31 @@
     const raw = (event.target as HTMLSelectElement).value;
     await session.setLapsPerBook(Number(raw) as 1 | 2 | 3);
   }
+
+  const CURATED_PROMPT_COUNT_OPTIONS: (2 | 3 | 4 | 5)[] = [2, 3, 4, 5];
+
+  // ui.md names the selector's options but no default. The Lobby commits one
+  // explicitly the moment the host switches to curated, so the room never
+  // starts a curated game with `curatedPromptCount` still null.
+  const DEFAULT_CURATED_PROMPT_COUNT = 3;
+
+  async function handlePromptModeChange(event: Event) {
+    const mode = (event.target as HTMLSelectElement).value as 'free-form' | 'curated';
+    await session.setPromptMode(mode);
+    if (mode === 'curated' && state.room?.curatedPromptCount == null) {
+      await session.setCuratedPromptCount(DEFAULT_CURATED_PROMPT_COUNT as 2 | 3 | 4 | 5);
+    }
+  }
+
+  async function handleCuratedPromptCountChange(event: Event) {
+    const raw = (event.target as HTMLSelectElement).value;
+    await session.setCuratedPromptCount(Number(raw) as 2 | 3 | 4 | 5);
+  }
+
+  async function handleAllowWriteInToggle(event: Event) {
+    const checked = (event.currentTarget as HTMLInputElement).checked;
+    await session.setAllowPromptWriteIn(checked);
+  }
 </script>
 
 <div class="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-6 p-4 sm:p-6">
@@ -253,6 +278,52 @@
             {/each}
           </select>
         </div>
+
+        <div class="flex flex-col gap-1">
+          <label for="prompt-mode-select" class="text-sm font-medium text-ink/90">
+            Prompt Mode
+          </label>
+          <select
+            id="prompt-mode-select"
+            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+            value={state.room.promptMode}
+            on:change={handlePromptModeChange}
+          >
+            <option value="free-form">Free-form — guests compose their own</option>
+            <option value="curated">Curated — deal each guest a hand</option>
+          </select>
+        </div>
+
+        {#if state.room.promptMode === 'curated'}
+          <div class="flex flex-col gap-1">
+            <label for="curated-prompt-count-select" class="text-sm font-medium text-ink/90">
+              Phrases Per Player
+            </label>
+            <select
+              id="curated-prompt-count-select"
+              class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+              value={state.room.curatedPromptCount ?? DEFAULT_CURATED_PROMPT_COUNT}
+              on:change={handleCuratedPromptCountChange}
+            >
+              {#each CURATED_PROMPT_COUNT_OPTIONS as option (option)}
+                <option value={option}>{option} phrases</option>
+              {/each}
+            </select>
+          </div>
+
+          <label
+            for="allow-prompt-write-in-toggle"
+            class="flex items-center gap-2 text-sm font-medium text-ink/90"
+          >
+            <input
+              id="allow-prompt-write-in-toggle"
+              type="checkbox"
+              checked={state.room.allowPromptWriteIn}
+              on:change={handleAllowWriteInToggle}
+            />
+            Permit guests to write their own instead
+          </label>
+        {/if}
 
         <p class="text-xs text-ink/60">
           Player count: recommend 4+ players, minimum 3.

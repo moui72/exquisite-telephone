@@ -85,7 +85,7 @@ status: in-progress
 
 ## Phase 3: Client — Lobby host controls
 
-- [ ] T007 [artifacts: ui] Add the host "prompt mode" control
+- [x] T007 [artifacts: ui] Add the host "prompt mode" control
   (free-form / curated) to `client/src/lib/views/Lobby.svelte`, emitting
   the T004 socket events. When curated is selected, reveal two dependent
   controls — a count selector (2 / 3 / 4 / 5) and an "allow write-in"
