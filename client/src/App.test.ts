@@ -74,7 +74,7 @@ describe('App (top-level state routing per ui.md States)', () => {
     expect(screen.getByText(/retrieving your ticket/i)).toBeInTheDocument();
   });
 
-  it('shows a "the exhibition has closed" state distinct from a generic error', () => {
+  it('shows a "the exhibition has closed" state distinct from a generic error, with a Return to the Foyer control that calls leaveGame', async () => {
     const session = makeFakeSession({
       room: null,
       player: null,
@@ -85,6 +85,10 @@ describe('App (top-level state routing per ui.md States)', () => {
     render(App, { props: { session } });
 
     expect(screen.getByText(/the exhibition has closed/i)).toBeInTheDocument();
+    const returnButton = screen.getByRole('button', { name: /return to the foyer/i });
+    await fireEvent.click(returnButton);
+
+    expect(session.leaveGame).toHaveBeenCalled();
   });
 
   it('shows a distinct "ended" state (Room.status === \'ended\') with a Return to the Foyer control that calls leaveGame', async () => {

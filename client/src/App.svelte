@@ -36,8 +36,15 @@
     <p class="text-lg text-ink/75">Retrieving your ticket…</p>
   </main>
 {:else if state.error === 'game-ended'}
-  <main class="flex min-h-screen items-center justify-center p-6">
+  <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
     <p class="text-lg text-ink/75">The Exhibition has Closed.</p>
+    <button
+      type="button"
+      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
+      on:click={() => session.leaveGame()}
+    >
+      Return to the Foyer
+    </button>
   </main>
 {:else if isKicked}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
