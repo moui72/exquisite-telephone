@@ -94,7 +94,7 @@ status: in-progress
   a declared Quality Standard in [[constitution]], and a stale script entry is
   treated as a bug.
 
-- [ ] T010 [artifacts: infrastructure] Add a `check:fly` step to the `checks`
+- [x] T010 [artifacts: infrastructure] Add a `check:fly` step to the `checks`
   job in `.github/workflows/ci.yml`. It belongs in `checks` (not a new job) so
   it inherits the existing skip on `release` — correct rather than a gap, since
   `release` only ever receives a fast-forward of `main` whose tree already
