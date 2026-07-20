@@ -1,7 +1,32 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (`/ardd-plan` ran over the help-text audit
-feedback and both recorded defects. Plan
+_Updated: 2026-07-20 (`/ardd-plan` ran over the last open feedback file
+and two backlogged deploy features. Plan
+`plan-fly-config-lockstep-2026-07-20-8fbb.md` **approved** (3 phases, 3
+open questions); `tasks-fly-config-lockstep-dac2.md` generated and
+`ready` (14 tasks). `fly-config-lockstep` and
+`release-promotion-workflow` both flipped `backlogged` -> `tasked`.
+
+Two decisions the user made at the checkpoint. **Generation, not a
+lint**, for the Fly configs — the register called generation the
+stronger option and the user took it: drift becomes unexpressible rather
+than merely detected. And **`curation-data-aggregation-pipe` was
+deliberately dropped from the plan** despite being selected: its stated
+purpose is the prompt-injection boundary for untrusted player text and
+its shape is undecided, so it routes to `/ardd-research` rather than
+being designed inline at a plan checkpoint. It stays `backlogged`.
+
+Worth noting for whoever implements: the curation fold already exists
+(`aggregateEvents`, `curationStore.ts:127`, plus a reading `aggregate()`
+at L308) and has **no caller at all** — the curator cannot currently read
+the data. That is a smaller gap than the feature implies, and separable
+from the sanitization design.
+
+There are now **two `ready` tasks files sharing `infrastructure` and
+`ui`** — see Work Queue.
+
+Prior pass: `/ardd-plan` over the help-text audit feedback and both
+recorded defects. Plan
 `plan-help-text-accuracy-2026-07-20-e6e1.md` **approved** (5 phases, 3
 open questions); `tasks-help-text-accuracy-9755.md` generated and
 `ready` (13 tasks).
@@ -65,11 +90,15 @@ that file is fully regenerated each run, never hand-edited.
 
 ## Feedback
 
-- **1 open feedback file** — `feedback-main-338d.md` (F001: host gets
-  no frozen-room signal after a kick, a regression from the Salon Footer
-  refactor). Deliberately left out of the help-text plan: a
-  state-broadcast bug sharing no files with that work. Will be picked up
-  by a later `/ardd-plan`.
+**0 open feedback files.**
+
+- `feedback-main-338d.md` (F001: host gets no frozen-room signal after a
+  kick, a regression from the Salon Footer refactor) is now **planned**
+  via `plan-fly-config-lockstep-2026-07-20-8fbb.md` (Phase 1,
+  T001–T004). The fix is the **gavel carrying the indication**, not
+  un-suppressing the host's page-body notice — `ui.md`'s Moderation
+  Panel section now states that outright rather than calling the gavel
+  "the natural place."
 - `feedback-help-text-audit-e243.md` is now **planned** (all four items
   incorporated) via `plan-help-text-accuracy-2026-07-20-e6e1.md`.
 
@@ -117,15 +146,20 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-3 backlogged · 0 planned · 0 tasked · 12 implemented · 1 subsumed — see
-`.project/features/`. No tasks file is `ready` or `in-progress`. Three
-backlogged entries, none urgent:
-`curation-data-aggregation-pipe` (the deterministic layer where
-prompt-injection defense belongs, before any agent reads player-written
-text), `release-promotion-workflow` (a `workflow_dispatch` that
-fast-forwards `release` from `main`), and `fly-config-lockstep` (lint or
-generate the two Fly configs so they cannot silently diverge — the drift
-this session fixed by hand).
+1 backlogged · 0 planned · 2 tasked · 12 implemented · 1 subsumed — see
+`.project/features/`.
+
+- `fly-config-lockstep` (**tasked**) and `release-promotion-workflow`
+  (**tasked**) — both bound to
+  `plan-fly-config-lockstep-2026-07-20-8fbb.md` /
+  `tasks-fly-config-lockstep-dac2.md`. Planned together because they're
+  ordered, not merely related: the promotion workflow operates on a
+  deploy surface config-generation defines, so generation lands first.
+- `curation-data-aggregation-pipe` (**still backlogged**) — the
+  deterministic layer where prompt-injection defense belongs, before any
+  agent reads player-written text. Selected for this plan and then
+  deliberately excluded: shape undecided, and it's a security boundary.
+  **Next step for it is `/ardd-research`, not `/ardd-plan`.**
 
 - `player-prompt-rating` (**implemented** 2026-07-20, logged 2026-07-20) — the player
   who draws a book's opening phrase rates it inline on that drawing
@@ -286,10 +320,25 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
+Two `ready` files now, and they are **not** safe to fan out blindly:
+
+- `tasks-fly-config-lockstep-dac2.md` — plan
+  `plan-fly-config-lockstep-2026-07-20-8fbb.md`, features
+  `fly-config-lockstep`, `release-promotion-workflow` (**ready**, 0/14).
+  - vs `tasks-help-text-accuracy-9755.md`: **shared-artifact**
+    (`infrastructure`, `ui`).
 - `tasks-help-text-accuracy-9755.md` — plan
   `plan-help-text-accuracy-2026-07-20-e6e1.md`, no bound features
-  (**ready**, 0/13). Sole `ready` file, so `parallel-matrix.sh` is
-  silent by design; nothing in flight to conflict with.
+  (**ready**, 0/13).
+  - vs `tasks-fly-config-lockstep-dac2.md`: **shared-artifact**
+    (`infrastructure`, `ui`).
+
+`shared-artifact` is a declared-overlap signal, not a proven conflict —
+but both files carry `ui` work, and the help-text plan's T010 fixes an
+`ui.md` tooltip-coverage defect while this plan's Phase 1 edits the same
+artifact's Moderation Panel section. Running them sequentially, or at
+least reviewing the `ui` touchpoints before parallelizing, is the safer
+call. `merge_policy` still governs at merge time regardless.
 
 ## In Flight
 
@@ -341,11 +390,18 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**Current state (2026-07-20, latest pass):** Safe to implement:
-**yes**. `tasks-help-text-accuracy-9755.md` is `ready` at 0/13.
-Artifacts `stable`, 0 open questions; nothing in flight. One feedback
-file stays open by choice (`feedback-main-338d.md`); three features stay
-backlogged, none urgent.
+**Current state (2026-07-20, latest pass):** Safe to plan: **yes**. Safe
+to implement: **yes, with sequencing** — two `ready` tasks files
+(`tasks-fly-config-lockstep-dac2.md` 0/14,
+`tasks-help-text-accuracy-9755.md` 0/13) share the `infrastructure` and
+`ui` artifacts, so they are not a clean parallel fan-out (see Work
+Queue). Artifacts all `stable`, 0 open questions, 0 open feedback files,
+nothing in flight. One feature stays backlogged
+(`curation-data-aggregation-pipe`), routed to `/ardd-research` rather
+than a plan.
+
+**ArDD update available:** installed `9fd6fbb`, source at `v1.0.2` — run
+`/ardd-update`.
 
 **Three open questions are assigned to tasks rather than left
 floating** — T004 (where the rating explanation lives), T007 (extend the
@@ -366,10 +422,17 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** `/ardd-implement` —
-`tasks-help-text-accuracy-9755.md` (13 tasks). Then `/ardd-diagram
-datamodel` + `/ardd-diagram infrastructure` for the two diagrams whose
-shape actually changed.
+**Recommended next step:** `/ardd-implement` — pick one of the two
+`ready` files and finish it before starting the other, given the shared
+`ui`/`infrastructure` surface. `tasks-help-text-accuracy-9755.md` is the
+better first pick: it's the older file, and its T010 settles an `ui.md`
+tooltip claim the other plan doesn't touch.
+
+Then, in no particular order: `/ardd-research` for
+`curation-data-aggregation-pipe`'s sanitization boundary,
+`/ardd-update` (a release behind), and `/ardd-diagram datamodel` +
+`/ardd-diagram infrastructure` for the two diagrams whose shape actually
+changed.
 
 ---
 
