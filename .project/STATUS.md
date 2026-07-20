@@ -13,16 +13,27 @@ The `shared-artifact` verdict on the pair proved benign: the only shared
 file was `App.test.ts`, and the fly-config change there was a pure
 append.
 
-**Two follow-ups came out of implementation, both real:**
+**Two follow-ups came out of implementation. The first is now resolved,
+by a design change rather than by documenting what was there:**
 
-1. **`infrastructure.md` needs a refine.** The new
-   `.github/workflows/promote.yml` requires a hand-created fine-grained
-   PAT secret, `PROMOTE_TOKEN` — a new manual operational step the
-   artifact documents nowhere, even though the workflow's own comments
-   point readers at it. **Promotion will fail until that secret is
-   created.** The implementer resolved the plan's Open Question 2 with a
-   real finding: a `GITHUB_TOKEN` push does not trigger further
-   workflows, so promotion would have silently deployed nothing.
+1. **~~PAT required~~ — promotion now deploys prod itself.** As
+   implemented, `promote.yml` only fast-forwarded `release` and relied on
+   a push-triggered `deploy-prod` job to fire. Since a `GITHUB_TOKEN`
+   push does not trigger further workflows, that needed a hand-created
+   fine-grained PAT (`PROMOTE_TOKEN`) to work at all — a new manual
+   operational step, a credential with an expiry, tied to one person's
+   account.
+
+   **The user rejected the PAT and chose the simpler shape:** one manual
+   dispatch that fast-forwards `release` **and** deploys, authenticated
+   with the `FLY_API_TOKEN_PROD` that already exists. `deploy-prod` is
+   removed and `release` dropped out of `ci.yml`'s push triggers (with
+   `checks` already skipped there, every job in such a run was skipped).
+   **Promotion is now the only path that deploys production**, which is
+   worth internalizing: `release` moving is no longer evidence that prod
+   was deployed — the dispatch run is. `infrastructure.md` records this.
+
+   Nothing is outstanding here anymore. No secret to create.
 2. **The root test suite was not wired into `pnpm run test`.** Without
    it, `scripts/**` tests would never run in pre-commit or CI and would
    have read as green by never executing. A scoped root `vitest.config.ts`
@@ -157,9 +168,9 @@ neither is reflected in the Feature Backlog counts below.
   than merely detected — with `app` the single per-channel key, guarded by
   an allowlist assertion. The regeneration diff was verified
   comment-only, parsed values matching the pre-change oracle exactly.
-  **Outstanding:** `promote.yml` needs a hand-created `PROMOTE_TOKEN`
-  secret that `infrastructure.md` documents nowhere — see the entry at the
-  top of this file.
+  `promote.yml` was subsequently reworked to deploy prod itself rather
+  than depend on a PAT-authenticated push — see the entry at the top of
+  this file.
 - `curation-data-aggregation-pipe` (**still backlogged**) — the
   deterministic layer where prompt-injection defense belongs, before any
   agent reads player-written text. Selected for this plan and then
@@ -392,10 +403,10 @@ feedback files. One feature stays backlogged
 (`curation-data-aggregation-pipe`), routed to `/ardd-research` rather
 than a plan.
 
-**One thing genuinely blocks a production promotion:** the
-`PROMOTE_TOKEN` secret does not exist yet and `infrastructure.md`
-documents neither it nor the promote workflow. Create the fine-grained
-PAT and run `/ardd-refine infrastructure` — see the top of this file.
+**Nothing blocks a production promotion.** The PAT requirement was
+designed away rather than documented: promotion now fast-forwards and
+deploys in one dispatch using the existing `FLY_API_TOKEN_PROD`. Not yet
+exercised against the real GitHub — the first dispatch is the proof.
 
 **ArDD is up-to-date** on the beta channel — `v1.0.2`, commit `33ac9ae`
 (updated 2026-07-20 from `v1.0.1`/`9fd6fbb`). No migrations were pending;
@@ -422,12 +433,11 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** `/ardd-refine infrastructure` — document the
-promote workflow and the `PROMOTE_TOKEN` secret it requires. This is the
-one item that leaves a shipped capability unusable and undocumented at
-the same time; the implementer's own comments already point readers at an
-artifact section that doesn't exist. Creating the PAT itself is a manual
-step only you can do.
+**Recommended next step:** push. `main` is well ahead of `origin/main`
+and every tasks file is complete; pushing auto-deploys beta, which is
+where the promote workflow and the generated Fly configs actually get
+exercised. The first `Promote main to release` dispatch is the only real
+test of the new prod path.
 
 Then, in no particular order: `/ardd-defects` to clear both
 now-fixed entries from the snapshot, `/ardd-research` for
