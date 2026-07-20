@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-store-hardening-2026-07-20-d61f.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
