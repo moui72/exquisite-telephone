@@ -1,4 +1,7 @@
-[![built with ArDD](https://shieldcn.dev/badge/built%20with-ArDD-blue.svg?variant=secondary&theme=blue)](https://github.com/moui72/artifact-driven-dev) [![ArDD version](https://shieldcn.dev/badge/version-v0.10.3--beta.1-lightgrey.svg?variant=secondary&theme=gray)](https://github.com/moui72/artifact-driven-dev)
+<!-- ardd-badge-start -->
+[![built with ArDD](https://img.shields.io/badge/built%20with-ArDD-blue)](https://github.com/moui72/artifact-driven-dev)
+<!-- ardd-badge-end -->
+[![ArDD version](https://img.shields.io/github/v/release/moui72/artifact-driven-dev?include_prereleases&label=ArDD)](https://github.com/moui72/artifact-driven-dev/releases)
 [![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
 
 ## Datamodel
