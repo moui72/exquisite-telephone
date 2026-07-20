@@ -1,7 +1,9 @@
 ---
 slug: release-promotion-workflow
-status: backlogged
+status: tasked
 logged: 2026-07-20
+plan: plan-fly-config-lockstep-2026-07-20-8fbb.md
+tasks: tasks-fly-config-lockstep-dac2.md
 ---
 
 Cutting a production release is a GitHub workflow_dispatch that fast-forwards the release branch from main, which triggers the existing prod deploy — rather than a remembered manual git push.

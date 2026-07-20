@@ -1,7 +1,9 @@
 ---
 slug: fly-config-lockstep
-status: backlogged
+status: tasked
 logged: 2026-07-20
+plan: plan-fly-config-lockstep-2026-07-20-8fbb.md
+tasks: tasks-fly-config-lockstep-dac2.md
 ---
 
 fly.toml and fly.staging.toml cannot silently diverge — enforced either by a lint that fails CI when they differ outside an allowlist of per-channel keys, or by generating both from a single source at deploy time.

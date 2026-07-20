@@ -156,8 +156,14 @@ a non-host even if opened. Its controls:
   visible — 2026-07-18, feedback F001
   `.project/feedback/feedback-main-8da5.md`). Now that the panel is a
   modal the host must open, the host needs a frozen-room signal
-  reachable *without* opening it — the footer's gavel is the natural
-  place to carry that indication. A kicked
+  reachable *without* opening it: **the footer's gavel itself carries
+  the indication** while `Room.nonContinuable` is `true`, so a host who
+  kicks a player mid-game sees the room is frozen without reopening the
+  panel. The indication is not colour alone (Baseline Accessibility,
+  [[constitution]]) and its accessible label says the room can't
+  continue, not merely that moderation exists. The body-notice
+  suppression for the host stays as-is — the fix is the gavel signal,
+  not showing the host the same notice the panel already carries. A kicked
   player is removed entirely from the visible roster shown to the host
   and other players (reversed 2026-07-17, feedback F001
   `.project/feedback/feedback-main-e2ff.md`, from the original

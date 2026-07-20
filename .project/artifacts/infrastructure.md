@@ -231,9 +231,66 @@ on directly and never diverges. That is precisely why
 `.github/workflows/ci.yml` skips its `checks` job when
 `github.ref == 'refs/heads/release'`: the identical commits already
 passed those checks on their push to `main`, so re-running them would
-test the same tree twice. (Promoting `release` is currently a manual
-fast-forward; automating it is backlogged as `release-promotion-workflow`
-and is deliberately not built here.)
+test the same tree twice. Promoting `release` is a dispatchable
+workflow, not a remembered command — see Release Promotion below.
+
+### Config Lockstep — generated, not hand-maintained
+
+The two Fly configs are meant to differ in exactly one key (`app`), and
+for a period they silently didn't: `fly.staging.toml` lost its
+`[mounts]` block and `CURATION_DATA_PATH`, discarding beta's curation
+data on every deploy. The header comment asserting the files mirror each
+other was documentation, not enforcement, and documentation cannot fail
+a build.
+
+**Both configs are generated from a single source.** One template plus a
+small per-channel values table produces `fly.toml` and
+`fly.staging.toml`; the generated files stay checked in (so `flyctl
+deploy --config` keeps working unchanged, and a reader sees the real
+config in the repo). CI regenerates both and fails if the committed
+files differ from the regenerated output — the check *is* the diff, so a
+hand-edit of a generated file is caught rather than blessed.
+
+Generation was chosen over a lint that merely compares the two files.
+A comparison lint detects drift after someone writes it; generation
+makes drift structurally unexpressible — there is no place to type a
+value into one channel and not the other. The cost is one build step and
+the discipline of editing the template rather than the output, which the
+CI check enforces on any lapse.
+
+**The per-channel values table is the allowlist.** A key belongs there
+only when the two channels genuinely must differ. Today that is `app`
+alone; the volume IDs differ in reality but are not named in either
+config, so they don't appear. Adding a key to that table is the explicit
+act of declaring a channel difference — the point is that it can't
+happen by accident.
+
+The check lives in CI's `checks` job, which is skipped on `release`
+(above). That is correct rather than a gap: `release` only ever receives
+a fast-forward of `main`, so the identical tree already passed the check
+on `main`.
+
+### Release Promotion
+
+Cutting production is a `workflow_dispatch` in
+`.github/workflows/` that fast-forwards `release` from `main`; the
+resulting push to `release` triggers the existing `deploy-prod` job.
+Nothing about the deploy half changes — this replaces only the manual
+`git push origin main:release` a human had to remember.
+
+**Fast-forward only, never a merge.** The push is a plain
+non-force-`push` of `main` into `release`; if it is rejected as
+non-fast-forward, that means `release` has diverged from `main`, which
+is precisely the invariant the whole dual-channel scheme rests on. The
+workflow fails loudly there rather than merging, forcing a human to
+investigate how `release` acquired a commit `main` doesn't have. A
+workflow that "helpfully" merged would repair the symptom and destroy
+the signal — and would push a tree to production that never passed
+`checks` on `main`, which is the exact assumption letting `release` skip
+them.
+
+Dispatch is manual (a human decides when to cut), and the run record is
+the audit trail the manual push never produced.
 
 **Principle I is still satisfied.** The earlier "single Fly.io app"
 phrasing in this section was simply wrong, not a scaling claim that has

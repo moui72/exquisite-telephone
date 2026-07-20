@@ -1,13 +1,13 @@
 ---
-status: open
+status: planned
 created: 2026-07-19
-plan: null
+plan: plan-fly-config-lockstep-2026-07-20-8fbb.md
 ---
 
 # Feedback
 
 ## Bugs
-- [ ] F001 The host gets no signal that a kick has frozen the room.
+- [x] F001 The host gets no signal that a kick has frozen the room.
   After the Salon Footer refactor moved the Moderation Panel from an
   always-visible inline panel to a modal opened by the footer's gavel,
   the host-specific suppression of the "this game can't continue"
