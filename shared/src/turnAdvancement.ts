@@ -69,18 +69,28 @@ export function currentRoundFor(room: Room): number {
  * of the room to catch up (round-gating).
  */
 export function computeNextEntry(room: Room, book: Book): NextEntry | null {
+  const active = activePlayers(room);
+  const activeCount = active.length;
   const position = book.entries.length;
   const laps = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
-  if (position >= room.players.length * laps) {
+  // Round-robin runs over the *active* roster, so completion is reached
+  // after activeCount * laps entries — a kicked player's slot is never
+  // assigned and must not strand the book (restart continuability fix).
+  if (activeCount === 0 || position >= activeCount * laps) {
     return null;
   }
   if (position > currentRoundFor(room)) {
     return null;
   }
 
-  const originIndex = room.players.findIndex((p) => p.id === book.originAuthorId);
-  const authorIndex = (originIndex + position) % room.players.length;
-  const author = room.players[authorIndex];
+  const originIndex = active.findIndex((p) => p.id === book.originAuthorId);
+  // The origin author was kicked (post-kick, pre-restart book): no active
+  // slot to rotate from, so the book has no next entry.
+  if (originIndex === -1) {
+    return null;
+  }
+  const authorIndex = (originIndex + position) % activeCount;
+  const author = active[authorIndex];
 
   return {
     authorId: author!.id,

@@ -421,3 +421,92 @@ describe('activePlayers (kicked players excluded from rotation)', () => {
     expect(activePlayers(room)).toEqual([]);
   });
 });
+
+describe('computeNextEntry over active players (restart after a kick)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+
+  function makeRoom(players: Player[], books: Book[], lapsPerBook: number | null): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players,
+      status: 'writing',
+      books,
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it('assigns turns only to remaining players and lets the book complete after a kick', () => {
+    // Restarted room: grace was kicked, so books were regenerated only
+    // for ada and lin (2 active players). With lapsPerBook 1 the book
+    // completes at 2 entries — the kicked player is never assigned and
+    // must not strand the book.
+    const kickedGrace = { ...grace, kicked: true };
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('bookA', ada.id, 0)],
+    };
+    let room = makeRoom([ada, kickedGrace, lin], [bookA], 1);
+
+    // Position 1 rotates to the next *active* player (lin), skipping grace.
+    expect(computeNextEntry(room, bookA)).toEqual({
+      authorId: lin.id,
+      type: 'drawing',
+      position: 1,
+    });
+
+    // Once lin contributes, the 2-active-player book is complete (not
+    // stranded waiting on a turn grace would have taken).
+    const completeBook: Book = {
+      ...bookA,
+      entries: [makeEntry('bookA', ada.id, 0), makeEntry('bookA', lin.id, 1)],
+    };
+    room = makeRoom([ada, kickedGrace, lin], [completeBook], 1);
+    expect(computeNextEntry(room, completeBook)).toBeNull();
+  });
+
+  it('returns null for a book whose origin author is kicked', () => {
+    const kickedAda = { ...ada, kicked: true };
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: kickedAda.id,
+      entries: [makeEntry('bookA', kickedAda.id, 0)],
+    };
+    const room = makeRoom([kickedAda, grace, lin], [bookA], 1);
+    expect(computeNextEntry(room, bookA)).toBeNull();
+  });
+
+  it('behaves exactly as before when no player is kicked (regression guard)', () => {
+    const bookA: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('bookA', ada.id, 0)],
+    };
+    const room = makeRoom([ada, grace, lin], [bookA], 1);
+    expect(computeNextEntry(room, bookA)).toEqual({
+      authorId: grace.id,
+      type: 'drawing',
+      position: 1,
+    });
+  });
+});
