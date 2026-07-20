@@ -722,6 +722,39 @@ describe('prompt rating control', () => {
     expect(screen.getByText(/was this fun to draw/i)).toBeInTheDocument();
   });
 
+  /**
+   * T005 — the control ships with an inline explanation (T004 decision).
+   * Without it a player sees thumbs on a phrase ANOTHER player wrote and
+   * reads it as rating that person, the exact dynamic ui.md designed out.
+   * Asserted as three claims, not as wording: what it is for, that it is
+   * anonymous, and that nobody ever sees it.
+   */
+  it('explains what the rating is for, inline at the control', async () => {
+    const { container } = renderAtPosition(1);
+
+    const help = screen.getByRole('button', { name: /rating/i });
+    await fireEvent.click(help);
+
+    const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
+    // 1. it tunes the curated phrase deck
+    expect(copy).toMatch(/phrase(s)? (we|the house) (offer|deal)|which phrases|phrase bank|deck/i);
+    // 2. it is anonymous
+    expect(copy).toMatch(/anonymous/i);
+    // 3. it is never shown to anyone, the phrase's author included
+    expect(copy).toMatch(/never shown|no one (ever )?sees|nobody (ever )?sees/i);
+    expect(copy).toMatch(/wrote it|author|whoever wrote/i);
+  });
+
+  it('keeps the explanation collapsed until asked', () => {
+    const { container } = renderAtPosition(1);
+
+    expect(screen.getByRole('button', { name: /rating/i })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect((container.textContent ?? '')).not.toMatch(/anonymous/i);
+  });
+
   it('renders NO rating control on the position-0 writing turn', () => {
     renderAtPosition(0, ada);
 

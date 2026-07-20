@@ -8,6 +8,7 @@
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
+  import InfoTooltip from '../components/InfoTooltip.svelte';
 
   export let session: SessionStore = defaultSession;
 
@@ -87,8 +88,7 @@
   // Normalization Rules -- Curated prompts). Applies to position 0 only:
   // every later text turn is a blind guess and stays free-form in both
   // modes. Only ever this player's own hand -- never anyone else's.
-  $: isCuratedOpeningTurn =
-    myTurn?.position === 0 && state.room?.promptMode === 'curated';
+  $: isCuratedOpeningTurn = myTurn?.position === 0 && state.room?.promptMode === 'curated';
   $: myDealtPrompts =
     isCuratedOpeningTurn && state.player ? (state.room?.dealtPrompts[state.player.id] ?? []) : [];
   $: allowWriteIn = state.room?.allowPromptWriteIn ?? false;
@@ -97,8 +97,7 @@
   const WRITE_IN = '\u0000write-in';
   let selectedPrompt: string | null = null;
 
-  $: curatedContent =
-    selectedPrompt === WRITE_IN ? textValue.trim() : (selectedPrompt ?? '');
+  $: curatedContent = selectedPrompt === WRITE_IN ? textValue.trim() : (selectedPrompt ?? '');
 
   async function handleSubmitCuratedPrompt() {
     if (!myTurn || !curatedContent) return;
@@ -125,11 +124,7 @@
     if (!myTurn || drawnOps.length === 0) return;
     // `?? undefined` so an uncast rating is omitted from the payload
     // rather than sent as null (T018).
-    await session.submitEntry(
-      myTurn.bookId,
-      serializeDrawOps(drawnOps),
-      promptRating ?? undefined,
-    );
+    await session.submitEntry(myTurn.bookId, serializeDrawOps(drawnOps), promptRating ?? undefined);
   }
 
   function handleOpsChange(ops: DrawOps) {
@@ -181,8 +176,7 @@
   {#if canVoteOnTimeout}
     <div class="flex flex-col gap-2 rounded-md border border-amber-300 bg-amber-50 p-4">
       <p class="text-sm text-ink/90">
-        {stalledPlayerNames} has yet to present their contribution to the salon. How shall the house
-        proceed?
+        {stalledPlayerNames} has yet to present their contribution to the salon. How shall the house proceed?
       </p>
       <div class="flex flex-wrap gap-2">
         <button
@@ -238,8 +232,7 @@
 
       {#if isCuratedOpeningTurn}
         <p class="text-sm italic text-ink/60">
-          Choose the phrase your book will chase. Yours alone — no other guest was offered
-          these.
+          Choose the phrase your book will chase. Yours alone — no other guest was offered these.
         </p>
         <form class="flex flex-col gap-4" on:submit|preventDefault={handleSubmitCuratedPrompt}>
           <fieldset class="flex flex-col gap-2">
@@ -319,7 +312,10 @@
               autocomplete="off"
             />
           </label>
-          <button type="submit" class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)]">
+          <button
+            type="submit"
+            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)]"
+          >
             <span class="inline-flex items-center gap-1.5">
               <Send size={16} aria-hidden="true" />
               Present your contribution
@@ -328,8 +324,8 @@
         </form>
       {:else}
         <p class="text-sm italic text-ink/60">
-          Draw exactly what the phrase says — no more, no less. Resist the urge to add anything
-          the words didn't ask for.
+          Draw exactly what the phrase says — no more, no less. Resist the urge to add anything the
+          words didn't ask for.
         </p>
         <div class="flex flex-col gap-4">
           <DrawingCanvas
@@ -357,28 +353,35 @@
               is paid down by reusing InfoTooltip -- collapsed to a single
               "(?)" until asked, matching the Lobby's established pattern.
             -->
-            <fieldset class="flex items-center gap-3 border-0 p-0">
+            <fieldset class="border-0 p-0">
               <legend class="text-sm italic text-ink/60">Was this fun to draw?</legend>
-              <button
-                type="button"
-                aria-label="Thumbs up — fun to draw"
-                aria-pressed={promptRating === 'up'}
-                class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
-                class:bg-butter={promptRating === 'up'}
-                on:click={() => (promptRating = promptRating === 'up' ? null : 'up')}
+              <InfoTooltip
+                label="What is this rating for?"
+                explanation="It tells the house which phrases are worth dealing again — nothing more. Your answer is anonymous, and it is never shown to anyone: not to the room, not to whoever wrote the phrase, not back to you. You are appraising the phrase, never the guest."
               >
-                <ThumbsUp size={16} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                aria-label="Thumbs down — not fun to draw"
-                aria-pressed={promptRating === 'down'}
-                class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
-                class:bg-butter={promptRating === 'down'}
-                on:click={() => (promptRating = promptRating === 'down' ? null : 'down')}
-              >
-                <ThumbsDown size={16} aria-hidden="true" />
-              </button>
+                <div class="flex items-center gap-3">
+                  <button
+                    type="button"
+                    aria-label="Thumbs up — fun to draw"
+                    aria-pressed={promptRating === 'up'}
+                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
+                    class:bg-butter={promptRating === 'up'}
+                    on:click={() => (promptRating = promptRating === 'up' ? null : 'up')}
+                  >
+                    <ThumbsUp size={16} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Thumbs down — not fun to draw"
+                    aria-pressed={promptRating === 'down'}
+                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
+                    class:bg-butter={promptRating === 'down'}
+                    on:click={() => (promptRating = promptRating === 'down' ? null : 'down')}
+                  >
+                    <ThumbsDown size={16} aria-hidden="true" />
+                  </button>
+                </div>
+              </InfoTooltip>
             </fieldset>
           {/if}
           <button
