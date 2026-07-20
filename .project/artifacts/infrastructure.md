@@ -214,9 +214,10 @@ single most repeated mistake in this repo's history.
 | Fly app | `exquisite-telephone` | `exquisite-telephone-beta` |
 | Config | `fly.toml` | `fly.staging.toml` |
 | CI token secret | `FLY_API_TOKEN_PROD` | `FLY_API_TOKEN_BETA` |
-| CI job (`.github/workflows/ci.yml`) | `deploy-prod` | `deploy-beta` |
-| Concurrency group | `deploy-prod` | `deploy-beta` |
+| Deploying workflow | `promote.yml` (manual dispatch) | `ci.yml` job `deploy-beta` (automatic) |
+| Concurrency group | `promote-release` | `deploy-beta` |
 | Deploys from branch | `release` | `main` |
+| Trigger | a human dispatches | any push to `main` |
 | Volume | `vol_r681m3no1nq5ex14` | `vol_vp2l1gyjj3lw9me4` |
 | Custom domain | `ex-tel.ty-pe.com` | `beta-ex-tel.ty-pe.com` |
 
@@ -233,7 +234,14 @@ on directly and never diverges. That is precisely why
 `github.ref == 'refs/heads/release'`: the identical commits already
 passed those checks on their push to `main`, so re-running them would
 test the same tree twice. Promoting `release` is a dispatchable
-workflow, not a remembered command — see Release Promotion below.
+workflow that fast-forwards **and** deploys — not a remembered command,
+and not a push that some other job reacts to — see Release Promotion
+below.
+
+Note the asymmetry this creates, and keep it: beta deploys are automatic
+and prod deploys are an explicit human act. The two channels differ in
+their *config* by exactly one key, but differ in their *trigger* by
+design.
 
 ### Config Lockstep — generated, not hand-maintained
 
@@ -274,23 +282,33 @@ on `main`.
 ### Release Promotion
 
 Cutting production is a `workflow_dispatch` in
-`.github/workflows/promote.yml` that fast-forwards `release` from `main`;
-the resulting push to `release` triggers the existing `deploy-prod` job.
-Nothing about the deploy half changes — this replaces only the manual
-`git push origin main:release` a human had to remember.
+`.github/workflows/promote.yml` that fast-forwards `release` from `main`
+**and then deploys prod in the same run**. It replaces both the manual
+`git push origin main:release` a human had to remember and the
+push-triggered deploy job that used to react to it.
 
-**The push must NOT use the default `GITHUB_TOKEN`.** A push
-authenticated with it does not trigger further workflow runs — GitHub's
-recursion guard — so `deploy-prod` would never fire and promotion would
-report success while deploying nothing. That failure mode is silent in
-both directions: the promote run goes green and prod simply stays on the
-old commit. The workflow therefore checks out with `PROMOTE_TOKEN`, a
-**fine-grained PAT with Contents read/write on this repo**, created by
-hand (see repo-level manual steps below).
+Re-dispatching when `release` is already current is harmless: the push is
+a no-op and the deploy re-ships the same tree.
 
-The token is the one part of promotion that is not self-contained in the
-repo, which is why it is called out here rather than left implicit in the
-workflow file.
+**The workflow deploys directly; it does not rely on its own push to
+trigger a deploy.** A push authenticated with the default `GITHUB_TOKEN`
+does not trigger further workflow runs — GitHub's recursion guard — so a
+promote workflow that only pushed and expected a separate push-triggered
+job to fire would report success while deploying nothing. Rather than
+reach for a personal access token to defeat that guard, promotion does
+both halves itself: fast-forward `release`, then run `flyctl deploy
+--config fly.toml` with `FLY_API_TOKEN_PROD`.
+
+This keeps the repo free of any hand-created PAT — no expiry to track, no
+token tied to one person's account, no credential outside the two Fly
+tokens the deploy already needs.
+
+**Promotion is therefore the ONLY path that deploys production.**
+`ci.yml` has no push-triggered `deploy-prod` job; a manual `git push
+origin main:release` fast-forwards the branch and deploys nothing. That
+is deliberate — one prod deploy path rather than two that must be kept in
+sync — but it does mean `release` moving is not by itself evidence that
+prod was deployed. The dispatch run is.
 
 **Fast-forward only, never a merge.** The push is a plain
 non-force-`push` of `main` into `release`; if it is rejected as
@@ -371,30 +389,11 @@ larger one.
 | `exquisite-telephone` | `vol_r681m3no1nq5ex14` | 1GB | `iad` | `iad` — matches |
 | `exquisite-telephone-beta` | `vol_vp2l1gyjj3lw9me4` | 1GB | `iad` | `iad` — matches |
 
-### One-time MANUAL repo-level steps — per repo, not per app
-
-Distinct from the per-app `flyctl` steps above: these are GitHub-side,
-run once for the repository regardless of how many channels exist.
-
-**`PROMOTE_TOKEN` — fine-grained PAT, Contents read/write on this repo,
-stored as a repository secret.** Required by
-`.github/workflows/promote.yml` for the reason given under Release
-Promotion: the default `GITHUB_TOKEN` cannot trigger `deploy-prod`.
-
-**Current state: NOT yet created — promotion will fail until it is.**
-This is the one outstanding manual step in the deployment topology; both
-Fly volumes and both `FLY_API_TOKEN_*` secrets are already in place.
-
-Its absence fails loudly rather than silently — `actions/checkout` errors
-on an empty token before any push is attempted — so the failure mode here
-is a red workflow run, not a promotion that appears to work. That is the
-opposite of the `GITHUB_TOKEN` trap it exists to avoid, and worth keeping
-that way: a token problem should never be able to look like a successful
-cut.
-
-Being a PAT, it carries an expiry and is tied to the account that created
-it — unlike the Fly tokens, it will need re-issuing at some point, and
-promotion will start failing on the day it lapses.
+**No repo-level manual step exists.** Promotion deliberately introduces
+none: it authenticates its push with the built-in `GITHUB_TOKEN` and its
+deploy with `FLY_API_TOKEN_PROD`, both of which already exist. The
+deployment topology's only manual steps remain the per-app `flyctl` ones
+above, and all of them are done.
 
 ## Production Annotations
 
