@@ -39,7 +39,14 @@ function makeFakeSession(
 
 const roomId = 'ABCDE';
 const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
-const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
+const grace = {
+  id: 'grace',
+  roomId,
+  name: 'Grace',
+  connected: true,
+  sessionToken: 't2',
+  kicked: false,
+};
 const lin = { id: 'lin', roomId, name: 'Lin', connected: true, sessionToken: 't3', kicked: false };
 
 function makeRoom(books: Book[], players = [ada, grace], overrides: Partial<Room> = {}): Room {
@@ -134,7 +141,9 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.getByText(/never (been )?told the original phrase|never seen the original phrase/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/never (been )?told the original phrase|never seen the original phrase/i),
+    ).toBeInTheDocument();
   });
 
   it('shows a docent-voice hint clarifying a draw turn should depict the phrase exactly', () => {
@@ -227,7 +236,14 @@ describe('Writing/Drawing view', () => {
       roomId,
       originAuthorId: ada.id,
       entries: [
-        { id: 'a0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'p1' },
+        {
+          id: 'a0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'p1',
+        },
         {
           id: 'a1',
           bookId: 'book-ada',
@@ -258,7 +274,14 @@ describe('Writing/Drawing view', () => {
       roomId,
       originAuthorId: lin.id,
       entries: [
-        { id: 'c0', bookId: 'book-lin', authorId: lin.id, position: 0, type: 'text', content: 'p3' },
+        {
+          id: 'c0',
+          bookId: 'book-lin',
+          authorId: lin.id,
+          position: 0,
+          type: 'text',
+          content: 'p3',
+        },
       ],
     };
     const room = makeRoom([bookA, bookB, bookC], [ada, grace, lin]);
@@ -386,7 +409,9 @@ describe('Writing/Drawing view', () => {
 
     render(WritingDrawing, { props: { session } });
 
-    expect(screen.queryByRole('button', { name: /declare the turn forfeit/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /declare the turn forfeit/i }),
+    ).not.toBeInTheDocument();
   });
 
   it('submits the written phrase to the session store', async () => {
@@ -479,7 +504,7 @@ describe('Writing/Drawing view', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('preserves in-progress draft text across a room broadcast that leaves this player\'s turn identity unchanged (F1 regression)', async () => {
+  it("preserves in-progress draft text across a room broadcast that leaves this player's turn identity unchanged (F1 regression)", async () => {
     // Grace is assigned position 1 (a guess) on Lin's book. Ada's book is a
     // separate, independent book also mid-round.
     const linBook: Book = {
@@ -487,7 +512,14 @@ describe('Writing/Drawing view', () => {
       roomId,
       originAuthorId: lin.id,
       entries: [
-        { id: 'l0', bookId: 'book-lin', authorId: lin.id, position: 0, type: 'text', content: 'p1' },
+        {
+          id: 'l0',
+          bookId: 'book-lin',
+          authorId: lin.id,
+          position: 0,
+          type: 'text',
+          content: 'p1',
+        },
         {
           id: 'l1',
           bookId: 'book-lin',
@@ -503,7 +535,14 @@ describe('Writing/Drawing view', () => {
       roomId,
       originAuthorId: ada.id,
       entries: [
-        { id: 'a0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'p2' },
+        {
+          id: 'a0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'p2',
+        },
         {
           id: 'a1',
           bookId: 'book-ada',
@@ -531,7 +570,14 @@ describe('Writing/Drawing view', () => {
       ...adaBook,
       entries: [
         ...adaBook.entries,
-        { id: 'a2', bookId: 'book-ada', authorId: lin.id, position: 2, type: 'text', content: 'p2-guess' },
+        {
+          id: 'a2',
+          bookId: 'book-ada',
+          authorId: lin.id,
+          position: 2,
+          type: 'text',
+          content: 'p2-guess',
+        },
       ],
     };
     const newRoom = makeRoom([linBook, adaBookAfterSubmit], [ada, grace, lin]);
@@ -657,7 +703,15 @@ describe('Writing/Drawing turn hint', () => {
 
   it('still renders the blind-guess copy on a later text turn', () => {
     const strokes = serializeDrawOps([
-      { type: 'stroke', points: [{ x: 0, y: 0 }, { x: 4, y: 4 }], color: '#1e293b', width: 3 },
+      {
+        type: 'stroke',
+        points: [
+          { x: 0, y: 0 },
+          { x: 4, y: 4 },
+        ],
+        color: '#1e293b',
+        width: 3,
+      },
     ]);
     // Ada's book: her opening phrase, then Grace's drawing. Position 2 is a
     // text turn -- a genuine blind guess.
@@ -666,8 +720,22 @@ describe('Writing/Drawing turn hint', () => {
       roomId,
       originAuthorId: ada.id,
       entries: [
-        { id: 'e0', bookId: 'book-ada', authorId: ada.id, position: 0, type: 'text', content: 'a phrase' },
-        { id: 'e1', bookId: 'book-ada', authorId: grace.id, position: 1, type: 'drawing', content: strokes },
+        {
+          id: 'e0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a phrase',
+        },
+        {
+          id: 'e1',
+          bookId: 'book-ada',
+          authorId: grace.id,
+          position: 1,
+          type: 'drawing',
+          content: strokes,
+        },
       ],
     };
     const room = makeRoom([book], [ada, grace, lin]);
@@ -752,7 +820,47 @@ describe('prompt rating control', () => {
       'aria-expanded',
       'false',
     );
-    expect((container.textContent ?? '')).not.toMatch(/anonymous/i);
+    expect(container.textContent ?? '').not.toMatch(/anonymous/i);
+  });
+
+  /**
+   * T006 — the Writing/Drawing half of the absence guard whose Reveal half
+   * lives in `Reveal.test.ts` ("prompt ratings are never surfaced to
+   * players"). Extended here rather than duplicated, because T005 added
+   * explanatory copy on THIS screen and "explain the rating" is a short
+   * step from "show the rating".
+   *
+   * Scoped to a rating *readback* — a value, count, or tally rendered as
+   * content. The thumbs' own `aria-pressed` is deliberately NOT in scope:
+   * it is the toggle's pressed state, the feedback that makes the control
+   * operable at all, and it reflects only what this player just pressed in
+   * this un-submitted turn. ui.md forbids showing a rating that has been
+   * recorded, not the button you are currently holding down.
+   */
+  it('surfaces no rating value, count, or tally — before or after casting one', async () => {
+    const { container } = renderAtPosition(1);
+
+    const readback =
+      /\b\d+\s*(?:ratings?|thumbs|votes?|up|down)\b|\b(?:rated|score|tally|average|liked by|out of)\b|\d+\s*%/i;
+
+    expect(container.textContent ?? '').not.toMatch(readback);
+
+    await fireEvent.click(screen.getByRole('button', { name: /^thumbs up/i }));
+    expect(container.textContent ?? '').not.toMatch(readback);
+
+    // The explanation itself must not become a readback either.
+    await fireEvent.click(screen.getByRole('button', { name: /rating/i }));
+    expect(container.textContent ?? '').not.toMatch(readback);
+  });
+
+  it('never shows another player’s rating of this phrase', () => {
+    const { container } = renderAtPosition(1);
+
+    // Nothing in the rendered turn attributes a rating to a named guest.
+    const text = container.textContent ?? '';
+    for (const name of ['Ada', 'Grace', 'Lin']) {
+      expect(text).not.toMatch(new RegExp(`${name}[^.]{0,40}(?:rated|thumbs|liked)`, 'i'));
+    }
   });
 
   it('renders NO rating control on the position-0 writing turn', () => {
