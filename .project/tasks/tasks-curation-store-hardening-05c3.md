@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-store-hardening-2026-07-20-d61f.md
 generated: 2026-07-20
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -38,4 +38,4 @@ status: in-progress
 
 - [x] T017 Delete the debounce timer, `flush()`, and the temp+fsync+rename write path from `server/src/domain/curationStore.ts`, along with the tests that asserted those behaviors. Constitution Principle IV — the replaced approach is deleted in the same change, not archived in place or left "for reference". No new test; the deletion is verified by T019.
 - [x] T018 Delete the `gracefulShutdown` module (`server/src/domain/gracefulShutdown.ts` and its test) and its wiring in `server/src/index.ts`. It existed solely to drain the debounce before exit; with no buffer there is nothing to flush. Verify `index.ts` still starts cleanly and remains pure wiring (constitution Principle X).
-- [ ] T019 Verify the full suite is green with the deleted code GONE rather than merely unreferenced: run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and grep the codebase for lingering references to `flush`, `debounce`, and `gracefulShutdown` in the curation path. Confirm no test still asserts deleted behavior. Report the final test count.
+- [x] T019 Verify the full suite is green with the deleted code GONE rather than merely unreferenced: run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and grep the codebase for lingering references to `flush`, `debounce`, and `gracefulShutdown` in the curation path. Confirm no test still asserts deleted behavior. Report the final test count.
