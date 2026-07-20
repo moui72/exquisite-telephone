@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Shared types, phrase bank, and deal logic
 
-- [ ] T001 [artifacts: datamodel] Extend the `Room` type in
+- [x] T001 [artifacts: datamodel] Extend the `Room` type in
   `shared/src/types.ts` with four new fields, matching the flat-field
   convention already used by `monochromeOnly` / `turnTimerMinutes` /
   `lapsPerBook`: `promptMode: 'free-form' | 'curated'` (defaults

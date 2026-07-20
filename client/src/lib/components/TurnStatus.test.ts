@@ -31,6 +31,10 @@ pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
 revealStartedAt: null,
+promptMode: 'free-form',
+curatedPromptCount: null,
+allowPromptWriteIn: true,
+dealtPrompts: {},
     };
 
     render(TurnStatus, { props: { room } });
@@ -73,6 +77,10 @@ pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
 revealStartedAt: null,
+promptMode: 'free-form',
+curatedPromptCount: null,
+allowPromptWriteIn: true,
+dealtPrompts: {},
     };
 
     render(TurnStatus, { props: { room } });

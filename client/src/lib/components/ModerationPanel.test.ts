@@ -58,6 +58,10 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
     ...overrides,
   };
 }

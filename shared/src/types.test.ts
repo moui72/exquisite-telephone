@@ -75,6 +75,10 @@ describe('datamodel types (datamodel.md)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
 
     const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];
@@ -82,5 +86,38 @@ describe('datamodel types (datamodel.md)', () => {
     expect(room.players).toHaveLength(1);
     expect(room.playAgainVotes).toHaveLength(0);
     expect(room.nonContinuable).toBe(false);
+  });
+
+  it('carries the curated-prompt fields at their free-form defaults (datamodel.md Room)', () => {
+    const room: Room = {
+      id: 'room-1',
+      hostPlayerId: 'player-1',
+      players: [],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+
+    const validModes: Room['promptMode'][] = ['free-form', 'curated'];
+    expect(validModes).toContain(room.promptMode);
+    expect(room.curatedPromptCount).toBeNull();
+    expect(room.allowPromptWriteIn).toBe(true);
+    expect(room.dealtPrompts).toEqual({});
+
+    const curated: Room = { ...room, promptMode: 'curated', curatedPromptCount: 3 };
+    expect(curated.curatedPromptCount).toBe(3);
   });
 });

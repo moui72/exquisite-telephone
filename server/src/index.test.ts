@@ -54,6 +54,10 @@ describe('startTimerSweep (30s background sweep)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     store.rooms.set(room.id, room);
     return { store, room };

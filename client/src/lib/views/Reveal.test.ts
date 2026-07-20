@@ -89,6 +89,10 @@ describe('Reveal view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -151,6 +155,10 @@ describe('Reveal view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const session = makeFakeSession({ room, player: ada, error: null });
 
@@ -213,6 +221,10 @@ describe('Reveal view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const session = makeFakeSession({ room, player: ada, error: null });
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
@@ -245,6 +257,10 @@ describe('Reveal view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
       ...overrides,
     };
   }
@@ -346,6 +362,10 @@ describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
   }
 
@@ -546,6 +566,10 @@ describe('Reveal view — position derived from Room.revealStartedAt, independen
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
   }
 

@@ -51,6 +51,10 @@ const sampleRoom: Room = {
   playAgainVotes: [],
   nonContinuable: false,
   revealStartedAt: null,
+  promptMode: 'free-form',
+  curatedPromptCount: null,
+  allowPromptWriteIn: true,
+  dealtPrompts: {},
 };
 
 describe('session store (client single source of state)', () => {

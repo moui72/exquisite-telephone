@@ -37,6 +37,10 @@ function makeRoomWithPlayers(players: Player[]): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
   };
 }
 

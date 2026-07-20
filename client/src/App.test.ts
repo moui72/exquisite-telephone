@@ -50,6 +50,10 @@ pendingTimeoutVote: null,
 playAgainVotes: [],
 nonContinuable: false,
 revealStartedAt: null,
+promptMode: 'free-form',
+curatedPromptCount: null,
+allowPromptWriteIn: true,
+dealtPrompts: {},
   };
 }
 

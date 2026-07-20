@@ -115,6 +115,34 @@ export interface Room {
    */
   lapsPerBook: number | null;
   /**
+   * Host-configurable, set before `status` leaves `lobby`; defaults
+   * `'free-form'` (players type their own opening phrase — the original
+   * behavior). When `'curated'`, each player instead picks their opening
+   * phrase from a dealt hand (see datamodel.md Normalization Rules —
+   * Curated prompts).
+   */
+  promptMode: 'free-form' | 'curated';
+  /**
+   * Host-configurable, set before `status` leaves `lobby`; how many
+   * phrases each player is dealt. One of `2 | 3 | 4 | 5` when set;
+   * `null` while `promptMode === 'free-form'`. Clamped at deal time.
+   */
+  curatedPromptCount: 2 | 3 | 4 | 5 | null;
+  /**
+   * Host-configurable, set before `status` leaves `lobby`; defaults
+   * `true`. When `true`, a curated-mode player may ignore their dealt
+   * hand and write their own opening phrase instead.
+   */
+  allowPromptWriteIn: boolean;
+  /**
+   * FK -> Player.id. The phrases dealt to each non-kicked player at game
+   * start, from a single shuffle-then-partition of the fixed phrase bank
+   * — which is what guarantees no phrase reaches two players in the same
+   * game. Empty `{}` while `promptMode === 'free-form'`. Re-dealt on
+   * *Restart game*.
+   */
+  dealtPrompts: Record<string, string[]>;
+  /**
    * Epoch ms marking when the current round began; `null` while
    * `status === 'lobby'`. Reset whenever the room-wide current round
    * advances. Only meaningful when `turnTimerMinutes` is set.

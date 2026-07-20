@@ -62,6 +62,10 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
   };
 
   store.rooms.set(room.id, room);
@@ -166,6 +170,10 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
   };
 
   store.rooms.set(room.id, room);

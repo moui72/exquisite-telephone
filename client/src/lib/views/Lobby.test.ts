@@ -34,6 +34,10 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           playAgainVotes: [],
           nonContinuable: false,
           revealStartedAt: null,
+          promptMode: 'free-form',
+          curatedPromptCount: null,
+          allowPromptWriteIn: true,
+          dealtPrompts: {},
         },
         player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
         error: null,
@@ -86,6 +90,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -117,6 +125,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
 
     const hostSession = makeFakeSession({
@@ -157,6 +169,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -182,6 +198,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -221,6 +241,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -253,6 +277,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -290,6 +318,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     });
 
     // 4 players (< 5) -> defaultLapsPerBook(4) === 2.
@@ -336,6 +368,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -366,6 +402,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
 
@@ -407,6 +447,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -437,6 +481,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
 
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -504,6 +552,10 @@ describe('Lobby view', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
 
     it('reveals an explanation for force monochrome, turn timer, and laps per book', async () => {

@@ -56,6 +56,10 @@ function makeRoom(books: Book[], players = [ada, grace]): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
   };
 }
 

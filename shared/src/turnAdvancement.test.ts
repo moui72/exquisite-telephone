@@ -49,6 +49,10 @@ describe('turn advancement (round-robin per book)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
   }
 
@@ -167,6 +171,10 @@ describe('round-gating (turns are round-gated, not asynchronous)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
   }
 
@@ -270,6 +278,10 @@ describe('laps per book (multi-lap completion math)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
     };
   }
 

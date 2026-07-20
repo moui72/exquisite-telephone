@@ -28,6 +28,10 @@ function makeRoom(overrides: Partial<Room> & { books: Book[] }): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
     ...overrides,
   };
 }
