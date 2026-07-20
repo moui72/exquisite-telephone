@@ -68,6 +68,11 @@ describe('RulesOverview', () => {
     const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
 
     expect(copy).toMatch(/lap/i);
+    // T013 — `Room.lapsPerBook` is 1..3 (datamodel.md Normalization Rules —
+    // Laps per book; shared/src/types.ts), so the panel must not imply the
+    // book goes round exactly once.
+    expect(copy).toMatch(/three|3 laps/i);
+    expect(copy).not.toMatch(/the book passes around the circle,/i);
     expect(copy).toMatch(/curated|dealt|deals/i);
     expect(copy).toMatch(/timer|timed|clock|time limit/i);
   });

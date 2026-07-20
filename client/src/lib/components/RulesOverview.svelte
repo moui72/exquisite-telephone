@@ -58,7 +58,7 @@
         </p>
         <p>
           Then a third guest writes a new phrase — but only from studying that drawing, never having
-          seen the original text. Writing and drawing alternate, and the book passes around the
+          seen the original text. Writing and drawing alternate, and the book keeps travelling the
           circle, each guest working from only what the guest before them left behind.
         </p>
         <p>
