@@ -8,6 +8,29 @@
    * can be opened from the Salon Footer's "?" button on any view; never
    * shown automatically. The parent controls when it opens.
    */
+  /*
+   * T011 decision -- what this panel covers.
+   *
+   * Rule adopted: the panel explains anything that changes the SHAPE of a
+   * game -- what a turn is, how many times a book goes round, where an
+   * opening phrase comes from -- and leaves per-setting detail to the
+   * Lobby's info tooltips. The plan's lean, evaluated rather than assumed,
+   * and it holds up: the tooltips are read by the host at the moment of
+   * choosing, while this panel is read by any guest trying to understand
+   * the game in front of them. Those are different questions, so
+   * duplicating the tooltips here would add length without adding answers,
+   * and length is the panel's real cost -- an overview nobody finishes is
+   * worse than a short one.
+   *
+   * Applied to the four omissions: laps per book and curated mode are IN
+   * (both change the shape of a game -- how long a book runs, and whether
+   * you author or choose). The turn timer is IN but only as the one-line
+   * fact that a turn may be timed, since a guest who sees a countdown
+   * needs to know what it is; its durations and the timeout vote stay with
+   * the tooltip. Prompt rating is OUT of this panel -- T004 already placed
+   * its explanation inline at the control, and repeating it here is the
+   * two-copies-of-one-claim drift this plan exists to fix.
+   */
   export let onClose: () => void;
 </script>
 
