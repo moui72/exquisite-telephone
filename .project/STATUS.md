@@ -1,6 +1,9 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-implement` ran
+_Updated: 2026-07-19 (`/ardd-backlog` logged
+`curated-prompt-mode` — host-selectable curated prompt mode dealt from a
+shuffled fixed phrase set, with configurable N and optional write-in.
+Prior entry: `/ardd-implement` ran
 `tasks-in-game-rules-and-guidance-4c59.md` end to end: delegated to a
 worktree subagent (solo mode, `delegation: eager`), all 6 tasks
 completed — a dismissible `RulesOverview.svelte` panel explaining the
@@ -446,9 +449,16 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 0 tasked · 10 implemented — see
-`.project/features/`.
+1 backlogged · 0 planned · 0 tasked · 10 implemented — see
+`.project/features/`. Target the backlogged slug with
+`/ardd-plan curated-prompt-mode`.
 
+- `curated-prompt-mode` (**backlogged**, logged 2026-07-19) — a
+  host-selectable curated prompt mode alongside the existing free-form
+  mode: each player is dealt N random phrases from a predetermined
+  fixed set and picks one, with N host-configurable and an optional
+  host-toggled write-in option. Dealing from a shuffled fixed set
+  guarantees no phrase appears to more than one player in a game.
 - `in-game-rules-and-guidance` (**implemented**) — a dismissible Rules
   Overview panel (Foyer + Lobby), docent-voice turn hints on the
   Writing/Drawing view, and `(?)` info tooltips on all three host
