@@ -1,41 +1,39 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (`/ardd-implement
-tasks-curation-store-hardening-05c3.md` ran in a delegated worktree:
-**19/19 complete, merged to `main`, worktree reaped**. Full suite green:
-**413 tests** (41 shared / 198 server / 174 client), lint and typecheck
-clean.
+_Updated: 2026-07-20 (first `/audit-help-text` run, then
+`/ardd-feedback`, then `/ardd-defects`.
 
-**Beta stopped losing curation data.** `fly.staging.toml` now carries
-the `[mounts]` block and `CURATION_DATA_PATH`; verified at merge that
-`app` is the ONLY non-comment difference between the two Fly configs.
-**`infrastructure.md`'s "single Fly.io app" claim is gone** — the
-Deployment section now describes the real two-app, two-channel topology,
-explicitly explains that the old phrasing was wrong rather than lapsed
-(each app still runs one machine, so Principle I holds), and inventories
-the one-time manual CLI steps with both volume IDs recorded.
+**Help-text audit found 4 issues**, logged as
+`feedback-help-text-audit-e243.md` (3 bugs, 1 UX, all tagged `ui`). The
+sharpest: `RulesOverview.svelte:30` tells players they may write
+"anything they like" as their opening phrase — false in curated mode,
+which shipped this morning. And `player-prompt-rating` ships a thumbs
+control with **no explanation anywhere**, which matters more than a
+missing tooltip: a player sees thumbs on a phrase *another player
+wrote* and reasonably reads it as rating that person, which is exactly
+the social dynamic `ui.md` designed out.
 
-The Curation Store is now append-only: one file per rating event,
-server-named, folded on demand. `gracefulShutdown` and the debounce /
-`flush()` / temp+fsync+rename path are **deleted**, not archived
-(Principle IV).
+**The audit also caught an error in its own skill.** `SKILL.md` cited
+`ui.md` as naming a minimum-player-override tooltip; it does not — that
+phrase is from a feature description, and the claim was written from
+memory rather than checked. Corrected, with a standing caution added:
+cite only from files actually opened.
 
-Open questions resolved by measurement, not guesswork: entry limits are
-**610 B text** and **2,830,862 B drawings**, derived from real payload
-measurements (a typical doodle is 76 KB; the cap is 2x a measured
-very-dense drawing) and disciplined by the 512 MB VM rather than rounded
-off. Accumulation bound is a **count of 65,536**, which is sufficient
-*because* text is already capped — worst-case event is ~800 B, so a
-count bound is a byte bound. Fold runs **on demand only**; construction
-does zero I/O.
+**`/ardd-defects` recorded 2 defects** (was 0): `infrastructure.md`'s
+handler list omits three handlers `server.ts` wires
+(`onSetPromptMode`, `onSetCuratedPromptCount`,
+`onSetAllowPromptWriteIn`), and `ui.md` claims the `(?)` pattern covers
+"every host-configurable setting" while four tooltips exist against
+seven controls. `DEFECTS.md` now also records what was **checked
+clean** — `Room` field parity, the deliberately number-free entry-limit
+rule, the rewritten Curation Store section, and Principles VII/IX/X —
+so a later run can see coverage, not just failures.
 
-Two findings from the run worth keeping: the path guard had to become a
-filename-shape whitelist, because `..\..\x`, `%2e%2e/x` and `....//x`
-do NOT escape `resolve()` on POSIX and a resolve-only check would have
-silently accepted them; and concurrent `recordRating` calls raced the
-accumulation bound (ten parallel calls all passed the check before any
-incremented), now serialized through a promise chain — caught by its
-own test, which failed first.)_
+**Deferred-ledger decision surfaced as instructed: keep waiting.** Every
+finding this run is a defect to fix, not a judgment to record as
+accepted; only one candidate (the curated-tooltip coverage question)
+would have gone in a ledger, which is not enough signal. Revisit after a
+second run.)_
 
 ## Artifact Status
 
@@ -72,24 +70,22 @@ a plan.)_
 
 ## Code-vs-Artifact Defects
 
-0 defects on file as of the last full pass (2026-07-15) plus this
-session's targeted fix — `.project/DEFECTS.md` itself still shows its
-2026-07-19 snapshot (1 defect, `62ab502f`) since fixing the underlying
-issue doesn't retroactively rewrite that file; it will read clean on
-the next full `/ardd-defects` pass. The prior performance-budget drift
-entry is also gone (its Quality Standard was trimmed this session as
-non-load-bearing).
-
-The previously-flagged code-ahead-of-docs gap (`ui.md`'s Visual Identity
-section missing the `font-title`/Uncial Antiqua treatment and the Foyer
-`GiltFrame` wrap) is now closed — `/ardd-refine ui` documented both this
-session.
+**2 defects** as of 2026-07-20 — see `.project/DEFECTS.md`.
+`infrastructure.md`'s handler list omits three wired handlers, and
+`ui.md` overclaims tooltip coverage (four tooltips, seven controls).
+Both are resolvable from either side — add the code, or narrow the
+claim. The `ui.md` one has a code-side twin logged as F003 in
+`feedback-help-text-audit-e243.md`; fixing that closes both.
 
 ## Feedback
 
-- **1 open feedback file** — `feedback-main-338d.md` (F001: host gets no
-  frozen-room signal after a kick, a regression from the Salon Footer
-  refactor). Will be picked up by the next `/ardd-plan`.
+- **2 open feedback files** — `feedback-main-338d.md` (F001: host gets
+  no frozen-room signal after a kick, a regression from the Salon Footer
+  refactor) and `feedback-help-text-audit-e243.md` (F001 rules panel
+  claims "anything they like", false in curated mode; F002 the rating
+  control has no explanation anywhere; F003 three Lobby controls lack
+  tooltips; F004 the rules panel omits four shipped features and implies
+  a single lap). Both will be picked up by the next `/ardd-plan`.
 
 _History below (all prior items resolved):_ `feedback-main-7922.md` (F001 Bug — drawing
 submit button unclickable; F002 Bug — palette needs a white erase/undo
@@ -356,39 +352,31 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**Current state (2026-07-20, latest pass):** 1 open issue (F001 from
-`feedback-main-338d.md`, logged not fixed). Safe to implement: **yes**,
-but nothing is queued. All three plans made this session are merged;
+**Current state (2026-07-20, latest pass):** Safe to implement:
+**yes**. Nothing is `ready` or `in-progress`. Two open feedback files
+(5 items total) and 2 recorded defects are the actionable work;
 artifacts are `stable` with 0 open questions; nothing in flight.
 
-**Not yet pushed.** `main` is ~52 commits ahead of `origin/main`.
-Pushing auto-deploys **beta** — which is now the first deploy that will
-actually mount the volume and persist ratings, so it is worth watching
-rather than assuming.
+**Not yet pushed.** `main` is ~59 commits ahead of `origin/main`.
+Pushing auto-deploys **beta** — the first deploy that will actually
+mount the volume and persist ratings, so worth watching rather than
+assuming.
 
 Carried forward, none blocking:
 - All three renderable artifacts are `stale` on diagrams;
   `infrastructure.md` and `datamodel.md` genuinely changed shape.
-- `player-prompt-rating` shipped a thumbs control with **no player-facing
-  explanation anywhere** — a live gap for the new `/audit-help-text`
-  skill, which has never been run.
-- `infrastructure.md`'s handler list omits three handlers `server.ts`
-  wires (`onSetPromptMode`, `onSetCuratedPromptCount`,
-  `onSetAllowPromptWriteIn`) — for `/ardd-defects`.
 - No client-side `maxlength` on the phrase input, so oversize content is
-  caught only server-side and returns `entry-too-large`; whether the
-  client surfaces that gracefully is unverified.
-- The `SalonFooter` component is still not described in `ui.md`.
+  caught only server-side (`entry-too-large`); whether the client
+  surfaces that gracefully is unverified.
 - **Flaky server test** — `server.test.ts > onStartGame rejects a
   non-host caller`, intermittent connect timeout. Predates this
   session's work; can fail CI and be misattributed.
 
-**Recommended next step:** `/audit-help-text` (new repo-local skill,
-never run) — `player-prompt-rating` shipped with no player-facing
-explanation, which is exactly what it hunts for. Then `/ardd-defects`
-for the handler-list drift, and `/ardd-diagram datamodel` +
-`/ardd-diagram infrastructure` for the two diagrams whose shape changed.
-Both Fly volumes now exist, so the prior deploy blocker is cleared.
+**Recommended next step:** `/ardd-plan` over the two open feedback
+files and the 2 defects — they overlap heavily (`ui.md` tooltip
+coverage appears as both), so one plan should absorb all of it. Then
+`/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
+diagrams whose shape actually changed.
 
 ---
 
