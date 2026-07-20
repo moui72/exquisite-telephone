@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { defaultLapsPerBook } from '@exquisite-telephone/shared';
+  import { activePlayers, defaultLapsPerBook } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import { Crown, Sparkles } from '@lucide/svelte';
@@ -207,7 +207,7 @@
         <p class="text-3xl font-bold tracking-widest text-ink">{state.room.id}</p>
 
         <ul class="flex flex-col gap-2">
-          {#each state.room.players as player (player.id)}
+          {#each activePlayers(state.room) as player (player.id)}
             <li class="rounded-md border border-marigold/30 px-3 py-2 text-base">
               {player.name}
               {#if player.id === state.room.hostPlayerId}

@@ -88,6 +88,37 @@ dealtPrompts: {},
     expect(screen.getAllByText(/piece presented/i).length).toBeGreaterThan(0);
     expect(screen.queryByText(/a very secret phrase/i)).not.toBeInTheDocument();
   });
+
+  it('omits a kicked player from the turn-status roster', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room: Room = {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: [ada, { ...grace, kicked: true }, lin],
+      status: 'writing',
+      books: [adaBook],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+
+    render(TurnStatus, { props: { room } });
+
+    expect(screen.getByText('Ada')).toBeInTheDocument();
+    expect(screen.getByText('Lin')).toBeInTheDocument();
+    expect(screen.queryByText('Grace')).not.toBeInTheDocument();
+  });
 });
 
 describe('theme regression guard (plan-1449)', () => {

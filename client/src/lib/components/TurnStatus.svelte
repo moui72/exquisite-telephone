@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { computeNextEntries } from '@exquisite-telephone/shared';
+  import { activePlayers, computeNextEntries } from '@exquisite-telephone/shared';
   import type { Room } from '@exquisite-telephone/shared';
 
   /**
@@ -13,7 +13,7 @@
 </script>
 
 <ul class="flex flex-col gap-1">
-  {#each room.players as player (player.id)}
+  {#each activePlayers(room) as player (player.id)}
     <li class="flex items-center justify-between text-sm">
       <span>{player.name}</span>
       {#if pendingAuthorIds.has(player.id)}

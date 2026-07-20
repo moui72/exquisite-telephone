@@ -1031,4 +1031,40 @@ describe('Lobby host-setting info affordances', () => {
 
     expect(uncovered.map((el) => el.id || el.getAttribute('type') || el.tagName)).toEqual([]);
   });
+
+  it('omits a kicked player from the guest list', () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: true },
+        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+
+    // A non-host guest: the kicked Grace must not appear in the roster.
+    const guestSession = makeFakeSession({ room, player: room.players[2]!, error: null });
+    render(Lobby, { props: { session: guestSession } });
+
+    expect(screen.getByText('Ada')).toBeInTheDocument();
+    expect(screen.getByText('Lin')).toBeInTheDocument();
+    expect(screen.queryByText('Grace')).not.toBeInTheDocument();
+  });
 });
