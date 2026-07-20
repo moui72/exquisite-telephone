@@ -25,8 +25,9 @@
     <GiltFrame caption="A Docent's Explanation">
       <div class="flex flex-col gap-3 text-sm text-ink/90">
         <p>
-          Every salon follows the same quiet ritual. A guest is handed a blank page and asked to
-          write a phrase — anything they like.
+          Every salon follows the same quiet ritual. A guest settles on an opening phrase —
+          composed at the blank page, or chosen from a hand the house deals them, as the host
+          has arranged it.
         </p>
         <p>
           The next player draws that phrase exactly as written, sight unseen of anything but the
