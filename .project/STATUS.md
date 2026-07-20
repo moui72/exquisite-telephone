@@ -1,34 +1,38 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (`/ardd-plan player-prompt-rating
-book-love-reactions` ran, on top of this session's earlier phrase-bank
-authoring. **`book-love-reactions` was subsumed, not planned**: the
-reviewer's simplification — the player who draws a book's opening
-phrase rates it inline on that drawing turn, and a thumbs-up on a
-player-written phrase joins the candidate pool — reaches the same
-goal (mining good player phrases) with one mechanism instead of two,
-and removes the Reveal-page heart surface entirely. Hearts were
-dropped, not deferred; reviving them later needs a fresh slug.
+_Updated: 2026-07-20 (`/ardd-implement tasks-curated-prompt-mode-4e57.md`
+ran in a delegated worktree: **11/11 complete, merged to `main`
+(fast-forward), worktree reaped**. `curated-prompt-mode` ->
+`implemented`. Full suite green on `main`: 333 tests.
 
-The plan introduces the **first durable storage in this app** — a
-Curation Store, one JSON file on a Fly volume, holding prompt ratings
-and candidate phrases. Deliberately scoped so the "all game state is
-in-memory" property survives intact: no running game reads it, and
-losing it degrades nothing a player sees. `datamodel.md` gains a
-Persisted Entities section (`PromptRating`, `CandidatePhrase`) and a
-Prompt rating normalization rule; `infrastructure.md` gains a Curation
-Store section and a volume mount; `ui.md` gains the rating control on
-the `position === 1` drawing turn. Two production annotations added
-(single-writer/volume-bound store; player-written content retained past
-the session). Plan `plan-curated-phrase-bank-2026-07-20-4eeb.md`
-**approved** (6 phases); `tasks-curated-phrase-bank-e335.md` generated
-and `ready` (21 tasks, 18 test-first).
+The delegated run verified the pre-existing phrase bank rather than
+recreating it (confirmed at merge time — `shared/src/phraseBank.ts` is
+byte-identical across the branch, still 74 phrases). Its T002 task text
+asked for "at least 200 entries", a number no artifact requires; the
+subagent instead tested the invariant that actually binds — bank size
+>= 5 x realistic-max-players — and named 12 as an explicit sizing
+assumption rather than a system constant, since datamodel.md sets no
+maximum player count.
 
-Earlier this session: the phrase bank landed at
-`shared/src/phraseBank.ts` (74 phrases) with its authoring criteria at
-`shared/PROMPT_CRITERIA.md`, clearing the Phase 1 blocker on
-`curated-prompt-mode`. Committed as `cd6230e` on branch
-`curated-phrase-bank`.)_
+Two decisions from that run worth knowing: (1) when players outnumber
+the bank, `dealPrompts` gives overflow players **empty hands** rather
+than repeating a phrase, per datamodel.md ranking distinctness above
+the host's requested count — reachable only at 75+ players, with
+write-in as the escape hatch; (2) a production annotation was added at
+`dealCuratedPrompts` because ui.md specifies the count selector's
+options but no default, so the server carries an
+unreachable-by-design `DEFAULT_CURATED_PROMPT_COUNT = 3` fallback.
+
+The run also found and fixed a real defect in its own earlier work
+(post-T011 commit): `onSetPromptMode` left a stale non-null
+`curatedPromptCount` when a host switched curated -> free-form,
+contradicting datamodel.md. And T010 fixed a live user-facing bug — the
+blind-guess turn hint was rendering on opening turns, where both of its
+claims are false.
+
+Earlier this session: phrase bank + criteria authored and committed
+(`cd6230e`); prompt-rating planned and `book-love-reactions` subsumed
+(`089b622`).)_
 
 ## Artifact Status
 
@@ -128,9 +132,10 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 2 tasked · 10 implemented · 1 subsumed — see
-`.project/features/`. Both tasked features have `ready` tasks files
-awaiting `/ardd-implement`. Nothing is backlogged.
+0 backlogged · 0 planned · 1 tasked · 11 implemented · 1 subsumed — see
+`.project/features/`. `curated-prompt-mode` landed this session;
+`player-prompt-rating` has a `ready` 21-task file awaiting
+`/ardd-implement`. Nothing is backlogged.
 
 - `player-prompt-rating` (**tasked**, logged 2026-07-20) — the player
   who draws a book's opening phrase rates it inline on that drawing
@@ -148,7 +153,7 @@ awaiting `/ardd-implement`. Nothing is backlogged.
   instead of two. Hearts as a purely social feature would be a fresh
   backlog entry; ArDD never revives a subsumed slug.
 
-- `curated-prompt-mode` (**tasked**, logged 2026-07-19) — a
+- `curated-prompt-mode` (**implemented** 2026-07-20, logged 2026-07-19) — a
   host-selectable curated prompt mode alongside the existing free-form
   mode: each player is dealt N phrases from a predetermined fixed set
   and picks one, with N host-configurable and an optional host-toggled
@@ -156,8 +161,8 @@ awaiting `/ardd-implement`. Nothing is backlogged.
   shuffle partitioned across players, not per-player sampling). Plan:
   `plan-curated-prompt-mode-2026-07-19-cfab.md` (**approved**, 5
   phases, 0 open questions). Tasks:
-  `tasks-curated-prompt-mode-4e57.md` (**ready**, 0/11) — awaiting
-  `/ardd-implement`.
+  `tasks-curated-prompt-mode-4e57.md` (**completed**, 11/11), merged to
+  `main`.
 - `in-game-rules-and-guidance` (**implemented**) — a dismissible Rules
   Overview panel (Foyer + Lobby), docent-voice turn hints on the
   Writing/Drawing view, and `(?)` info tooltips on all three host
@@ -290,26 +295,12 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-Two `ready` files. They are **not** independent — run them in the order
-below, not in parallel.
-
-- `tasks-curated-prompt-mode-4e57.md` — plan
-  `plan-curated-prompt-mode-2026-07-19-cfab.md`, feature
-  `curated-prompt-mode` (**ready**, 0/11).
-  - vs `tasks-curated-phrase-bank-e335.md`: **shared-artifact**
-    (`datamodel`, `ui`).
 - `tasks-curated-phrase-bank-e335.md` — plan
   `plan-curated-phrase-bank-2026-07-20-4eeb.md`, feature
-  `player-prompt-rating` (**ready**, 0/21).
-  - vs `tasks-curated-prompt-mode-4e57.md`: **shared-artifact**
-    (`datamodel`, `ui`).
-
-Beyond the declared artifact overlap there is a real **dependency**
-`parallel-matrix.sh` cannot see: rating an opening phrase requires
-curated mode to exist, and both touch the Writing/Drawing view and
-`onSubmitEntry`. Sequence curated-prompt-mode first. (`shared-artifact`
-means declared overlap only; `merge_policy` still governs at merge
-time.)
+  `player-prompt-rating` (**ready**, 0/21). Sole `ready` file, so
+  `parallel-matrix.sh` is silent by design (it needs two participants);
+  nothing in flight to conflict with. Its dependency on
+  `curated-prompt-mode` is now satisfied — that feature is merged.
 
 ## In Flight
 
@@ -362,26 +353,24 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 ## Summary
 
 **Current state (2026-07-20, latest pass):** 1 open issue (F001,
-logged not fixed). Safe to implement: **yes**. Two features are
-`tasked` with `ready` files — `curated-prompt-mode` (11 tasks) and
-`player-prompt-rating` (21 tasks) — and they must run in that order:
-rating an opening phrase presupposes curated mode, and both touch the
-Writing/Drawing view and `onSubmitEntry`. Artifacts are all `stable`
-with 0 open questions. Nothing backlogged; nothing in flight.
+logged not fixed). Safe to implement: **yes**. `curated-prompt-mode` is
+merged to `main` and `implemented`; `player-prompt-rating` is `tasked`
+with a `ready` 21-task file and its dependency now satisfied. Artifacts
+all `stable`, 0 open questions. Nothing backlogged, nothing in flight.
 
-Carried forward, none blocking: all three renderable artifacts are now
+Carried forward, none blocking: all three renderable artifacts are
 `stale` on diagrams (infrastructure genuinely changed — the Curation
-Store is a new node); the `SalonFooter` component is still not
-described in `ui.md` (code ahead of docs); and the curated phrase bank
-plus its criteria are committed on branch `curated-phrase-bank`
-(`cd6230e`), not yet merged to `main`.
+Store is a new node; datamodel gained two persisted entities); the
+`SalonFooter` component is still not described in `ui.md` (code ahead
+of docs); and a **flaky server test** was reported by the delegated run
+— `server.test.ts > Socket.IO server bootstrap > onStartGame rejects a
+non-host caller`, intermittent `waitForEvent` connect timeout. Did not
+reproduce in 6 isolated runs post-merge, and that file was never
+touched by this work, so it is not a regression from it — but it can
+still fail CI unattributably. Worth `/ardd-feedback` if it recurs.
 
 **Recommended next step:** `/ardd-implement` —
-`tasks-curated-prompt-mode-4e57.md` first (11 tasks, 10 test-first),
-then `tasks-curated-phrase-bank-e335.md` (21 tasks, 18 test-first).
-Note curated-prompt-mode's Phase 1 asks for the phrase bank to be
-*created*; it already exists at `shared/src/phraseBank.ts`, so that
-task reduces to wiring and verification.
+`tasks-curated-phrase-bank-e335.md` (21 tasks, 18 test-first).
 
 ---
 
