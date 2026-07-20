@@ -1,7 +1,7 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-19
+last_updated: 2026-07-20
 diagram_status: stale
 diagram_type: graph TD
 render_section: UI
@@ -232,6 +232,29 @@ point (see [[datamodel]] Entry — a `fill` draw op, replayed in sequence
 alongside `stroke` ops). The active color/width selection applies to
 new strokes only; it does not retroactively change strokes already
 drawn.
+
+When the phrase being drawn is a book's **opening** phrase
+(`Entry.position === 1` — see [[datamodel]] Normalization Rules — Prompt
+rating), the canvas carries a small thumbs-up / thumbs-down control:
+"was this fun to draw?". It is optional and unobtrusive — submitting
+without touching it is the normal path, and the control never blocks or
+gates submission. The rating rides along with the entry submission
+rather than being its own round trip. Once cast it shows as selected and
+can be changed until submit, after which it is settled for that book.
+
+The control is deliberately uniform: both thumbs are offered regardless
+of whether the phrase came from the curated bank or was written by
+another player, because branching the control by phrase origin would
+leak which mode produced a phrase the player is not otherwise told
+about. Where the rating *goes* differs by origin, but that is server-side
+and invisible here (see [[datamodel]]). No rating is ever attributed to
+the rater in any view, and the player whose phrase was rated is never
+shown the result — this is curation telemetry, not a scoreboard, and
+surfacing it would turn a party game into a judged one.
+
+Every later drawing turn (`position > 1`) shows no rating control at
+all: it is drawing a mid-chain guess, which is not a prompt and has
+nothing to curate.
 
 A simple turn-status indicator shows who's still working, without
 revealing content — mirrors the "pass the folded paper" mechanic. Turn

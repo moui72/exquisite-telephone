@@ -1,8 +1,8 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-19
-diagram_status: current
+last_updated: 2026-07-20
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -25,6 +25,11 @@ a short-lived session store supports reconnect-tolerance. This matches
 Principle I ([[constitution]]) — no premature scaling infrastructure
 before it's needed.
 
+One narrow exception writes to disk: the **Curation Store** below, a
+single JSON file holding prompt ratings and candidate phrases. It is not
+game state and no running game reads it, so the "all game state is
+in-memory" property above is unchanged.
+
 ## Realtime Sync (Socket.IO)
 
 Socket.IO is the transport for all lobby state, turn-passing, and
@@ -38,7 +43,7 @@ event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
 `onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSetLapsPerBook`,
 `onSubmitEntry`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
-`onKickPlayer`, `onRestartGame`, `onRejoin`, `onDisconnect`), not a single large
+`onKickPlayer`, `onRestartGame`, `onRatePrompt`, `onRejoin`, `onDisconnect`), not a single large
 switch. Drawing entries sync only once, in full, via `onSubmitEntry`
 when a player finishes their turn — there is no per-stroke real-time
 sync handler; stroke data never leaves the client mid-turn.
@@ -107,6 +112,45 @@ is introduced — a single in-process interval is sufficient at this
 app's scale (Principle I), consistent with everything else here living
 in one process's memory.
 
+## Curation Store
+
+The curated phrase bank (`CURATED_PHRASE_BANK` in `shared/`) is a
+build-time constant, but deciding *what belongs in it* needs evidence
+from real play. The Curation Store is where that evidence accumulates:
+prompt ratings and candidate phrases (see [[datamodel]] Persisted
+Entities), written when a player rates the opening phrase they drew.
+
+**Shape.** A single JSON file — `{ ratings: { [phrase]: { up, down } },
+candidates: [{ phrase, votes, firstLoggedAt }] }` — read once at startup
+into memory, mutated in place, and flushed back on a debounce. Reads
+never touch disk after boot.
+
+**Why a file and not a database.** The whole dataset is a few hundred
+counters and a string list, read by one human every few weeks when
+pruning the bank. SQLite would add a dependency and a query engine to
+solve a problem `JSON.parse` already solves; Postgres would add a
+network hop and credentials to an app that currently has neither
+(Principle I — the simplest thing that satisfies the requirement).
+Emitting ratings as structured log events (Principle IX) was considered
+and rejected: Fly's log retention is short and there is no aggregation,
+so mining them would need a log drain — more infrastructure, not less.
+Revisit if the app ever runs more than one process, at which point
+concurrent writers make a file the wrong shape.
+
+**Durability.** Writes are atomic — serialize to a temp file in the same
+directory, `fsync`, then `rename` over the target — so a crash mid-write
+leaves the previous good file rather than a truncated one. Flushes are
+debounced (a few seconds) rather than synchronous per rating: losing the
+last few seconds of ratings to a hard kill is acceptable, and this is
+explicitly not data a player can miss.
+
+**Location.** Read from `CURATION_DATA_PATH`, defaulting to a
+gitignored local path for dev. In deployment this points inside a Fly
+volume mount (see Deployment), which is what makes it survive the
+process restart a deploy causes. A missing or unparseable file at
+startup is not fatal — the server logs it and starts with an empty
+store, since a lost curation file must never keep the game from booting.
+
 ## Export Pipeline (PNG)
 
 At game end, a player can save a `Book` they like as a PNG image strip
@@ -130,6 +174,13 @@ from the `PORT` environment variable (already supported by
 `server/src/config.ts`); Fly injects `PORT` into the container at
 runtime.
 
+A Fly **volume** is mounted for the Curation Store (see above) — the
+only persistent disk this app uses. `CURATION_DATA_PATH` points at a
+file inside that mount. The volume is what carries curation data across
+the process restart every deploy causes; without it the file would be
+recreated empty on each release. Game state is deliberately *not* moved
+onto it.
+
 ## Production Annotations
 
 - **Single server process, no horizontal scaling**: All room state lives
@@ -140,6 +191,12 @@ runtime.
   in-progress and completed-but-unsaved games — in production, finished
   books worth preserving would be written to a real datastore before
   the room is torn down.
+- **Curation store is single-writer and volume-bound**: The JSON file
+  assumes exactly one process writing it. The volume also pins the app
+  to the single machine that mounts it — already true of this app for
+  in-memory-state reasons, but now enforced by storage as well. Running
+  a second instance would both corrupt the file (last-write-wins over
+  whole-file rewrites) and only see its own volume.
 - **No zero-downtime deploys**: A Fly deploy restarts the single
   process, dropping all in-progress in-memory games — in production,
   this would need either a durable store to resume from (see above) or

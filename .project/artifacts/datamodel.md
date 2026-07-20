@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-19
+last_updated: 2026-07-20
 diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
@@ -20,8 +20,15 @@ duration of a game (per [[constitution]] Principle I — no premature
 scaling, and Principle VI — single source of state). There is no
 long-term database; the source of truth for a running game is the
 server's authoritative room store. A short-lived session store backs
-reconnect-tolerance (see [[infrastructure]]) but nothing here is intended
-to survive a server restart.
+reconnect-tolerance (see [[infrastructure]]) but nothing about a *game*
+is intended to survive a server restart.
+
+The one exception is **curation data** — prompt ratings and candidate
+phrases (see Persisted Entities below). These are not game state: no
+running game reads them, and losing them degrades nothing a player can
+see. They exist so the curated phrase bank can be pruned and grown from
+real play instead of by hand (see [[infrastructure]] Curation Store).
+They are deliberately the only shapes here that outlive a process.
 
 ## Entities
 
@@ -91,6 +98,40 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
 | eligibleVoterIds | string[] | FK -> Player.id — players who had already submitted this round, or, if none had, every player in the room (see Normalization Rules) |
 | votes | Record\<playerId, 'full' \| 'half' \| '15m' \| 'force-empty'\> | Cast so far; a player may vote once per pending vote |
 | voteDeadline | timestamp | Epoch ms; the vote resolves when every eligible voter has cast a vote, or this deadline passes, whichever is first |
+
+## Persisted Entities
+
+The only data in this app that survives a server restart. Stored outside
+the room store entirely (see [[infrastructure]] Curation Store) — they
+are keyed by phrase text, not by `Room`/`Player`, and carry no link back
+to who rated what.
+
+### PromptRating
+
+One record per curated-bank phrase that has ever been rated. Absent
+until a phrase receives its first rating.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| phrase | string | Verbatim text from `CURATED_PHRASE_BANK`; the record key. A phrase edited or removed from the bank simply orphans its record — harmless, and the curator reads bank and ratings together anyway. |
+| up | integer | Count of thumbs-up, across all games ever played |
+| down | integer | Count of thumbs-down |
+
+### CandidatePhrase
+
+One record per distinct player-written opening phrase that has received
+at least one thumbs-up. This is the mining path for new bank entries.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| phrase | string | Verbatim player-written text; the record key. Never normalized or lowercased — the curator wants to see exactly what was typed. |
+| votes | integer | How many times this exact text has been thumbs-upped, across all games. Repeat occurrences increment rather than appending a duplicate record. |
+| firstLoggedAt | timestamp | Epoch ms of the first thumbs-up |
+
+There is no negative counterpart. A thumbs-down on a player-written
+phrase is not recorded anywhere: it has no destination (the phrase isn't
+in the bank, so there's no tally to decrement) and recording "someone
+disliked this player's writing" serves no purpose the curator needs.
 
 ## Normalization Rules
 
@@ -185,6 +226,32 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   `Room` whose settings start at their defaults for the host to
   reconfigure (no carry-over), while *Restart game* resets the same room
   in place and re-deals `dealtPrompts` alongside the regenerated `books`.
+- **Prompt rating.** Applies to **`Entry.position === 1` only** — the
+  single drawing turn whose source is a book's opening phrase. That
+  drawer is the one player who had to work with the phrase, which makes
+  them the only useful judge of it; every later drawing turn renders a
+  mid-chain guess, which is a description of a drawing rather than a
+  prompt and is never rated. Rating is optional — a turn submits
+  normally whether or not a rating was cast — and at most one rating per
+  book per game, recorded when the drawer submits their entry.
+
+  Where a rating lands depends on the opening phrase's origin, which the
+  server determines authoritatively (never from a client claim): if the
+  position-0 `Entry.content` matches a `CURATED_PHRASE_BANK` entry
+  verbatim, the rating increments that `PromptRating`'s `up` or `down`;
+  otherwise the phrase was player-written (free-form mode, or a curated
+  write-in) and a thumbs-up upserts a `CandidatePhrase` — incrementing
+  `votes` if that exact text already exists, else creating it with
+  `votes: 1`. A thumbs-down on a player-written phrase is discarded.
+
+  A phrase that is *both* player-written and coincidentally identical to
+  a bank entry is treated as a bank phrase; the two are indistinguishable
+  by text and the bank tally is the more useful destination.
+
+  Ratings are never attributed. Nothing links a `PromptRating` or
+  `CandidatePhrase` back to the rater or the phrase's author — the
+  curator needs the phrase and the count, not who said what.
+
 - **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
   stamped the instant `status` transitions to `reveal` (the same
   transition already logged as `game_completed` in `onSubmitEntry`).
@@ -293,6 +360,14 @@ lookup pattern changes materially.
   ethos would rather keep private. In production, the broadcast would
   scope each client to its own entry (the per-client push already used
   by *Play again* is the existing precedent for that shape).
+- **Player-written content retained past the session**: A
+  `CandidatePhrase` stores player-authored text durably, outliving the
+  room that produced it — the first thing in this app to do so. Scoped
+  by design (opening phrases only, thumbs-up only, no author link), and
+  the file is reviewed by a human before anything enters the bank, which
+  is also the filter for content nobody wants in the deck. In production
+  with strangers rather than small private groups, this would need an
+  explicit retention/consent story rather than an annotation.
 - **No account system**: `Player` identity is purely session-based with
   no verification — in production supporting persistent profiles or
   matchmaking, this would need a real auth/account layer.

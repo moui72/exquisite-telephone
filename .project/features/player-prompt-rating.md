@@ -1,7 +1,9 @@
 ---
 slug: player-prompt-rating
-status: backlogged
+status: tasked
 logged: 2026-07-20
+plan: plan-curated-phrase-bank-2026-07-20-4eeb.md
+tasks: tasks-curated-phrase-bank-e335.md
 ---
 
 Players can thumbs-up or thumbs-down each curated prompt they are dealt or draw from, with ratings accumulating per phrase-bank entry so weak cards can be retired and strong ones kept.
