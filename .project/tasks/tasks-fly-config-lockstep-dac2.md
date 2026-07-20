@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Host frozen-room signal (F001)
 
-- [ ] T001 [artifacts: ui, datamodel] Write a failing component test for
+- [x] T001 [artifacts: ui, datamodel] Write a failing component test for
   `client/src/lib/components/SalonFooter.svelte` asserting the gavel button
   renders a frozen-room indication when a new `nonContinuable` prop is `true`
   and does not when `false`. The indication must not be conveyed by colour
