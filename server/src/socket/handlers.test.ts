@@ -14,6 +14,9 @@ import {
   computeNextEntries,
   computeNextEntry,
   CURATED_PHRASE_BANK,
+  entryContentBytes,
+  MAX_DRAWING_ENTRY_BYTES,
+  MAX_TEXT_ENTRY_BYTES,
   type Player,
   type PromptRatingValue,
   type Room,
@@ -2018,5 +2021,130 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
     const serialized = JSON.stringify(curation.snapshot());
     expect(serialized).not.toContain('ops');
     expect(serialized).not.toContain('stroke');
+  });
+});
+
+describe('onSubmitEntry content length cap (datamodel.md Normalization Rules)', () => {
+  /**
+   * Builds a drawing payload of roughly the shape DrawingCanvas.svelte
+   * actually produces: full-precision float coordinates, ~47 bytes per
+   * point, no rounding or simplification. See shared/src/entryLimits.ts
+   * for the measurements these tests are calibrated against.
+   */
+  function drawingPayload(strokes: number, pointsPerStroke: number, fills: number): string {
+    const scale = 800 / 393.3333333333333;
+    const pt = (i: number, j: number) => ({
+      x: (120 + Math.sin(i * 0.3 + j) * 90 - 12.5) * scale,
+      y: (200 + Math.cos(i * 0.2 + j) * 70 - 63.75) * scale,
+    });
+    const ops: unknown[] = [];
+    for (let s = 0; s < strokes; s += 1) {
+      const points = [];
+      for (let p = 0; p < pointsPerStroke; p += 1) points.push(pt(p, s));
+      ops.push({ type: 'stroke', points, color: '#3355aa', width: 3 });
+    }
+    for (let f = 0; f < fills; f += 1) ops.push({ type: 'fill', point: pt(f, 1), color: '#ffee00' });
+    return JSON.stringify(ops);
+  }
+
+  /** A room mid-game whose next expected entry is a drawing at position 1. */
+  function roomAwaitingDrawing() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const [adaId, graceId] = room.players.map((p) => p.id);
+    const adaBook = room.books.find((b) => b.originAuthorId === adaId)!;
+    adaBook.entries.push({
+      id: 'e0',
+      bookId: adaBook.id,
+      authorId: adaId!,
+      position: 0,
+      type: 'text',
+      content: 'a phrase',
+    });
+    // Both books must sit at the same round, or the submission is
+    // refused as round-not-open before the size check is ever reached.
+    const graceBook = room.books.find((b) => b.originAuthorId === graceId)!;
+    graceBook.entries.push({
+      id: 'g0',
+      bookId: graceBook.id,
+      authorId: graceId!,
+      position: 0,
+      type: 'text',
+      content: 'another phrase',
+    });
+    return { store, room, adaBook, graceId: graceId! };
+  }
+
+  it('rejects an oversize TEXT entry rather than truncating it', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const adaId = room.players[0]!.id;
+    const adaBook = room.books[0]!;
+    const ack = vi.fn();
+
+    const oversize = 'x'.repeat(MAX_TEXT_ENTRY_BYTES + 1);
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: oversize },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'entry-too-large' });
+    // Never truncated, and never reaches in-memory game state.
+    expect(adaBook.entries).toHaveLength(0);
+  });
+
+  it('rejects an oversize DRAWING payload rather than truncating it', () => {
+    const { store, room, adaBook, graceId } = roomAwaitingDrawing();
+    const ack = vi.fn();
+
+    // ~3.6 MB: the "extreme" row in entryLimits.ts, deliberately above the cap.
+    const oversize = drawingPayload(200, 400, 20);
+    expect(entryContentBytes(oversize)).toBeGreaterThan(MAX_DRAWING_ENTRY_BYTES);
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: graceId, bookId: adaBook.id, content: oversize },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'entry-too-large' });
+    expect(adaBook.entries).toHaveLength(1);
+  });
+
+  it('ACCEPTS a realistic very-dense drawing near the limit', () => {
+    // The regression guard that matters most (plan Complexity Tracking):
+    // without it, a cap set far too low still passes both rejection tests
+    // above while silently breaking real gameplay. This is the measured
+    // "very dense" payload -- 120 strokes, 30,000 points, ~1.4 MB -- an
+    // already-elaborate drawing that MUST go through.
+    const { store, room, adaBook, graceId } = roomAwaitingDrawing();
+    const ack = vi.fn();
+
+    const dense = drawingPayload(120, 250, 15);
+    const bytes = entryContentBytes(dense);
+    expect(bytes).toBeGreaterThan(1_000_000);
+    expect(bytes).toBeLessThan(MAX_DRAWING_ENTRY_BYTES);
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: graceId, bookId: adaBook.id, content: dense },
+      ack,
+    );
+
+    expect(ack).not.toHaveBeenCalledWith({ error: 'entry-too-large' });
+    expect(adaBook.entries).toHaveLength(2);
+    expect(adaBook.entries[1]!.content).toBe(dense);
   });
 });

@@ -6,6 +6,7 @@ import {
   currentRoundFor,
   dealPrompts,
   defaultLapsPerBook,
+  exceedsEntryContentLimit,
   type Entry,
   type Player,
   type Room,
@@ -650,6 +651,30 @@ export function onSubmitEntry(
       reason: 'not-your-turn',
     });
     ack({ error: 'not-your-turn' });
+    return;
+  }
+
+  // Bound `Entry.content` BEFORE anything else touches it (datamodel.md
+  // Normalization Rules -- Entry.content has a maximum length). This sits
+  // ahead of the curated-prompt comparison, ahead of the room store, and
+  // ahead of the curation store, so oversize content never reaches
+  // in-memory game state OR durable storage -- and so a multi-megabyte
+  // string is never string-compared against a dealt hand.
+  //
+  // The limit is keyed on `next.type`, computed server-side from turn
+  // order, never on any claim from the client. Oversize is REJECTED, never
+  // truncated: telling a player their turn succeeded while silently
+  // discarding half their drawing is the worse failure.
+  if (exceedsEntryContentLimit(input.content, next.type)) {
+    logger.log({
+      event: 'turn_advanced',
+      outcome: 'failure',
+      roomId: input.roomId,
+      playerId: input.playerId,
+      bookId: input.bookId,
+      reason: 'entry-too-large',
+    });
+    ack({ error: 'entry-too-large' });
     return;
   }
 
