@@ -1,7 +1,19 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (**Prod is deployed and a fresh `/ardd-defects` pass
-found 7 defects — see below; that is now the main thing on the board.**
+_Updated: 2026-07-20 (**The 7 defects are now planned and tasked —
+`tasks-25a0-15f7.md` is `ready`, 0/10, the one executable thing on the
+board.** Plan `plan-25a0-2026-07-20-1822.md` is `approved`; five phases,
+each defect tagged. Two user decisions are baked in: timer extensions go
+**additive** (code fixed, `datamodel.md` corrected to match), and the
+curation cap is **annotated and pointed at
+`curation-data-aggregation-pipe`** rather than made to evict.
+
+Implementation ordering that matters: **Phase 1 (T001–T003) must land
+before Phase 2** — T004/T005/T008 all consume the `activePlayers` helper
+T001 introduces. Phases 3–5 are independent.
+
+Prod is deployed; the `/ardd-defects` pass that produced these findings
+is described below.
 
 Since the last update: both tasks files merged, `main` was pushed (beta
 deployed green, `check:fly` passing in CI for the first time), and the
@@ -138,7 +150,9 @@ and dropped out.
 - `constitution.md` — clean. All ten declared principles verified against
   real code.
 
-`/ardd-plan` will offer each as a fix task.
+All seven are now planned in `plan-25a0-2026-07-20-1822.md` and tasked in
+`tasks-25a0-15f7.md` (`ready`, 0/10). They stay listed in `DEFECTS.md`
+until a `/ardd-defects` run after the fixes lands re-verifies them gone.
 
 ## Feedback
 
@@ -380,15 +394,16 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(empty — no `ready` tasks files. **All 22 tasks files in the project are
-`completed`.**)_
+- `tasks-25a0-15f7.md` — plan `plan-25a0-2026-07-20-1822.md`, no bound
+  features (**ready**, 0/10). The only `ready` file, so the matrix is
+  silent — nothing to run it against. Internally sequenced: Phase 1
+  before Phase 2 (see the header note).
 
-The prior pair's `shared-artifact` verdict turned out benign in practice:
-they were fanned out in parallel anyway, and the only file both touched
-was `App.test.ts`, where the fly-config change was a pure append. Worth
-remembering as a calibration point — `shared-artifact` is a
-declared-overlap signal on artifact tags, not evidence of code-path
-contact.
+Prior calibration point, still worth remembering: the last pair's
+`shared-artifact` verdict turned out benign — they were fanned out in
+parallel anyway, and the only file both touched was `App.test.ts`, a pure
+append. `shared-artifact` is a declared-overlap signal on artifact tags,
+not evidence of code-path contact.
 
 ## In Flight
 
@@ -481,17 +496,10 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** `/ardd-plan` over the recorded defects — it
-offers each `DEFECTS.md` entry as a fix task. Plan the three kicked-player
-findings **together**: they are one seam, and fixing them from three
-separate entries would produce three unrelated-looking patches.
-
-Two decisions to make while planning, neither settleable from code:
-1. **Timer extensions** — should granting time be able to *shorten* a
-   deadline? Today it can. Fix the code or fix `ui.md`, but pick.
-2. **The curation cap** — annotate it as an accepted shortcut, or make
-   it evict? The backlogged `curation-data-aggregation-pipe` is the
-   natural home for draining the log.
+**Recommended next step:** `/ardd-implement` — execute
+`tasks-25a0-15f7.md` (the defect-fix tasks, 0/10). Both planning
+decisions are already settled, so there is nothing left to decide before
+implementing; just respect the Phase 1 → Phase 2 ordering.
 
 Then, in no particular order: `/ardd-research` for
 `curation-data-aggregation-pipe`'s sanitization boundary, and
