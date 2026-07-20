@@ -25,8 +25,9 @@ a short-lived session store supports reconnect-tolerance. This matches
 Principle I ([[constitution]]) — no premature scaling infrastructure
 before it's needed.
 
-One narrow exception writes to disk: the **Curation Store** below, a
-single JSON file holding prompt ratings and candidate phrases. It is not
+One narrow exception writes to disk: the **Curation Store** below, an
+append-only directory of per-event JSON files recording prompt ratings
+and candidate phrases. It is not
 game state and no running game reads it, so the "all game state is
 in-memory" property above is unchanged.
 
@@ -127,10 +128,24 @@ from real play. The Curation Store is where that evidence accumulates:
 prompt ratings and candidate phrases (see [[datamodel]] Persisted
 Entities), written when a player rates the opening phrase they drew.
 
-**Shape.** A single JSON file — `{ ratings: { [phrase]: { up, down } },
-candidates: [{ phrase, votes, firstLoggedAt }] }` — read once at startup
-into memory, mutated in place, and flushed back on a debounce. Reads
-never touch disk after boot.
+**Shape.** An append-only event log: a directory of small JSON files,
+**one file per rating event**, each written exactly once and never
+mutated afterwards. An event carries the phrase, the rating value, its
+origin (bank phrase vs player-written), and a timestamp — see
+[[datamodel]] Persisted Entities. The `PromptRating` / `CandidatePhrase`
+shapes a curator reads are no longer the on-disk shape; they are a
+**derived aggregate view**, produced by folding the event log at read
+time (see [[datamodel]]).
+
+**Filenames are server-controlled.** A file name is composed ONLY of a
+timestamp and a random suffix — no player-influenced component, not even
+a sanitized slug of the phrase. Player text belongs in the file's
+*contents*, where it is inert, never in its path. A slug is the tempting
+shape and the wrong one: it puts attacker-influenced bytes into a
+filesystem path for no benefit the timestamp does not already provide.
+The write path additionally refuses any resolved target outside the
+configured curation directory, so a future change to the naming scheme
+cannot silently reintroduce traversal.
 
 **Why a file and not a database.** The whole dataset is a few hundred
 counters and a string list, read by one human every few weeks when
@@ -141,22 +156,40 @@ network hop and credentials to an app that currently has neither
 Emitting ratings as structured log events (Principle IX) was considered
 and rejected: Fly's log retention is short and there is no aggregation,
 so mining them would need a log drain — more infrastructure, not less.
-Revisit if the app ever runs more than one process, at which point
-concurrent writers make a file the wrong shape.
 
-**Durability.** Writes are atomic — serialize to a temp file in the same
-directory, `fsync`, then `rename` over the target — so a crash mid-write
-leaves the previous good file rather than a truncated one. Flushes are
-debounced (a few seconds) rather than synchronous per rating: losing the
-last few seconds of ratings to a hard kill is acceptable, and this is
-explicitly not data a player can miss.
+The "revisit if the app ever runs more than one process" caveat that
+stood here is **resolved, not deferred**: append-only removes the
+question. Distinct writers never touch the same file, because each event
+gets its own uniquely-named file, so concurrent writers are not a
+correctness problem for this store. (They remain one for in-memory game
+state, and the Fly volume still pins the app to one machine — both
+stated independently under Deployment.)
 
-**Location.** Read from `CURATION_DATA_PATH`, defaulting to a
-gitignored local path for dev. In deployment this points inside a Fly
-volume mount (see Deployment), which is what makes it survive the
-process restart a deploy causes. A missing or unparseable file at
-startup is not fatal — the server logs it and starts with an empty
-store, since a lost curation file must never keep the game from booting.
+**Durability.** There is no atomic rewrite and no debounce, because
+there is nothing to rewrite and nothing to buffer. Each event is created
+once, with an exclusive create, and never read-modify-written. That
+retires the whole temp-file/`fsync`/`rename` dance along with the
+debounce timer and its flush-on-shutdown hook: they existed only to make
+a whole-file rewrite survivable.
+
+Crash safety degrades to the mildest possible failure — **at worst one
+partial trailing file**, the event that was mid-write when the process
+died. The read-time fold skips a corrupt or truncated file with a logged
+warning rather than failing the whole aggregate, so a single bad trailing
+file costs exactly one rating and nothing else. This is telemetry: a lost
+rating is not data any player can miss.
+
+**Location.** `CURATION_DATA_PATH` remains the single configured knob,
+defaulting to a gitignored local path for dev. The event directory is
+**derived from it** — the `curation-events/` directory beside it — so
+the deployment surface stays one environment variable per channel and
+both Fly configs keep the value they already declare. In deployment that
+resolves inside a Fly volume mount (see Deployment), which is what makes
+the events survive the process restart a deploy causes. A missing
+directory is the normal first-run case, not a failure: it is created on
+first write, and a read that finds nothing yields an empty aggregate.
+Nothing about curation storage is ever fatal to boot — a lost curation
+file must never keep the game from starting.
 
 ## Export Pipeline (PNG)
 
