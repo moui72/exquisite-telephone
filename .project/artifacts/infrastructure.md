@@ -257,12 +257,6 @@ second machine would neither see this volume nor share the file.
   in-progress and completed-but-unsaved games — in production, finished
   books worth preserving would be written to a real datastore before
   the room is torn down.
-- **Curation store is single-writer and volume-bound**: The JSON file
-  assumes exactly one process writing it. The volume also pins the app
-  to the single machine that mounts it — already true of this app for
-  in-memory-state reasons, but now enforced by storage as well. Running
-  a second instance would both corrupt the file (last-write-wins over
-  whole-file rewrites) and only see its own volume.
 - **No zero-downtime deploys**: A Fly deploy restarts the single
   process, dropping all in-progress in-memory games — in production,
   this would need either a durable store to resume from (see above) or
