@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { writable, type Writable } from 'svelte/store';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { Book, Room } from '@exquisite-telephone/shared';
+import type { Book, Entry, Room } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
 import WritingDrawing from './WritingDrawing.svelte';
@@ -290,6 +290,51 @@ describe('Writing/Drawing view', () => {
     render(WritingDrawing, { props: { session } });
 
     expect(screen.getByText(/awaiting the round.s conclusion/i)).toBeInTheDocument();
+  });
+
+  it('holds the waiting state on a later lap, not just the first (2-lap game)', () => {
+    // 3-player, 2-lap game: each book completes at 3*2 = 6 entries. Grace
+    // has already written her second-lap entry on her own book (4 entries,
+    // past the first lap of 3 but short of 6), and has no pending turn
+    // this round (her book is round-gated ahead of ada/lin's, which sit at
+    // 3 entries). She must still see the waiting state — the old
+    // one-lap (players.length) comparison wrongly dropped her to the
+    // generic hint on any lap past the first.
+    const entry = (bookId: string, authorId: string, position: number): Entry => ({
+      id: `${bookId}-${position}`,
+      bookId,
+      authorId,
+      position,
+      type: position % 2 === 0 ? 'text' : 'drawing',
+      content: `c-${position}`,
+    });
+    const rotation = [ada, grace, lin];
+    const bookGrace: Book = {
+      id: 'book-grace',
+      roomId,
+      originAuthorId: grace.id,
+      // 4 entries: origin-relative rotation grace, lin, ada, grace.
+      entries: [0, 1, 2, 3].map((p) => entry('book-grace', rotation[(1 + p) % 3]!.id, p)),
+    };
+    const bookAda: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [0, 1, 2].map((p) => entry('book-ada', rotation[(0 + p) % 3]!.id, p)),
+    };
+    const bookLin: Book = {
+      id: 'book-lin',
+      roomId,
+      originAuthorId: lin.id,
+      entries: [0, 1, 2].map((p) => entry('book-lin', rotation[(2 + p) % 3]!.id, p)),
+    };
+    const room = makeRoom([bookGrace, bookAda, bookLin], [ada, grace, lin]);
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText(/awaiting the round.s conclusion/i)).toBeInTheDocument();
+    expect(screen.queryByText(/awaiting your next commission/i)).not.toBeInTheDocument();
   });
 
   it('shows a countdown to the deadline when Room.turnTimerMinutes is set', () => {

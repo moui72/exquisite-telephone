@@ -24,7 +24,7 @@ status: in-progress
 
 ## Phase 4: Remaining UI drift
 
-- [ ] T008 [parallel] Fix the `waitingForRoundToFinish` condition in `client/src/lib/views/WritingDrawing.svelte` (~lines 44-50) to compare a book's `entries.length` against `activeCount * laps` (its true completion length) rather than `players.length` (one lap), so the "waiting for the round to finish" state holds for the whole game rather than only the first lap. Use the same active-count / laps resolution as Phase 1. Test: in a default 3-4 player (2-lap) game, a player who finishes their second-lap entry early sees the waiting state, not the generic hint. [defect: 1e4c9016] [artifacts: ui]
+- [x] T008 [parallel] Fix the `waitingForRoundToFinish` condition in `client/src/lib/views/WritingDrawing.svelte` (~lines 44-50) to compare a book's `entries.length` against `activeCount * laps` (its true completion length) rather than `players.length` (one lap), so the "waiting for the round to finish" state holds for the whole game rather than only the first lap. Use the same active-count / laps resolution as Phase 1. Test: in a default 3-4 player (2-lap) game, a player who finishes their second-lap entry early sees the waiting state, not the generic hint. [defect: 1e4c9016] [artifacts: ui]
 - [ ] T009 [parallel] Add the documented "Return to home" control to the rejoin-a-dead-room branch in `client/src/App.svelte` (~lines 38-41, the `state.error === 'game-ended'` branch), matching the control already present on the `room.status === 'ended'` and kicked branches, in docent-voice copy. Test: the game-ended-error screen renders a return control that resets to the host/join page. [defect: 2d6dda28] [artifacts: ui]
 
 ## Phase 5: Curation cap annotation

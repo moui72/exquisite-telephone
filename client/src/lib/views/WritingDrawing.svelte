@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import { computeNextEntries, parseDrawOps, serializeDrawOps } from '@exquisite-telephone/shared';
+  import {
+    activePlayers,
+    computeNextEntries,
+    defaultLapsPerBook,
+    parseDrawOps,
+    serializeDrawOps,
+  } from '@exquisite-telephone/shared';
   import type { DrawOps, PromptRatingValue } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
@@ -41,12 +47,18 @@
   // a generic wait state (ui.md Writing/Drawing View): true when the
   // player has no entry offered this round, but still has an incomplete
   // book of their own elsewhere in the room.
+  // A book's true completion length is activeCount * laps (its full run
+  // through the active roster, all laps), not one lap (players.length) —
+  // so the waiting state must hold for the whole game, not just the first
+  // lap (datamodel.md Normalization Rules — Laps per book).
+  $: activeCount = state.room ? activePlayers(state.room).length : 0;
+  $: laps = state.room ? (state.room.lapsPerBook ?? defaultLapsPerBook(activeCount)) : 0;
   $: waitingForRoundToFinish =
     !myTurn &&
     state.room &&
     state.player &&
     state.room.books.some(
-      (b) => b.originAuthorId === state.player!.id && b.entries.length < state.room!.players.length,
+      (b) => b.originAuthorId === state.player!.id && b.entries.length < activeCount * laps,
     );
 
   // Reset local draft state only when the *identity* of the assigned turn
