@@ -110,7 +110,17 @@ export function createCurationStore(
         return;
       }
 
-      // Player-written. Upsert by EXACT text -- never normalized or
+      // Player-written and thumbs-DOWN: record NOTHING, anywhere. Not a
+      // zero-vote candidate, not a placeholder -- nothing. The phrase
+      // isn't in the bank so there is no tally to decrement, and
+      // "someone disliked this player's writing" serves no curator
+      // purpose (datamodel.md CandidatePhrase -- there is no negative
+      // counterpart). Accepted and discarded, never rejected.
+      if (value === 'down') {
+        return;
+      }
+
+      // Player-written thumbs-up. Upsert by EXACT text -- never normalized or
       // lowercased, because the curator wants to see exactly what was
       // typed (datamodel.md CandidatePhrase). Near-miss wordings are
       // therefore separate records, deliberately.

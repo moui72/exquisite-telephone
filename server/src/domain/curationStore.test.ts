@@ -150,3 +150,65 @@ describe('recordRating routing', () => {
     expect(store.snapshot().candidates).toHaveLength(2);
   });
 });
+
+/**
+ * A thumbs-DOWN on a player-written phrase is recorded NOWHERE — not as
+ * a candidate, not as a zero-vote placeholder, not as a PromptRating
+ * (datamodel.md CandidatePhrase: "There is no negative counterpart").
+ * It has no destination: the phrase isn't in the bank, so there's no
+ * tally to decrement, and recording "someone disliked this player's
+ * writing" serves no purpose the curator needs.
+ *
+ * These tests exist because "does nothing" is precisely the behavior a
+ * later refactor breaks silently — a well-meaning symmetry pass that
+ * gives candidates a `downvotes` field would pass every other test here.
+ */
+describe('recordRating discards a thumbs-down on a player-written phrase', () => {
+  it('creates no candidate record', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a moose reading the news', 'down', false);
+
+    expect(store.snapshot().candidates).toEqual([]);
+  });
+
+  it('creates no rating record either — it does not fall through to the bank tally', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a moose reading the news', 'down', false);
+
+    expect(store.snapshot().ratings).toEqual({});
+  });
+
+  it('does not throw — the rating is accepted and discarded, never rejected', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    expect(() => store.recordRating('a moose reading the news', 'down', false)).not.toThrow();
+  });
+
+  it('leaves an existing candidate’s votes untouched', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a moose reading the news', 'up', false);
+    store.recordRating('a moose reading the news', 'down', false);
+
+    expect(store.snapshot().candidates).toEqual([
+      { phrase: 'a moose reading the news', votes: 1, firstLoggedAt: expect.any(Number) },
+    ]);
+  });
+
+  it('mutates nothing at all — the whole store is byte-identical afterwards', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+    store.recordRating('a bear on a unicycle', 'up', true);
+    const before = JSON.stringify(store.snapshot());
+
+    store.recordRating('a moose reading the news', 'down', false);
+
+    expect(JSON.stringify(store.snapshot())).toBe(before);
+  });
+});
