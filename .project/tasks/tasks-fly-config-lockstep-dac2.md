@@ -54,7 +54,7 @@ status: in-progress
   and defeat the allowlist. This task has no test requirement of its own; it
   produces the fixture the next test consumes.
 
-- [ ] T006 [artifacts: infrastructure] Write a failing test asserting that,
+- [x] T006 [artifacts: infrastructure] Write a failing test asserting that,
   for each channel, the **parsed** generator output equals the parsed T005
   fixture on every key except `app`, and equals the channel's declared `app`
   value on that one. Compare parsed TOML, not raw bytes — comments are
