@@ -28,12 +28,25 @@ Two real instances from this repo, useful as calibration:
   where there is no preceding entry and both claims are false. It shipped
   that way and was caught later by a task that happened to touch the
   hint.
-- `ui.md` claimed tooltips existed for "every host-configurable setting",
-  naming a minimum-player-override tooltip. The Lobby has four tooltips;
-  there are six host-configurable `Room` fields.
+- `ui.md` claimed the `(?)` info-affordance pattern was used for "every
+  host-configurable setting in the Lobby View", then enumerated four.
+  The Lobby has seven host controls.
+- The rules panel told players they could write "anything they like" as
+  their opening phrase. True in free-form mode; false in curated mode,
+  where the player picks from a dealt hand. The sentence was written
+  before curated mode existed and nothing flagged it when the mode
+  shipped.
 
-Both are the same failure: prose drifted from behavior, and nothing
+All three are the same failure: prose drifted from behavior, and nothing
 enforced the link.
+
+**A caution drawn from this skill's own first run.** Its original text
+asserted that `ui.md` named a *minimum-player-override* tooltip. It does
+not — that phrase comes from the `in-game-rules-and-guidance` feature
+description, and the claim was written from memory rather than checked.
+An audit that cites evidence it has not opened is worse than no audit,
+because its findings read as authoritative. Open the file and quote it;
+never cite from recall, including the examples above.
 
 ## Do not hardcode an inventory
 
