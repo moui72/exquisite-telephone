@@ -88,7 +88,7 @@ status: in-progress
   re-running T006 and by eyeballing the diff for value changes specifically,
   not just its size.
 
-- [ ] T009 Add a `gen:fly` (generate) and a `check:fly` (regenerate and diff,
+- [x] T009 Add a `gen:fly` (generate) and a `check:fly` (regenerate and diff,
   non-zero exit on any difference) script to the root `package.json`. Declared
   scripts must match what actually exists on disk — Manifest/Script Hygiene is
   a declared Quality Standard in [[constitution]], and a stale script entry is

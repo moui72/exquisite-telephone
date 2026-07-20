@@ -9,6 +9,8 @@
     "typecheck": "pnpm run build:shared && pnpm --filter shared typecheck && pnpm --filter server typecheck && pnpm --filter client typecheck",
     "test": "pnpm run build:shared && pnpm --filter shared test && pnpm --filter server test && pnpm --filter client test && pnpm run test:root",
     "test:root": "vitest run",
+    "gen:fly": "node scripts/fly-config/generate.ts",
+    "check:fly": "node scripts/fly-config/check.ts",
     "build": "pnpm run build:shared && pnpm --filter server build && pnpm --filter client build",
     "dev:server": "pnpm run build:shared && pnpm --filter server dev",
     "dev:client": "pnpm run build:shared && pnpm --filter client dev",
