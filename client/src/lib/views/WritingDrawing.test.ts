@@ -441,7 +441,8 @@ describe('Writing/Drawing view', () => {
     expect(submitButton).not.toBeDisabled();
 
     await fireEvent.click(submitButton);
-    expect(session.submitEntry).toHaveBeenCalledWith('book-ada', expect.any(String));
+    // Third arg is the optional rating, undefined when uncast (T018).
+    expect(session.submitEntry).toHaveBeenCalledWith('book-ada', expect.any(String), undefined);
   });
 
   it('shows a "game can\'t continue" notice to every player when Room.nonContinuable is true', () => {

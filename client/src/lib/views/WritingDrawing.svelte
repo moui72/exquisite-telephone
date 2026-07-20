@@ -123,7 +123,13 @@
 
   async function handleSubmitDrawing() {
     if (!myTurn || drawnOps.length === 0) return;
-    await session.submitEntry(myTurn.bookId, serializeDrawOps(drawnOps));
+    // `?? undefined` so an uncast rating is omitted from the payload
+    // rather than sent as null (T018).
+    await session.submitEntry(
+      myTurn.bookId,
+      serializeDrawOps(drawnOps),
+      promptRating ?? undefined,
+    );
   }
 
   function handleOpsChange(ops: DrawOps) {

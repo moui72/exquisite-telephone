@@ -364,3 +364,59 @@ describe('session store (client single source of state)', () => {
     expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('roomchanged-tok');
   });
 });
+
+/**
+ * The rating rides the submission payload rather than its own event
+ * (infrastructure.md). Absence must be a MISSING field, not `null` or a
+ * sentinel — the server's handling is `input.rating &&`, and a `null`
+ * would work only by accident of falsiness.
+ */
+describe('submitEntry prompt rating', () => {
+  it('includes the rating when one was cast', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: sampleRoom });
+    await session.submitEntry('book-1', 'a phrase', 'up');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'submitEntry',
+      payload: {
+        roomId: 'ABCDE',
+        playerId: 'p1',
+        bookId: 'book-1',
+        content: 'a phrase',
+        rating: 'up',
+      },
+    });
+  });
+
+  it('omits the rating field ENTIRELY when none was cast', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: sampleRoom });
+    await session.submitEntry('book-1', 'a phrase');
+
+    const payload = fake.getLastEmit()?.payload as Record<string, unknown>;
+    // Not null, not 'none', not present at all — so the server's optional
+    // handling is exercised as designed rather than by falsiness.
+    expect('rating' in payload).toBe(false);
+  });
+
+  it('sends a thumbs-down as its own value, not as an absent rating', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: sampleRoom });
+    await session.submitEntry('book-1', 'a phrase', 'down');
+
+    expect((fake.getLastEmit()?.payload as Record<string, unknown>).rating).toBe('down');
+  });
+});

@@ -37,7 +37,7 @@ status: in-progress
 
 - [x] T016 [artifacts: ui] Failing component test first, then add the thumbs-up/down control to the drawing view, rendered ONLY when the turn is `position === 1`. Assert it is absent at every other position — see `.project/artifacts/ui.md` Writing/Drawing View.
 - [x] T017 [artifacts: ui] Failing tests first, then implement the control's interaction: optional (submitting without touching it is the normal path), selectable, and changeable until submit. It must never block or gate the submit button. Both thumbs render regardless of phrase origin — branching the control by origin would leak which mode produced a phrase the player is not otherwise told about.
-- [ ] T018 Failing test first, then include the selected rating in the `onSubmitEntry` payload. Assert that no selection sends no `rating` field (not `null`, not `'none'`) so the server's optional-field handling in T014 is exercised as designed.
+- [x] T018 Failing test first, then include the selected rating in the `onSubmitEntry` payload. Assert that no selection sends no `rating` field (not `null`, not `'none'`) so the server's optional-field handling in T014 is exercised as designed.
 - [ ] T019 [artifacts: ui] Verify no rating is ever surfaced back to any player in any view — not to the rater, not to the phrase's author, not on Reveal. Curation telemetry, not a scoreboard. This is a review-and-assert task against the client; add a test that the reveal view renders no rating data.
 
 ## Phase 6: Deployment

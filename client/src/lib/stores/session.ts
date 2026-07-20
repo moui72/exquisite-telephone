@@ -1,4 +1,4 @@
-import type { Player, Room, TimeoutVoteChoice } from '@exquisite-telephone/shared';
+import type { Player, PromptRatingValue, Room, TimeoutVoteChoice } from '@exquisite-telephone/shared';
 import { get, writable, type Readable } from 'svelte/store';
 import type { GameSocket } from '../socket/types.js';
 
@@ -56,7 +56,7 @@ export interface SessionStore extends Readable<SessionState> {
   createRoom(hostName: string): Promise<void>;
   joinRoom(roomId: string, playerName: string): Promise<void>;
   startGame(acknowledgeSmallGame?: boolean): Promise<void>;
-  submitEntry(bookId: string, content: string): Promise<void>;
+  submitEntry(bookId: string, content: string, rating?: PromptRatingValue): Promise<void>;
   setMonochrome(monochromeOnly: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
@@ -152,13 +152,17 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         acknowledgeSmallGame,
       });
     },
-    submitEntry(bookId: string, content: string) {
+    submitEntry(bookId: string, content: string, rating?: PromptRatingValue) {
       const state = get(store);
       return emitWithAck('submitEntry', {
         roomId: state.room?.id,
         playerId: state.player?.id,
         bookId,
         content,
+        // Spread rather than `rating: rating ?? null`: no rating must mean
+        // the field is ABSENT, so the server's optional handling is
+        // exercised as designed instead of relying on null's falsiness.
+        ...(rating ? { rating } : {}),
       });
     },
     setMonochrome(monochromeOnly: boolean) {
