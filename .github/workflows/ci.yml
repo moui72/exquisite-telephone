@@ -2,17 +2,16 @@ name: CI
 
 on:
   push:
-    # `release` is deliberately absent: with no deploy-prod job, and
-    # `checks` skipped there anyway, a push to release would trigger a run
-    # in which every job is skipped. Promotion is promote.yml's job.
+    # `release` is deliberately absent. It only ever receives a
+    # fast-forward of `main`, so its tree has already passed `checks`
+    # here; and prod is deployed by promote.yml, not by anything reacting
+    # to a push. Running this workflow on `release` would re-test an
+    # identical tree and deploy nothing.
     branches: [main]
   pull_request:
 
 jobs:
   checks:
-    # release only ever receives a fast-forward of main, which already
-    # passed these checks on its own push — no need to re-run them.
-    if: github.ref != 'refs/heads/release'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
