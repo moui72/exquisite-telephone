@@ -10,7 +10,15 @@ import {
   joinRoom,
   type RoomStore,
 } from '../domain/roomStore.js';
-import { computeNextEntries, type Room } from '@exquisite-telephone/shared';
+import {
+  computeNextEntries,
+  computeNextEntry,
+  CURATED_PHRASE_BANK,
+  type Player,
+  type PromptRatingValue,
+  type Room,
+} from '@exquisite-telephone/shared';
+import type { CurationStore } from '../domain/curationStore.js';
 import { createLogger } from '../observability/logger.js';
 import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
@@ -1635,5 +1643,255 @@ describe('onSetPromptMode keeps curatedPromptCount coupled to the mode', () => {
 
     expect(room.promptMode).toBe('free-form');
     expect(room.curatedPromptCount).toBeNull();
+  });
+});
+
+/**
+ * Prompt rating (datamodel.md Normalization Rules — Prompt rating).
+ *
+ * Three of these assert that NOTHING happens. They are written that way
+ * on purpose: "the rating is ignored" is exactly the behavior a later
+ * refactor breaks silently, and none of the positive-path tests would
+ * notice.
+ */
+describe('onSubmitEntry prompt rating', () => {
+  const logger = createLogger(() => {});
+  const OPENING_PHRASE = CURATED_PHRASE_BANK[0]!;
+  // Deliberately different from the opening phrase, and shaped like what
+  // a drawing turn actually submits. If the handler ever records
+  // `input.content` instead of the book's opening phrase, these tests
+  // fail loudly rather than tallying stroke data against the bank.
+  const STROKE_DATA = '{"ops":[{"type":"stroke","points":[[1,2],[3,4]]}]}';
+
+  function fakeCurationStore() {
+    const calls: Array<[string, string, boolean]> = [];
+    const store = {
+      snapshot: () => ({ ratings: {}, candidates: [] }),
+      recordRating: (phrase: string, value: PromptRatingValue, isBank: boolean) => {
+        calls.push([phrase, value, isBank]);
+      },
+      flush: async () => {},
+    } as CurationStore;
+    return { store, calls };
+  }
+
+  /** A three-player room whose first book already has its opening phrase in. */
+  function roomAtPositionOne(openingContent: string) {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const [ada, grace, linus] = room.players as [Player, Player, Player];
+
+    onStartGame(
+      makeFakeSocket(),
+      store,
+      { roomId: room.id, playerId: ada.id, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+
+    // Every player submits their opening phrase, so the round advances and
+    // position 1 opens on each book.
+    for (const player of [ada, grace, linus]) {
+      const book = room.books.find((b) => b.originAuthorId === player.id)!;
+      onSubmitEntry(
+        makeFakeSocket(),
+        store,
+        logger,
+        {
+          roomId: room.id,
+          playerId: player.id,
+          bookId: book.id,
+          content: player.id === ada.id ? openingContent : 'some other opening phrase',
+        },
+        vi.fn(),
+      );
+    }
+
+    const adasBook = room.books.find((b) => b.originAuthorId === ada.id)!;
+    const drawerId = computeNextEntry(room, adasBook)!.authorId;
+    return { store, room, adasBook, drawerId };
+  }
+
+  it('records a rating cast on a position-1 submission', () => {
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(OPENING_PHRASE);
+    const { store: curation, calls } = fakeCurationStore();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: drawerId,
+        bookId: adasBook.id,
+        content: STROKE_DATA,
+        rating: 'up',
+      },
+      vi.fn(),
+      curation,
+    );
+
+    expect(calls).toHaveLength(1);
+  });
+
+  it('rates the OPENING PHRASE, not the drawing that was submitted', () => {
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(OPENING_PHRASE);
+    const { store: curation, calls } = fakeCurationStore();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: drawerId,
+        bookId: adasBook.id,
+        content: STROKE_DATA,
+        rating: 'up',
+      },
+      vi.fn(),
+      curation,
+    );
+
+    // The phrase recorded is the book's position-0 content — the thing
+    // that was drawn — never the position-1 stroke payload.
+    expect(calls[0]).toEqual([OPENING_PHRASE, 'up', true]);
+    expect(calls[0]![0]).not.toBe(STROKE_DATA);
+  });
+
+  it('routes a player-written opening phrase to the candidate pool', () => {
+    const written = 'a moose reading the evening news aloud to nobody';
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(written);
+    const { store: curation, calls } = fakeCurationStore();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: drawerId,
+        bookId: adasBook.id,
+        content: STROKE_DATA,
+        rating: 'up',
+      },
+      vi.fn(),
+      curation,
+    );
+
+    expect(calls[0]).toEqual([written, 'up', false]);
+  });
+
+  it('records nothing when no rating is present, and the turn submits normally', () => {
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(OPENING_PHRASE);
+    const { store: curation, calls } = fakeCurationStore();
+    const ack = vi.fn();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: drawerId, bookId: adasBook.id, content: STROKE_DATA },
+      ack,
+      curation,
+    );
+
+    expect(calls).toEqual([]);
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
+  });
+
+  it('IGNORES a rating sent on a position-0 submission', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const ada = room.players[0]!;
+    onStartGame(
+      makeFakeSocket(),
+      store,
+      { roomId: room.id, playerId: ada.id, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+    const book = room.books.find((b) => b.originAuthorId === ada.id)!;
+    const { store: curation, calls } = fakeCurationStore();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: ada.id,
+        bookId: book.id,
+        content: OPENING_PHRASE,
+        rating: 'up',
+      },
+      vi.fn(),
+      curation,
+    );
+
+    // Position 0 IS the prompt; there is nothing above it to rate.
+    expect(calls).toEqual([]);
+  });
+
+  it('IGNORES a rating sent on a position-2 submission', () => {
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(OPENING_PHRASE);
+    // Advance every book past position 1 so position 2 opens.
+    for (const book of room.books) {
+      const next = computeNextEntry(room, book)!;
+      onSubmitEntry(
+        makeFakeSocket(),
+        store,
+        logger,
+        { roomId: room.id, playerId: next.authorId, bookId: book.id, content: STROKE_DATA },
+        vi.fn(),
+      );
+    }
+    const nextAt2 = computeNextEntry(room, adasBook)!;
+    expect(nextAt2.position).toBe(2);
+    const { store: curation, calls } = fakeCurationStore();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: nextAt2.authorId,
+        bookId: adasBook.id,
+        content: 'a guess about the drawing',
+        rating: 'down',
+      },
+      vi.fn(),
+      curation,
+    );
+
+    // Position 2 describes a DRAWING, not a prompt — nothing to curate.
+    expect(calls).toEqual([]);
+    expect(drawerId).toBeDefined();
+  });
+
+  it('never gates or fails a submission — a rating with no curation store still submits', () => {
+    const { store, room, adasBook, drawerId } = roomAtPositionOne(OPENING_PHRASE);
+    const ack = vi.fn();
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: drawerId,
+        bookId: adasBook.id,
+        content: STROKE_DATA,
+        rating: 'up',
+      },
+      ack,
+      // No curation store injected at all.
+    );
+
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
+    expect(ack).not.toHaveBeenCalledWith(expect.objectContaining({ error: expect.anything() }));
   });
 });

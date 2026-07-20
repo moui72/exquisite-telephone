@@ -21,6 +21,7 @@ import {
   type RoomStore,
 } from '../domain/roomStore.js';
 import type { CurationStore } from '../domain/curationStore.js';
+import { isBankPhrase } from '../domain/promptOrigin.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { resolveTimeoutVote } from '../domain/timerSweep.js';
 import type { Logger } from '../observability/logger.js';
@@ -610,7 +611,7 @@ export function onSubmitEntry(
   logger: Logger,
   input: SubmitEntryInput,
   ack: (response: SubmitEntryAck) => void,
-  _curationStore?: CurationStore,
+  curationStore?: CurationStore,
 ): void {
   const room = store.getRoom(input.roomId);
   if (!room) {
@@ -683,6 +684,26 @@ export function onSubmitEntry(
     room.roundStartedAt = Date.now();
     room.timerExtensions = {};
     room.pendingTimeoutVote = null;
+  }
+
+  // Prompt rating (datamodel.md Normalization Rules -- Prompt rating).
+  // Acted on ONLY at position 1: that is the single drawing turn whose
+  // source is a book's opening phrase, and its drawer is the one player
+  // who had to work with that phrase. A rating sent at any other position
+  // is ignored entirely -- position 0 IS the prompt, and positions 2+
+  // describe a drawing, not a prompt.
+  //
+  // Note the phrase rated is the book's POSITION-0 content -- the phrase
+  // that was drawn -- never `input.content`, which at position 1 is
+  // serialized stroke data.
+  //
+  // Deliberately last, after the entry is committed and never before any
+  // guard: a rating must never gate or fail a submission.
+  if (curationStore && input.rating && entry.position === 1) {
+    const openingPhrase = book.entries.find((e) => e.position === 0)?.content;
+    if (openingPhrase !== undefined) {
+      curationStore.recordRating(openingPhrase, input.rating, isBankPhrase(openingPhrase));
+    }
   }
 
   logger.log({
