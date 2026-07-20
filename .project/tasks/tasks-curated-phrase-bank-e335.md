@@ -29,7 +29,7 @@ status: in-progress
 
 ## Phase 4: Server: origin resolution and submission handling
 
-- [ ] T013 [artifacts: datamodel] Failing test first, then add server-side origin resolution: a set-membership test of the position-0 `Entry.content` against `CURATED_PHRASE_BANK` (imported from `shared`). Build the lookup set once at module load, not per call. Assert a phrase that is player-written but coincidentally identical to a bank entry resolves as a BANK phrase — the two are indistinguishable by text and the bank tally is the more useful destination.
+- [x] T013 [artifacts: datamodel] Failing test first, then add server-side origin resolution: a set-membership test of the position-0 `Entry.content` against `CURATED_PHRASE_BANK` (imported from `shared`). Build the lookup set once at module load, not per call. Assert a phrase that is player-written but coincidentally identical to a bank entry resolves as a BANK phrase — the two are indistinguishable by text and the bank tally is the more useful destination.
 - [ ] T014 [artifacts: datamodel] Failing tests first, then extend `onSubmitEntry` to accept the optional `rating`, and act on it ONLY when the submitted entry is `position === 1`. Cover: rating present at position 1 records; rating present at position 0, 2, or 3 is ignored entirely; rating absent at position 1 records nothing and the turn submits normally. Rating must never gate or fail a submission.
 - [ ] T015 Failing test first, then confirm end-to-end at the handler level that a position-1 submission in curated mode routes to the bank tally, and in free-form mode (or a curated write-in) routes to the candidate pool. This is the integration point between T013's resolution and T006's routing.
 
