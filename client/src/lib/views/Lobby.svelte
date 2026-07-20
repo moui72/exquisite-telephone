@@ -222,6 +222,31 @@
       </GiltFrame>
 
       {#if isHost}
+        <!--
+          T007 decision -- every host setting gets its OWN InfoTooltip; the
+          curated-mode tooltip is NOT extended to cover the phrase-count
+          selector and the write-in toggle.
+
+          A shared tooltip was the tempting option (they are all curated
+          sub-settings) and was rejected for two reasons. First, the three
+          have genuinely different consequences: the mode control changes
+          where phrases come from, the count control changes how much choice
+          each guest gets, and the write-in toggle decides whether the
+          curated deck is binding at all. Folding them together would force
+          copy explaining a cluster, which is what the tooltips exist to
+          avoid. Second, the tooltip sits on the mode control's label row,
+          several controls above -- a host adjusting the count would have to
+          know to look upward for its explanation.
+
+          One tooltip per setting also gives T009 a rule it can derive from
+          the rendered DOM (each host setting input has an info affordance in
+          its row) rather than a per-cluster exception table.
+
+          The small-game acknowledgement is treated as its own call, per the
+          task: it is not a curated setting, and it is a confirmation rather
+          than a configuration -- but it is still a host-only checkbox that
+          changes what the host is permitted to do, so it is covered too.
+        -->
         <InfoTooltip
           label="About force monochrome"
           explanation="Hides the color palette from everyone's drawing tool, for the whole game."
