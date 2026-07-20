@@ -17,10 +17,16 @@
 #
 # Deployment topology: pushing to `main` deploys beta automatically (see
 # .github/workflows/ci.yml). Prod deploys only from the `release` branch,
-# which only ever receives a fast-forward of `main` — promote via the
-# "Promote main to release" workflow (.github/workflows/promote.yml,
-# run it from the Actions tab) rather than pushing by hand. See
-# infrastructure.md Deployment for the full two-app topology.
+# which only ever receives a fast-forward of `main`.
+#
+# To promote, run the "Promote main to release" workflow from the Actions
+# tab (.github/workflows/promote.yml, workflow_dispatch only). It replaces
+# the remembered `git push origin main:release`. The push is plain and
+# non-force: if `release` has diverged, the workflow fails and asks a human
+# to resolve it rather than merging or force-pushing — `release` skips CI,
+# and that is only safe while every commit on it already passed on `main`.
+#
+# See infrastructure.md Deployment for the full two-app topology.
 #
 # Custom domains (certs managed via `fly certs`, DNS in Namecheap on
 # ty-pe.com — not tracked here): prod is ex-tel.ty-pe.com, beta is

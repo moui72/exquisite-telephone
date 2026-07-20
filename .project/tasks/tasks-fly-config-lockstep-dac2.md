@@ -144,7 +144,7 @@ status: in-progress
   `release` skip them, so the workflow must surface it for a human rather than
   repair it. See [[infrastructure]] Deployment — Release Promotion.
 
-- [ ] T014 [artifacts: infrastructure] Update the manual-promotion convention
+- [x] T014 [artifacts: infrastructure] Update the manual-promotion convention
   comment in the config template (originating from `fly.staging.toml` L2-3) to
   point at the promotion workflow instead of the remembered `git push` — edit
   the template, not the generated output, then regenerate via T009's script.
