@@ -48,18 +48,29 @@
     <GiltFrame caption="A Docent's Explanation">
       <div class="flex flex-col gap-3 text-sm text-ink/90">
         <p>
-          Every salon follows the same quiet ritual. A guest settles on an opening phrase —
-          composed at the blank page, or chosen from a hand the house deals them, as the host
-          has arranged it.
+          Every salon follows the same quiet ritual. A guest settles on an opening phrase — composed
+          at the blank page, or chosen from a hand the house deals them, as the host has arranged
+          it.
         </p>
         <p>
           The next player draws that phrase exactly as written, sight unseen of anything but the
           page in front of them.
         </p>
         <p>
-          Then a third guest writes a new phrase — but only from studying that drawing, never
-          having seen the original text. Writing and drawing alternate, and the book passes around
-          the circle, each guest working from only what the guest before them left behind.
+          Then a third guest writes a new phrase — but only from studying that drawing, never having
+          seen the original text. Writing and drawing alternate, and the book passes around the
+          circle, each guest working from only what the guest before them left behind.
+        </p>
+        <p>
+          The host arranges two things beforehand that change the evening's shape. Where opening
+          phrases come from: guests may compose their own, or the house may deal each of them a
+          curated hand to choose from. And how long each book runs — one lap of the circle, or as
+          many as three, which sends every book past every guest again.
+        </p>
+        <p>
+          The host may also allot a contemplation period, in which case a turn carries a clock. It
+          is a courtesy to the room, not a guillotine — the house has ways of proceeding when a
+          guest is detained.
         </p>
         <p>
           When the round concludes, Reveal shows the whole chain, start to finish — every phrase and

@@ -57,6 +57,44 @@ describe('RulesOverview', () => {
     }
   });
 
+  /**
+   * T012 — the panel must cover what changes the SHAPE of a game (T011
+   * decision): how many laps a book runs, that an opening phrase may be
+   * dealt rather than written, and that a turn may be timed. Per-setting
+   * detail stays with the Lobby tooltips.
+   */
+  it('covers the shipped features that change the shape of a game', () => {
+    const { container } = render(RulesOverview, { props: { onClose: vi.fn() } });
+    const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(copy).toMatch(/lap/i);
+    expect(copy).toMatch(/curated|dealt|deals/i);
+    expect(copy).toMatch(/timer|timed|clock|time limit/i);
+  });
+
+  /**
+   * The panel stays an OVERVIEW (T011). A panel nobody finishes reading
+   * helps less than a short one, so length is asserted as a real budget —
+   * generous enough not to fight ordinary edits, tight enough that
+   * documenting every setting here would fail.
+   */
+  it('stays short enough to be read', () => {
+    const { container } = render(RulesOverview, { props: { onClose: vi.fn() } });
+    const words = (container.textContent ?? '').trim().split(/\s+/).length;
+
+    expect(words).toBeLessThan(320);
+  });
+
+  /**
+   * Prompt rating is deliberately NOT explained here — T004 placed that
+   * explanation inline at the control, and a second copy would drift.
+   */
+  it('does not duplicate the inline prompt-rating explanation', () => {
+    const { container } = render(RulesOverview, { props: { onClose: vi.fn() } });
+
+    expect(container.textContent ?? '').not.toMatch(/thumbs|rate the phrase|anonymous/i);
+  });
+
   it('calls onClose when the dismiss control is activated', async () => {
     const onClose = vi.fn();
     render(RulesOverview, { props: { onClose } });
