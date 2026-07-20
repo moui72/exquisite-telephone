@@ -344,6 +344,18 @@
               thumbs render regardless of where the phrase came from --
               branching by origin would leak which mode produced a phrase
               the player is not otherwise told about (ui.md).
+
+              T004 decision -- the explanation of what this rating IS lives
+              INLINE here, not in the Rules Overview panel, and not in both.
+              The misreading being prevented ("am I judging the person who
+              wrote this?") occurs at the instant the thumbs are seen, on a
+              screen where the rules panel is closed; an explanation only
+              reachable by opening a modal arrives after the player has
+              already formed the wrong reading. Choosing "both" was rejected
+              as well: two copies of the same claim drift apart, which is the
+              precise failure this whole plan exists to fix. The clutter cost
+              is paid down by reusing InfoTooltip -- collapsed to a single
+              "(?)" until asked, matching the Lobby's established pattern.
             -->
             <fieldset class="flex items-center gap-3 border-0 p-0">
               <legend class="text-sm italic text-ink/60">Was this fun to draw?</legend>
