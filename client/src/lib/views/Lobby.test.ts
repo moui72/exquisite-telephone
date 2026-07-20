@@ -993,4 +993,42 @@ describe('Lobby host-setting info affordances', () => {
 
     expect(screen.getByText(/barely any chain/i)).toBeInTheDocument();
   });
+
+  /**
+   * The structural guard (T009). Derives the control set from the rendered
+   * DOM rather than a hardcoded list — a hardcoded list is the same failure
+   * mode as ui.md's stale "every host-configurable setting" claim, and would
+   * go quietly stale the next time a setting is added.
+   *
+   * T007 decided one tooltip PER setting, so the rule is per-control with no
+   * cluster exceptions: every form input rendered inside the host block must
+   * sit within an InfoTooltip row. `InfoTooltip` renders its `(?)` button as
+   * a sibling of the slotted control inside a shared wrapper, so "has an
+   * info affordance" is: walk up from the input, find a container that also
+   * contains a `[aria-expanded]` help button.
+   */
+  it('gives every rendered host setting an info affordance', () => {
+    const { container } = renderAllHostControls();
+
+    const inputs = Array.from(container.querySelectorAll<HTMLElement>('input, select'));
+    // Sanity: all seven host settings must actually be on screen, or this
+    // assertion is vacuous.
+    expect(inputs.length).toBe(7);
+
+    const uncovered = inputs.filter((input) => {
+      // Walk up only while the enclosing block still describes THIS setting
+      // alone. The moment an ancestor contains a second input we have left
+      // the setting's own row and reached the host block, where finding a
+      // help button would prove nothing.
+      let node: HTMLElement | null = input.parentElement;
+      while (node && node !== container) {
+        if (node.querySelectorAll('input, select').length > 1) return true;
+        if (node.querySelector('button[aria-expanded]')) return false;
+        node = node.parentElement;
+      }
+      return true;
+    });
+
+    expect(uncovered.map((el) => el.id || el.getAttribute('type') || el.tagName)).toEqual([]);
+  });
 });
