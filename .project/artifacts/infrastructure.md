@@ -229,11 +229,13 @@ source tree.
 anything merged is live on beta within minutes, including any config
 mistake. Production deploys ONLY from the `release` branch, and `release`
 only ever receives a **fast-forward of `main`** — it is never developed
-on directly and never diverges. That is precisely why
-`.github/workflows/ci.yml` skips its `checks` job when
-`github.ref == 'refs/heads/release'`: the identical commits already
-passed those checks on their push to `main`, so re-running them would
-test the same tree twice. Promoting `release` is a dispatchable
+on directly and never diverges. `.github/workflows/ci.yml` does not run
+on `release` at all: it triggers on pushes to `main` and on pull
+requests. Re-running checks there would only test the same tree twice,
+since the identical commits already passed them on their push to `main`.
+(An earlier design ran CI on `release` and skipped the `checks` job with
+a `github.ref` guard; once `release` left the push triggers, that guard
+could never fire and was removed.) Promoting `release` is a dispatchable
 workflow that fast-forwards **and** deploys — not a remembered command,
 and not a push that some other job reacts to — see Release Promotion
 below.
@@ -274,7 +276,7 @@ config, so they don't appear. Adding a key to that table is the explicit
 act of declaring a channel difference — the point is that it can't
 happen by accident.
 
-The check lives in CI's `checks` job, which is skipped on `release`
+The check lives in CI's `checks` job, which never runs on `release`
 (above). That is correct rather than a gap: `release` only ever receives
 a fast-forward of `main`, so the identical tree already passed the check
 on `main`.
