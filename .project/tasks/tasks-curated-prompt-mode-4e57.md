@@ -31,7 +31,7 @@ status: in-progress
   minimum size — written and confirmed failing before the constant
   exists.
 
-- [ ] T003 [artifacts: datamodel] Create the deal function in `shared/`
+- [x] T003 [artifacts: datamodel] Create the deal function in `shared/`
   (new file, e.g. `shared/src/promptDeal.ts`) as a pure function over
   `(bank: readonly string[], playerIds: string[], requestedCount:
   number, shuffle?: (items) => items)` returning `Record<string,
