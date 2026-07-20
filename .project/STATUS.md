@@ -1,6 +1,34 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (**Both `ready` tasks files are now implemented and
+_Updated: 2026-07-20 (**Prod is deployed and a fresh `/ardd-defects` pass
+found 7 defects — see below; that is now the main thing on the board.**
+
+Since the last update: both tasks files merged, `main` was pushed (beta
+deployed green, `check:fly` passing in CI for the first time), and the
+promote workflow was **dispatched successfully** — `release`
+fast-forwarded to `96eb2ef` and prod deployed in 42s, healthy. That run
+also confirmed the design premise empirically: the push to `release`
+triggered **no** CI run, which is exactly why the deploy had to live
+inside `promote.yml` rather than react to the push.
+
+Prod had been 105 commits behind, so this shipped several sessions at
+once — the curated phrase bank and its durable storage, the salon UI
+redesign, moderation controls, help-text work, generated Fly configs.
+It is the **first prod deploy that mounts the volume**, so curation data
+now persists there.
+
+**The defects pass is the headline.** Four of its seven findings are one
+seam, not four bugs: `Player.kicked` is honored where a kicked player is
+a *source* of work (book origins, prompt dealing) and ignored where they
+are a *recipient* of it (turn rotation, timeout-vote membership, roster
+rendering). Two stand out — **restart-game does not actually restore a
+frozen room's continuability**, and the **curation store silently drops
+every rating past 65,536** with no Production Annotation in any artifact.
+One finding needs a product decision rather than a doc fix: timer
+extensions *replace* the base duration instead of adding to it, so
+granting "15 minutes" on a 30-minute timer moves the deadline *earlier*.
+
+Earlier this pass: **both `ready` tasks files were implemented and
 merged to `main`.** `/ardd-implement` fanned out to two parallel worktree
 subagents — `tasks-help-text-accuracy-9755.md` (13/13) and
 `tasks-fly-config-lockstep-dac2.md` (14/14) — and both merged clean
@@ -89,12 +117,28 @@ a plan.)_
 
 ## Code-vs-Artifact Defects
 
-**2 defects** on file as of 2026-07-20 — see `.project/DEFECTS.md` —
-but **both are now fixed**, so the snapshot is stale. `infrastructure.md`'s
-handler list gained the three missing curated-prompt handlers (T001), and
-`ui.md`'s tooltip-coverage claim is now literally true (T010). They will
-drop out on the next `/ardd-defects` run — that file is fully regenerated
-each run, never hand-edited.
+**7 defects** as of 2026-07-20, from a full four-artifact survey — see
+`.project/DEFECTS.md`. The two prior entries were re-verified as fixed
+and dropped out.
+
+- `datamodel.md` — 2. Kicked players aren't excluded from timeout-vote
+  membership; and **restart-game doesn't restore continuability**
+  (`createBooksForRoom` filters kicked players as book *origins*, but
+  author rotation runs over the unfiltered roster) — **broken-contract**.
+- `infrastructure.md` — 1. The curation store caps at 65,536 events and
+  **silently drops** every rating past it; the code carries its own
+  `PRODUCTION ANNOTATION` comment but no artifact does, which the
+  constitution's annotation rule exists to prevent.
+- `ui.md` — 4. Kicked players still appear in `Lobby`/`TurnStatus`
+  (filtered only in the Moderation Panel); timer extensions **replace**
+  rather than add to the base duration; the "waiting for the round to
+  finish" state misfires for the entire second lap of a default 3–4
+  player game; the rejoin-a-dead-room screen is a dead end with no return
+  control.
+- `constitution.md` — clean. All ten declared principles verified against
+  real code.
+
+`/ardd-plan` will offer each as a fix task.
 
 ## Feedback
 
@@ -403,10 +447,14 @@ feedback files. One feature stays backlogged
 (`curation-data-aggregation-pipe`), routed to `/ardd-research` rather
 than a plan.
 
-**Nothing blocks a production promotion.** The PAT requirement was
-designed away rather than documented: promotion now fast-forwards and
-deploys in one dispatch using the existing `FLY_API_TOKEN_PROD`. Not yet
-exercised against the real GitHub — the first dispatch is the proof.
+**Promotion works and has been exercised.** `release` is at `96eb2ef`,
+identical to `main` at the time of the cut; prod is live and healthy at
+https://ex-tel.ty-pe.com/. Re-dispatching is harmless (no-op push, same
+tree re-shipped).
+
+**Local commits are ahead of `origin/main`** — the ci.yml guard removal,
+the artifact correction, and the regenerated `DEFECTS.md`. None affect
+runtime; the next push carries them to beta.
 
 **ArDD is up-to-date** on the beta channel — `v1.0.2`, commit `33ac9ae`
 (updated 2026-07-20 from `v1.0.1`/`9fd6fbb`). No migrations were pending;
@@ -433,14 +481,19 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** push. `main` is well ahead of `origin/main`
-and every tasks file is complete; pushing auto-deploys beta, which is
-where the promote workflow and the generated Fly configs actually get
-exercised. The first `Promote main to release` dispatch is the only real
-test of the new prod path.
+**Recommended next step:** `/ardd-plan` over the recorded defects — it
+offers each `DEFECTS.md` entry as a fix task. Plan the four kicked-player
+findings **together**: they are one seam, and fixing them from four
+separate entries would produce four unrelated-looking patches.
 
-Then, in no particular order: `/ardd-defects` to clear both
-now-fixed entries from the snapshot, `/ardd-research` for
+Two decisions to make while planning, neither settleable from code:
+1. **Timer extensions** — should granting time be able to *shorten* a
+   deadline? Today it can. Fix the code or fix `ui.md`, but pick.
+2. **The curation cap** — annotate it as an accepted shortcut, or make
+   it evict? The backlogged `curation-data-aggregation-pipe` is the
+   natural home for draining the log.
+
+Then, in no particular order: `/ardd-research` for
 `curation-data-aggregation-pipe`'s sanitization boundary, and
 `/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
 diagrams whose shape actually changed.
