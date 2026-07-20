@@ -9,12 +9,12 @@ handler list, `ui.md`'s tooltip-coverage overclaim) were fixed by
 `tasks-help-text-accuracy-9755.md` and are gone from this snapshot —
 re-verified against the code this run, not assumed.
 
-**A theme worth naming before the individual entries:** four of the seven
+**A theme worth naming before the individual entries:** three of the seven
 findings below are the same underlying gap. `Player.kicked` is honored
 where a kicked player is a *source* of work (book origins, prompt
 dealing) but ignored wherever they are a *recipient* of it (turn
 rotation, timeout-vote membership, roster rendering). Fixing these
-one-by-one from the entries below will produce four unrelated-looking
+one-by-one from the entries below will produce three unrelated-looking
 patches; they are one design seam.
 
 ## datamodel.md

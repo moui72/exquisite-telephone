@@ -17,8 +17,8 @@ redesign, moderation controls, help-text work, generated Fly configs.
 It is the **first prod deploy that mounts the volume**, so curation data
 now persists there.
 
-**The defects pass is the headline.** Four of its seven findings are one
-seam, not four bugs: `Player.kicked` is honored where a kicked player is
+**The defects pass is the headline.** Three of its seven findings are one
+seam, not three bugs: `Player.kicked` is honored where a kicked player is
 a *source* of work (book origins, prompt dealing) and ignored where they
 are a *recipient* of it (turn rotation, timeout-vote membership, roster
 rendering). Two stand out — **restart-game does not actually restore a
@@ -482,9 +482,9 @@ Carried forward, none blocking:
   session's work.
 
 **Recommended next step:** `/ardd-plan` over the recorded defects — it
-offers each `DEFECTS.md` entry as a fix task. Plan the four kicked-player
-findings **together**: they are one seam, and fixing them from four
-separate entries would produce four unrelated-looking patches.
+offers each `DEFECTS.md` entry as a fix task. Plan the three kicked-player
+findings **together**: they are one seam, and fixing them from three
+separate entries would produce three unrelated-looking patches.
 
 Two decisions to make while planning, neither settleable from code:
 1. **Timer extensions** — should granting time be able to *shorten* a
