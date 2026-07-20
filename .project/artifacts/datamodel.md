@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-18
-diagram_status: current
+last_updated: 2026-07-19
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -43,6 +43,10 @@ to survive a server restart.
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
 | revealStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `reveal`; `null` otherwise. Gives every client a shared reference point to derive the Reveal page's animated pacing (current book index, revealed-entry count) as a pure function of `now - revealStartedAt`, rather than each client running its own independent local timer — see [[ui]] Reveal View and Normalization Rules below. |
+| promptMode | enum | `free-form` \| `curated` — Host-configurable, set before `status` leaves `lobby`; defaults `free-form` (players type their own opening phrase, the original behavior). When `curated`, each player instead picks their opening phrase from a dealt hand (see Normalization Rules — Curated prompts). |
+| curatedPromptCount | number \| null | Host-configurable, set before `status` leaves `lobby`; how many phrases each player is dealt. One of `2 \| 3 \| 4 \| 5` when set; `null` while `promptMode === 'free-form'`. Clamped at deal time (see Normalization Rules — Curated prompts). |
+| allowPromptWriteIn | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `true`, a write-your-own option is always offered alongside the dealt phrases, so curated mode restricts nobody who has their own idea. Only meaningful when `promptMode === 'curated'`. |
+| dealtPrompts | Record\<playerId, string[]\> | The phrases dealt to each non-kicked player at game start, from a single shuffle-then-partition of the fixed phrase bank — which is what guarantees no phrase reaches two players in the same game. Empty `{}` while `promptMode === 'free-form'`. Re-dealt on *Restart game*; see Normalization Rules — Curated prompts. |
 | lapsPerBook | number \| null | Host-configurable, set before `status` leaves `lobby`; `null` means the host hasn't explicitly chosen a value yet — see Normalization Rules for the live-default-until-overridden behavior. When non-`null`, one of `1 \| 2 \| 3`. Governs how many full rotations through `Room.players` each book completes before the game ends (see Normalization Rules — Laps per book). |
 
 ### Player
@@ -154,6 +158,33 @@ Only present as `Room.pendingTimeoutVote` while a round-expiry vote is open (see
   player count at start time) if it's still `null` when the game
   starts, so `computeNextEntry`/`computeNextEntries` never have to
   handle a `null` value themselves.
+- **Curated prompts.** Applies to **`Entry.position === 0` only** — a
+  book's opening phrase. Every later text entry is a blind guess written
+  from only the drawing before it, so there is nothing to curate there;
+  those turns stay free-form in both modes, unconditionally. When
+  `Room.promptMode === 'curated'`, `onStartGame` shuffles the fixed
+  phrase bank (a static constant in `shared/`, not stored per-room —
+  Principle VI) and *partitions* it across the non-kicked players,
+  dealing each `Room.curatedPromptCount` phrases into
+  `Room.dealtPrompts`. Partitioning a single shuffle, rather than
+  sampling independently per player, is what makes the
+  no-phrase-reaches-two-players guarantee structural instead of a
+  retry-until-distinct loop. A player's opening submission is accepted
+  only if it matches one of their own dealt phrases, or — when
+  `Room.allowPromptWriteIn` is `true` — is any free text they typed;
+  the server never trusts the client's claim about which mode is
+  active. **Bank exhaustion**: with no maximum player count anywhere in
+  the design, `curatedPromptCount * playerCount` can exceed the bank, so
+  the count is clamped at deal time to `floor(bankSize / playerCount)`
+  with a floor of 1. A large room quietly gets fewer choices rather than
+  the deal throwing or silently repeating a phrase — the distinctness
+  guarantee outranks the host's requested count. The bank is sized so
+  realistic rooms never reach the clamp.
+  Curated settings follow the same lifecycle as `monochromeOnly` /
+  `turnTimerMinutes` / `lapsPerBook`: *Play again* mints a brand-new
+  `Room` whose settings start at their defaults for the host to
+  reconfigure (no carry-over), while *Restart game* resets the same room
+  in place and re-deals `dealtPrompts` alongside the regenerated `books`.
 - **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
   stamped the instant `status` transitions to `reveal` (the same
   transition already logged as `game_completed` in `onSubmitEntry`).
@@ -254,6 +285,14 @@ lookup pattern changes materially.
   memory and is lost on restart or crash — in production, this would be
   backed by a durable or at-least replicated store (e.g. Redis) so a
   deploy doesn't kill in-progress games.
+- **Unscoped dealt prompts**: `Room.dealtPrompts` ships in the room-wide
+  broadcast, so every client can read every other player's candidate
+  phrases. Inert for gameplay — an unchosen phrase never surfaces
+  anywhere, and knowing another player's hand reveals nothing about what
+  they picked — but it does leak information the "pass the folded paper"
+  ethos would rather keep private. In production, the broadcast would
+  scope each client to its own entry (the per-client push already used
+  by *Play again* is the existing precedent for that shape).
 - **No account system**: `Player` identity is purely session-based with
   no verification — in production supporting persistent profiles or
   matchmaking, this would need a real auth/account layer.

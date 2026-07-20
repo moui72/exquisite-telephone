@@ -1,9 +1,37 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-backlog` logged
-`curated-prompt-mode` — host-selectable curated prompt mode dealt from a
-shuffled fixed phrase set, with configurable N and optional write-in.
-Prior entry: `/ardd-implement` ran
+_Updated: 2026-07-19 (`/ardd-refine ui` ran: documented the **Salon
+Footer** — a persistent bottom bar on every view carrying the house
+wordmark (or "Salon No. <code>" once seated), the docent's "?" button,
+and a host-only gavel. The refine found the footer had *replaced*, not
+merely supplemented, the prior entry points: `Lobby.svelte` no longer
+contains the "How this salon works" link or the Moderation Panel at
+all, so three `ui.md` sections (Lobby View, Rules Overview Panel,
+Moderation Panel) were describing an app that no longer existed. All
+three corrected; both panels are now app-level overlays with the footer
+as their single entry point. **One regression surfaced and logged**
+(`feedback-main-338d.md`, F001): the host-suppression of the "game
+can't continue" notice was only justified while the Moderation Panel
+was inline and always visible — now that it's a modal, a host who kicks
+mid-game gets no frozen-room signal at all until they reopen it, while
+every non-host sees the notice. `ui.md` `last_updated` stamped,
+`diagram_status` stale. Prior entry: `/ardd-plan curated-prompt-mode` ran: designed
+and applied the feature's `datamodel.md` + `ui.md` changes (four new
+`Room` fields — `promptMode`, `curatedPromptCount`, `allowPromptWriteIn`,
+`dealtPrompts`; a "Curated prompts" normalization rule scoping the
+feature to `Entry.position === 0`, guaranteeing distinctness by
+partitioning a single shuffle, and clamping the hand size at deal time;
+an "Unscoped dealt prompts" production annotation; host prompt-mode
+controls and a three-way turn-hint split in `ui.md`). Plan
+`plan-curated-prompt-mode-2026-07-19-cfab.md` **approved** (5 phases, 0
+open questions); tasks file `tasks-curated-prompt-mode-4e57.md`
+generated and `ready` (11 tasks, 10 of 11 carrying a failing-test-first
+requirement). Feature flipped `backlogged` -> `planned` -> `tasked`.
+`datamodel.md` `diagram_status` flipped `stale`. **Note**: T010 corrects
+a real existing bug found while checking the seam — the blind-guess turn
+hint currently renders on the opening turn (`position === 0`), where no
+preceding drawing exists and the copy is false. Prior entry: `/ardd-backlog` logged
+`curated-prompt-mode`. Prior entry: `/ardd-implement` ran
 `tasks-in-game-rules-and-guidance-4c59.md` end to end: delegated to a
 worktree subagent (solo mode, `delegation: eager`), all 6 tasks
 completed — a dismissible `RulesOverview.svelte` panel explaining the
@@ -382,7 +410,8 @@ a plan.)_
 
 ## Diagrams
 
-- datamodel.md — current ✅
+- datamodel.md — stale ⚠️ (run /ardd-diagram datamodel — four new
+  `Room` fields added this pass)
 - infrastructure.md — current ✅
 - ui.md — stale ⚠️ (run /ardd-diagram ui — textual-only change, no new
   component nodes, so the diagram content itself won't actually change,
@@ -404,6 +433,10 @@ section missing the `font-title`/Uncial Antiqua treatment and the Foyer
 session.
 
 ## Feedback
+
+- **1 open feedback file** — `feedback-main-338d.md` (F001: host gets no
+  frozen-room signal after a kick, a regression from the Salon Footer
+  refactor). Will be picked up by the next `/ardd-plan`.
 
 0 open feedback files. `feedback-main-7922.md` (F001 Bug — drawing
 submit button unclickable; F002 Bug — palette needs a white erase/undo
@@ -449,16 +482,20 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-1 backlogged · 0 planned · 0 tasked · 10 implemented — see
-`.project/features/`. Target the backlogged slug with
-`/ardd-plan curated-prompt-mode`.
+0 backlogged · 0 planned · 1 tasked · 10 implemented — see
+`.project/features/`. Nothing is backlogged; the one tasked feature has
+a `ready` tasks file awaiting `/ardd-implement`.
 
-- `curated-prompt-mode` (**backlogged**, logged 2026-07-19) — a
+- `curated-prompt-mode` (**tasked**, logged 2026-07-19) — a
   host-selectable curated prompt mode alongside the existing free-form
-  mode: each player is dealt N random phrases from a predetermined
-  fixed set and picks one, with N host-configurable and an optional
-  host-toggled write-in option. Dealing from a shuffled fixed set
-  guarantees no phrase appears to more than one player in a game.
+  mode: each player is dealt N phrases from a predetermined fixed set
+  and picks one, with N host-configurable and an optional host-toggled
+  write-in option. Distinctness across players is structural (a single
+  shuffle partitioned across players, not per-player sampling). Plan:
+  `plan-curated-prompt-mode-2026-07-19-cfab.md` (**approved**, 5
+  phases, 0 open questions). Tasks:
+  `tasks-curated-prompt-mode-4e57.md` (**ready**, 0/11) — awaiting
+  `/ardd-implement`.
 - `in-game-rules-and-guidance` (**implemented**) — a dismissible Rules
   Overview panel (Foyer + Lobby), docent-voice turn hints on the
   Writing/Drawing view, and `(?)` info tooltips on all three host
@@ -639,6 +676,24 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
+**Current state (2026-07-19, latest pass):** 1 open issue (F001, logged
+not fixed). Safe to implement: **yes**. `curated-prompt-mode` is `tasked` with a `ready`
+11-task file; artifacts are all `stable` with 0 open questions; 0 open
+feedback (`feedback-main-338d.md`, F001 — host frozen-room signal); no
+worktrees in flight. Two things carried forward, neither
+blocking: `datamodel.md` and `ui.md` are both `stale` on diagrams, and
+the `SalonFooter` component committed this session (a persistent
+bottom bar carrying the rules and moderation affordances) is **not yet
+described in `ui.md`** — code ahead of docs, a candidate for the next
+`/ardd-defects` or `/ardd-refine ui` pass.
+
+**Recommended next step:** `/ardd-implement` — execute
+`tasks-curated-prompt-mode-4e57.md`.
+
+---
+
+_Historical, from prior passes:_
+
 **All 7 features (the original 3-phase Phase Plan, both defect
 fix-up plans, and now `host-game-moderation-controls`) are
 implemented and merged to `main`.** The last backlogged feature added
@@ -671,7 +726,7 @@ fixed and merged to `main` via `plan-main-2026-07-19-05fb.md` /
 `tasks-main-be75.md` (**completed 4/4**). `feedback-main-5fdc.md`'s
 F001 (theme not applied broadly) fixed and merged via
 `plan-1449-2026-07-18-2ce0.md` / `tasks-1449-a6ef.md` (completed 9/9).
-Nothing in flight. ArDD is up-to-date on the beta channel (`v1.0.1-beta.1`).
+Nothing in flight. ArDD is up-to-date on the beta channel (`v1.0.1`, commit `9fd6fbb` — the final release superseded the `v1.0.1-beta.1` prerelease previously installed).
 Working tree clean on `main`; no worktrees in flight — all three
 delegated worktrees this session reported back, merged (two
 fast-forward/non-fast-forward clean merges, one merge that needed the

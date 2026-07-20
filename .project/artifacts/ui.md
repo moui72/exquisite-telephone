@@ -29,8 +29,8 @@ one-line docent-voice tagline) above a create/join form, itself wrapped
 in a Gilt Frame captioned "The Foyer — RSVP Required" — the same
 signature component used everywhere else an artifact appears, so the
 very first screen already reads as part of the salon rather than a
-bare utility form. A "How this salon works" link opens the Rules
-Overview Panel (see below) — a new player's first chance to understand
+bare utility form. The Salon Footer (see below) is already present
+here, so its "?" button is a new player's first chance to understand
 the game before committing to a room.
 
 Once a room exists, it's framed as an RSVP/guest-list card (see Visual
@@ -40,15 +40,14 @@ shareable room code); other players join by entering the code and a
 display name. Shows connected players and a "start game" control
 visible only to the host. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
-state. The "How this salon works" link from the Foyer (see above) stays
-available here too. The host also
+state. The host also
 sees a "force monochrome" toggle (default off) that sets
 `Room.monochromeOnly`, hiding the color palette for everyone's drawing
 tool for the whole game (see Writing / Drawing View below) — not
 visible or editable once the game has started. An info affordance next
 to the toggle explains what it does before the host picks a value (see
 Rules Overview Panel below for the info-affordance convention shared by
-all three host settings here).
+all four host settings here).
 
 The host sees player-count guidance ("recommend 4+ players, minimum
 3") next to the player list. Below 3 players, an "I know this won't
@@ -74,6 +73,48 @@ room's life. An info affordance next to the control explains what a
 "lap" means in terms of how many times the book passes around the
 circle before Reveal.
 
+The host also sees a "prompt mode" control (free-form / curated — free-form
+by default) that sets `Room.promptMode`. Free-form is the original
+behavior: every player types their own opening phrase. Choosing curated
+reveals two dependent controls — a count selector (2 / 3 / 4 / 5) setting
+`Room.curatedPromptCount`, and an "allow write-in" toggle (on by default)
+setting `Room.allowPromptWriteIn` — which are hidden entirely in
+free-form mode rather than shown disabled, since they have no meaning
+there. An info affordance next to the mode control explains that curated
+deals each player a private hand of phrases to choose from, and that no
+two players are ever offered the same phrase.
+
+## Salon Footer
+
+A slim bar fixed along the bottom of the viewport on **every** view —
+the Foyer, Lobby, Writing/Drawing, Reveal, and the terminal states —
+rendered once at the app root rather than per-view, so it never
+disappears or shifts between screens. Framed as the velvet skirting of
+the gallery wall, trimmed with a double gilt rail (a bright hairline
+over a dimmer one) that echoes the Gilt Frame's outer + inset strokes
+without carrying a heavy border.
+
+It carries three things:
+
+- **Identity, left**: the house wordmark ("Exquisite Telephone") before
+  a room exists, replaced by the current salon's number ("Salon No.
+  <room code>") once the player is seated — so the room code a player
+  needs to read aloud is permanently on screen instead of only on the
+  Lobby.
+- **The docent's "?" button**: opens the Rules Overview Panel (see
+  below) from anywhere, at any point in the game.
+- **The host's gavel**: opens the Moderation Panel (see below).
+  Rendered only for the host; absent entirely from every other
+  player's footer rather than shown disabled.
+
+Both buttons open their panel as an app-level overlay. This is the
+single entry point for each — neither panel is reachable from inside a
+view any more. That consolidation is deliberate: it makes rules and
+moderation available during Writing/Drawing and Reveal, where
+previously they were reachable only from the Lobby, and it removes the
+duplicated per-view controls rather than leaving them alongside the
+footer.
+
 ## Rules Overview Panel
 
 A dismissible panel explaining the core game loop in docent voice: a
@@ -81,36 +122,42 @@ player writes a phrase, the next player draws it having never seen the
 original text, the next player writes a new phrase from only the
 drawing, and so on around the circle — Reveal then shows the whole
 chain, phrase to drawing to phrase, so everyone sees how far it
-drifted. Opened via a "How this salon works" link/button, available
-from both the Foyer (before any room exists) and the Lobby (once in a
-room) — the same panel content either way, just reachable from two
-points in the flow. Not shown automatically; a player who already
-knows the game is never interrupted by it.
+drifted. Opened as an overlay from the Salon Footer's "?" button (see
+above) — so it is reachable from every view, including mid-turn and
+during Reveal, not just before the game starts. Not shown
+automatically; a player who already knows the game is never
+interrupted by it.
 
 The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
 separate modal) is reused for every host-configurable setting in the
 Lobby View above — the force-monochrome toggle, the turn timer
-selector, and the laps-per-book control — so a host understands a
+selector, the laps-per-book control, and the prompt-mode control — so a host understands a
 setting's consequence before choosing a value, not just its label.
 
 ## Moderation Panel
 
-A host-only, collapsible panel available during `lobby`, `writing`, and
-`reveal` (see [[datamodel]] Normalization Rules — Moderation), never
-shown to non-host players:
+A host-only modal overlay, opened from the Salon Footer's gavel button
+(see above) and available during `lobby`, `writing`, and `reveal` (see
+[[datamodel]] Normalization Rules — Moderation). It is never shown to
+non-host players, and guards this twice over: the footer omits the
+gavel entirely for non-hosts, and the panel itself renders nothing for
+a non-host even if opened. Its controls:
 
 - **Per-player "kick"** control next to each entry in the player list.
   Kicking sets `Player.kicked` and, if the room is `writing`, also sets
   `Room.nonContinuable` — the panel then surfaces a "this game can't
-  continue" notice to the host alongside the "restart game" control
-  below. The room-wide broadcast also carries `Room.nonContinuable` to
-  every other player, but the host sees the notice via this panel only
-  — the page-body copy described in Writing / Drawing View is
-  suppressed specifically for the host, to avoid showing the same
-  notice twice in one client (fixed 2026-07-18, feedback F001
-  `.project/feedback/feedback-main-8da5.md`); non-host players, who
-  never see this panel, still see the notice in the page body. A kicked
+  continue" notice alongside the "restart game" control below. The
+  room-wide broadcast also carries `Room.nonContinuable` to every other
+  player; non-host players see the notice in the page body described
+  under Writing / Drawing View, which is suppressed specifically for
+  the host (originally so the host wouldn't see the same notice twice
+  in one client, when this panel was rendered inline and always
+  visible — 2026-07-18, feedback F001
+  `.project/feedback/feedback-main-8da5.md`). Now that the panel is a
+  modal the host must open, the host needs a frozen-room signal
+  reachable *without* opening it — the footer's gavel is the natural
+  place to carry that indication. A kicked
   player is removed entirely from the visible roster shown to the host
   and other players (reversed 2026-07-17, feedback F001
   `.project/feedback/feedback-main-e2ff.md`, from the original
@@ -138,13 +185,32 @@ piece for the salon" framing is consistent turn to turn. The core
 gameplay loop. Each player sees either a text-entry prompt
 (write a phrase) or a canvas (draw the previous phrase), depending on
 `Entry.type` for their current turn, driven entirely by server-broadcast
-room state (Principle VI — no client-side authoritative state). A short
-docent-voice hint above the prompt/canvas states the turn's actual job,
-distinct per `Entry.type` — the write turn's hint makes clear the
-player is writing blind from only the drawing before them (never told
-the original phrase), and the draw turn's hint makes clear they should
-draw exactly what the phrase says, no more and no less — since a new
-player can't infer either rule just from seeing an empty input. The
+room state (Principle VI — no client-side authoritative state).
+
+The **opening turn** (`Entry.position === 0` — the player starting their
+own book) is a distinct case from every later text turn, and the view
+branches on it. In free-form mode it is today's plain text input. When
+`Room.promptMode === 'curated'`, it instead presents that player's own
+dealt hand (`Room.dealtPrompts` for their `Player.id`) as selectable
+options — one choice, committed on submit — plus, when
+`Room.allowPromptWriteIn` is `true`, an always-present write-your-own
+option that reveals a free-text field. A player never sees another
+player's hand in the interface, and the phrases are presented as a
+choice rather than a suggestion list, so picking one is the normal path
+rather than a fallback.
+
+A short docent-voice hint above the prompt/canvas states the turn's
+actual job, distinct per turn kind — three kinds, not two. The draw
+turn's hint makes clear the player should draw exactly what the phrase
+says, no more and no less. The **later** text turn's hint (`position >
+0`) makes clear the player is writing blind from only the drawing before
+them, never told the original phrase. The **opening** text turn
+(`position === 0`) gets its own copy: there is no preceding drawing and
+nothing to guess, so the blind-guess wording is simply false there and
+must not be shown — the origin-turn hint instead frames the player as
+setting the phrase the rest of the circle will chase. (Before this
+feature, the blind-guess hint rendered on the opening turn too, which
+described a situation the player was not in.) The
 canvas uses pointer events for mobile-friendly touch drawing (Principle
 II / touch cleanup quality standard), with listeners registered and torn
 down across Svelte's component lifecycle. Pointer coordinates are
