@@ -7,6 +7,7 @@ import type {
   PromptRating,
   PromptRatingValue,
   Room,
+  SubmitEntryPayload,
 } from './index.js';
 
 describe('datamodel types (datamodel.md)', () => {
@@ -155,5 +156,33 @@ describe('persisted curation types (datamodel.md Persisted Entities)', () => {
     const values: PromptRatingValue[] = ['up', 'down'];
 
     expect(values).toEqual(['up', 'down']);
+  });
+});
+
+describe('SubmitEntryPayload (datamodel.md Normalization Rules — Prompt rating)', () => {
+  it('typechecks without a rating — rating is never required to submit a turn', () => {
+    const payload: SubmitEntryPayload = {
+      roomId: 'room-1',
+      playerId: 'player-1',
+      bookId: 'book-1',
+      content: 'a phrase',
+    };
+
+    expect(payload.rating).toBeUndefined();
+    expect(payload.content).toBe('a phrase');
+  });
+
+  it('accepts an optional rating of up or down', () => {
+    const up: SubmitEntryPayload = {
+      roomId: 'room-1',
+      playerId: 'player-1',
+      bookId: 'book-1',
+      content: 'a phrase',
+      rating: 'up',
+    };
+    const down: SubmitEntryPayload = { ...up, rating: 'down' };
+
+    expect(up.rating).toBe('up');
+    expect(down.rating).toBe('down');
   });
 });

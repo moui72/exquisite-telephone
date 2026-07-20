@@ -226,3 +226,25 @@ export interface CandidatePhrase {
   /** Epoch ms of the first thumbs-up. */
   firstLoggedAt: number;
 }
+
+/**
+ * What a client sends to submit its current turn. `Entry.position` and
+ * `type` are deliberately absent — the server computes them from the
+ * round-robin turn order rather than trusting the client (datamodel.md
+ * Normalization Rules).
+ */
+export interface SubmitEntryPayload {
+  roomId: string;
+  playerId: string;
+  bookId: string;
+  /** Text phrase, or serialized drawing-stroke data — see {@link Entry}. */
+  content: string;
+  /**
+   * Optional verdict on the book's opening phrase, carried along with
+   * the submission rather than as its own round trip. Optional because a
+   * rating is never required to submit a turn, and only ever acted on
+   * when the submitted entry is `position === 1` — see datamodel.md
+   * Normalization Rules — Prompt rating.
+   */
+  rating?: PromptRatingValue;
+}

@@ -9,6 +9,7 @@ import {
   type Entry,
   type Player,
   type Room,
+  type SubmitEntryPayload,
   type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
 import type { Server as SocketIOServer, Socket } from 'socket.io';
@@ -582,13 +583,12 @@ export function onPlayAgain(
   ack({ room: newRoom, player: newHostPlayer });
 }
 
-export interface SubmitEntryInput {
-  roomId: string;
-  playerId: string;
-  bookId: string;
-  /** Text phrase, or serialized drawing-stroke data — see datamodel.md Entry. */
-  content: string;
-}
+/**
+ * Re-exported from `shared` so the wire payload has exactly one
+ * definition (constitution Principle VII) rather than the server and
+ * client each retyping it.
+ */
+export type SubmitEntryInput = SubmitEntryPayload;
 
 export interface SubmitEntryAck {
   room?: Room;
