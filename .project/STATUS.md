@@ -1,16 +1,35 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (**The 7 defects are now planned and tasked —
-`tasks-25a0-15f7.md` is `ready`, 0/10, the one executable thing on the
-board.** Plan `plan-25a0-2026-07-20-1822.md` is `approved`; five phases,
-each defect tagged. Two user decisions are baked in: timer extensions go
-**additive** (code fixed, `datamodel.md` corrected to match), and the
-curation cap is **annotated and pointed at
-`curation-data-aggregation-pipe`** rather than made to evict.
+_Updated: 2026-07-20 (**All 7 defects are fixed and merged to `main`.**
+`tasks-25a0-15f7.md` completed 10/10 in a delegated worktree, merged
+clean (fast-forward), worktree reaped. Verified post-merge: full suite
+green — 451 tests (shared 49 · server 202 · client 196 · root 4) — lint
+and typecheck clean. **Every tasks file in the project is `completed`;
+nothing is ready or in flight.** The next `/ardd-defects` run will
+re-verify these gone and clear the snapshot.
 
-Implementation ordering that matters: **Phase 1 (T001–T003) must land
-before Phase 2** — T004/T005/T008 all consume the `activePlayers` helper
-T001 introduces. Phases 3–5 are independent.
+The kicked-player seam was fixed as one change, as planned: a shared
+`activePlayers(room)` helper in `shared/` that rotation, timeout-vote
+membership, and roster rendering all read from. Timer extensions are now
+**additive** (a 30m timer + 15m grant yields 45m, not 15) with
+`datamodel.md` corrected to match; the curation cap is recorded in
+`infrastructure.md`'s Production Annotations.
+
+**Two implementer findings worth carrying forward (neither a defect, both
+out of scope of this plan):**
+1. **T003 turned out to be effectively a no-op in live play.**
+   `onStartGame` resolves `lapsPerBook` to a concrete value at game
+   start, so `computeNextEntry`'s `?? defaultLapsPerBook(...)` null branch
+   never fires mid-game. It is T002's `activeCount * laps` completion
+   count — not the lap default — that actually un-strands a restarted
+   room's books. The T003 change is correct for the pure function's
+   contract but changes no live behavior.
+2. **Latent, untouched:** `onStartGame` (`handlers.ts:160`) resolves the
+   lap default from `room.players.length`, not the active count. Since a
+   kick is allowed during `lobby`, a lobby-kick-then-start resolves the
+   default off the inflated roster and yields a shorter-than-intended
+   game. Low confidence, correctly left alone. Candidate for a
+   `/ardd-feedback` note if it matters.
 
 Prod is deployed; the `/ardd-defects` pass that produced these findings
 is described below.
@@ -150,9 +169,11 @@ and dropped out.
 - `constitution.md` — clean. All ten declared principles verified against
   real code.
 
-All seven are now planned in `plan-25a0-2026-07-20-1822.md` and tasked in
-`tasks-25a0-15f7.md` (`ready`, 0/10). They stay listed in `DEFECTS.md`
-until a `/ardd-defects` run after the fixes lands re-verifies them gone.
+All seven are now **fixed and merged** via
+`plan-25a0-2026-07-20-1822.md` / `tasks-25a0-15f7.md` (completed 10/10).
+`DEFECTS.md` still lists them until a fresh `/ardd-defects` run
+regenerates the snapshot — the file is a point-in-time record, not a live
+view, so a stale-looking entry there is expected until then.
 
 ## Feedback
 
@@ -394,12 +415,10 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-- `tasks-25a0-15f7.md` — plan `plan-25a0-2026-07-20-1822.md`, no bound
-  features (**ready**, 0/10). The only `ready` file, so the matrix is
-  silent — nothing to run it against. Internally sequenced: Phase 1
-  before Phase 2 (see the header note).
+_(empty — no `ready` tasks files. **All 22 tasks files in the project are
+`completed`.**)_
 
-Prior calibration point, still worth remembering: the last pair's
+Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
 parallel anyway, and the only file both touched was `App.test.ts`, a pure
 append. `shared-artifact` is a declared-overlap signal on artifact tags,
@@ -483,12 +502,16 @@ shared cluster, and the rules panel covers what changes a game's *shape*
 (laps, curated mode, timers) while rating stays out to avoid a second
 drifting copy.
 
-**Not yet pushed.** `main` is well ahead of `origin/main`. Pushing
-auto-deploys **beta** — the first deploy that will mount the volume and
-persist ratings.
+**Not yet pushed.** `main` is well ahead of `origin/main` — the defect
+fixes, the ci.yml guard removal, and the regenerated reports. Pushing
+auto-deploys **beta**; prod is already current as of the last promotion
+(the defect fixes are not on prod until the next `/ardd-plan`-free
+promote dispatch).
 
 Carried forward, none blocking:
-- All three renderable artifacts are `stale` on diagrams.
+- All three renderable artifacts are `stale` on diagrams — `datamodel`
+  and `infrastructure` gained real changes this pass (active-player
+  rotation, additive timer formula, the curation annotation).
 - No client-side `maxlength` on the phrase input; oversize content is
   caught only server-side (`entry-too-large`) and whether the client
   surfaces that gracefully is unverified.
@@ -496,15 +519,18 @@ Carried forward, none blocking:
   non-host caller`, intermittent connect timeout. Predates this
   session's work.
 
-**Recommended next step:** `/ardd-implement` — execute
-`tasks-25a0-15f7.md` (the defect-fix tasks, 0/10). Both planning
-decisions are already settled, so there is nothing left to decide before
-implementing; just respect the Phase 1 → Phase 2 ordering.
+**Recommended next step:** push `main` to origin — it carries the defect
+fixes and deploys them to beta for hands-on confirmation (especially the
+kicked-player and timer-extension changes, which automated tests cover
+but live play exercises differently). A production promote can follow
+once beta looks right.
 
-Then, in no particular order: `/ardd-research` for
-`curation-data-aggregation-pipe`'s sanitization boundary, and
+Then, in no particular order: `/ardd-defects` to re-verify the seven now
+drop out of the snapshot; `/ardd-research` for
+`curation-data-aggregation-pipe`'s sanitization boundary; and
 `/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
-diagrams whose shape actually changed.
+diagrams whose shape actually changed. The `handlers.ts:160` lap-default
+finding (see header) is a candidate `/ardd-feedback` note.
 
 One standing suggestion from the ArDD reinstall, not yet acted on: the
 README's ArDD badge tracks ArDD's *latest release* rather than the
