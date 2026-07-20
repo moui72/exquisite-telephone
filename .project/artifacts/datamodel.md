@@ -45,7 +45,7 @@ They are deliberately the only shapes here that outlive a process.
 | monochromeOnly | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `false`. When `true`, the drawing tool's color palette is hidden and all strokes render in the default ink color — see [[ui]] Writing/Drawing View. |
 | turnTimerMinutes | number \| null | Host-configurable, set before `status` leaves `lobby`; defaults `null` (no timer — the room waits indefinitely for the current round, per Normalization Rules). One of `15 \| 30 \| 60 \| 240 \| 720` when set. |
 | roundStartedAt | timestamp \| null | Epoch ms marking when the current round began; `null` while `status === 'lobby'`. Reset whenever the room-wide current round advances (see Normalization Rules). Only meaningful when `turnTimerMinutes` is set. |
-| timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); cleared whenever the round advances. |
+| timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); **added to** the base turn duration rather than replacing it, so a granted extension lengthens the turn. Cleared whenever the round advances. |
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
@@ -211,8 +211,13 @@ disliked this player's writing" serves no purpose the curator needs.
   testing). See [[ui]] Lobby View.
 - **Turn timer (optional).** When `Room.turnTimerMinutes` is set, each
   player still short of the current round has an individual deadline of
-  `Room.roundStartedAt + (Room.timerExtensions[playerId] ??
-  Room.turnTimerMinutes * 60000)`. A background process (see
+  `Room.roundStartedAt + Room.turnTimerMinutes * 60000 +
+  (Room.timerExtensions[playerId] ?? 0)` — the extension is **additive**,
+  lengthening the base turn rather than replacing it (a 30-minute timer
+  plus a 15-minute grant yields a 45-minute deadline). This corrects the
+  artifact to match a deliberate code change (see [[ui]]); the earlier
+  replacing form documented here was the drift, not the code. A
+  background process (see
   [[infrastructure]]) periodically checks in-progress rooms with a
   timer set: when every remaining player's deadline has passed and no
   `pendingTimeoutVote` is open, it opens one (`Room.pendingTimeoutVote`)

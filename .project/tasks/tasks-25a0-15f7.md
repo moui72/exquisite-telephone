@@ -20,7 +20,7 @@ status: in-progress
 ## Phase 3: Timer extensions become additive
 
 - [x] T006 Make the turn deadline additive in both `server/src/domain/timerSweep.ts` (`deadlineFor`, ~line 138: `roundStartedAt + (extensions ?? FULL_TURN_MS)`) and `client/src/lib/views/WritingDrawing.svelte` (the `deadline` derivation, ~lines 73-77): compute `roundStartedAt + base + (timerExtensions[id] ?? 0)` so an extension adds to the base duration rather than replacing it. Do NOT change the accumulation site (`timerExtensions[id] = (existing ?? 0) + extensionMs`) — it is already correct. Test: granting an extension moves the deadline later; a 30-minute timer plus a 15-minute grant yields a 45-minute deadline (the current code inverts this to 15). [defect: e3de2e2a] [artifacts: datamodel]
-- [ ] T007 Correct `datamodel.md`'s `Room.timerExtensions` field description and its stated deadline formula from the replacing form to the additive form, matching the code after T006 and `ui.md`. This is an artifact catching up to a deliberate code change, not new drift — note that in the edit. [defect: e3de2e2a] [artifacts: datamodel]
+- [x] T007 Correct `datamodel.md`'s `Room.timerExtensions` field description and its stated deadline formula from the replacing form to the additive form, matching the code after T006 and `ui.md`. This is an artifact catching up to a deliberate code change, not new drift — note that in the edit. [defect: e3de2e2a] [artifacts: datamodel]
 
 ## Phase 4: Remaining UI drift
 
