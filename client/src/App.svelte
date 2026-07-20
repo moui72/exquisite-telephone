@@ -74,6 +74,7 @@
   roomCode={state.room?.id ?? null}
   onShowRules={() => (showRulesOverview = true)}
   onShowModeration={isHost ? () => (showModeration = true) : null}
+  nonContinuable={state.room?.nonContinuable ?? false}
 />
 
 {#if showRulesOverview}

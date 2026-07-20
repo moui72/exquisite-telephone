@@ -197,6 +197,21 @@ describe('salon footer rules overview (plan-in-game-rules-and-guidance)', () => 
       cleanup();
     }
   });
+
+  it('shows the host the frozen-room signal on the gavel when the room is nonContinuable', () => {
+    const session = makeFakeSession({
+      room: { ...makeRoom('writing'), nonContinuable: true },
+      player: ada,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(App, { props: { session } });
+
+    // App.svelte derives the value and passes it down; the footer stays
+    // presentational ([[constitution]] Principle VI).
+    expect(screen.getByRole('button', { name: /cannot continue/i })).toBeInTheDocument();
+  });
 });
 
 describe('theme regression guard (plan-1449)', () => {

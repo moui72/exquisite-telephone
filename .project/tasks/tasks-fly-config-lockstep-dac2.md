@@ -24,7 +24,7 @@ status: in-progress
   `client/src/lib/views/WritingDrawing.svelte:161-166` — that stays as-is; see
   [[ui]] Moderation Panel.
 
-- [ ] T003 [artifacts: ui] Wire the prop in `client/src/lib/App.svelte`, which
+- [x] T003 [artifacts: ui] Wire the prop in `client/src/lib/App.svelte`, which
   already derives `isHost` around L76 where it passes
   `onShowModeration`: pass `room?.nonContinuable ?? false` down to
   `SalonFooter`. Keeping the derivation in `App.svelte` rather than reading the
