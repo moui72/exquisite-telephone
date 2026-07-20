@@ -25,8 +25,9 @@ a short-lived session store supports reconnect-tolerance. This matches
 Principle I ([[constitution]]) — no premature scaling infrastructure
 before it's needed.
 
-One narrow exception writes to disk: the **Curation Store** below, a
-single JSON file holding prompt ratings and candidate phrases. It is not
+One narrow exception writes to disk: the **Curation Store** below, an
+append-only directory of per-event JSON files recording prompt ratings
+and candidate phrases. It is not
 game state and no running game reads it, so the "all game state is
 in-memory" property above is unchanged.
 
@@ -127,10 +128,24 @@ from real play. The Curation Store is where that evidence accumulates:
 prompt ratings and candidate phrases (see [[datamodel]] Persisted
 Entities), written when a player rates the opening phrase they drew.
 
-**Shape.** A single JSON file — `{ ratings: { [phrase]: { up, down } },
-candidates: [{ phrase, votes, firstLoggedAt }] }` — read once at startup
-into memory, mutated in place, and flushed back on a debounce. Reads
-never touch disk after boot.
+**Shape.** An append-only event log: a directory of small JSON files,
+**one file per rating event**, each written exactly once and never
+mutated afterwards. An event carries the phrase, the rating value, its
+origin (bank phrase vs player-written), and a timestamp — see
+[[datamodel]] Persisted Entities. The `PromptRating` / `CandidatePhrase`
+shapes a curator reads are no longer the on-disk shape; they are a
+**derived aggregate view**, produced by folding the event log at read
+time (see [[datamodel]]).
+
+**Filenames are server-controlled.** A file name is composed ONLY of a
+timestamp and a random suffix — no player-influenced component, not even
+a sanitized slug of the phrase. Player text belongs in the file's
+*contents*, where it is inert, never in its path. A slug is the tempting
+shape and the wrong one: it puts attacker-influenced bytes into a
+filesystem path for no benefit the timestamp does not already provide.
+The write path additionally refuses any resolved target outside the
+configured curation directory, so a future change to the naming scheme
+cannot silently reintroduce traversal.
 
 **Why a file and not a database.** The whole dataset is a few hundred
 counters and a string list, read by one human every few weeks when
@@ -141,22 +156,40 @@ network hop and credentials to an app that currently has neither
 Emitting ratings as structured log events (Principle IX) was considered
 and rejected: Fly's log retention is short and there is no aggregation,
 so mining them would need a log drain — more infrastructure, not less.
-Revisit if the app ever runs more than one process, at which point
-concurrent writers make a file the wrong shape.
 
-**Durability.** Writes are atomic — serialize to a temp file in the same
-directory, `fsync`, then `rename` over the target — so a crash mid-write
-leaves the previous good file rather than a truncated one. Flushes are
-debounced (a few seconds) rather than synchronous per rating: losing the
-last few seconds of ratings to a hard kill is acceptable, and this is
-explicitly not data a player can miss.
+The "revisit if the app ever runs more than one process" caveat that
+stood here is **resolved, not deferred**: append-only removes the
+question. Distinct writers never touch the same file, because each event
+gets its own uniquely-named file, so concurrent writers are not a
+correctness problem for this store. (They remain one for in-memory game
+state, and the Fly volume still pins the app to one machine — both
+stated independently under Deployment.)
 
-**Location.** Read from `CURATION_DATA_PATH`, defaulting to a
-gitignored local path for dev. In deployment this points inside a Fly
-volume mount (see Deployment), which is what makes it survive the
-process restart a deploy causes. A missing or unparseable file at
-startup is not fatal — the server logs it and starts with an empty
-store, since a lost curation file must never keep the game from booting.
+**Durability.** There is no atomic rewrite and no debounce, because
+there is nothing to rewrite and nothing to buffer. Each event is created
+once, with an exclusive create, and never read-modify-written. That
+retires the whole temp-file/`fsync`/`rename` dance along with the
+debounce timer and its flush-on-shutdown hook: they existed only to make
+a whole-file rewrite survivable.
+
+Crash safety degrades to the mildest possible failure — **at worst one
+partial trailing file**, the event that was mid-write when the process
+died. The read-time fold skips a corrupt or truncated file with a logged
+warning rather than failing the whole aggregate, so a single bad trailing
+file costs exactly one rating and nothing else. This is telemetry: a lost
+rating is not data any player can miss.
+
+**Location.** `CURATION_DATA_PATH` remains the single configured knob,
+defaulting to a gitignored local path for dev. The event directory is
+**derived from it** — the `curation-events/` directory beside it — so
+the deployment surface stays one environment variable per channel and
+both Fly configs keep the value they already declare. In deployment that
+resolves inside a Fly volume mount (see Deployment), which is what makes
+the events survive the process restart a deploy causes. A missing
+directory is the normal first-run case, not a failure: it is created on
+first write, and a read that finds nothing yields an empty aggregate.
+Nothing about curation storage is ever fatal to boot — a lost curation
+file must never keep the game from starting.
 
 ## Export Pipeline (PNG)
 
@@ -171,9 +204,45 @@ explicitly deferred past v1; PNG only for now.
 
 ## Deployment (Fly.io)
 
-The app deploys as a single Fly.io app running one process/container —
-matching Principle I (no premature scaling): one Dockerfile, one
-`fly.toml`. The Docker build is multi-stage: install and build
+**There are TWO Fly apps, not one.** Read this section before touching
+anything deployment-shaped: a change applied to only one channel is the
+single most repeated mistake in this repo's history.
+
+| | Production | Beta |
+|---|---|---|
+| Fly app | `exquisite-telephone` | `exquisite-telephone-beta` |
+| Config | `fly.toml` | `fly.staging.toml` |
+| CI token secret | `FLY_API_TOKEN_PROD` | `FLY_API_TOKEN_BETA` |
+| CI job (`.github/workflows/ci.yml`) | `deploy-prod` | `deploy-beta` |
+| Concurrency group | `deploy-prod` | `deploy-beta` |
+| Deploys from branch | `release` | `main` |
+| Volume | `vol_r681m3no1nq5ex14` | `vol_vp2l1gyjj3lw9me4` |
+| Custom domain | `ex-tel.ty-pe.com` | `beta-ex-tel.ty-pe.com` |
+
+Each channel has its own app, its own config, its own API token, and its
+own volume. Nothing is shared between them but the Dockerfile and the
+source tree.
+
+**Channel semantics.** Every push to `main` auto-deploys **beta** — so
+anything merged is live on beta within minutes, including any config
+mistake. Production deploys ONLY from the `release` branch, and `release`
+only ever receives a **fast-forward of `main`** — it is never developed
+on directly and never diverges. That is precisely why
+`.github/workflows/ci.yml` skips its `checks` job when
+`github.ref == 'refs/heads/release'`: the identical commits already
+passed those checks on their push to `main`, so re-running them would
+test the same tree twice. (Promoting `release` is currently a manual
+fast-forward; automating it is backlogged as `release-promotion-workflow`
+and is deliberately not built here.)
+
+**Principle I is still satisfied.** The earlier "single Fly.io app"
+phrasing in this section was simply wrong, not a scaling claim that has
+since lapsed: each app runs exactly **one machine, one process**, which
+is what Principle I (no premature scaling) actually asks for. Two
+channels of one machine each is not horizontal scaling — it is a staging
+environment.
+
+The Docker build is multi-stage: install and build
 `shared`/`server`/`client` via pnpm workspaces, then a slim runtime
 image running only the compiled server (which serves the client's
 static build, per the Overview above). The server reads its listen port
@@ -182,37 +251,54 @@ from the `PORT` environment variable (already supported by
 runtime.
 
 A Fly **volume** is mounted for the Curation Store (see above) — the
-only persistent disk this app uses. `CURATION_DATA_PATH` points at a
-file inside that mount (`/data/curation.json`). The volume is what
-carries curation data across the process restart every deploy causes;
-without it the file would be recreated empty on each release. Game state
-is deliberately *not* moved onto it.
+only persistent disk this app uses, and **one per channel**, never
+shared. `CURATION_DATA_PATH` (`/data/curation.json`) resolves inside
+that mount. The volume is what carries curation data across the process
+restart every deploy causes; without it, curation data would be
+recreated empty on each release — which is exactly what beta did
+silently until `fly.staging.toml` gained its `[mounts]` block and
+`CURATION_DATA_PATH`. Game state is deliberately *not* moved onto it.
 
-### One-time volume creation (required before the first deploy)
+Because the volume pins each app to the one machine that mounts it,
+`fly scale count 1` matters (see the note in `fly.toml`): a second
+machine would neither see that volume nor share its files. This is
+independent of, and additional to, the in-memory-room-state reason for
+running one machine.
 
-`fly deploy` does **not** create the volume for you. A deploy whose
-`fly.toml` declares a `[mounts]` entry with no matching volume fails at
-machine start, not at build time — so it looks like a healthy deploy
-right up until nothing comes back up. Create it once, by hand:
+### One-time MANUAL CLI steps — per app, not per repo
+
+These are **manual**, run by a human with `flyctl`, and are *not*
+performed by CI or by `fly deploy`. They are listed explicitly because
+they are precisely what gets forgotten when a second channel is added:
+CI deploys look healthy, and the omission surfaces later as a machine
+that will not start, or as data that silently goes nowhere.
+
+Run **once per app** — `exquisite-telephone` AND
+`exquisite-telephone-beta`:
 
 ```
-fly status                       # read the machine's ACTUAL region
-fly volumes create curation_data --size 1 --region <that region>
+fly status -a <app>                       # read the machine's ACTUAL region
+fly volumes create curation_data --app <app> --region <that region> --size 1
+fly scale count 1 -a <app>                # after the first deploy
 ```
 
-**The region must match the machine's**, not necessarily
-`primary_region` in `fly.toml`. A volume in a different region is
-invisible to the machine, which then fails to start with no obviously
-storage-related error. Always read the running machine's region from
-`fly status` rather than assuming it followed `primary_region`.
+**The volume region must match the RUNNING MACHINE's region**, read from
+`fly status`, and not necessarily `primary_region` in the config. A
+volume in a different region is invisible to the machine, which then
+fails to start with **no obviously storage-related error** — the deploy
+reports success right up until nothing comes back up.
 
-1GB is Fly's minimum volume size — far beyond what a few hundred
-counters need, but there is no smaller option and no reason to pick a
+1GB is Fly's minimum volume size — far beyond what a few hundred rating
+events need, but there is no smaller option and no reason to pick a
 larger one.
 
-Because the volume pins the app to the one machine that mounts it, this
-is also why `fly scale count 1` matters (see the note in `fly.toml`): a
-second machine would neither see this volume nor share the file.
+**Current state: both volumes already exist and are verified.** No
+`fly volumes create` is outstanding for either channel.
+
+| App | Volume ID | Size | Region | Machine region |
+|---|---|---|---|---|
+| `exquisite-telephone` | `vol_r681m3no1nq5ex14` | 1GB | `iad` | `iad` — matches |
+| `exquisite-telephone-beta` | `vol_vp2l1gyjj3lw9me4` | 1GB | `iad` | `iad` — matches |
 
 ## Production Annotations
 
@@ -224,12 +310,6 @@ second machine would neither see this volume nor share the file.
   in-progress and completed-but-unsaved games — in production, finished
   books worth preserving would be written to a real datastore before
   the room is torn down.
-- **Curation store is single-writer and volume-bound**: The JSON file
-  assumes exactly one process writing it. The volume also pins the app
-  to the single machine that mounts it — already true of this app for
-  in-memory-state reasons, but now enforced by storage as well. Running
-  a second instance would both corrupt the file (last-write-wins over
-  whole-file rewrites) and only see its own volume.
 - **No zero-downtime deploys**: A Fly deploy restarts the single
   process, dropping all in-progress in-memory games — in production,
   this would need either a durable store to resume from (see above) or

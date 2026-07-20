@@ -14,6 +14,9 @@ import {
   computeNextEntries,
   computeNextEntry,
   CURATED_PHRASE_BANK,
+  entryContentBytes,
+  MAX_DRAWING_ENTRY_BYTES,
+  MAX_TEXT_ENTRY_BYTES,
   type Player,
   type PromptRatingValue,
   type Room,
@@ -1669,11 +1672,11 @@ describe('onSubmitEntry prompt rating', () => {
   function fakeCurationStore() {
     const calls: Array<[string, string, boolean]> = [];
     const store = {
-      snapshot: () => ({ ratings: {}, candidates: [] }),
       recordRating: (phrase: string, value: PromptRatingValue, isBank: boolean) => {
         calls.push([phrase, value, isBank]);
       },
-      flush: async () => {},
+      aggregate: async () => ({ ratings: {}, candidates: [] }),
+      settled: async () => {},
     } as CurationStore;
     return { store, calls };
   }
@@ -1763,7 +1766,7 @@ describe('onSubmitEntry prompt rating', () => {
     expect(calls[0]![0]).not.toBe(STROKE_DATA);
   });
 
-  it('routes a player-written opening phrase to the candidate pool', () => {
+  it('routes a player-written opening phrase to the candidate pool', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
     const { store, room, adasBook, drawerId } = roomAtPositionOne(written);
     const { store: curation, calls } = fakeCurationStore();
@@ -1923,7 +1926,11 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  function submitRatedDrawing(openingContent: string, rating: PromptRatingValue) {
+  function submitRatedDrawing(
+    openingContent: string,
+    rating: PromptRatingValue,
+    options: { maxEvents?: number } = {},
+  ) {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     joinRoom(store, { roomId: room.id, playerName: 'Grace' });
@@ -1954,7 +1961,8 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
 
     const adasBook = room.books.find((b) => b.originAuthorId === players[0].id)!;
     const drawer = computeNextEntry(room, adasBook)!;
-    const curation = createCurationStore(join(dir, 'c.json'), logger, { debounceMs: 60_000 });
+    const curation = createCurationStore(join(dir, 'c.json'), logger, options);
+    const ack = vi.fn();
 
     onSubmitEntry(
       makeFakeSocket(),
@@ -1967,56 +1975,217 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
         content: STROKE_DATA,
         rating,
       },
-      vi.fn(),
+      ack,
       curation,
     );
 
-    return curation;
+    return { curation, ack };
   }
 
-  it('routes a curated-bank opening phrase to the bank tally', () => {
+  it('routes a curated-bank opening phrase to the bank tally', async () => {
     const phrase = CURATED_PHRASE_BANK[0]!;
 
-    const curation = submitRatedDrawing(phrase, 'up');
+    const { curation } = submitRatedDrawing(phrase, 'up');
 
-    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 1, down: 0 });
-    expect(curation.snapshot().candidates).toEqual([]);
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.ratings[phrase]).toEqual({ phrase, up: 1, down: 0 });
+    expect(aggregate.candidates).toEqual([]);
   });
 
-  it('routes a player-written opening phrase to the candidate pool', () => {
+  it('routes a player-written opening phrase to the candidate pool', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
 
-    const curation = submitRatedDrawing(written, 'up');
+    const { curation } = submitRatedDrawing(written, 'up');
 
-    expect(curation.snapshot().candidates).toEqual([
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.candidates).toEqual([
       { phrase: written, votes: 1, firstLoggedAt: expect.any(Number) },
     ]);
-    expect(curation.snapshot().ratings).toEqual({});
+    expect(aggregate.ratings).toEqual({});
   });
 
-  it('records a thumbs-down on a bank phrase against the bank tally', () => {
+  it('records a thumbs-down on a bank phrase against the bank tally', async () => {
     const phrase = CURATED_PHRASE_BANK[1]!;
 
-    const curation = submitRatedDrawing(phrase, 'down');
+    const { curation } = submitRatedDrawing(phrase, 'down');
 
-    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 0, down: 1 });
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.ratings[phrase]).toEqual({ phrase, up: 0, down: 1 });
   });
 
-  it('records a thumbs-down on a player-written phrase NOWHERE', () => {
+  it('records a thumbs-down on a player-written phrase NOWHERE', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
 
-    const curation = submitRatedDrawing(written, 'down');
+    const { curation } = submitRatedDrawing(written, 'down');
 
-    expect(curation.snapshot()).toEqual({ ratings: {}, candidates: [] });
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate).toEqual({ ratings: {}, candidates: [] });
   });
 
-  it('never tallies stroke data — nothing in the store resembles the drawing payload', () => {
+  it('a turn still submits successfully with the curation store at its limit', async () => {
+    // T016 / plan Open Question 2 -- curation is TELEMETRY. Reaching the
+    // accumulation bound must degrade curation and nothing else; it must
+    // never block, fail, or slow a game turn. Without this test the bound
+    // could be made blocking and every other curation test would still pass.
     const phrase = CURATED_PHRASE_BANK[0]!;
 
-    const curation = submitRatedDrawing(phrase, 'up');
+    // maxEvents: 0 -- the store is full before it has written anything.
+    const { curation, ack } = submitRatedDrawing(phrase, 'up', { maxEvents: 0 });
 
-    const serialized = JSON.stringify(curation.snapshot());
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    // The rating was silently discarded...
+    expect(aggregate).toEqual({ ratings: {}, candidates: [] });
+    // ...but the turn itself landed: the drawing is in the book.
+    expect(ack).toHaveBeenCalledWith(
+      expect.objectContaining({ entry: expect.objectContaining({ content: STROKE_DATA }) }),
+    );
+  });
+
+  it('never tallies stroke data — nothing in the store resembles the drawing payload', async () => {
+    const phrase = CURATED_PHRASE_BANK[0]!;
+
+    const { curation } = submitRatedDrawing(phrase, 'up');
+
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    const serialized = JSON.stringify(aggregate);
     expect(serialized).not.toContain('ops');
     expect(serialized).not.toContain('stroke');
+  });
+});
+
+describe('onSubmitEntry content length cap (datamodel.md Normalization Rules)', () => {
+  /**
+   * Builds a drawing payload of roughly the shape DrawingCanvas.svelte
+   * actually produces: full-precision float coordinates, ~47 bytes per
+   * point, no rounding or simplification. See shared/src/entryLimits.ts
+   * for the measurements these tests are calibrated against.
+   */
+  function drawingPayload(strokes: number, pointsPerStroke: number, fills: number): string {
+    const scale = 800 / 393.3333333333333;
+    const pt = (i: number, j: number) => ({
+      x: (120 + Math.sin(i * 0.3 + j) * 90 - 12.5) * scale,
+      y: (200 + Math.cos(i * 0.2 + j) * 70 - 63.75) * scale,
+    });
+    const ops: unknown[] = [];
+    for (let s = 0; s < strokes; s += 1) {
+      const points = [];
+      for (let p = 0; p < pointsPerStroke; p += 1) points.push(pt(p, s));
+      ops.push({ type: 'stroke', points, color: '#3355aa', width: 3 });
+    }
+    for (let f = 0; f < fills; f += 1) ops.push({ type: 'fill', point: pt(f, 1), color: '#ffee00' });
+    return JSON.stringify(ops);
+  }
+
+  /** A room mid-game whose next expected entry is a drawing at position 1. */
+  function roomAwaitingDrawing() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const [adaId, graceId] = room.players.map((p) => p.id);
+    const adaBook = room.books.find((b) => b.originAuthorId === adaId)!;
+    adaBook.entries.push({
+      id: 'e0',
+      bookId: adaBook.id,
+      authorId: adaId!,
+      position: 0,
+      type: 'text',
+      content: 'a phrase',
+    });
+    // Both books must sit at the same round, or the submission is
+    // refused as round-not-open before the size check is ever reached.
+    const graceBook = room.books.find((b) => b.originAuthorId === graceId)!;
+    graceBook.entries.push({
+      id: 'g0',
+      bookId: graceBook.id,
+      authorId: graceId!,
+      position: 0,
+      type: 'text',
+      content: 'another phrase',
+    });
+    return { store, room, adaBook, graceId: graceId! };
+  }
+
+  it('rejects an oversize TEXT entry rather than truncating it', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const adaId = room.players[0]!.id;
+    const adaBook = room.books[0]!;
+    const ack = vi.fn();
+
+    const oversize = 'x'.repeat(MAX_TEXT_ENTRY_BYTES + 1);
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: oversize },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'entry-too-large' });
+    // Never truncated, and never reaches in-memory game state.
+    expect(adaBook.entries).toHaveLength(0);
+  });
+
+  it('rejects an oversize DRAWING payload rather than truncating it', () => {
+    const { store, room, adaBook, graceId } = roomAwaitingDrawing();
+    const ack = vi.fn();
+
+    // ~3.6 MB: the "extreme" row in entryLimits.ts, deliberately above the cap.
+    const oversize = drawingPayload(200, 400, 20);
+    expect(entryContentBytes(oversize)).toBeGreaterThan(MAX_DRAWING_ENTRY_BYTES);
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: graceId, bookId: adaBook.id, content: oversize },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'entry-too-large' });
+    expect(adaBook.entries).toHaveLength(1);
+  });
+
+  it('ACCEPTS a realistic very-dense drawing near the limit', () => {
+    // The regression guard that matters most (plan Complexity Tracking):
+    // without it, a cap set far too low still passes both rejection tests
+    // above while silently breaking real gameplay. This is the measured
+    // "very dense" payload -- 120 strokes, 30,000 points, ~1.4 MB -- an
+    // already-elaborate drawing that MUST go through.
+    const { store, room, adaBook, graceId } = roomAwaitingDrawing();
+    const ack = vi.fn();
+
+    const dense = drawingPayload(120, 250, 15);
+    const bytes = entryContentBytes(dense);
+    expect(bytes).toBeGreaterThan(1_000_000);
+    expect(bytes).toBeLessThan(MAX_DRAWING_ENTRY_BYTES);
+
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: graceId, bookId: adaBook.id, content: dense },
+      ack,
+    );
+
+    expect(ack).not.toHaveBeenCalledWith({ error: 'entry-too-large' });
+    expect(adaBook.entries).toHaveLength(2);
+    expect(adaBook.entries[1]!.content).toBe(dense);
   });
 });

@@ -1,12 +1,24 @@
-import { readFileSync } from 'node:fs';
-import { open, rename, unlink } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { mkdir, open, readdir, readFile } from 'node:fs/promises';
+import { dirname, join, resolve, sep } from 'node:path';
 import type { CandidatePhrase, PromptRating, PromptRatingValue } from '@exquisite-telephone/shared';
 import type { Logger } from '../observability/logger.js';
 
 /**
- * The on-disk shape of the curation file, mirrored exactly by the
- * store's in-memory state so there is no mapping layer between them.
+ * The persisted record (datamodel.md Persisted Entities — RatingEvent):
+ * one per rating cast, written to its own file exactly once and never
+ * mutated. Carries no rater or author attribution, by design.
+ */
+export interface RatingEvent {
+  phrase: string;
+  value: PromptRatingValue;
+  origin: 'bank' | 'player-written';
+  ratedAt: number;
+}
+
+/**
+ * The DERIVED aggregate view a curator reads — no longer the on-disk
+ * shape. Produced by folding the event log at read time.
  */
 export interface CurationData {
   /** Keyed by verbatim bank phrase. */
@@ -15,199 +27,318 @@ export interface CurationData {
 }
 
 export interface CurationStore {
-  /** The current in-memory state — the same shape written to disk. */
-  snapshot(): CurationData;
+  /**
+   * Appends one rating event. Fire-and-forget by design: a game turn
+   * calls this and must never wait on, or fail because of, disk I/O.
+   */
   recordRating(phrase: string, value: PromptRatingValue, isBankPhrase: boolean): void;
-  /** Write immediately, bypassing the debounce timer. */
-  flush(): Promise<void>;
-}
-
-function emptyData(): CurationData {
-  return { ratings: {}, candidates: [] };
-}
-
-/**
- * Reads the curation file, degrading to an empty store on anything
- * unexpected. Deliberately total: a missing, unreadable, corrupt, or
- * structurally wrong file all yield an empty store rather than a throw,
- * because the game does not depend on this data and refusing to boot
- * over it would trade a curation gap for an outage (constitution
- * Principle IX — the failure is logged, not swallowed silently).
- */
-function loadData(path: string, logger: Logger): CurationData {
-  let raw: string;
-  try {
-    raw = readFileSync(path, 'utf8');
-  } catch (error) {
-    const code = (error as NodeJS.ErrnoException).code;
-    if (code !== 'ENOENT') {
-      logger.log({
-        event: 'curation_store_load',
-        outcome: 'failure',
-        path,
-        reason: 'unreadable',
-        code,
-      });
-    }
-    // A missing file is the normal first-run case, not a failure.
-    return emptyData();
-  }
-
-  try {
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== 'object') {
-      throw new Error('curation file is not an object');
-    }
-    const { ratings, candidates } = parsed as Partial<CurationData>;
-    return {
-      ratings: ratings && typeof ratings === 'object' ? { ...ratings } : {},
-      candidates: Array.isArray(candidates) ? [...candidates] : [],
-    };
-  } catch (error) {
-    logger.log({
-      event: 'curation_store_load',
-      outcome: 'failure',
-      path,
-      reason: 'unparseable',
-      message: error instanceof Error ? error.message : String(error),
-    });
-    return emptyData();
-  }
+  /** Folds the event log into the aggregate view. On demand only — see below. */
+  aggregate(): Promise<CurationData>;
+  /** Resolves once every write issued so far has settled. Test seam only. */
+  settled(): Promise<void>;
 }
 
 /**
- * A few seconds: long enough that a burst of ratings coalesces into one
- * write, short enough that an unclean crash loses at most a handful of
- * counter increments — which is an acceptable loss for curation
- * telemetry, and why this is debounced rather than written synchronously
- * on every rating.
+ * The event directory, derived from the single configured
+ * `CURATION_DATA_PATH` knob (infrastructure.md Curation Store —
+ * Location) so the deployment surface stays one env var per channel and
+ * both Fly configs keep the value they already declare.
  */
-export const DEFAULT_CURATION_DEBOUNCE_MS = 2_000;
+export function curationEventsDirFor(dataPath: string): string {
+  return join(dirname(dataPath), 'curation-events');
+}
+
+/**
+ * OPEN QUESTION 2 — what bounds event accumulation: count, bytes, or age?
+ *
+ * RESOLVED: COUNT.
+ *
+ * Bytes bound the actual risk, but `Entry.content` is ALREADY byte-bounded
+ * at the submission boundary (shared/src/entryLimits.ts,
+ * MAX_TEXT_ENTRY_BYTES = 610), so every event file has a hard worst-case
+ * size of ~800 bytes: a 610-byte phrase plus fixed metadata. That makes a
+ * count bound a byte bound too, without a second accounting mechanism —
+ * so count is chosen because it is simplest AND sufficient, not merely
+ * simplest. Age was rejected: it would silently delete a curator's
+ * evidence on a schedule nobody is watching, which is worse than
+ * declining to add more.
+ *
+ * The number: the Fly volume is 1GB. Budgeting 5% of it to curation
+ * (50 MiB = 52,428,800 bytes) at the ~800-byte worst case gives
+ * 52,428,800 / 800 = 65,536 events. The power of two is a coincidence of
+ * the arithmetic, not the reason for the choice.
+ */
+export const MAX_CURATION_EVENTS = 65_536;
+
+/**
+ * T011 — the file name is composed ONLY of server-controlled values: the
+ * timestamp and a random UUID. `phrase` is accepted so the signature
+ * documents that the phrase is DELIBERATELY IGNORED here, and so a test
+ * can assert that no part of the name derives from it.
+ *
+ * A sanitized slug of the phrase is the tempting shape and the wrong one:
+ * it puts attacker-influenced bytes into a filesystem path for no benefit
+ * the timestamp does not already provide. Player text belongs in the
+ * file's contents, where it is inert.
+ *
+ * `randomUUID` comes from `node:crypto` — no new dependency.
+ */
+export function generateEventFilename(timestamp: number, phrase: string): string {
+  void phrase; // Intentionally unused. See above; do not "improve" this.
+  return `${timestamp}-${randomUUID()}.json`;
+}
+
+/**
+ * T012 — refuses any target that resolves outside `eventsDir`.
+ *
+ * This is REDUNDANT against `generateEventFilename` BY DESIGN (plan
+ * Complexity Tracking): the generated names are safe today, and this
+ * guard is what stops a FUTURE change to the naming scheme from silently
+ * reintroducing path traversal. Do not remove it as duplication.
+ */
+export function resolveEventPath(eventsDir: string, filename: string): string {
+  // Whitelist the shape a generated name has: one flat segment of
+  // timestamp, hex, hyphens, ending in `.json`. A blacklist would be the
+  // weaker choice here -- note that `..\..\x`, `%2e%2e/x` and `....//x`
+  // do NOT escape via `resolve()` on POSIX (they are merely odd literal
+  // names), so a resolve-only check would silently ACCEPT them and let
+  // encoded or Windows-shaped traversal land as real files. Refusing
+  // anything that is not a plain generated name closes that off on every
+  // platform.
+  if (!/^[0-9]+-[0-9a-fA-F-]+\.json$/.test(filename)) {
+    throw new Error(`curation event filename is not a generated name: ${filename}`);
+  }
+
+  const base = resolve(eventsDir);
+  const target = resolve(base, filename);
+  // Belt and braces: even a name that passed the pattern above must land
+  // inside the directory. This is the guard that survives a future change
+  // to the naming scheme (plan Complexity Tracking).
+  if (target === base || !target.startsWith(base + sep)) {
+    throw new Error(`curation event path escapes its directory: ${filename}`);
+  }
+  return target;
+}
+
+/**
+ * The read-time fold: events in, aggregate view out. Pure — it does no
+ * I/O, so the aggregation semantics are testable without a filesystem.
+ */
+export function aggregateEvents(events: readonly RatingEvent[]): CurationData {
+  const ratings: Record<string, PromptRating> = {};
+  const candidates: CandidatePhrase[] = [];
+
+  for (const event of events) {
+    if (event.origin === 'bank') {
+      const existing = ratings[event.phrase] ?? { phrase: event.phrase, up: 0, down: 0 };
+      ratings[event.phrase] = { ...existing, [event.value]: existing[event.value] + 1 };
+      continue;
+    }
+
+    // Player-written thumbs-down is never written in the first place
+    // (see recordRating); this is belt-and-braces for a hand-placed file.
+    if (event.value === 'down') continue;
+
+    // Upsert by EXACT text -- never normalized or lowercased, because the
+    // curator wants to see exactly what was typed (datamodel.md
+    // CandidatePhrase). Near-miss wordings stay separate, deliberately.
+    const candidate = candidates.find((c) => c.phrase === event.phrase);
+    if (candidate) {
+      candidate.votes += 1;
+      // Events fold in name order, which is timestamp order, but a clock
+      // skew or a hand-placed file must not move this backwards.
+      candidate.firstLoggedAt = Math.min(candidate.firstLoggedAt, event.ratedAt);
+      continue;
+    }
+    candidates.push({ phrase: event.phrase, votes: 1, firstLoggedAt: event.ratedAt });
+  }
+
+  return { ratings, candidates };
+}
 
 export interface CurationStoreOptions {
-  /** Injectable clock, so `firstLoggedAt` is assertable in tests. */
+  /** Injectable clock, so `ratedAt` is assertable in tests. */
   now?: () => number;
-  debounceMs?: number;
-  /**
-   * Test seam fired after the temp file is written and fsynced but
-   * BEFORE the rename, so a crash in exactly that window can be
-   * simulated (by throwing) without crashing the process.
-   */
-  onBeforeRename?: (contents: string) => void;
+  /** Override the accumulation bound. Tests only; production uses the default. */
+  maxEvents?: number;
 }
 
 /**
  * The Curation Store (infrastructure.md Curation Store) — the one place
- * in this app that writes to disk, and the only state that survives a
- * restart. Game state deliberately stays in memory (datamodel.md
- * Overview); nothing here touches Room, Player, Book, or Entry.
+ * in this app that writes to disk. Append-only: one immutable file per
+ * rating event, created exactly once, never read-modify-written. Game
+ * state deliberately stays in memory (datamodel.md Overview); nothing
+ * here touches Room, Player, Book, or Entry.
  *
- * Loads synchronously at construction: the file is small, this runs once
- * at boot, and a synchronous read keeps the store usable the instant it
- * is constructed rather than forcing every caller through a ready-check.
+ * OPEN QUESTION 3 — does aggregation run at server boot or on demand?
+ *
+ * RESOLVED: ON DEMAND ONLY. Construction performs NO I/O whatsoever — it
+ * does not read the event directory, does not create it, and does not
+ * fold anything. Nothing in the running game reads the aggregate, so
+ * folding at boot would be pure startup cost for zero benefit, and it
+ * would grow linearly with accumulated events, making boot slower the
+ * longer the app runs. It also keeps the door open for the backlogged
+ * `curation-data-aggregation-pipe` to be the aggregate's only reader.
+ * The store is usable the instant it is constructed.
  */
 export function createCurationStore(
   path: string,
   logger: Logger,
   options: CurationStoreOptions = {},
 ): CurationStore {
-  const data = loadData(path, logger);
   const now = options.now ?? Date.now;
-  const debounceMs = options.debounceMs ?? DEFAULT_CURATION_DEBOUNCE_MS;
-  let timer: NodeJS.Timeout | undefined;
-  let inFlight: Promise<void> | undefined;
+  const maxEvents = options.maxEvents ?? MAX_CURATION_EVENTS;
+  const eventsDir = curationEventsDirFor(path);
 
   /**
-   * Atomic write: serialize to a temp file in the SAME directory (so the
-   * rename is within one filesystem and therefore atomic), fsync it so
-   * the bytes are durable before anything points at them, then rename
-   * over the target. A crash at any point before the rename leaves the
-   * previous good file untouched — a reader never sees a truncated file.
+   * Tracks in-flight writes so tests can await quiescence. Callers in the
+   * game path never await this -- that is the point of the
+   * fire-and-forget shape.
    */
-  async function writeAtomically(): Promise<void> {
-    const contents = JSON.stringify(data, null, 2);
-    const tempPath = join(dirname(path), `.curation-${process.pid}-${now()}.tmp`);
-    try {
-      const handle = await open(tempPath, 'w');
+  const pending = new Set<Promise<void>>();
+
+  /** Serializes appends so the accumulation bound cannot be raced. */
+  let queue: Promise<void> = Promise.resolve();
+
+  /**
+   * Live event count, seeded ONCE by counting the directory on first
+   * write (so a restart does not reset the bound) and incremented from
+   * there -- rather than a `readdir` on every single rating.
+   */
+  let count: number | undefined;
+  let reportedFull = false;
+
+  async function currentCount(): Promise<number> {
+    if (count === undefined) {
       try {
-        await handle.writeFile(contents, 'utf8');
-        await handle.sync();
-      } finally {
-        await handle.close();
+        count = (await readdir(eventsDir)).length;
+      } catch {
+        // Missing directory is the normal first-run case: zero events.
+        count = 0;
       }
-      options.onBeforeRename?.(contents);
-      await rename(tempPath, path);
-    } catch (error) {
-      // Never throw: losing curation telemetry must not take down a game
-      // in progress (Principle IX — logged, not swallowed silently).
-      logger.log({
-        event: 'curation_store_write',
-        outcome: 'failure',
-        path,
-        message: error instanceof Error ? error.message : String(error),
-      });
-      await unlink(tempPath).catch(() => {});
     }
+    return count;
   }
 
-  function scheduleWrite(): void {
-    if (timer) return;
-    timer = setTimeout(() => {
-      timer = undefined;
-      inFlight = writeAtomically();
-    }, debounceMs);
-  }
-
-  return {
-    snapshot() {
-      return data;
-    },
-    recordRating(phrase: string, value: PromptRatingValue, isBankPhrase: boolean) {
-      if (isBankPhrase) {
-        const existing = data.ratings[phrase] ?? { phrase, up: 0, down: 0 };
-        data.ratings[phrase] = {
-          ...existing,
-          [value]: existing[value] + 1,
-        };
-        scheduleWrite();
+  async function appendEvent(event: RatingEvent): Promise<void> {
+    try {
+      if ((await currentCount()) >= maxEvents) {
+        // PRODUCTION ANNOTATION -- Curation events are DROPPED at the
+        // limit, not rotated. Once MAX_CURATION_EVENTS files exist, every
+        // subsequent rating is discarded: the store stops accepting new
+        // evidence and never deletes old evidence, so what a curator has
+        // is the FIRST 65,536 ratings, not the most recent ones. This is
+        // a deliberate shortcut for an app whose curation data is read by
+        // one human every few weeks and has never yet run in production.
+        // In production this would need either eviction with a retention
+        // policy, or the backlogged `curation-data-aggregation-pipe`
+        // draining and truncating the log on a schedule. It is logged
+        // once per process so it is visible when it happens rather than
+        // discovered later as mysteriously absent data.
+        //
+        // FAIL SAFELY (plan Open Question 2): refuse the write, log once,
+        // return normally. The game turn that triggered this has already
+        // succeeded and must never learn that curation is full.
+        if (!reportedFull) {
+          reportedFull = true;
+          logger.log({
+            event: 'curation_store_full',
+            outcome: 'failure',
+            path: eventsDir,
+            reason: 'max-events-reached',
+            maxEvents,
+          });
+        }
         return;
       }
 
+      await mkdir(eventsDir, { recursive: true });
+      // The filename's timestamp exists for ORDERING only -- it is not
+      // the rating time. `event.ratedAt` is the rating time, and the fold
+      // reads that, never the name.
+      const target = resolveEventPath(eventsDir, generateEventFilename(now(), event.phrase));
+      // 'wx' -- EXCLUSIVE create. Never opens an existing file, so an
+      // event can never be overwritten or partially rewritten, and a name
+      // collision fails loudly here rather than silently losing a rating.
+      const handle = await open(target, 'wx');
+      try {
+        await handle.writeFile(JSON.stringify(event), 'utf8');
+      } finally {
+        await handle.close();
+      }
+      count = (count ?? 0) + 1;
+    } catch (error) {
+      // Never throw: losing curation telemetry must not take down a game
+      // in progress (Principle IX -- logged, not swallowed silently).
+      logger.log({
+        event: 'curation_store_write',
+        outcome: 'failure',
+        path: eventsDir,
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  return {
+    recordRating(phrase: string, value: PromptRatingValue, isBankPhrase: boolean) {
       // Player-written and thumbs-DOWN: record NOTHING, anywhere. Not a
       // zero-vote candidate, not a placeholder -- nothing. The phrase
       // isn't in the bank so there is no tally to decrement, and
       // "someone disliked this player's writing" serves no curator
       // purpose (datamodel.md CandidatePhrase -- there is no negative
-      // counterpart). Accepted and discarded, never rejected.
-      if (value === 'down') {
-        return;
+      // counterpart). Accepted and discarded, never rejected. Filtered
+      // HERE rather than during the fold, so it never reaches disk.
+      if (!isBankPhrase && value === 'down') return;
+
+      const event: RatingEvent = {
+        phrase,
+        value,
+        origin: isBankPhrase ? 'bank' : 'player-written',
+        ratedAt: now(),
+      };
+      // SERIALIZED, not fired in parallel. Each append must observe the
+      // count left by the previous one, or a burst of ratings all pass
+      // the limit check together and overshoot the bound. Chaining also
+      // keeps file names in the order events actually happened.
+      queue = queue.then(() => appendEvent(event));
+      const write = queue.finally(() => pending.delete(write));
+      pending.add(write);
+    },
+
+    async aggregate() {
+      let names: string[];
+      try {
+        names = (await readdir(eventsDir)).filter((n) => n.endsWith('.json'));
+      } catch {
+        // No directory yet means no events yet -- an empty aggregate, not
+        // a failure. Nothing about curation is ever fatal.
+        return aggregateEvents([]);
       }
 
-      // Player-written thumbs-up. Upsert by EXACT text -- never normalized or
-      // lowercased, because the curator wants to see exactly what was
-      // typed (datamodel.md CandidatePhrase). Near-miss wordings are
-      // therefore separate records, deliberately.
-      const candidate = data.candidates.find((c) => c.phrase === phrase);
-      if (candidate) {
-        candidate.votes += 1;
-        scheduleWrite();
-        return;
+      const events: RatingEvent[] = [];
+      // Name order is timestamp order, so the fold sees events roughly in
+      // the order they happened -- which `firstLoggedAt` then pins exactly.
+      for (const name of names.sort()) {
+        try {
+          const raw = await readFile(resolveEventPath(eventsDir, name), 'utf8');
+          events.push(JSON.parse(raw) as RatingEvent);
+        } catch (error) {
+          // The crash case append-only accepts BY CONSTRUCTION: at worst
+          // one partial trailing file, costing exactly one rating. Skip it
+          // with a warning rather than failing the whole fold.
+          logger.log({
+            event: 'curation_event_skipped',
+            outcome: 'failure',
+            path: name,
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
       }
-      data.candidates.push({ phrase, votes: 1, firstLoggedAt: now() });
-      scheduleWrite();
+      return aggregateEvents(events);
     },
-    async flush() {
-      // Cancel the pending debounce and write now, so the data lands
-      // once rather than again on a timer that outlives the process.
-      if (timer) {
-        clearTimeout(timer);
-        timer = undefined;
-        inFlight = writeAtomically();
-      }
-      // Await any write already running, so a caller that awaits flush()
-      // -- graceful shutdown -- can trust the bytes are on disk.
-      await inFlight;
-      inFlight = undefined;
+
+    async settled() {
+      await Promise.all([...pending]);
     },
   };
 }

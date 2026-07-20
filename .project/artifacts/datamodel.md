@@ -106,10 +106,40 @@ the room store entirely (see [[infrastructure]] Curation Store) — they
 are keyed by phrase text, not by `Room`/`Player`, and carry no link back
 to who rated what.
 
+**The persisted record is an event; the entities below are the derived
+view.** What is written to disk is one immutable `RatingEvent` per
+rating cast — appended, never mutated. `PromptRating` and
+`CandidatePhrase` are no longer the on-disk shape: they are the
+**aggregate view** produced by folding the event log at read time. They
+remain the shapes a curator reads and the shapes in the type system;
+they simply stop being what a writer touches.
+
+### RatingEvent
+
+The persisted record. One file per event ([[infrastructure]] Curation
+Store), written exactly once and never modified.
+
+| Field | Type | Notes |
+|-------|------|-------|
+| phrase | string | Verbatim rated text — a bank phrase or a player-written one. Never normalized or lowercased. |
+| value | enum | `up` \| `down` |
+| origin | enum | `bank` \| `player-written` — which of the two aggregates below this event folds into. Recorded at write time from server-side room state, never from a client claim. |
+| ratedAt | timestamp | Epoch ms the rating was cast. |
+
+**No attribution, unchanged.** A `RatingEvent` carries no `Player.id`,
+no `Room.id`, and no rater or author link — the same property the
+aggregate view has always had, now enforced at the record level where
+the data actually lands.
+
+Player-written **thumbs-down** remains recorded nowhere: it is discarded
+at write time rather than written and filtered during the fold, so it
+never reaches disk at all (see the note under `CandidatePhrase`).
+
 ### PromptRating
 
-One record per curated-bank phrase that has ever been rated. Absent
-until a phrase receives its first rating.
+Derived, not stored. One entry per curated-bank phrase that has ever
+been rated, produced by folding every `origin: 'bank'` event for that
+phrase. Absent until a phrase receives its first rating.
 
 | Field | Type | Notes |
 |-------|------|-------|
@@ -119,14 +149,16 @@ until a phrase receives its first rating.
 
 ### CandidatePhrase
 
-One record per distinct player-written opening phrase that has received
-at least one thumbs-up. This is the mining path for new bank entries.
+Derived, not stored. One entry per distinct player-written opening
+phrase that has received at least one thumbs-up, produced by folding
+every `origin: 'player-written'`, `value: 'up'` event and upserting by
+exact text. This is the mining path for new bank entries.
 
 | Field | Type | Notes |
 |-------|------|-------|
 | phrase | string | Verbatim player-written text; the record key. Never normalized or lowercased — the curator wants to see exactly what was typed. |
-| votes | integer | How many times this exact text has been thumbs-upped, across all games. Repeat occurrences increment rather than appending a duplicate record. |
-| firstLoggedAt | timestamp | Epoch ms of the first thumbs-up |
+| votes | integer | How many times this exact text has been thumbs-upped, across all games. Repeat occurrences increment the folded count rather than producing a duplicate entry. |
+| firstLoggedAt | timestamp | Epoch ms of the first thumbs-up — the EARLIEST `ratedAt` among that phrase's events, which the fold must preserve rather than overwrite as later events are applied. |
 
 There is no negative counterpart. A thumbs-down on a player-written
 phrase is not recorded anywhere: it has no destination (the phrase isn't
@@ -152,6 +184,25 @@ disliked this player's writing" serves no purpose the curator needs.
   Reversed 2026-07-14 (feedback F001,
   `.project/feedback/feedback-main-4af4.md`) from the original
   asynchronous-per-book design.
+- **`Entry.content` has a maximum length, enforced at the submission
+  boundary.** `content` was previously bounded only by a non-empty
+  check, which left both in-memory game state and the durable Curation
+  Store growable without limit by a client. The cap is enforced in the
+  entry-submission handler — **ahead of both the room store and the
+  curation store** — so a single check protects in-memory state as well
+  as anything that reaches disk; bounding it inside the store would
+  leave the room store just as exposed. There are **two limits, not
+  one**: text phrases and serialized drawing payloads differ by orders
+  of magnitude, and a single cap would either truncate real drawings or
+  fail to bound text meaningfully. Both are derived from measured
+  realistic payloads with margin above them, not chosen as round
+  numbers, and are recorded alongside their measurements at the
+  constants themselves. Oversize submissions are **rejected with a
+  clear failure response, never silently truncated** — a player must
+  never be told their turn succeeded while part of their drawing was
+  discarded. This bound is independent of, and does not replace, the
+  bound on curation event accumulation (see [[infrastructure]]): a
+  bounded phrase submitted many times is still unbounded disk.
 - **Minimum player count.** `Room.status` may not transition out of
   `lobby` (`start_game`) with fewer than 3 players unless the host
   explicitly overrides — no persisted override flag; it's a one-time
