@@ -10,7 +10,7 @@ status: in-progress
 
 - [x] T001 [artifacts: datamodel] Add a failing test in `shared/src/types.test.ts` asserting the shape of `PromptRating` (`{ phrase: string; up: number; down: number }`) and `CandidatePhrase` (`{ phrase: string; votes: number; firstLoggedAt: number }`), then add both interfaces plus `export type PromptRatingValue = 'up' | 'down'` to `shared/src/types.ts`. These are the only shapes in the app that outlive a process; document that in a doc comment on each.
 - [x] T002 [parallel] Add an optional `rating?: PromptRatingValue` field to the entry-submission payload type in `shared/src/types.ts` (the type `onSubmitEntry` accepts). Optional because rating is never required to submit a turn. Test-first: assert a submission payload without `rating` still typechecks and is accepted.
-- [ ] T003 [artifacts: infrastructure] [parallel] Correct `.project/artifacts/infrastructure.md`: remove `onRatePrompt` from the Realtime Sync handler list, since the rating rides `onSubmitEntry` (see the plan's Technical Approach). Documentation-only — no test requirement (constitution Principle IV: docs describe only what is true).
+- [x] T003 [artifacts: infrastructure] [parallel] Correct `.project/artifacts/infrastructure.md`: remove `onRatePrompt` from the Realtime Sync handler list, since the rating rides `onSubmitEntry` (see the plan's Technical Approach). Documentation-only — no test requirement (constitution Principle IV: docs describe only what is true).
 
 ## Phase 2: Curation store module
 

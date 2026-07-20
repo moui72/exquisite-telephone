@@ -43,10 +43,17 @@ event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
 `onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSetLapsPerBook`,
 `onSubmitEntry`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
-`onKickPlayer`, `onRestartGame`, `onRatePrompt`, `onRejoin`, `onDisconnect`), not a single large
+`onKickPlayer`, `onRestartGame`, `onRejoin`, `onDisconnect`), not a single large
 switch. Drawing entries sync only once, in full, via `onSubmitEntry`
 when a player finishes their turn — there is no per-stroke real-time
 sync handler; stroke data never leaves the client mid-turn.
+
+There is deliberately no `onRatePrompt` handler. A prompt rating rides
+along in the `onSubmitEntry` payload as an optional field, because it is
+a property of the submission — cast on the same screen, settled at the
+same moment. A separate event would need its own idempotency story for a
+double-tap and could arrive after the entry it describes; riding the
+submission makes the rating atomic with the thing it rates.
 
 `onEndGame` carries no `Room.status` guard (host-only is the only
 check) — it's reachable both from the Reveal page and from the
