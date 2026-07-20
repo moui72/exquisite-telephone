@@ -11,6 +11,30 @@ primary_region = "iad"
 
 [env]
   PORT = "3000"
+  # Inside the mounted volume below, so the Curation Store's file survives
+  # deploys. Everything else in this app is in-memory by design and is
+  # deliberately NOT written here (infrastructure.md Curation Store).
+  CURATION_DATA_PATH = "/data/curation.json"
+
+# The Curation Store's durable home — the only thing this app persists.
+#
+# IMPORTANT: `fly deploy` does NOT create this volume. It must be created
+# once, by hand, BEFORE the first deploy that references it, or the
+# machine fails to start:
+#
+#   fly volumes create curation_data --size 1
+#
+# and it MUST be created in the region the machine actually runs in. Read
+# that region from `fly status` rather than assuming it matches
+# `primary_region` above — a volume in the wrong region is invisible to
+# the machine, which then fails to start. See infrastructure.md
+# Deployment.
+#
+# 1GB is Fly's minimum and is far beyond what a few hundred counters need;
+# there is no smaller option, and no reason to pick a larger one.
+[mounts]
+  source = "curation_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 3000
