@@ -1,40 +1,41 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (`/ardd-implement tasks-curated-phrase-bank-e335.md`
-ran in a delegated worktree: **21/21 complete, merged to `main`,
-worktree reaped**. `player-prompt-rating` -> `implemented`. Full suite
-green on `main`: **406 tests** (41 shared / 191 server / 174 client),
-lint and typecheck clean.
+_Updated: 2026-07-20 (`/ardd-implement
+tasks-curation-store-hardening-05c3.md` ran in a delegated worktree:
+**19/19 complete, merged to `main`, worktree reaped**. Full suite green:
+**413 tests** (41 shared / 198 server / 174 client), lint and typecheck
+clean.
 
-**Scoping verified at merge, not taken on trust** — this feature
-introduced the app's first durable storage, so the guardrails were
-checked directly: `package.json`/`pnpm-lock.yaml` diffs are empty (no
-SQLite, Postgres, or Redis — storage is `node:fs` only); `Room`, `Book`,
-and `Entry` carry no rating field, so no game state moved to disk; and
-`STATUS.md` was never written inside the worktree.
+**Beta stopped losing curation data.** `fly.staging.toml` now carries
+the `[mounts]` block and `CURATION_DATA_PATH`; verified at merge that
+`app` is the ONLY non-comment difference between the two Fly configs.
+**`infrastructure.md`'s "single Fly.io app" claim is gone** — the
+Deployment section now describes the real two-app, two-channel topology,
+explicitly explains that the old phrasing was wrong rather than lapsed
+(each app still runs one machine, so Principle I holds), and inventories
+the one-time manual CLI steps with both volume IDs recorded.
 
-New modules: `curationStore` (atomic temp+fsync+rename write, debounced
-flush), `promptOrigin` (set-membership against `CURATED_PHRASE_BANK`),
-`gracefulShutdown` (flush on SIGTERM/SIGINT).
+The Curation Store is now append-only: one file per rating event,
+server-named, folded on demand. `gracefulShutdown` and the debounce /
+`flush()` / temp+fsync+rename path are **deleted**, not archived
+(Principle IV).
 
-**REQUIRED BEFORE NEXT DEPLOY — the Fly volume does not exist yet.**
-`fly.toml` now declares a `[mounts]` entry; a deploy with no matching
-volume fails at *machine start*, not build time, so it looks healthy
-until nothing comes back up. The delegated run could not create it (the
-`fly` CLI is installed but unauthenticated, API 503) and correctly did
-NOT assume `iad` from `primary_region`. Run `fly status` to read the
-machine's actual region, then `fly volumes create curation_data --size 1
---region <that region>`. Full instructions are in infrastructure.md's
-Deployment section.
+Open questions resolved by measurement, not guesswork: entry limits are
+**610 B text** and **2,830,862 B drawings**, derived from real payload
+measurements (a typical doodle is 76 KB; the cap is 2x a measured
+very-dense drawing) and disciplined by the 512 MB VM rather than rounded
+off. Accumulation bound is a **count of 65,536**, which is sufficient
+*because* text is already capped — worst-case event is ~800 B, so a
+count bound is a byte bound. Fold runs **on demand only**; construction
+does zero I/O.
 
-A `T021` artifact edit beyond the one explicitly authorized (T003) was
-flagged by the subagent and reviewed at merge: purely additive
-documentation, directed by the task text and scheduled by the plan's
-Phase 6. Blessed, not reverted.
-
-Earlier this session: phrase bank + criteria (`cd6230e`);
-prompt-rating planned, `book-love-reactions` subsumed (`089b622`);
-`curated-prompt-mode` implemented and merged.)_
+Two findings from the run worth keeping: the path guard had to become a
+filename-shape whitelist, because `..\..\x`, `%2e%2e/x` and `....//x`
+do NOT escape `resolve()` on POSIX and a resolve-only check would have
+silently accepted them; and concurrent `recordRating` calls raced the
+accumulation bound (ten parallel calls all passed the check before any
+incremented), now serialized through a promise chain — caught by its
+own test, which failed first.)_
 
 ## Artifact Status
 
@@ -134,9 +135,15 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 0 tasked · 12 implemented · 1 subsumed — see
-`.project/features/`. **Nothing is queued** — every feature is
-implemented or subsumed, and no tasks file is `ready` or `in-progress`.
+3 backlogged · 0 planned · 0 tasked · 12 implemented · 1 subsumed — see
+`.project/features/`. No tasks file is `ready` or `in-progress`. Three
+backlogged entries, none urgent:
+`curation-data-aggregation-pipe` (the deterministic layer where
+prompt-injection defense belongs, before any agent reads player-written
+text), `release-promotion-workflow` (a `workflow_dispatch` that
+fast-forwards `release` from `main`), and `fly-config-lockstep` (lint or
+generate the two Fly configs so they cannot silently diverge — the drift
+this session fixed by hand).
 
 - `player-prompt-rating` (**implemented** 2026-07-20, logged 2026-07-20) — the player
   who draws a book's opening phrase rates it inline on that drawing
@@ -297,8 +304,7 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(none — no `ready` or `in-progress` tasks file. `parallel-matrix.sh`
-is silent with no participants.)_
+_(none — no `ready` or `in-progress` tasks file.)_
 
 ## In Flight
 
@@ -350,43 +356,39 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**Current state (2026-07-20, latest pass):** 1 open issue (F001,
-logged not fixed). Safe to implement: **yes** — but there is nothing
-queued. Both features planned this session are merged to `main` and
-`implemented`; the register is empty of actionable work. Artifacts all
-`stable`, 0 open questions. Nothing in flight.
+**Current state (2026-07-20, latest pass):** 1 open issue (F001 from
+`feedback-main-338d.md`, logged not fixed). Safe to implement: **yes**,
+but nothing is queued. All three plans made this session are merged;
+artifacts are `stable` with 0 open questions; nothing in flight.
 
-**One operational action is outstanding and will break the next
-deploy if skipped**: the Fly volume backing the Curation Store does
-not exist yet (see the header above for the exact commands). This is
-the only item here that is not merely tidy-up.
+**Not yet pushed.** `main` is ~52 commits ahead of `origin/main`.
+Pushing auto-deploys **beta** — which is now the first deploy that will
+actually mount the volume and persist ratings, so it is worth watching
+rather than assuming.
 
-Also carried forward, none blocking:
-- All three renderable artifacts are `stale` on diagrams.
-  `infrastructure.md` and `datamodel.md` genuinely changed shape (a new
-  Curation Store node; two new persisted entities); `ui.md`'s is a
-  no-op restamp.
+Carried forward, none blocking:
+- All three renderable artifacts are `stale` on diagrams;
+  `infrastructure.md` and `datamodel.md` genuinely changed shape.
+- `player-prompt-rating` shipped a thumbs control with **no player-facing
+  explanation anywhere** — a live gap for the new `/audit-help-text`
+  skill, which has never been run.
 - `infrastructure.md`'s handler list omits three handlers `server.ts`
-  actually wires — `onSetPromptMode`, `onSetCuratedPromptCount`,
-  `onSetAllowPromptWriteIn` — inherited from curated-prompt-mode.
-  A code-vs-artifact drift for `/ardd-defects`.
+  wires (`onSetPromptMode`, `onSetCuratedPromptCount`,
+  `onSetAllowPromptWriteIn`) — for `/ardd-defects`.
+- No client-side `maxlength` on the phrase input, so oversize content is
+  caught only server-side and returns `entry-too-large`; whether the
+  client surfaces that gracefully is unverified.
 - The `SalonFooter` component is still not described in `ui.md`.
-- **Flaky server test**: `server.test.ts > Socket.IO server bootstrap >
-  onStartGame rejects a non-host caller`, intermittent `waitForEvent`
-  connect timeout. Did not reproduce in 6 isolated runs; that file was
-  never touched by this session's work, so it is not a regression from
-  it — but it can fail CI and be misattributed to whatever branch is
-  unlucky.
-- On a fresh local checkout `.curation-data/` does not exist, so the
-  first curation writes fail-and-log until something creates it. Never
-  crashes, never blocks a game; production is unaffected (the `/data`
-  mount exists).
+- **Flaky server test** — `server.test.ts > onStartGame rejects a
+  non-host caller`, intermittent connect timeout. Predates this
+  session's work; can fail CI and be misattributed.
 
-**Recommended next step:** create the Fly volume (see above) before
-any deploy. Then `/ardd-defects` to capture the handler-list drift and
-the other carried-forward items, and `/ardd-diagram datamodel` +
-`/ardd-diagram infrastructure` to refresh the two diagrams whose shape
-actually changed.
+**Recommended next step:** `/audit-help-text` (new repo-local skill,
+never run) — `player-prompt-rating` shipped with no player-facing
+explanation, which is exactly what it hunts for. Then `/ardd-defects`
+for the handler-list drift, and `/ardd-diagram datamodel` +
+`/ardd-diagram infrastructure` for the two diagrams whose shape changed.
+Both Fly volumes now exist, so the prior deploy blocker is cleared.
 
 ---
 
