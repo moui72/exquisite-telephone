@@ -274,10 +274,23 @@ on `main`.
 ### Release Promotion
 
 Cutting production is a `workflow_dispatch` in
-`.github/workflows/` that fast-forwards `release` from `main`; the
-resulting push to `release` triggers the existing `deploy-prod` job.
+`.github/workflows/promote.yml` that fast-forwards `release` from `main`;
+the resulting push to `release` triggers the existing `deploy-prod` job.
 Nothing about the deploy half changes — this replaces only the manual
 `git push origin main:release` a human had to remember.
+
+**The push must NOT use the default `GITHUB_TOKEN`.** A push
+authenticated with it does not trigger further workflow runs — GitHub's
+recursion guard — so `deploy-prod` would never fire and promotion would
+report success while deploying nothing. That failure mode is silent in
+both directions: the promote run goes green and prod simply stays on the
+old commit. The workflow therefore checks out with `PROMOTE_TOKEN`, a
+**fine-grained PAT with Contents read/write on this repo**, created by
+hand (see repo-level manual steps below).
+
+The token is the one part of promotion that is not self-contained in the
+repo, which is why it is called out here rather than left implicit in the
+workflow file.
 
 **Fast-forward only, never a merge.** The push is a plain
 non-force-`push` of `main` into `release`; if it is rejected as
@@ -357,6 +370,31 @@ larger one.
 |---|---|---|---|---|
 | `exquisite-telephone` | `vol_r681m3no1nq5ex14` | 1GB | `iad` | `iad` — matches |
 | `exquisite-telephone-beta` | `vol_vp2l1gyjj3lw9me4` | 1GB | `iad` | `iad` — matches |
+
+### One-time MANUAL repo-level steps — per repo, not per app
+
+Distinct from the per-app `flyctl` steps above: these are GitHub-side,
+run once for the repository regardless of how many channels exist.
+
+**`PROMOTE_TOKEN` — fine-grained PAT, Contents read/write on this repo,
+stored as a repository secret.** Required by
+`.github/workflows/promote.yml` for the reason given under Release
+Promotion: the default `GITHUB_TOKEN` cannot trigger `deploy-prod`.
+
+**Current state: NOT yet created — promotion will fail until it is.**
+This is the one outstanding manual step in the deployment topology; both
+Fly volumes and both `FLY_API_TOKEN_*` secrets are already in place.
+
+Its absence fails loudly rather than silently — `actions/checkout` errors
+on an empty token before any push is attempted — so the failure mode here
+is a red workflow run, not a promotion that appears to work. That is the
+opposite of the `GITHUB_TOKEN` trap it exists to avoid, and worth keeping
+that way: a token problem should never be able to look like a successful
+cut.
+
+Being a PAT, it carries an expiry and is tied to the account that created
+it — unlike the Fly tokens, it will need re-issuing at some point, and
+promotion will start failing on the day it lapses.
 
 ## Production Annotations
 

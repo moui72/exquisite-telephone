@@ -2,7 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main, release]
+    # `release` is deliberately absent: with no deploy-prod job, and
+    # `checks` skipped there anyway, a push to release would trigger a run
+    # in which every job is skipped. Promotion is promote.yml's job.
+    branches: [main]
   pull_request:
 
 jobs:
@@ -44,14 +47,7 @@ jobs:
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
 
-  deploy-prod:
-    name: Deploy prod (release)
-    if: github.ref == 'refs/heads/release' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    concurrency: deploy-prod
-    steps:
-      - uses: actions/checkout@v5
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --config fly.toml --remote-only
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
+# There is deliberately NO deploy-prod job here. Production is deployed
+# only by promote.yml, which fast-forwards `release` and deploys in the
+# same manual run — see infrastructure.md, Release Promotion. A push to
+# `release` therefore deploys nothing on its own.

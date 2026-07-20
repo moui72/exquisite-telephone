@@ -1,19 +1,32 @@
 name: Promote main to release
 
-# Manual promotion only: prod (fly.toml, exquisite-telephone) deploys from
-# `release`, and `release` only ever receives a fast-forward of `main`.
-# This workflow replaces the remembered `git push origin main:release`.
+# Manual promotion only, and the ONLY path that deploys prod (fly.toml,
+# exquisite-telephone). `release` only ever receives a fast-forward of
+# `main`; this workflow performs that fast-forward AND the deploy in one
+# run, replacing both the remembered `git push origin main:release` and
+# the push-triggered deploy-prod job ci.yml used to carry.
+#
+# Re-dispatching when release is already current is harmless: the push is
+# a no-op ("Everything up-to-date") and the deploy simply re-ships the
+# same tree.
 on:
   workflow_dispatch:
 
-# Two dispatches must not race each other onto the same branch.
+# Two dispatches must not race each other onto the same branch, nor into
+# the same Fly app. This group covers the fast-forward AND the deploy,
+# which is why it is not the `deploy-prod` group ci.yml used to hold.
 concurrency:
   group: promote-release
   cancel-in-progress: false
 
+# The push below is authenticated with the built-in GITHUB_TOKEN, which
+# needs write access to push to `release`.
+permissions:
+  contents: write
+
 jobs:
   promote:
-    name: Fast-forward release to main
+    name: Fast-forward release to main, then deploy prod
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -23,12 +36,6 @@ jobs:
           # full history of both branches to know whether release is an
           # ancestor of main.
           fetch-depth: 0
-          # NOT the default GITHUB_TOKEN: a push authenticated with it does
-          # not trigger further workflow runs (GitHub's recursion guard),
-          # so deploy-prod would never fire and promotion would silently
-          # deploy nothing. PROMOTE_TOKEN is a fine-grained PAT with
-          # Contents read/write, created by hand — see infrastructure.md.
-          token: ${{ secrets.PROMOTE_TOKEN }}
 
       - name: Push main to release (fast-forward only)
         run: |
@@ -66,3 +73,23 @@ jobs:
           that release becomes a strict ancestor of main again.
           MSG
           exit 1
+
+      # This run deploys prod itself rather than letting the push above
+      # trigger a separate job. A push authenticated with GITHUB_TOKEN does
+      # not trigger further workflow runs (GitHub's recursion guard), so a
+      # push-triggered deploy would never fire and this workflow would go
+      # green having deployed nothing. Deploying here is what makes the
+      # dispatch's success mean what it appears to mean.
+      #
+      # It runs only if the push above succeeded: `set -euo pipefail` plus
+      # the explicit `exit 1` fails the step, and a failed step skips the
+      # rest of the job by default. A diverged release is never deployed.
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy prod
+        # The checkout is `main`, whose tree is now byte-identical to
+        # release — deploying from this working copy and deploying from a
+        # fresh release checkout are the same tree, by fast-forward.
+        run: flyctl deploy --config fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
