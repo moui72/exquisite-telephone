@@ -40,7 +40,7 @@ status: in-progress
 
 ## Phase 2: Fly config generation
 
-- [ ] T005 Record a baseline before changing anything: copy the current
+- [x] T005 Record a baseline before changing anything: copy the current
   `fly.toml` and `fly.staging.toml` into the test fixtures directory used by
   the generator test in T006. These files are currently in correct lockstep
   **at the level of parsed config values** (verified 2026-07-20 — identical key
