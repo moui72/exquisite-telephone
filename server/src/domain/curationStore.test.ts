@@ -78,3 +78,75 @@ describe('createCurationStore load behavior', () => {
     ]);
   });
 });
+
+/**
+ * Where a rating lands depends on the opening phrase's origin, which the
+ * caller resolves (datamodel.md Normalization Rules — Prompt rating).
+ */
+describe('recordRating routing', () => {
+  it('creates a PromptRating on a bank phrase’s first rating', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+
+    expect(store.snapshot().ratings['a bear on a unicycle']).toEqual({
+      phrase: 'a bear on a unicycle',
+      up: 1,
+      down: 0,
+    });
+    expect(store.snapshot().candidates).toEqual([]);
+  });
+
+  it('increments the existing record rather than replacing it, for both up and down', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    store.recordRating('a bear on a unicycle', 'up', true);
+    store.recordRating('a bear on a unicycle', 'down', true);
+
+    expect(store.snapshot().ratings['a bear on a unicycle']).toEqual({
+      phrase: 'a bear on a unicycle',
+      up: 2,
+      down: 1,
+    });
+    expect(Object.keys(store.snapshot().ratings)).toHaveLength(1);
+  });
+
+  it('creates a CandidatePhrase on a non-bank phrase’s first thumbs-up', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger, { now: () => 1_700_000_000_000 });
+
+    store.recordRating('a moose reading the news', 'up', false);
+
+    expect(store.snapshot().candidates).toEqual([
+      { phrase: 'a moose reading the news', votes: 1, firstLoggedAt: 1_700_000_000_000 },
+    ]);
+    expect(store.snapshot().ratings).toEqual({});
+  });
+
+  it('upserts by exact text — a repeat thumbs-up increments votes and preserves firstLoggedAt', () => {
+    let clock = 1_000;
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger, { now: () => clock });
+
+    store.recordRating('a moose reading the news', 'up', false);
+    clock = 9_999;
+    store.recordRating('a moose reading the news', 'up', false);
+
+    expect(store.snapshot().candidates).toEqual([
+      { phrase: 'a moose reading the news', votes: 2, firstLoggedAt: 1_000 },
+    ]);
+  });
+
+  it('treats near-miss wording as distinct records — exact text only', () => {
+    const { logger } = makeLogger();
+    const store = createCurationStore(join(dir, 'c.json'), logger);
+
+    store.recordRating('a bear on a unicycle', 'up', false);
+    store.recordRating('a bear riding a unicycle', 'up', false);
+
+    expect(store.snapshot().candidates).toHaveLength(2);
+  });
+});

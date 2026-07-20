@@ -73,6 +73,11 @@ function loadData(path: string, logger: Logger): CurationData {
   }
 }
 
+export interface CurationStoreOptions {
+  /** Injectable clock, so `firstLoggedAt` is assertable in tests. */
+  now?: () => number;
+}
+
 /**
  * The Curation Store (infrastructure.md Curation Store) — the one place
  * in this app that writes to disk, and the only state that survives a
@@ -83,15 +88,38 @@ function loadData(path: string, logger: Logger): CurationData {
  * at boot, and a synchronous read keeps the store usable the instant it
  * is constructed rather than forcing every caller through a ready-check.
  */
-export function createCurationStore(path: string, logger: Logger): CurationStore {
+export function createCurationStore(
+  path: string,
+  logger: Logger,
+  options: CurationStoreOptions = {},
+): CurationStore {
   const data = loadData(path, logger);
+  const now = options.now ?? Date.now;
 
   return {
     snapshot() {
       return data;
     },
-    recordRating(_phrase: string, _value: PromptRatingValue, _isBankPhrase: boolean) {
-      throw new Error('createCurationStore.recordRating: not implemented');
+    recordRating(phrase: string, value: PromptRatingValue, isBankPhrase: boolean) {
+      if (isBankPhrase) {
+        const existing = data.ratings[phrase] ?? { phrase, up: 0, down: 0 };
+        data.ratings[phrase] = {
+          ...existing,
+          [value]: existing[value] + 1,
+        };
+        return;
+      }
+
+      // Player-written. Upsert by EXACT text -- never normalized or
+      // lowercased, because the curator wants to see exactly what was
+      // typed (datamodel.md CandidatePhrase). Near-miss wordings are
+      // therefore separate records, deliberately.
+      const candidate = data.candidates.find((c) => c.phrase === phrase);
+      if (candidate) {
+        candidate.votes += 1;
+        return;
+      }
+      data.candidates.push({ phrase, votes: 1, firstLoggedAt: now() });
     },
     flush() {
       throw new Error('createCurationStore.flush: not implemented');
