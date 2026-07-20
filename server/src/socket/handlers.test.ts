@@ -10,6 +10,7 @@ import {
   joinRoom,
   type RoomStore,
 } from '../domain/roomStore.js';
+import { computeNextEntries, type Room } from '@exquisite-telephone/shared';
 import { createLogger } from '../observability/logger.js';
 import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
@@ -1460,5 +1461,146 @@ describe('curated prompt dealing on start and restart', () => {
     // A re-deal, not the same hands carried over. With a 74-phrase bank and
     // 9 phrases dealt, an identical shuffle result is vanishingly unlikely.
     expect(JSON.stringify(room.dealtPrompts)).not.toBe(firstDeal);
+  });
+});
+
+/**
+ * Opening-turn submission validation in curated mode (datamodel.md
+ * Normalization Rules — Curated prompts). Applies to `position === 0` only;
+ * every later text entry is a blind guess and stays free-form in both modes.
+ */
+describe('onSubmitEntry curated opening-turn validation', () => {
+  const logger = createLogger(() => {});
+
+  function startedCuratedRoom(allowPromptWriteIn: boolean) {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Linus' });
+    const adaId = room.players[0]!.id;
+    room.promptMode = 'curated';
+    room.curatedPromptCount = 3;
+    room.allowPromptWriteIn = allowPromptWriteIn;
+
+    onStartGame(
+      makeFakeSocket(),
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      vi.fn(),
+    );
+    return { store, room, adaId };
+  }
+
+  /** The book whose opening turn belongs to `playerId`. */
+  function openingBookFor(room: Room, playerId: string) {
+    return room.books.find((b) => b.originAuthorId === playerId)!;
+  }
+
+  it("accepts one of the submitting player's own dealt phrases", () => {
+    const { store, room, adaId } = startedCuratedRoom(false);
+    const book = openingBookFor(room, adaId);
+    const mine = room.dealtPrompts[adaId]![0]!;
+
+    const ack = vi.fn();
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: book.id, content: mine },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
+    expect(book.entries[0]!.content).toBe(mine);
+  });
+
+  it("rejects another player's dealt phrase", () => {
+    const { store, room, adaId } = startedCuratedRoom(false);
+    const graceId = room.players[1]!.id;
+    const book = openingBookFor(room, adaId);
+    const notMine = room.dealtPrompts[graceId]![0]!;
+
+    const ack = vi.fn();
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: book.id, content: notMine },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'prompt-not-dealt' });
+    expect(book.entries).toHaveLength(0);
+  });
+
+  it('rejects arbitrary text when write-in is off', () => {
+    const { store, room, adaId } = startedCuratedRoom(false);
+    const book = openingBookFor(room, adaId);
+
+    const ack = vi.fn();
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: book.id, content: 'something I made up' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'prompt-not-dealt' });
+    expect(book.entries).toHaveLength(0);
+  });
+
+  it('accepts arbitrary text when write-in is on', () => {
+    const { store, room, adaId } = startedCuratedRoom(true);
+    const book = openingBookFor(room, adaId);
+
+    const ack = vi.fn();
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: book.id, content: 'something I made up' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
+    expect(book.entries[0]!.content).toBe('something I made up');
+  });
+
+  it('leaves position > 0 submissions unaffected by the curated check', () => {
+    const { store, room, adaId } = startedCuratedRoom(false);
+    const graceId = room.players[1]!.id;
+    const linusId = room.players[2]!.id;
+
+    // Every player submits their own opening phrase so the round advances.
+    for (const playerId of [adaId, graceId, linusId]) {
+      const book = openingBookFor(room, playerId);
+      onSubmitEntry(
+        makeFakeSocket(),
+        store,
+        logger,
+        { roomId: room.id, playerId, bookId: book.id, content: room.dealtPrompts[playerId]![0]! },
+        vi.fn(),
+      );
+    }
+
+    // Position 1 is a drawing turn on someone else's book: free text, and not
+    // drawn from anybody's hand, yet accepted.
+    const next = computeNextEntries(room)[0]!;
+    const ack = vi.fn();
+    onSubmitEntry(
+      makeFakeSocket(),
+      store,
+      logger,
+      {
+        roomId: room.id,
+        playerId: next.authorId,
+        bookId: next.bookId,
+        content: 'arbitrary later-turn content',
+      },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ entry: expect.any(Object) }));
   });
 });

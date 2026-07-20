@@ -650,6 +650,21 @@ export function onSubmitEntry(
     return;
   }
 
+  // Curated opening turns (datamodel.md Normalization Rules -- Curated
+  // prompts). Applies to `position === 0` only: every later text entry is a
+  // blind guess written from the drawing above it, so there is nothing to
+  // curate there. The mode is read from room state -- the client's claim
+  // about which mode is active is never trusted.
+  if (next.position === 0 && room.promptMode === 'curated') {
+    const myHand = room.dealtPrompts[input.playerId] ?? [];
+    const isDealtToMe = myHand.includes(input.content);
+    const isPermittedWriteIn = room.allowPromptWriteIn && input.content.trim().length > 0;
+    if (!isDealtToMe && !isPermittedWriteIn) {
+      ack({ error: 'prompt-not-dealt' });
+      return;
+    }
+  }
+
   const roundBeforeSubmit = currentRoundFor(room);
 
   const entry: Entry = {

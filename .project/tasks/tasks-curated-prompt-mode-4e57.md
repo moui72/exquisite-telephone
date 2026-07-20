@@ -70,7 +70,7 @@ status: in-progress
   failing server tests asserting the deal happens on start, re-deals on
   restart, excludes kicked players, and stays empty in free-form mode.
 
-- [ ] T006 [artifacts: datamodel] Validate opening-turn submissions in
+- [x] T006 [artifacts: datamodel] Validate opening-turn submissions in
   `onSubmitEntry`: when the submitted entry is at `position === 0` and
   the room is in curated mode, accept the content only if it matches one
   of the *submitting player's own* `dealtPrompts` entries, or is any
