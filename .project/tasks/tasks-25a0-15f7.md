@@ -1,7 +1,7 @@
 ---
 plan: plan-25a0-2026-07-20-1822.md
 generated: 2026-07-20
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -29,4 +29,4 @@ status: in-progress
 
 ## Phase 5: Curation cap annotation
 
-- [ ] T010 [parallel] Add the curation event cap to `infrastructure.md`'s `## Production Annotations` section: `MAX_CURATION_EVENTS = 65_536`; events past the cap are dropped (not rotated), so a curator holds the *first* N ratings rather than the most recent; the accepted-shortcut rationale (one human reads curation data every few weeks); and the backlogged `curation-data-aggregation-pipe` as the intended remedy. No code change — the behavior and its inline `PRODUCTION ANNOTATION` comment at `server/src/domain/curationStore.ts:225` already exist; this only records it where the constitution requires. [defect: d991281a] [artifacts: infrastructure]
+- [x] T010 [parallel] Add the curation event cap to `infrastructure.md`'s `## Production Annotations` section: `MAX_CURATION_EVENTS = 65_536`; events past the cap are dropped (not rotated), so a curator holds the *first* N ratings rather than the most recent; the accepted-shortcut rationale (one human reads curation data every few weeks); and the backlogged `curation-data-aggregation-pipe` as the intended remedy. No code change — the behavior and its inline `PRODUCTION ANNOTATION` comment at `server/src/domain/curationStore.ts:225` already exist; this only records it where the constitution requires. [defect: d991281a] [artifacts: infrastructure]

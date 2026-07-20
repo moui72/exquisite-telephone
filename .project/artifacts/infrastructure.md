@@ -411,3 +411,17 @@ above, and all of them are done.
   process, dropping all in-progress in-memory games — in production,
   this would need either a durable store to resume from (see above) or
   a maintenance-window/drain strategy before deploying.
+- **Curation event cap (`MAX_CURATION_EVENTS = 65_536`)**: The curation
+  store accepts at most `MAX_CURATION_EVENTS` rating events; once the cap
+  is reached, every subsequent rating is **dropped, not rotated** — old
+  evidence is never evicted, so a curator holds the *first* N ratings
+  rather than the most recent. This is a deliberate accepted shortcut:
+  curation data is read by one human every few weeks, so losing the tail
+  after 65,536 ratings is tolerable and the write path stays simple (a
+  game turn that triggers a full store still succeeds and never learns
+  curation is full — it fails safely, logging once). The intended remedy
+  is the backlogged `curation-data-aggregation-pipe`, which would drain
+  and truncate the log on a schedule. The behavior and its inline
+  `PRODUCTION ANNOTATION` comment already exist at
+  `server/src/domain/curationStore.ts:225`; this records it where the
+  constitution requires a production annotation to live.
