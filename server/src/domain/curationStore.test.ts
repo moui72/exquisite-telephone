@@ -26,8 +26,7 @@ afterEach(() => {
  * degrading to an empty store is always preferable to refusing to start.
  */
 describe('createCurationStore load behavior', () => {
-  // T004 lands these red; T005 implements the behavior and removes `.fails`.
-  it.fails('yields an empty store when the file is missing', () => {
+  it('yields an empty store when the file is missing', () => {
     const { logger } = makeLogger();
 
     const store = createCurationStore(join(dir, 'absent.json'), logger);
@@ -35,8 +34,7 @@ describe('createCurationStore load behavior', () => {
     expect(store.snapshot()).toEqual({ ratings: {}, candidates: [] });
   });
 
-  // T004 lands these red; T005 implements the behavior and removes `.fails`.
-  it.fails('yields an empty store and logs a structured warning when the file is unparseable', () => {
+  it('yields an empty store and logs a structured warning when the file is unparseable', () => {
     const path = join(dir, 'corrupt.json');
     writeFileSync(path, '{ this is not json');
     const { logger, events } = makeLogger();
@@ -49,8 +47,7 @@ describe('createCurationStore load behavior', () => {
     );
   });
 
-  // T004 lands these red; T005 implements the behavior and removes `.fails`.
-  it.fails('does not throw on an unparseable file — a lost file must not stop the server booting', () => {
+  it('does not throw on an unparseable file — a lost file must not stop the server booting', () => {
     const path = join(dir, 'corrupt.json');
     writeFileSync(path, 'not json at all');
     const { logger } = makeLogger();
@@ -58,8 +55,7 @@ describe('createCurationStore load behavior', () => {
     expect(() => createCurationStore(path, logger)).not.toThrow();
   });
 
-  // T004 lands these red; T005 implements the behavior and removes `.fails`.
-  it.fails('loads existing ratings and candidates back from a well-formed file', () => {
+  it('loads existing ratings and candidates back from a well-formed file', () => {
     const path = join(dir, 'curation.json');
     writeFileSync(
       path,
