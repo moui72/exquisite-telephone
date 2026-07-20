@@ -62,10 +62,8 @@
           circle, each guest working from only what the guest before them left behind.
         </p>
         <p>
-          The host arranges two things beforehand that change the evening's shape. Where opening
-          phrases come from: guests may compose their own, or the house may deal each of them a
-          curated hand to choose from. And how long each book runs — one lap of the circle, or as
-          many as three, which sends every book past every guest again.
+          How long a book runs is the host's arrangement too — one lap of the circle, or as many as
+          three, which sends every book past every guest again.
         </p>
         <p>
           The host may also allot a contemplation period, in which case a turn carries a clock. It
