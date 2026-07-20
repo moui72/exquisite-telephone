@@ -196,8 +196,18 @@ export function createCurationStore(
       data.candidates.push({ phrase, votes: 1, firstLoggedAt: now() });
       scheduleWrite();
     },
-    flush() {
-      throw new Error('createCurationStore.flush: not implemented');
+    async flush() {
+      // Cancel the pending debounce and write now, so the data lands
+      // once rather than again on a timer that outlives the process.
+      if (timer) {
+        clearTimeout(timer);
+        timer = undefined;
+        inFlight = writeAtomically();
+      }
+      // Await any write already running, so a caller that awaits flush()
+      // -- graceful shutdown -- can trust the bytes are on disk.
+      await inFlight;
+      inFlight = undefined;
     },
   };
 }

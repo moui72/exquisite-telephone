@@ -19,7 +19,7 @@ status: in-progress
 - [x] T006 Failing tests first, then implement `recordRating(phrase, value, isBankPhrase)`: when `isBankPhrase`, increment that phrase's `up` or `down` in `ratings` (creating the record on first rating); when not a bank phrase and value is `'up'`, upsert into `candidates` by EXACT text — incrementing `votes` on an existing record rather than appending a duplicate, preserving the original `firstLoggedAt`. Cover the create-vs-increment branch for both destinations.
 - [x] T007 Failing test first, then implement the discard case: a thumbs-DOWN on a non-bank phrase mutates nothing — no candidate record created, no rating record created, no throw. Test this explicitly and name it for what it is; "does nothing" is precisely the behavior a later refactor breaks silently. See `.project/artifacts/datamodel.md` Normalization Rules — Prompt rating.
 - [x] T008 Failing tests first, then implement the debounced atomic flush: serialize to a temp file in the same directory, fsync, then rename over the target. Assert that a crash simulated between write and rename leaves the PREVIOUS good file intact rather than a truncated one, and that N rapid `recordRating` calls within the debounce window produce one write, not N.
-- [ ] T009 Failing test first, then implement `flush()` for explicit synchronous-on-demand writing (used by graceful shutdown in T012), independent of the debounce timer.
+- [x] T009 Failing test first, then implement `flush()` for explicit synchronous-on-demand writing (used by graceful shutdown in T012), independent of the debounce timer.
 
 ## Phase 3: Config and wiring
 

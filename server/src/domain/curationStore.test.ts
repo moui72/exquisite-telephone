@@ -332,3 +332,65 @@ describe('debounced atomic flush', () => {
     );
   });
 });
+
+/**
+ * `flush()` is the on-demand write used by graceful shutdown (T012):
+ * a clean deploy must not lose the ratings still sitting in the debounce
+ * window.
+ */
+describe('flush', () => {
+  it('writes immediately without waiting for the debounce window', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    // A debounce far longer than this test will ever wait, so a pass here
+    // can only mean flush bypassed the timer.
+    const store = createCurationStore(path, logger, { debounceMs: 60_000 });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await store.flush();
+
+    const onDisk = JSON.parse(readFileSync(path, 'utf8')) as CurationData;
+    expect(onDisk.ratings['a bear on a unicycle']).toEqual({
+      phrase: 'a bear on a unicycle',
+      up: 1,
+      down: 0,
+    });
+  });
+
+  it('cancels the pending debounce so the data is not written twice', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const writes: string[] = [];
+    const store = createCurationStore(path, logger, {
+      debounceMs: 20,
+      onBeforeRename: (contents) => writes.push(contents),
+    });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await store.flush();
+    await new Promise((r) => setTimeout(r, 100));
+
+    expect(writes).toHaveLength(1);
+  });
+
+  it('is safe to call with nothing pending', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const store = createCurationStore(path, logger, { debounceMs: 20 });
+
+    await expect(store.flush()).resolves.toBeUndefined();
+  });
+
+  it('awaits an already in-flight debounced write rather than racing it', async () => {
+    const path = join(dir, 'c.json');
+    const { logger } = makeLogger();
+    const store = createCurationStore(path, logger, { debounceMs: 5 });
+
+    store.recordRating('a bear on a unicycle', 'up', true);
+    await new Promise((r) => setTimeout(r, 10));
+    await store.flush();
+
+    const onDisk = JSON.parse(readFileSync(path, 'utf8')) as CurationData;
+    expect(onDisk.ratings['a bear on a unicycle']?.up).toBe(1);
+  });
+});
