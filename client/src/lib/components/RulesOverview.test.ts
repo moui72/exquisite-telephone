@@ -23,6 +23,40 @@ describe('RulesOverview', () => {
     expect(copy).not.toMatch(/anything they like/i);
   });
 
+  /**
+   * Regression guard for the class of bug fixed in T002: the panel is a
+   * single piece of copy shown to every player, but `Room.promptMode`
+   * makes the opening turn work two different ways. Any sentence that
+   * presupposes one mode is false for players in the other.
+   *
+   * Deliberately structural, not pinned to wording (plan Complexity
+   * Tracking): it lists phrasings that *presuppose* a mode rather than
+   * asserting the current sentence, so ordinary copy edits pass and only
+   * a reintroduced mode-specific claim fails.
+   */
+  it('makes no claim that presupposes one prompt mode', () => {
+    const { container } = render(RulesOverview, { props: { onClose: vi.fn() } });
+    const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
+
+    const presupposesFreeForm = [
+      /anything they (?:like|want|please)/i,
+      /whatever they (?:like|want|please)/i,
+      /(?:invent|compose|write|think up)s? (?:any|their own) phrase/i,
+      /blank page and asked to write/i,
+    ];
+    const presupposesCurated = [
+      /(?:must|has to|have to) (?:pick|choose) from/i,
+      /handed a hand of phrases/i,
+      /no writing of their own/i,
+    ];
+
+    for (const pattern of [...presupposesFreeForm, ...presupposesCurated]) {
+      expect(copy, `rules copy makes a prompt-mode-specific claim: ${pattern}`).not.toMatch(
+        pattern,
+      );
+    }
+  });
+
   it('calls onClose when the dismiss control is activated', async () => {
     const onClose = vi.fn();
     render(RulesOverview, { props: { onClose } });
