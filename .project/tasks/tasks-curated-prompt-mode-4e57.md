@@ -20,7 +20,7 @@ status: in-progress
   `shared/src/types.test.ts` with a failing assertion on the new shape
   before implementing.
 
-- [ ] T002 [parallel] Create the curated phrase bank as a static
+- [x] T002 [parallel] Create the curated phrase bank as a static
   exported constant in `shared/` (new file, e.g.
   `shared/src/promptBank.ts`) — a frozen array of short, drawable
   phrases in the game's playful register. Size it to at least 200
