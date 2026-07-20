@@ -1,6 +1,6 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (`/ardd-plan` ran over the last open feedback file
+_Updated: 2026-07-20 (ArDD updated to `v1.0.2`. Earlier this pass, `/ardd-plan` ran over the last open feedback file
 and two backlogged deploy features. Plan
 `plan-fly-config-lockstep-2026-07-20-8fbb.md` **approved** (3 phases, 3
 open questions); `tasks-fly-config-lockstep-dac2.md` generated and
@@ -400,8 +400,9 @@ nothing in flight. One feature stays backlogged
 (`curation-data-aggregation-pipe`), routed to `/ardd-research` rather
 than a plan.
 
-**ArDD update available:** installed `9fd6fbb`, source at `v1.0.2` — run
-`/ardd-update`.
+**ArDD is up-to-date** on the beta channel — `v1.0.2`, commit `33ac9ae`
+(updated 2026-07-20 from `v1.0.1`/`9fd6fbb`). No migrations were pending;
+all eight were already applied.
 
 **Three open questions are assigned to tasks rather than left
 floating** — T004 (where the rating explanation lives), T007 (extend the
@@ -429,10 +430,17 @@ better first pick: it's the older file, and its T010 settles an `ui.md`
 tooltip claim the other plan doesn't touch.
 
 Then, in no particular order: `/ardd-research` for
-`curation-data-aggregation-pipe`'s sanitization boundary,
-`/ardd-update` (a release behind), and `/ardd-diagram datamodel` +
-`/ardd-diagram infrastructure` for the two diagrams whose shape actually
-changed.
+`curation-data-aggregation-pipe`'s sanitization boundary, and
+`/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
+diagrams whose shape actually changed.
+
+One standing suggestion from the ArDD reinstall, not yet acted on: the
+README's ArDD badge tracks ArDD's *latest release* rather than the
+version installed here, so it can read green while this project sits a
+release behind. Fixing it means swapping the badge inside its markers for
+the shields.io endpoint form pointing at this repo's own
+`.github/badges/ardd-version.json` (written by re-running install with
+`ARDD_VERSION_BADGE=1`). Left alone — it's cosmetic and yours to decide.
 
 ---
 
