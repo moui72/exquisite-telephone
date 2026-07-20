@@ -4,9 +4,12 @@ _Updated: 2026-07-20 (**All 7 defects are fixed and merged to `main`.**
 `tasks-25a0-15f7.md` completed 10/10 in a delegated worktree, merged
 clean (fast-forward), worktree reaped. Verified post-merge: full suite
 green — 451 tests (shared 49 · server 202 · client 196 · root 4) — lint
-and typecheck clean. **Every tasks file in the project is `completed`;
-nothing is ready or in flight.** The next `/ardd-defects` run will
-re-verify these gone and clear the snapshot.
+and typecheck clean, then pushed — **beta is live on the defect-fix
+build**. **Every tasks file in the project is `completed`; nothing is
+ready or in flight.** One **open feedback item** was filed afterward from
+an implementer finding (lap default vs kicked lobby players — see
+Feedback). The next `/ardd-defects` run will re-verify the seven gone and
+clear the snapshot.
 
 The kicked-player seam was fixed as one change, as planned: a shared
 `activePlayers(room)` helper in `shared/` that rotation, timeout-vote
@@ -177,7 +180,18 @@ view, so a stale-looking entry there is expected until then.
 
 ## Feedback
 
-**0 open feedback files.**
+**1 open feedback file** — will be picked up by the next `/ardd-plan`.
+
+- `feedback-lap-default-kicked-players-8005.md` (F001, Bug): `onStartGame`
+  resolves `defaultLapsPerBook` from `room.players.length`, not the active
+  count, so a lobby-kick-then-start yields a shorter-than-intended game.
+  Surfaced by the `plan-25a0` defect-fix implementer as latent and
+  out-of-scope; low confidence it matters in practice. Tagged
+  `[artifacts: datamodel]` — the "live player count" wording there doesn't
+  settle whether a kicked lobby player counts. Natural fix routes the call
+  site through the `activePlayers` helper the defect pass introduced.
+
+_History below (all prior items resolved):_
 
 - `feedback-main-338d.md` (F001: host gets no frozen-room signal after a
   kick, a regression from the Salon Footer refactor) is now **planned**
@@ -517,13 +531,19 @@ Carried forward, none blocking:
   surfaces that gracefully is unverified.
 - **Flaky server test** — `server.test.ts > onStartGame rejects a
   non-host caller`, intermittent connect timeout. Predates this
-  session's work.
+  session's work; cost a pre-commit-hook retry this pass. Worth a fix on
+  its own at some point.
 
-**Recommended next step:** push `main` to origin — it carries the defect
-fixes and deploys them to beta for hands-on confirmation (especially the
-kicked-player and timer-extension changes, which automated tests cover
-but live play exercises differently). A production promote can follow
-once beta looks right.
+**Current state:** `main` at `68f47a5` is pushed through `2315fc9`
+(beta live and healthy on the defect-fix build); the one commit after
+that (`68f47a5`, the feedback file) is docs-only and rides the next
+push. Prod is on the earlier promotion, one build behind — a promote
+dispatch ships the defect fixes there once beta looks right.
+
+**Recommended next step:** `/ardd-plan` — one open feedback item
+(`feedback-lap-default-kicked-players-8005.md`) is now the only plannable
+input. It is small and low-confidence, so it can also reasonably wait and
+be batched with whatever comes next; there is no urgency.
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
 drop out of the snapshot; `/ardd-research` for
