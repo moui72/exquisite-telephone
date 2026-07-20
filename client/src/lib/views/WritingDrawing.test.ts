@@ -308,6 +308,27 @@ describe('Writing/Drawing view', () => {
     expect(screen.getByTestId('turn-timer-countdown')).toBeInTheDocument();
   });
 
+  it('adds a granted extension to the base duration (30m timer + 15m grant = 45m)', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const roundStartedAt = Date.now();
+    const room: Room = {
+      ...makeRoom([adaBook]),
+      turnTimerMinutes: 30,
+      lapsPerBook: null,
+      roundStartedAt,
+      timerExtensions: { [ada.id]: 15 * 60_000 },
+    };
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    // Additive: 30m base + 15m grant ~= 45m remaining, not 15m (which the
+    // old replacing form produced).
+    const countdown = screen.getByTestId('turn-timer-countdown');
+    expect(countdown.textContent).toMatch(/4[45]:\d\d/);
+    expect(countdown.textContent).not.toMatch(/1[45]:\d\d/);
+  });
+
   it('shows no countdown when Room.turnTimerMinutes is null', () => {
     const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
     const room: Room = { ...makeRoom([adaBook]), turnTimerMinutes: null };

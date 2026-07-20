@@ -73,7 +73,8 @@
   $: deadline =
     state.room && state.player && state.room.turnTimerMinutes && state.room.roundStartedAt != null
       ? state.room.roundStartedAt +
-        (state.room.timerExtensions[state.player.id] ?? state.room.turnTimerMinutes * 60_000)
+        state.room.turnTimerMinutes * 60_000 +
+        (state.room.timerExtensions[state.player.id] ?? 0)
       : null;
   $: countdownLabel = deadline !== null ? formatCountdown(Math.max(0, deadline - now)) : null;
 

@@ -225,6 +225,41 @@ describe('sweepRoom', () => {
     expect(room.pendingTimeoutVote!.voteDeadline).toBeLessThanOrEqual(now + 2 * 60_000 + 1000);
   });
 
+  it('adds a granted extension to the base turn duration (additive deadline)', () => {
+    // 30m timer, round started 40m ago, ada has a 15m extension. Additive
+    // deadline = start + 30m + 15m = start + 45m, still 5m in the future,
+    // so no vote opens. The old replacing form (deadline = start + 15m)
+    // would have opened one.
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const room = makeRoom({
+      players: [ada],
+      books: [bookA],
+      roundStartedAt: Date.now() - 40 * 60_000,
+      timerExtensions: { [ada.id]: 15 * 60_000 },
+    });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).toBeNull();
+  });
+
+  it('opens the vote once the additive (base + extension) deadline has passed', () => {
+    // Same 30m + 15m = 45m deadline, but the round started 50m ago, so it
+    // has now passed and the vote opens — confirming the total is 45m.
+    const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
+    const room = makeRoom({
+      players: [ada],
+      books: [bookA],
+      roundStartedAt: Date.now() - 50 * 60_000,
+      timerExtensions: { [ada.id]: 15 * 60_000 },
+    });
+
+    sweepRoom(room, Date.now());
+
+    expect(room.pendingTimeoutVote).not.toBeNull();
+    expect(room.pendingTimeoutVote!.stalledPlayerIds).toEqual([ada.id]);
+  });
+
   it('does not open a vote while at least one still-due player has not yet passed their deadline', () => {
     const bookA: Book = { id: 'bookA', roomId, originAuthorId: ada.id, entries: [] };
     const bookC: Book = { id: 'bookC', roomId, originAuthorId: lin.id, entries: [] };

@@ -139,7 +139,9 @@ function deadlineFor(room: Room, playerId: string): number {
   // invokes this on `writing` rooms with a timer set (infrastructure.md
   // Turn Timer Sweep), so this is always a real timestamp in practice.
   const roundStartedAt = room.roundStartedAt ?? 0;
-  return roundStartedAt + (room.timerExtensions[playerId] ?? FULL_TURN_MS(room));
+  // Additive: an extension adds to the base turn duration rather than
+  // replacing it (datamodel.md Normalization Rules — Turn timer).
+  return roundStartedAt + FULL_TURN_MS(room) + (room.timerExtensions[playerId] ?? 0);
 }
 
 /**
