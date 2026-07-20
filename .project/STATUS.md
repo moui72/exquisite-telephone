@@ -1,389 +1,25 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-19 (`/ardd-refine ui` ran: documented the **Salon
-Footer** — a persistent bottom bar on every view carrying the house
-wordmark (or "Salon No. <code>" once seated), the docent's "?" button,
-and a host-only gavel. The refine found the footer had *replaced*, not
-merely supplemented, the prior entry points: `Lobby.svelte` no longer
-contains the "How this salon works" link or the Moderation Panel at
-all, so three `ui.md` sections (Lobby View, Rules Overview Panel,
-Moderation Panel) were describing an app that no longer existed. All
-three corrected; both panels are now app-level overlays with the footer
-as their single entry point. **One regression surfaced and logged**
-(`feedback-main-338d.md`, F001): the host-suppression of the "game
-can't continue" notice was only justified while the Moderation Panel
-was inline and always visible — now that it's a modal, a host who kicks
-mid-game gets no frozen-room signal at all until they reopen it, while
-every non-host sees the notice. `ui.md` `last_updated` stamped,
-`diagram_status` stale. Prior entry: `/ardd-plan curated-prompt-mode` ran: designed
-and applied the feature's `datamodel.md` + `ui.md` changes (four new
-`Room` fields — `promptMode`, `curatedPromptCount`, `allowPromptWriteIn`,
-`dealtPrompts`; a "Curated prompts" normalization rule scoping the
-feature to `Entry.position === 0`, guaranteeing distinctness by
-partitioning a single shuffle, and clamping the hand size at deal time;
-an "Unscoped dealt prompts" production annotation; host prompt-mode
-controls and a three-way turn-hint split in `ui.md`). Plan
-`plan-curated-prompt-mode-2026-07-19-cfab.md` **approved** (5 phases, 0
-open questions); tasks file `tasks-curated-prompt-mode-4e57.md`
-generated and `ready` (11 tasks, 10 of 11 carrying a failing-test-first
-requirement). Feature flipped `backlogged` -> `planned` -> `tasked`.
-`datamodel.md` `diagram_status` flipped `stale`. **Note**: T010 corrects
-a real existing bug found while checking the seam — the blind-guess turn
-hint currently renders on the opening turn (`position === 0`), where no
-preceding drawing exists and the copy is false. Prior entry: `/ardd-backlog` logged
-`curated-prompt-mode`. Prior entry: `/ardd-implement` ran
-`tasks-in-game-rules-and-guidance-4c59.md` end to end: delegated to a
-worktree subagent (solo mode, `delegation: eager`), all 6 tasks
-completed — a dismissible `RulesOverview.svelte` panel explaining the
-core game loop, reachable via a "How this salon works" toggle in both
-the Foyer and in-room `Lobby.svelte` branches; docent-voice turn hints
-in `WritingDrawing.svelte` keyed off `Entry.type`; a new
-`InfoTooltip.svelte` `(?)` affordance (click-to-reveal, mobile-friendly
-per Principle II) applied to all three host settings (force
-monochrome, turn timer, laps per book). **One real bug found and fixed
-along the way**: nesting the tooltip's `<button>` inside each setting's
-`<label>` broke implicit label association (a `<button>` is itself
-labelable, so the wrapping picked the wrong control) — fixed with
-explicit `id`/`for` association and distinct accessible names per
-tooltip. Tasks file flipped `completed`; feature flipped `implemented`.
-Merged clean to `main` (`merge_policy: auto`, no conflicts, 10 files
-changed), worktree reaped. Post-merge typecheck reconfirmed clean (331
-files, 0 errors — up from 327, the 4 new component/test files). Full
-suite per the subagent's own T006 run: 136 tests green, lint clean.
-Prior entry: `/ardd-plan in-game-rules-and-guidance` ran:
-designed and applied the feature's `ui.md` changes — a new "Rules
-Overview Panel" section (core-loop explanation, reachable from both
-the Foyer and Lobby via a "How this salon works" link), a docent-voice
-turn hint added to the Writing/Drawing View (distinct per `Entry.type`),
-and an info-affordance convention (`(?)` tooltip) applied to all three
-host settings (force monochrome, turn timer, laps per book). Pure
-client-side content/UI — no `datamodel.md`/`infrastructure.md` changes
-needed. `ui.md` stays `stable`, `diagram_status` stale (textual only,
-no new top-level component nodes worth diagramming differently — this
-is content inside existing views). Plan
-`plan-in-game-rules-and-guidance-2026-07-19-5540.md` approved (4
-phases: Rules Overview Panel, turn hints, host-setting tooltips,
-full-suite verification); tasks file
-`tasks-in-game-rules-and-guidance-4c59.md` generated and `ready` (6
-tasks, every task except the final verification carries a
-failing-test-first requirement). Feature flipped `backlogged` ->
-`planned` -> `tasked`. Prior entry: `/ardd-refine ui` ran: documented this session's
-two design changes that had shipped ahead of the artifact — the Foyer
-(pre-room hero heading + tagline, create/join form wrapped in a
-`GiltFrame` captioned "The Foyer — RSVP Required") added to the Lobby
-View section, and Reveal's "The Gallery Opens" title moment added to
-the Reveal View section. Visual Identity gained a new "Gilded title
-treatment" paragraph documenting the `font-title`/Uncial Antiqua token
-(reserved for exactly these two title-page moments, never applied
-elsewhere) and the Gilt Frame description now notes its fourth usage
-site (the Foyer form). Pure documentation catch-up — no new capability
-introduced, nothing routed to the feature register. `last_updated`
-stamped, `diagram_status` flipped `stale` (textual only, no new
-component nodes). Prior entry: `/ardd-implement` ran `tasks-main-1f13.md` end to
-end, inline (not delegated — a trivial one-line doc fix, lower overhead
-than a full worktree subagent): T001 added `onSetLapsPerBook` to
-`infrastructure.md`'s Realtime Sync handler list, verified via
-`git diff`. Tasks file flipped `completed` (1/1); no bound features.
-Committed directly to `main` (`9364dee`, pre-commit hook green: lint/
-typecheck/full suite). `DEFECTS.md`'s one open defect (`62ab502f`) is
-now fixed. Prior entry: `/ardd-plan` ran (no feature slug — artifacts/
-feedback/defects only): surfaced the one unsurfaced defect
-(`62ab502f`, `onSetLapsPerBook` missing from `infrastructure.md`'s
-handler list), accepted. Plan `plan-main-2026-07-19-b1d5.md` approved
-(1 phase, pure documentation fix — no code changes, the handler already
-works correctly); tasks file `tasks-main-1f13.md` generated and `ready`
-(1 task; no bound features). `in-game-rules-and-guidance` stays
-`backlogged` — not targeted by slug this run, still available via
-`/ardd-plan in-game-rules-and-guidance`. Prior entry: `/ardd-backlog`
-logged `in-game-rules-and-guidance`:
-a rules-overview panel, explanatory text on the turn interface, and
-tooltips/info links for every host setting — the game currently has no
-onboarding/explanation surface at all. Backlogged, not yet planned.
-Prior entry: `/ardd-defects` ran a fresh full pass — **1 defect** found
-(down from 1, but a different one): `infrastructure.md`'s Realtime Sync
-handler list is missing `onSetLapsPerBook` (exists and works in
-`server/src/socket/handlers.ts:221`/`server.ts:16`, just undocumented —
-cosmetic, likely missed when laps-per-book shipped). `constitution.md`,
-`datamodel.md`, `ui.md` all clean (0 defects each). The prior
-standing-drift entry (no artifact states a performance budget) dropped
-out entirely — the Quality Standard it tracked was trimmed as
-non-load-bearing in this session's `/ardd-refine constitution --review`
-pass, so there's no longer a claim to check it against. `ui.md`'s survey
-also flagged 2 documented-but-undocumented-scope gaps (not defects — code
-ahead of docs): this session's `font-title`/Uncial Antiqua gilded
-treatment and the pre-room "Foyer" GiltFrame wrap aren't yet described in
-`ui.md`'s Visual Identity/Lobby View sections; routed to a future
-`/ardd-refine ui` pass, not tracked in `DEFECTS.md`. Prior entry:
-`/ardd-refine constitution --review` ran: audited
-all 10 Core Principles plus the 5 Quality Standards against the other
-artifacts and a codebase grep, not against their own prose. All 10
-Core Principles and 3 of 5 Quality Standards confirmed load-bearing
-(notably Principle IX/Observability, which the standing `audit.md`
-question flagged as undocumented in `infrastructure.md`/`datamodel.md` —
-but `server/src/observability/logger.ts` actually implements it
-faithfully; that's a docs gap, not a dead principle, left for a future
-non-review `/ardd-refine constitution` pass to close). Two Quality
-Standards trimmed on user confirmation: **Performance Budgets** (never
-satisfied across 5+ shipped features; a prior plan explicitly declined
-to fix it, carried as standing drift in `DEFECTS.md` — decorative, not
-enforced) and **No Vendored Dependency With a Nested `.git`** (zero
-vendored dependencies exist anywhere in the repo; never once invoked
-against a real decision). Version bumped 1.0.1 -> 1.1.0 (MINOR — removes
-governance surface), Sync Impact Report prepended, `last_updated`
-stamped. **Note**: this makes the standing `DEFECTS.md` performance-budget
-drift entry and the corresponding `audit.md` constitution question both
-moot — neither file was touched here (single-writer rule: `/ardd-defects`
-and `/ardd-audit` own them respectively), so both will keep reporting a
-now-nonexistent claim until their owning skill next runs and re-derives
-against the trimmed constitution. Prior entry: `/ardd-implement` ran `tasks-main-be75.md` end to
-end: delegated to a worktree subagent (solo mode, `delegation: eager`),
-all 4 tasks completed. **T001's live reproduction found the real bug**:
-the drawing submit button isn't disabled and isn't broken on a normal
-click — it silently no-ops when clicked with an empty canvas
-(`drawnOps.length === 0` in `handleSubmitDrawing`), giving zero
-feedback and reading as "the button doesn't work." **T002** fixed it by
-disabling the button until a stroke/fill exists (`disabled={drawnOps.length
-=== 0}`, matching the text-entry form's existing disabled-until-valid
-pattern), test-first. **T003** added `'#ffffff'` to `DrawingCanvas.svelte`'s
-`PALETTE_COLORS` with a `border-marigold/30` default border so the white
-swatch stays visible against the toolbar before selection, test-first.
-**T004** full-suite verification: 271 tests green (25 shared + 119 server
-+ 127 client), lint clean, typecheck clean. Tasks file flipped
-`completed`; no bound features (`features: []`). Merged clean to `main`
-(`merge_policy: auto`, no conflicts, 5 files changed), worktree reaped.
-Post-merge typecheck reconfirmed clean (327 files, 0 errors).
-`feedback-main-7922.md` (F001, F002) is now fully resolved and merged —
-nothing further tracked from it. Prior entry: `/ardd-plan` ran: consumed `feedback-main-7922.md`
-(F001 drawing submit button unclickable, F002 palette needs a white
-erase/undo option), both accepted. `ui.md` amended — the drawing
-toolbar's palette now documents a white swatch as the erase/undo-fill
-mechanism (paint back over the white canvas background instead of a
-dedicated eraser); `diagram_status` flipped to `stale` (textual change
-only, no new component nodes, so a diagram refresh isn't strictly
-needed but the flag stands per convention). Plan
-`plan-main-2026-07-19-05fb.md` approved (3 phases: reproduce+fix the
-submit button, add the white swatch, full-suite verify) — F001's root
-cause wasn't determinable from static reading (no `disabled`, no
-overlay/`pointer-events` issue, no z-index conflict found in
-`WritingDrawing.svelte`/`DrawingCanvas.svelte`/`GiltFrame.svelte`), so
-T001 is a live-reproduction task ahead of the test-first fix. Tasks file
-`tasks-main-be75.md` generated and `ready` (4 tasks; no bound features).
-`feedback-main-7922.md` flipped `open` -> `planned`. No unsurfaced
-defects, no existing approved plan superseded. Prior entry: `/ardd-update` ran: switched channel stayed
-`beta`, updated installed skills from `c5ce6e9` (`v0.10.3-beta.1`) to
-`c7cb703` (`v1.0.1-beta.1`) — no pending migrations, all already
-applied; four workflow fields (`workflow_mode`/`next_step_prompt`/
-`delegation`/`merge_policy`) already present, no backfill needed.
-Project is now up-to-date on the beta channel. Prior entry:
-`/ardd-feedback` logged `feedback-main-7922.md`:
-F001 (Bug, `[artifacts: ui]`) — the drawing submit button doesn't work
-(can't be clicked); F002 (Bug, `[artifacts: ui]`) — the color palette
-needs to offer white as a way to erase/undo a fill. Both open, queued
-for the next `/ardd-plan`. Prior entry: `/ardd-implement` ran
-`tasks-configurable-book-laps-per-gam-2b08.md` end to end: delegated to
-a worktree subagent (solo mode, `delegation: eager`), all 7 tasks
-completed — `Room.lapsPerBook: number | null` added (shared type +
-`createRoom`/`replayRoom` defaults), a new `defaultLapsPerBook`
-shared helper, `computeNextEntry`'s completion check now multiplies
-`players.length` by the resolved laps value (author rotation/entry-type
-alternation confirmed unchanged, as the plan predicted), a new
-host-only/lobby-only `onSetLapsPerBook` handler + `set_laps_per_book`
-event, `onStartGame` resolving a still-`null` value at start time, a
-new `setLapsPerBook` session-store method, and a new Lobby control
-showing the live default until the host picks a value. One expected
-ripple, not a scope deviation: several pre-existing tests assumed
-single-rotation completion for small rooms (now 2 laps by default under
-5 players) and were pinned to `lapsPerBook: 1` since they test unrelated
-mechanics. Tasks file flipped `completed`; feature flipped
-`implemented`. Merged clean to `main` (`merge_policy: auto`, no
-conflicts, 23 files changed), worktree reaped. Post-merge typecheck
-clean (327 files, 0 errors). Full suite per the subagent's own T007 run:
-269 tests green (25 shared + 119 server + 125 client), lint clean.
-Both `datamodel.md` and `ui.md` diagrams refreshed: `datamodel.md`'s ER
-diagram gained the `lapsPerBook` field on `ROOM`; `ui.md`'s diagram is
-component-structure-level and the laps control is a plain form field on
-the existing Lobby node (no new component), so its diagram content is
-unchanged — both now `diagram_status: current`. Prior entry: `/ardd-plan
-configurable-book-laps-per-gam` ran:
-designed and applied the feature's artifact changes — `datamodel.md`
-gains `Room.lapsPerBook: number | null` plus a new Normalization Rule
-("Laps per book": book completion becomes `players.length * resolved
-laps`, author rotation/entry-type alternation unchanged; `null` means
-the Lobby shows a live-derived default — 2 under 5 players, 1 otherwise
-— that locks the moment the host explicitly picks a value);
-`ui.md`'s Lobby View gains a "laps per book" (1/2/3) control describing
-that same live-default-until-overridden behavior. Both `stable`, both
-`diagram_status: stale` pending a fresh `/ardd-diagram` pass. No
-changes needed to infrastructure/constitution. Plan
-`plan-configurable-book-laps-per-gam-2026-07-18-37ca.md` approved (4
-phases: shared round-math helper, server setter + start-game
-resolution, client Lobby control, full-suite verification); tasks file
-`tasks-configurable-book-laps-per-gam-2b08.md` generated and `ready` (7
-tasks, every task except the final verification carries a
-failing-test-first requirement). Feature flipped `backlogged` ->
-`planned` -> `tasked`. Prior entry: `/ardd-implement` ran
-`tasks-1449-a6ef.md` end to
-end: delegated to a worktree subagent, all 9 tasks completed —
-`ui.md` clarified (theme applies globally + slate-to-token mapping
-table), a global `@layer base` added to `app.css` (body bg/color/font,
-heading font), and every remaining view (`Lobby`, `WritingDrawing`,
-`Reveal`, `ModerationPanel`, `App` terminal states, plus a
-confirmation pass on `TurnStatus`/`DrawingCanvas`'s toolbar) reskinned
-to the theme tokens, each verified via a source-scan regression test
-plus a manual `grep -c "slate-"` returning 0 — the mechanism designed
-specifically to prevent a repeat of the prior pass's "looked plausible
-but only half-landed" gap. Merge hit one snag: this repo's global
-`commit.gpgsign=true` uses the user's 1Password-backed key, which was
-locked, so the plain `git merge --no-ff -m` failed
-(`1Password: failed to fill whole buffer`) — resolved by finishing the
-already-staged, conflict-free merge with an explicit
-`-c user.signingkey=...id_claude_signing.pub` override, this repo's
-established on-disk-key convention for Claude-made commits. Merged
-clean to `main`, worktree reaped. Post-merge typecheck reconfirmed
-clean (327 files, 0 errors — the file count jumped from 216 because
-the subagent also fixed `client/tsconfig.app.json` missing `"node"` in
-its `types` array, needed once the new source-scan tests used
-`node:fs`/`node:path`/`__dirname`). `feedback-main-5fdc.md`'s F001 is
-now fully resolved and merged. Prior entry: `/ardd-backlog` logged
-`configurable-book-laps-per-gam`: a game-creation setting for how many
-laps each book takes before Reveal — default 2 laps under 5 players,
-1 lap otherwise, max 3. Backlog entry only; target with `/ardd-plan
-configurable-book-laps-per-gam` when ready to design. Meanwhile, the
-full-app theme reskin (`tasks-1449-a6ef.md`) is running in a delegated
-worktree — see In Flight below; its plan/tasks/feedback bookkeeping
-already reflects the pre-delegation state described in the prior entry
-and isn't re-narrated here. Prior entry: `/ardd-plan` ran: consumed
-`feedback-main-5fdc.md`'s
-F001 (accepted) into a new 4-phase plan, `plan-1449-2026-07-18-2ce0.md`
-(approved) — Phase 1 clarifies `ui.md` (theme applies globally, not just
-to `GiltFrame`, plus a slate-to-token mapping table), Phase 2 adds a
-global `app.css` base layer (body bg/color/font, heading font), Phase 3
-does the actual per-view reskin across Lobby/WritingDrawing/Reveal/
-ModerationPanel/App-terminal-states/TurnStatus-DrawingCanvas-check (6
-parallel tasks, each with a source-scan regression-guard test asserting
-no `slate-` substring remains — meant to prevent a repeat of the
-"looked plausible but only half-landed" failure mode from the first
-pass), Phase 4 full-suite verification. Tasks file
-`tasks-1449-a6ef.md` generated and `ready` (9 tasks; no bound features).
-`feedback-main-5fdc.md` flipped `open` -> `planned`. No unsurfaced
-defects, no existing approved plan superseded. Prior entry:
-`/ardd-feedback` logged `feedback-main-5fdc.md`:
-F001 (UX) — the user reported the reskinned UI still "looks very
-plain," which a code check confirmed: `salon-gallery-ui-redesign`
-only actually reskinned the `GiltFrame` component itself; `font-
-display`/`font-body` are never applied anywhere, and the theme's
-background/text colors (`bg-butter`/`bg-velvet`/`bg-ink`/`bg-marigold`)
-appear nowhere outside `GiltFrame.svelte` — page headings, body text,
-labels, borders, and most buttons across Lobby/WritingDrawing/Reveal/
-ModerationPanel/TurnStatus/App terminal states are still stock
-Tailwind slate-gray/white. Open, queued for the next `/ardd-plan`.
-**ArDD update available**: installed `c5ce6e9`, source (beta channel)
-at `v0.10.3-beta.3` — run `/ardd-update` when convenient. Prior entry:
-`/ardd-implement` ran `tasks-7c63-355f.md` end to
-end: delegated to a worktree subagent (solo mode, `delegation: eager`),
-all 5 tasks completed and committed — `ui.md` clarified (host-only
-notice suppression rule, error-code-mapping rule), the duplicate
-"game can't continue" notice fixed in `WritingDrawing.svelte`
-(host-excluded, non-host still sees it), and an `ERROR_COPY`/
-`FALLBACK_ERROR_COPY` lookup added to `Lobby.svelte` replacing the raw
-`{state.error}` render — both test-first, both confirmed failing before
-the fix. Tasks file flipped `completed`; no bound features (`features:
-[]`) so nothing to flip to `implemented`. Merged clean to `main`
-(`merge_policy: auto`, no conflicts, 6 files changed), worktree reaped.
-Post-merge typecheck reconfirmed clean (216 files, 0 errors). Full
-suite per the subagent's own T005 run: 243 tests green (shared 18 +
-server 112 + client 113), lint clean. `feedback-main-8da5.md` (F001,
-F002) is now fully resolved and merged — nothing further tracked from
-it. All diagrams remain current (the `ui.md` edits were textual
-clarifications, no new component nodes). Prior entry: `/ardd-diagram
-ui` then `/ardd-plan` ran: `ui.md`'s
-diagram regenerated (`graph TD`, `README.md` UI section) and stamped
-`current`. Then a no-feature-slug `/ardd-plan` consumed the one open
-feedback file, `feedback-main-8da5.md` — both F001 and F002 accepted by
-the user and incorporated into a new 3-phase plan,
-`plan-7c63-2026-07-18-f55f.md` (approved): Phase 1 clarifies `ui.md`
-(single-visibility rule for the "can't continue" notice; error-code-
-mapping rule for Lobby's Error state), Phase 2 implements both fixes
-test-first, Phase 3 full-suite verification. Tasks file
-`tasks-7c63-355f.md` generated and `ready` (5 tasks; no bound features —
-`features: []`). `feedback-main-8da5.md` flipped `open` -> `planned`,
-stamped with the consuming plan. No unsurfaced defects, no existing
-approved plan superseded (none in scope overlap). Prior entry:
-`/ardd-feedback` logged `feedback-main-8da5.md`:
-the two implementer judgment calls flagged after
-`salon-gallery-ui-redesign`'s implementation, filed at the user's
-request — F001 (Bug, `[artifacts: ui]`): `ModerationPanel` and
-`WritingDrawing` both render the "game can't continue" notice,
-double-showing it when the panel's expanded; F002 (UX,
-`[artifacts: ui]`): Error/Empty states in `Lobby.svelte` still show raw
-server error codes instead of docent-voice copy. Both open, queued for
-the next `/ardd-plan`. Prior entry: `/ardd-implement` ran
-`tasks-salon-gallery-ui-
-redesign-7729.md` end to end: delegated to a worktree subagent (solo
-mode, `delegation: eager`), all 11 tasks completed and committed
-(Tailwind salon/gallery tokens + webfonts, `GiltFrame.svelte` signature
-component, docent-voice reskin of Lobby/WritingDrawing/Reveal/
-ModerationPanel/App terminal states, a new `prefersReducedMotion`
-store), tasks file flipped `completed`, feature flipped `implemented`.
-Merged clean to `main` (`merge_policy: auto`, no conflicts, 22 files
-changed), worktree reaped. Post-merge typecheck reconfirmed clean (216
-files, 0 errors). Full suite per the subagent's own T011 run: 135 tests
-green (shared 18 + server 112 + client 105), lint clean. `ui.md`'s
-`diagram_status` is `stale` (expected — a Visual Identity section was
-added; run `/ardd-diagram ui`). **Two implementer judgment calls
-flagged for review, not yet resolved:** (1) `ModerationPanel.svelte` now
-also renders the "game can't continue" notice inside the panel (T009),
-matching `ui.md`'s literal description, but the notice was already
-shown in `WritingDrawing.svelte` too — a host with the panel open during
-a non-continuable game now sees it twice; presentational only. (2) T010
-left the **Error** and **Empty** terminal states without docent-voice
-copy: `Lobby.svelte` renders raw server error codes
-(`room-not-found`/`not-host`/etc.) verbatim with no human-readable copy
-layer to translate, a pre-existing gap this redesign didn't introduce
-and no task authorized building an error-code-to-copy mapping; Empty is
-just Lobby with one player, already covered. Neither was decided
-unilaterally — both are surfaced here for the user to route via
-`/ardd-feedback` if they want either tracked as follow-up work. Prior
-entry: `/ardd-plan salon-gallery-ui-redesign` ran:
-designed and applied the feature's `ui.md` changes — a new "Visual
-Identity" section (color tokens, Fraunces/Rubik/Space Mono type
-pairing, the reusable Gilt Frame signature component, the Docent Voice
-copy rule, a `prefers-reduced-motion` carve-out for Reveal's decorative
-flourish only) plus short per-view framing notes (Lobby = RSVP card,
-Writing/Drawing = easel, Reveal = gallery opening) — replacing the old
-bare `## Styling` section; `ui.md` stays `stable`, `diagram_status` now
-`stale` pending a fresh `/ardd-diagram ui` pass. No changes needed to
-datamodel/infrastructure/constitution — presentation-layer only. Plan
-`plan-salon-gallery-ui-redesign-2026-07-18-885b.md` approved (6 phases,
-0 Complexity Tracking/Production Annotation entries — neither
-warranted); tasks file `tasks-salon-gallery-ui-redesign-7729.md`
-generated and `ready` (11 tasks, T001/T005/T011 untested by design —
-config-only, pure-restyle-no-behavior-change, and a verification run,
-respectively — every other task carries a failing-test-first
-requirement per constitution Principle III). Feature flipped
-`backlogged` -> `planned` -> `tasked`. Re-confirmed on this pass: no
-cross-artifact issues, no orphaned completion flips, nothing in flight,
-no open feedback, no documented-but-untracked capabilities, no epic
-grouping. Prior entry:
-`/ardd-update --beta` ran: project deliberately switched from the
-`stable` to the `beta` channel and updated to v0.10.2, no pending
-migrations, no frontmatter backfill needed. `tasks-5ef1-9eea.md` is
-fully `completed`
-(8/8): after the user supplied missing context on the two previously-
-open questions, `datamodel.md`/`ui.md` were refined with the resolved
-decisions (server-synchronized `Room.revealStartedAt` for Reveal
-pacing; kicked-player own-client ejection; full roster removal instead
-of strikethrough), and a second delegated worktree implemented T005-T008
-against that guidance — merged clean (non-fast-forward, no conflicts).
-All 5 bugs found that session are fixed and merged. Combined with
-the PNG-export fix (`tasks-7b9d-a92c.md`, 3/3, `completed`), all 10
-tasks files in the project are now `completed`, full suite on `main` is
-222 tests, all green (lint/typecheck clean too). A fresh `/ardd-audit`
-full pass also ran that session — 8 findings (0 suggestions, 5
-questions, 3 risks) written to `.project/audit.md`, not tracked here
-since it isn't part of this report's schema; see that file directly.).
-Keep this current as artifacts are refined and open questions are
-resolved._
+_Updated: 2026-07-20 (curated phrase-bank authoring session + two
+backlog entries. The **phrase bank for `curated-prompt-mode` now
+exists**: `shared/src/phraseBank.ts` exports
+`CURATED_PHRASE_BANK` (74 phrases), re-exported from
+`shared/src/index.ts`, typechecks clean. This satisfies the tasks
+file's Phase 1 requirement for a bank "sized so a realistic room never
+hits the clamp" — the clamp is `floor(bankSize / playerCount)`, so 74
+covers a 12-player room dealt 5 each with margin. Authoring ran as five
+generate-and-review batches (665 candidates -> 74 keepers); the
+selection criteria the reviewer converged on are captured in
+`shared/PROMPT_CRITERIA.md` (9 criteria with worked
+examples) — **read that file before generating more phrases**, since
+the load-bearing criterion (incongruity must be *earned* by the
+subject's anatomy or cultural baggage) is not recoverable from the
+keeper list alone. Two features backlogged to grow the bank
+organically from real play instead of by hand-curation:
+`player-prompt-rating` and `book-love-reactions`; both share a
+persistence gap, since the app is in-memory only. Prior entry:
+`/ardd-refine ui` ran, documenting the **Salon Footer** and logging
+regression F001 in `feedback-main-338d.md`.)_
 
 ## Artifact Status
 
@@ -438,7 +74,7 @@ session.
   frozen-room signal after a kick, a regression from the Salon Footer
   refactor). Will be picked up by the next `/ardd-plan`.
 
-0 open feedback files. `feedback-main-7922.md` (F001 Bug — drawing
+_History below (all prior items resolved):_ `feedback-main-7922.md` (F001 Bug — drawing
 submit button unclickable; F002 Bug — palette needs a white erase/undo
 option) is `planned` via `plan-main-2026-07-19-05fb.md`, and both items
 are now **fixed and merged to `main`** (`tasks-main-be75.md`,
@@ -482,9 +118,23 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-0 backlogged · 0 planned · 1 tasked · 10 implemented — see
-`.project/features/`. Nothing is backlogged; the one tasked feature has
-a `ready` tasks file awaiting `/ardd-implement`.
+2 backlogged · 0 planned · 1 tasked · 10 implemented — see
+`.project/features/`. The one tasked feature has a `ready` tasks file
+awaiting `/ardd-implement`; both backlogged entries feed the curated
+phrase bank and are deliberately deferred until it ships.
+
+- `player-prompt-rating` (**backlogged**, logged 2026-07-20) — players
+  thumbs-up/down the curated prompts they are dealt or draw from, with
+  ratings accumulating per phrase-bank entry so weak cards can be
+  retired and strong ones kept. Non-trivial: adds persistence
+  infrastructure the architecture does not yet have (rooms and sessions
+  are in-memory, so per-phrase tallies would not survive a restart).
+- `book-love-reactions` (**backlogged**, logged 2026-07-20) — heart
+  reactions on finished books at Reveal (positive-only by design, so the
+  reveal stays celebratory and no player's book is publicly downvoted);
+  when a hearted book opened with a player-written free-form prompt,
+  that phrase is logged as a curated-bank candidate. Shares the
+  persistence gap above.
 
 - `curated-prompt-mode` (**tasked**, logged 2026-07-19) — a
   host-selectable curated prompt mode alongside the existing free-form
@@ -626,6 +276,14 @@ three are now implemented and merged to `main`.**
 (not part of any of the 3 phases above) and is now implemented and
 merged — see Feature Backlog.
 
+## Work Queue
+
+- `tasks-curated-prompt-mode-4e57.md` — plan
+  `plan-curated-prompt-mode-2026-07-19-cfab.md`, feature
+  `curated-prompt-mode` (**ready**, 0/11). Sole `ready` file, so
+  `parallel-matrix.sh` is silent by design (it needs two participants);
+  no pair verdicts to report and nothing in flight to conflict with.
+
 ## In Flight
 
 _(none — the full-app reskin worktree reported back, merged clean,
@@ -676,19 +334,26 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 
 ## Summary
 
-**Current state (2026-07-19, latest pass):** 1 open issue (F001, logged
-not fixed). Safe to implement: **yes**. `curated-prompt-mode` is `tasked` with a `ready`
-11-task file; artifacts are all `stable` with 0 open questions; 0 open
-feedback (`feedback-main-338d.md`, F001 — host frozen-room signal); no
-worktrees in flight. Two things carried forward, neither
-blocking: `datamodel.md` and `ui.md` are both `stale` on diagrams, and
-the `SalonFooter` component committed this session (a persistent
-bottom bar carrying the rules and moderation affordances) is **not yet
-described in `ui.md`** — code ahead of docs, a candidate for the next
-`/ardd-defects` or `/ardd-refine ui` pass.
+**Current state (2026-07-20, latest pass):** 1 open issue (F001,
+logged not fixed). Safe to implement: **yes**. The blocker on
+`curated-prompt-mode` is cleared — `shared/src/phraseBank.ts` now holds
+a 74-phrase `CURATED_PHRASE_BANK`, so Phase 1's bank requirement is
+satisfied and the `ready` 11-task file can run. Artifacts are all
+`stable` with 0 open questions; 2 features backlogged (both
+phrase-bank growth, both blocked on the same missing persistence
+layer); no worktrees in flight. Three things carried forward, none
+blocking: `datamodel.md` and `ui.md` are both `stale` on diagrams; the
+`SalonFooter` component is **not yet described in `ui.md`** (code ahead
+of docs). The phrase-bank authoring criteria now live at
+`shared/PROMPT_CRITERIA.md`, tracked alongside the bank itself; the
+intermediate scratch files (raw batches, keepers list, rejection log)
+were discarded as superseded by the bank and that document.
 
 **Recommended next step:** `/ardd-implement` — execute
-`tasks-curated-prompt-mode-4e57.md`.
+`tasks-curated-prompt-mode-4e57.md` (11 tasks, 10 carrying a
+failing-test-first requirement). Note T001/Phase 1 asks for the bank to
+be *created*; it already exists, so that task reduces to wiring and
+verification.
 
 ---
 
