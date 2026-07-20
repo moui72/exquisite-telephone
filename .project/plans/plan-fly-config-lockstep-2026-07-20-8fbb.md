@@ -46,9 +46,16 @@ doesn't require opening the moderation modal.
 ## Technical Approach
 
 **Config generation.** Today both configs declare an identical key set
-and differ only in `app` (verified 2026-07-20) — so the generator starts
-from a green state and its first output must be byte-identical to what's
-committed, which is the strongest possible test of the template. The
+and every value matches except `app` (verified 2026-07-20) — so the
+generator starts from a green state, and its first output must match the
+committed files on every parsed key, which is the strongest available
+test of the template. The comparison is on **parsed values, not raw
+bytes**: the two files carry different comment blocks today
+(`fly.staging.toml`'s drift history, `fly.toml`'s scale note), and a
+single template with a one-key values table cannot reproduce two
+different comment blocks. Forcing byte-identity would push comments into
+the values table and defeat the allowlist, so comments are unified in the
+template instead. The
 generated files stay checked in so `flyctl deploy --config <file>` is
 unchanged and a reader sees real config in the repo. The per-channel
 values table is the allowlist of legitimate differences; adding a key to
@@ -132,7 +139,7 @@ Implements `release-promotion-workflow`. [artifacts: infrastructure]
 1. **Template format.** A `.toml` template with placeholder substitution
    keeps the source readable as TOML; a JS/TS object emitting TOML is
    more expressive but makes the source no longer look like the artifact
-   it produces. Resolve at Phase 2 implementation — the byte-identity
+   it produces. Resolve at Phase 2 implementation — the parsed-value
    test constrains either choice equally.
 2. **Which token pushes to `release`.** The default `GITHUB_TOKEN` may
    not trigger the `deploy-prod` workflow on the resulting push
