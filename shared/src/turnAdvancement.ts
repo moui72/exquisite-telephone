@@ -72,7 +72,7 @@ export function computeNextEntry(room: Room, book: Book): NextEntry | null {
   const active = activePlayers(room);
   const activeCount = active.length;
   const position = book.entries.length;
-  const laps = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
+  const laps = room.lapsPerBook ?? defaultLapsPerBook(activeCount);
   // Round-robin runs over the *active* roster, so completion is reached
   // after activeCount * laps entries — a kicked player's slot is never
   // assigned and must not strand the book (restart continuability fix).

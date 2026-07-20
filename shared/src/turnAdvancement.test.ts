@@ -509,4 +509,32 @@ describe('computeNextEntry over active players (restart after a kick)', () => {
       position: 1,
     });
   });
+
+  it('with lapsPerBook null, the lap default is derived from the active count', () => {
+    // 5-player room, one kicked -> 4 active. defaultLapsPerBook(4) === 2,
+    // so completion is 4 active * 2 laps = 8 entries. Under the pre-T003
+    // code the default came from the full roster (defaultLapsPerBook(5)
+    // === 1 lap -> 4 entries), which would have stranded the book at the
+    // wrong length. Exercises the null fallback branch of the lap
+    // resolution (concrete lapsPerBook is normally resolved at start).
+    const bob = makePlayer('bob', roomId);
+    const cy = makePlayer('cy', roomId);
+    const kickedCy = { ...cy, kicked: true };
+    const roster = [ada, grace, lin, bob, kickedCy];
+    const fourEntries: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        makeEntry('bookA', ada.id, 0),
+        makeEntry('bookA', grace.id, 1),
+        makeEntry('bookA', lin.id, 2),
+        makeEntry('bookA', bob.id, 3),
+      ],
+    };
+    const room = makeRoom(roster, [fourEntries], null);
+    // Not complete at 4: the active-count lap default (2 laps) means the
+    // book runs to 8 entries.
+    expect(computeNextEntry(room, fourEntries)).not.toBeNull();
+  });
 });
