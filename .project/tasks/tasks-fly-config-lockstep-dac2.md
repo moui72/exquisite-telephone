@@ -79,7 +79,7 @@ status: in-progress
   channel should say so in its own text rather than becoming a values-table
   key. Make T006 pass.
 
-- [ ] T008 [artifacts: infrastructure] Regenerate both configs from the
+- [x] T008 [artifacts: infrastructure] Regenerate both configs from the
   template and commit the output. Expect a **comment-only diff** against the
   committed files (the unification from T007) — every parsed key and value
   must be unchanged apart from `app`. Any substantive value diff means the

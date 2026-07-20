@@ -1,11 +1,36 @@
-# Single Fly app, single process group — matches constitution Principle I
-# (no premature scaling: one server instance holds all in-memory room
-# state, see infrastructure.md). Update `app` after `fly launch`/`fly apps
-# create` assigns the real app name.
+# GENERATED FILE — DO NOT EDIT BY HAND.
+#
+# Both fly.toml (prod) and fly.staging.toml (beta) are generated from
+# scripts/fly-config/fly.template.toml by `pnpm run gen:fly`. Edit the
+# template and regenerate; `pnpm run check:fly` fails CI if either file
+# has drifted from what the template produces.
+#
+# The two configs are INTENDED to be identical except for `app`, and the
+# generator is what enforces it: `app` is the only key in the per-channel
+# values table, so a channel-specific setting cannot be introduced by
+# accident. Before this was mechanical it was a hand-maintained
+# convention, and it had already drifted once — the beta app ran without
+# the [mounts] block and CURATION_DATA_PATH below, so the Curation Store
+# silently fell back to a path inside the ephemeral container and every
+# rating beta collected was discarded on each deploy. No error, no
+# missing volume, just no data.
+#
+# Deployment topology: pushing to `main` deploys beta automatically (see
+# .github/workflows/ci.yml). Prod deploys only from the `release` branch,
+# which only ever receives a fast-forward of `main` — promote via the
+# "Promote main to release" workflow (.github/workflows/promote.yml,
+# run it from the Actions tab) rather than pushing by hand. See
+# infrastructure.md Deployment for the full two-app topology.
+#
+# Custom domains (certs managed via `fly certs`, DNS in Namecheap on
+# ty-pe.com — not tracked here): prod is ex-tel.ty-pe.com, beta is
+# beta-ex-tel.ty-pe.com.
+#
+# Single Fly app per channel, single process group — matches constitution
+# Principle I (no premature scaling: one server instance holds all
+# in-memory room state, see infrastructure.md).
 app = "exquisite-telephone"
 primary_region = "iad"
-# Custom domain: ex-tel.ty-pe.com (cert managed via `fly certs`, DNS in
-# Namecheap on ty-pe.com — not tracked here).
 
 [build]
 
@@ -19,8 +44,8 @@ primary_region = "iad"
 # The Curation Store's durable home — the only thing this app persists.
 #
 # IMPORTANT: `fly deploy` does NOT create this volume. It must be created
-# once, by hand, BEFORE the first deploy that references it, or the
-# machine fails to start:
+# once per app, by hand, BEFORE the first deploy that references it, or
+# the machine fails to start:
 #
 #   fly volumes create curation_data --size 1
 #
@@ -28,7 +53,10 @@ primary_region = "iad"
 # that region from `fly status` rather than assuming it matches
 # `primary_region` above — a volume in the wrong region is invisible to
 # the machine, which then fails to start. See infrastructure.md
-# Deployment.
+# Deployment for the per-app manual procedure.
+#
+# Beta's volume `vol_vp2l1gyjj3lw9me4` (1GB, iad, matching that app's
+# machine region) already exists, so beta's mount has a volume behind it.
 #
 # 1GB is Fly's minimum and is far beyond what a few hundred counters need;
 # there is no smaller option, and no reason to pick a larger one.
@@ -53,9 +81,10 @@ primary_region = "iad"
   # adapter across processes) makes that a correctness bug, not just an
   # HA nicety: Socket.IO requests round-robin between machines, so a
   # room created on machine A 404s ("room-not-found") when a join lands
-  # on machine B. After the first deploy, run `fly scale count 1` once
-  # to bring it down to a single machine — subsequent deploys update
-  # that machine in place rather than re-provisioning a second one.
+  # on machine B. After the first deploy against a given app, run
+  # `fly scale count 1` once (add `-a <app>` for beta) to bring it down
+  # to a single machine — subsequent deploys update that machine in
+  # place rather than re-provisioning a second one.
 
   [[http_service.checks]]
     grace_period = "10s"
