@@ -20,7 +20,14 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           id: 'ABCDE',
           hostPlayerId: 'p1',
           players: [
-            { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
+            {
+              id: 'p1',
+              roomId: 'ABCDE',
+              name: hostName,
+              connected: true,
+              sessionToken: 't',
+              kicked: false,
+            },
           ],
           status: 'lobby',
           books: [],
@@ -39,7 +46,14 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
           allowPromptWriteIn: true,
           dealtPrompts: {},
         },
-        player: { id: 'p1', roomId: 'ABCDE', name: hostName, connected: true, sessionToken: 't', kicked: false },
+        player: {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: hostName,
+          connected: true,
+          sessionToken: 't',
+          kicked: false,
+        },
         error: null,
         reconnecting: false,
       });
@@ -80,7 +94,16 @@ describe('Lobby view', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      players: [
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+      ],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -113,8 +136,22 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -156,9 +193,30 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
+        {
+          id: 'p3',
+          roomId: 'ABCDE',
+          name: 'Lin',
+          connected: true,
+          sessionToken: 't3',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -188,7 +246,16 @@ describe('Lobby view', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      players: [
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+      ],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -228,9 +295,30 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
+        {
+          id: 'p3',
+          roomId: 'ABCDE',
+          name: 'Lin',
+          connected: true,
+          sessionToken: 't3',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -264,9 +352,30 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
-        { id: 'p3', roomId: 'ABCDE', name: 'Lin', connected: true, sessionToken: 't3', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
+        {
+          id: 'p3',
+          roomId: 'ABCDE',
+          name: 'Lin',
+          connected: true,
+          sessionToken: 't3',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -297,7 +406,7 @@ describe('Lobby view', () => {
     expect(hostSession.setTurnTimer).toHaveBeenCalledWith(60);
   });
 
-  it("shows the live default laps-per-book value when Room.lapsPerBook is null, tracking player count", async () => {
+  it('shows the live default laps-per-book value when Room.lapsPerBook is null, tracking player count', async () => {
     const makeRoom = (playerCount: number): Room => ({
       id: 'ABCDE',
       hostPlayerId: 'p1',
@@ -356,8 +465,22 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -391,7 +514,14 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -435,8 +565,22 @@ describe('Lobby view', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -464,14 +608,25 @@ describe('Lobby view', () => {
 
     const guestSession = makeFakeSession({ room, player: room.players[1]!, error: null });
     render(Lobby, { props: { session: guestSession } });
-    expect(screen.queryAllByRole('checkbox', { name: /enforce a monochrome decree/i })).toHaveLength(1); // still just the host's
+    expect(
+      screen.queryAllByRole('checkbox', { name: /enforce a monochrome decree/i }),
+    ).toHaveLength(1); // still just the host's
   });
 
   it('emits set_monochrome with the new value when the host toggles it', async () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      players: [
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+      ],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -542,7 +697,16 @@ describe('Lobby view', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
-      players: [{ id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false }],
+      players: [
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+      ],
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
@@ -565,10 +729,14 @@ describe('Lobby view', () => {
       const session = makeFakeSession({ room, player: room.players[0]!, error: null });
       render(Lobby, { props: { session } });
 
-      await fireEvent.click(screen.getByRole('button', { name: /force monochrome|monochrome decree/i }));
+      await fireEvent.click(
+        screen.getByRole('button', { name: /force monochrome|monochrome decree/i }),
+      );
       expect(screen.getByText(/hides the color palette/i)).toBeInTheDocument();
 
-      await fireEvent.click(screen.getByRole('button', { name: /turn timer|contemplation period/i }));
+      await fireEvent.click(
+        screen.getByRole('button', { name: /turn timer|contemplation period/i }),
+      );
       expect(screen.getByText(/timeout vote/i)).toBeInTheDocument();
 
       await fireEvent.click(screen.getByRole('button', { name: /what's a lap/i }));
@@ -588,8 +756,22 @@ describe('Lobby prompt-mode host controls', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
-        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+        {
+          id: 'p2',
+          roomId: 'ABCDE',
+          name: 'Grace',
+          connected: true,
+          sessionToken: 't2',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -690,7 +872,14 @@ describe('Lobby prompt-mode info affordance', () => {
       id: 'ABCDE',
       hostPlayerId: 'p1',
       players: [
-        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
       ],
       status: 'lobby',
       books: [],
@@ -722,5 +911,86 @@ describe('Lobby prompt-mode info affordance', () => {
     // The tooltip button must not break the select's label association --
     // the control is still reachable by its own label.
     expect(screen.getByLabelText(/prompt mode/i)).toBeInTheDocument();
+  });
+});
+
+/**
+ * T008/T009 — info-affordance coverage across ALL host settings (ui.md
+ * Lobby View). Four tooltips existed against seven host controls; the
+ * phrase-count selector, the write-in toggle, and the small-game
+ * acknowledgement had none.
+ */
+describe('Lobby host-setting info affordances', () => {
+  /**
+   * Renders the Lobby in the ONE state where every host setting is on
+   * screen at once: as host, in curated mode (which reveals the count
+   * selector and write-in toggle), below the minimum player count (which
+   * reveals the small-game acknowledgement). Rendering any other state
+   * would let a coverage assertion pass vacuously.
+   */
+  function renderAllHostControls() {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        {
+          id: 'p1',
+          roomId: 'ABCDE',
+          name: 'Ada',
+          connected: true,
+          sessionToken: 't1',
+          kicked: false,
+        },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'curated',
+      curatedPromptCount: 3,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    return render(Lobby, { props: { session } });
+  }
+
+  it('explains the phrases-per-player selector', async () => {
+    renderAllHostControls();
+
+    const tooltip = screen.getByRole('button', { name: /how large is each hand/i });
+    await fireEvent.click(tooltip);
+
+    expect(screen.getByText(/more choice/i)).toBeInTheDocument();
+    // The label association must survive the tooltip wrapper.
+    expect(screen.getByLabelText(/phrases per player/i)).toBeInTheDocument();
+  });
+
+  it('explains the write-in toggle', async () => {
+    renderAllHostControls();
+
+    const tooltip = screen.getByRole('button', { name: /write.?in/i });
+    await fireEvent.click(tooltip);
+
+    expect(screen.getByText(/offer rather than a rule/i)).toBeInTheDocument();
+  });
+
+  it('explains the small-game acknowledgement', async () => {
+    renderAllHostControls();
+
+    const tooltip = screen.getByRole('button', {
+      name: /small salon|fewer than three|small game/i,
+    });
+    await fireEvent.click(tooltip);
+
+    expect(screen.getByText(/barely any chain/i)).toBeInTheDocument();
   });
 });

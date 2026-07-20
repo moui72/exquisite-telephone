@@ -24,7 +24,7 @@
    * start game, rejoin); a generic fallback covers any unmapped code.
    */
   const ERROR_COPY: Record<string, string> = {
-    'room-not-found': "The house has no salon by that code — check the code and try again.",
+    'room-not-found': 'The house has no salon by that code — check the code and try again.',
     'not-host': 'Only the host may do that.',
     'too-few-players': 'The salon needs a few more guests before the exhibition can begin.',
     'room-not-in-lobby': 'This salon has already begun — late arrivals cannot be seated.',
@@ -126,8 +126,8 @@
         Exquisite Telephone
       </h1>
       <p class="max-w-sm text-sm text-ink/60">
-        A salon game of drawings whispered down the line. Gather your guests, then write, draw,
-        and reveal.
+        A salon game of drawings whispered down the line. Gather your guests, then write, draw, and
+        reveal.
       </p>
     </div>
 
@@ -251,7 +251,10 @@
           label="About force monochrome"
           explanation="Hides the color palette from everyone's drawing tool, for the whole game."
         >
-          <label for="monochrome-toggle" class="flex items-center gap-2 text-sm font-medium text-ink/90">
+          <label
+            for="monochrome-toggle"
+            class="flex items-center gap-2 text-sm font-medium text-ink/90"
+          >
             <input
               id="monochrome-toggle"
               type="checkbox"
@@ -326,9 +329,14 @@
 
         {#if state.room.promptMode === 'curated'}
           <div class="flex flex-col gap-1">
-            <label for="curated-prompt-count-select" class="text-sm font-medium text-ink/90">
-              Phrases Per Player
-            </label>
+            <InfoTooltip
+              label="How large is each hand?"
+              explanation="How many phrases each guest is dealt to choose from. A larger hand means more choice, and fewer guests settling for a phrase they didn't much like."
+            >
+              <label for="curated-prompt-count-select" class="text-sm font-medium text-ink/90">
+                Phrases Per Player
+              </label>
+            </InfoTooltip>
             <select
               id="curated-prompt-count-select"
               class="rounded-md border border-marigold/30 px-3 py-2 text-base"
@@ -341,30 +349,38 @@
             </select>
           </div>
 
-          <label
-            for="allow-prompt-write-in-toggle"
-            class="flex items-center gap-2 text-sm font-medium text-ink/90"
+          <InfoTooltip
+            label="About permitting a write-in"
+            explanation="Leaves the dealt hand as an offer rather than a rule: a guest may ignore it and write their own opening phrase. Turn it off to keep every book starting from the curated bank."
           >
-            <input
-              id="allow-prompt-write-in-toggle"
-              type="checkbox"
-              checked={state.room.allowPromptWriteIn}
-              on:change={handleAllowWriteInToggle}
-            />
-            Permit guests to write their own instead
-          </label>
+            <label
+              for="allow-prompt-write-in-toggle"
+              class="flex items-center gap-2 text-sm font-medium text-ink/90"
+            >
+              <input
+                id="allow-prompt-write-in-toggle"
+                type="checkbox"
+                checked={state.room.allowPromptWriteIn}
+                on:change={handleAllowWriteInToggle}
+              />
+              Permit guests to write their own instead
+            </label>
+          </InfoTooltip>
         {/if}
 
-        <p class="text-xs text-ink/60">
-          Player count: recommend 4+ players, minimum 3.
-        </p>
+        <p class="text-xs text-ink/60">Player count: recommend 4+ players, minimum 3.</p>
 
         {#if belowMinimumPlayers}
-          <label class="flex items-start gap-2 text-sm text-ink/90">
-            <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
-            I am aware this salon is intimately attended (fewer than three guests) and wish to proceed
-            nonetheless
-          </label>
+          <InfoTooltip
+            label="About proceeding with a small salon"
+            explanation="Below three guests a book returns to its author almost at once, so a phrase has barely any chain to drift along — the reveal has little to show. Ticking this lets the exhibition begin anyway."
+          >
+            <label class="flex items-start gap-2 text-sm text-ink/90">
+              <input type="checkbox" bind:checked={acknowledgeSmallGame} class="mt-1" />
+              I am aware this salon is intimately attended (fewer than three guests) and wish to proceed
+              nonetheless
+            </label>
+          </InfoTooltip>
         {/if}
 
         <button
