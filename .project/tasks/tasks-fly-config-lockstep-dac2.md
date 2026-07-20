@@ -32,7 +32,7 @@ status: in-progress
   ([[constitution]] Principle VI). Add a test covering that a host in a
   `nonContinuable` room sees the indication end-to-end at the App level.
 
-- [ ] T004 [artifacts: ui] Add a regression test asserting the gavel button
+- [x] T004 [artifacts: ui] Add a regression test asserting the gavel button
   (and therefore the indication) is absent entirely for a non-host, even when
   `room.nonContinuable` is `true` — `App.svelte` passes
   `onShowModeration: null` for non-hosts, and the moderation affordance must

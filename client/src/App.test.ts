@@ -212,6 +212,25 @@ describe('salon footer rules overview (plan-in-game-rules-and-guidance)', () => 
     // presentational ([[constitution]] Principle VI).
     expect(screen.getByRole('button', { name: /cannot continue/i })).toBeInTheDocument();
   });
+
+  it('never shows a non-host the gavel, even when the room is nonContinuable', () => {
+    const bob = { id: 'bob', roomId, name: 'Bob', connected: true, sessionToken: 't2', kicked: false };
+    const room = { ...makeRoom('writing'), nonContinuable: true };
+    const session = makeFakeSession({
+      room: { ...room, players: [ada, bob] },
+      player: bob,
+      error: null,
+      reconnecting: false,
+    });
+
+    render(App, { props: { session } });
+
+    // App.svelte passes onShowModeration: null for non-hosts, so the gavel
+    // is absent entirely rather than shown disabled ([[ui]] Salon Footer).
+    // The moderation affordance must never leak to a non-host.
+    expect(screen.queryByRole('button', { name: /cannot continue/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /moderation/i })).not.toBeInTheDocument();
+  });
 });
 
 describe('theme regression guard (plan-1449)', () => {
