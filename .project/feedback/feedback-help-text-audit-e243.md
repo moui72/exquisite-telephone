@@ -1,7 +1,7 @@
 ---
-status: open
+status: planned
 created: 2026-07-20
-plan: null
+plan: plan-help-text-accuracy-2026-07-20-e6e1.md
 ---
 
 # Feedback
@@ -11,7 +11,7 @@ player-facing help text problems in shipped behavior._
 
 ## Bugs
 
-- [ ] F001 `client/src/lib/components/RulesOverview.svelte:30` — the
+- [x] F001 `client/src/lib/components/RulesOverview.svelte:30` — the
   app's primary self-explanation — says "A guest is handed a blank page
   and asked to write a phrase — **anything they like**." This is FALSE
   whenever `Room.promptMode === 'curated'`: the player is dealt a fixed
@@ -22,7 +22,7 @@ player-facing help text problems in shipped behavior._
   prompts; `WritingDrawing.svelte:240` renders a chooser, not a blank
   input. [artifacts: ui]
 
-- [ ] F002 The `player-prompt-rating` thumbs control
+- [x] F002 The `player-prompt-rating` thumbs control
   (`WritingDrawing.svelte:340-372`) ships with only the legend "Was this
   fun to draw?" and **no explanation anywhere** — not in the rules
   panel, not in the footer, nowhere. The design deliberately makes
@@ -34,7 +34,7 @@ player-facing help text problems in shipped behavior._
   leaves a host guessing, whereas this one actively invites a wrong and
   socially costly reading. [artifacts: ui]
 
-- [ ] F003 Three host controls in the Lobby have no `InfoTooltip` while
+- [x] F003 Three host controls in the Lobby have no `InfoTooltip` while
   four others do: the curated prompt count selector
   (`Lobby.svelte:307`), the allow-write-in checkbox (`:325`), and the
   small-game acknowledgement checkbox (`:339`). The existing
@@ -52,7 +52,7 @@ player-facing help text problems in shipped behavior._
 
 ## UX
 
-- [ ] F004 `RulesOverview` describes only the base write/draw/reveal
+- [x] F004 `RulesOverview` describes only the base write/draw/reveal
   loop and omits four shipped features: turn timers, laps per book,
   curated prompt mode, and prompt rating. It also implies a book passes
   around the circle exactly once — "the book passes around the circle" —

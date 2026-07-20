@@ -1,39 +1,24 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (first `/audit-help-text` run, then
-`/ardd-feedback`, then `/ardd-defects`.
+_Updated: 2026-07-20 (`/ardd-plan` ran over the help-text audit
+feedback and both recorded defects. Plan
+`plan-help-text-accuracy-2026-07-20-e6e1.md` **approved** (5 phases, 3
+open questions); `tasks-help-text-accuracy-9755.md` generated and
+`ready` (13 tasks).
 
-**Help-text audit found 4 issues**, logged as
-`feedback-help-text-audit-e243.md` (3 bugs, 1 UX, all tagged `ui`). The
-sharpest: `RulesOverview.svelte:30` tells players they may write
-"anything they like" as their opening phrase — false in curated mode,
-which shipped this morning. And `player-prompt-rating` ships a thumbs
-control with **no explanation anywhere**, which matters more than a
-missing tooltip: a player sees thumbs on a phrase *another player
-wrote* and reasonably reads it as rating that person, which is exactly
-the social dynamic `ui.md` designed out.
+Scope covers F001-F004 from `feedback-help-text-audit-e243.md` plus
+defects `c217e21f` and `f678931d`. `feedback-main-338d.md` was
+deliberately left `open` and untouched — it is a state-broadcast bug
+sharing no files with this work.
 
-**The audit also caught an error in its own skill.** `SKILL.md` cited
-`ui.md` as naming a minimum-player-override tooltip; it does not — that
-phrase is from a feature description, and the claim was written from
-memory rather than checked. Corrected, with a standing caution added:
-cite only from files actually opened.
-
-**`/ardd-defects` recorded 2 defects** (was 0): `infrastructure.md`'s
-handler list omits three handlers `server.ts` wires
-(`onSetPromptMode`, `onSetCuratedPromptCount`,
-`onSetAllowPromptWriteIn`), and `ui.md` claims the `(?)` pattern covers
-"every host-configurable setting" while four tooltips exist against
-seven controls. `DEFECTS.md` now also records what was **checked
-clean** — `Room` field parity, the deliberately number-free entry-limit
-rule, the rewritten Curation Store section, and Principles VII/IX/X —
-so a later run can see coverage, not just failures.
-
-**Deferred-ledger decision surfaced as instructed: keep waiting.** Every
-finding this run is a defect to fix, not a judgment to record as
-accepted; only one candidate (the curated-tooltip coverage question)
-would have gone in a ledger, which is not enough signal. Revisit after a
-second run.)_
+Two structural decisions in the plan: the two defects sit in **different
+phases** rather than being batched as "the doc fixes", because
+`f678931d` cannot be corrected until the tooltip question is settled —
+`ui.md`'s claim becomes true or false depending on what the code does;
+and the plan commits to **structural** prose tests (a tooltip exists per
+control; the panel makes no mode-specific claim) rather than assertions
+pinned to exact wording, which would break on every copy edit and get
+deleted.)_
 
 ## Artifact Status
 
@@ -73,19 +58,20 @@ a plan.)_
 **2 defects** as of 2026-07-20 — see `.project/DEFECTS.md`.
 `infrastructure.md`'s handler list omits three wired handlers, and
 `ui.md` overclaims tooltip coverage (four tooltips, seven controls).
-Both are resolvable from either side — add the code, or narrow the
-claim. The `ui.md` one has a code-side twin logged as F003 in
-`feedback-help-text-audit-e243.md`; fixing that closes both.
+Both are now **surfaced and planned** in
+`plan-help-text-accuracy-2026-07-20-e6e1.md` (T001 and T010). They will
+drop out of `DEFECTS.md` on the next `/ardd-defects` run once fixed —
+that file is fully regenerated each run, never hand-edited.
 
 ## Feedback
 
-- **2 open feedback files** — `feedback-main-338d.md` (F001: host gets
+- **1 open feedback file** — `feedback-main-338d.md` (F001: host gets
   no frozen-room signal after a kick, a regression from the Salon Footer
-  refactor) and `feedback-help-text-audit-e243.md` (F001 rules panel
-  claims "anything they like", false in curated mode; F002 the rating
-  control has no explanation anywhere; F003 three Lobby controls lack
-  tooltips; F004 the rules panel omits four shipped features and implies
-  a single lap). Both will be picked up by the next `/ardd-plan`.
+  refactor). Deliberately left out of the help-text plan: a
+  state-broadcast bug sharing no files with that work. Will be picked up
+  by a later `/ardd-plan`.
+- `feedback-help-text-audit-e243.md` is now **planned** (all four items
+  incorporated) via `plan-help-text-accuracy-2026-07-20-e6e1.md`.
 
 _History below (all prior items resolved):_ `feedback-main-7922.md` (F001 Bug — drawing
 submit button unclickable; F002 Bug — palette needs a white erase/undo
@@ -300,7 +286,10 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(none — no `ready` or `in-progress` tasks file.)_
+- `tasks-help-text-accuracy-9755.md` — plan
+  `plan-help-text-accuracy-2026-07-20-e6e1.md`, no bound features
+  (**ready**, 0/13). Sole `ready` file, so `parallel-matrix.sh` is
+  silent by design; nothing in flight to conflict with.
 
 ## In Flight
 
@@ -353,30 +342,34 @@ Repo is public on GitHub: https://github.com/moui72/exquisite-telephone
 ## Summary
 
 **Current state (2026-07-20, latest pass):** Safe to implement:
-**yes**. Nothing is `ready` or `in-progress`. Two open feedback files
-(5 items total) and 2 recorded defects are the actionable work;
-artifacts are `stable` with 0 open questions; nothing in flight.
+**yes**. `tasks-help-text-accuracy-9755.md` is `ready` at 0/13.
+Artifacts `stable`, 0 open questions; nothing in flight. One feedback
+file stays open by choice (`feedback-main-338d.md`); three features stay
+backlogged, none urgent.
 
-**Not yet pushed.** `main` is ~59 commits ahead of `origin/main`.
-Pushing auto-deploys **beta** — the first deploy that will actually
-mount the volume and persist ratings, so worth watching rather than
-assuming.
+**Three open questions are assigned to tasks rather than left
+floating** — T004 (where the rating explanation lives), T007 (extend the
+curated tooltip or add separate ones), T011 (what the rules panel should
+cover). Each is a decision task whose output a later task depends on, so
+implementation cannot quietly guess.
+
+**Not yet pushed.** `main` is ~61 commits ahead of `origin/main`.
+Pushing auto-deploys **beta** — the first deploy that will mount the
+volume and persist ratings.
 
 Carried forward, none blocking:
-- All three renderable artifacts are `stale` on diagrams;
-  `infrastructure.md` and `datamodel.md` genuinely changed shape.
-- No client-side `maxlength` on the phrase input, so oversize content is
-  caught only server-side (`entry-too-large`); whether the client
+- All three renderable artifacts are `stale` on diagrams.
+- No client-side `maxlength` on the phrase input; oversize content is
+  caught only server-side (`entry-too-large`) and whether the client
   surfaces that gracefully is unverified.
 - **Flaky server test** — `server.test.ts > onStartGame rejects a
   non-host caller`, intermittent connect timeout. Predates this
-  session's work; can fail CI and be misattributed.
+  session's work.
 
-**Recommended next step:** `/ardd-plan` over the two open feedback
-files and the 2 defects — they overlap heavily (`ui.md` tooltip
-coverage appears as both), so one plan should absorb all of it. Then
-`/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
-diagrams whose shape actually changed.
+**Recommended next step:** `/ardd-implement` —
+`tasks-help-text-accuracy-9755.md` (13 tasks). Then `/ardd-diagram
+datamodel` + `/ardd-diagram infrastructure` for the two diagrams whose
+shape actually changed.
 
 ---
 
