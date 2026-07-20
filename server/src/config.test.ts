@@ -35,4 +35,24 @@ describe('server config', () => {
 
     expect(config.clientDistPath).toBe('/srv/static');
   });
+
+  /**
+   * Resolves the plan's Open Question 2. `.curation-data/` is chosen
+   * because it collides with none of the repo's existing ignores
+   * (`node_modules/`, `dist/`, `build/`, `.vite/`, `coverage/`,
+   * `.project/.lock`) and names itself unambiguously.
+   */
+  it('defaults curationDataPath to a local gitignored path', () => {
+    const config = loadConfig({});
+
+    const here = dirname(fileURLToPath(import.meta.url));
+    const expected = resolve(here, '../../.curation-data/curation.json');
+    expect(config.curationDataPath).toBe(expected);
+  });
+
+  it('uses CURATION_DATA_PATH from the environment when set', () => {
+    const config = loadConfig({ CURATION_DATA_PATH: '/data/curation.json' });
+
+    expect(config.curationDataPath).toBe('/data/curation.json');
+  });
 });
