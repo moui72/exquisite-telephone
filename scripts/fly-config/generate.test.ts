@@ -26,7 +26,7 @@ const channels = [
 
 describe('fly config generator', () => {
   for (const { channel, app, fixture: fixtureName } of channels) {
-    it.fails(`reproduces the ${channel} config's parsed values, differing only in app`, async () => {
+    it(`reproduces the ${channel} config's parsed values, differing only in app`, async () => {
       const { generate } = await import('./generate.ts');
 
       const generated = parse(generate(channel)) as Record<string, unknown>;
@@ -47,7 +47,7 @@ describe('fly config generator', () => {
     });
   }
 
-  it.fails('keeps the per-channel values table to exactly one key (app)', async () => {
+  it('keeps the per-channel values table to exactly one key (app)', async () => {
     const { channelValues } = await import('./generate.ts');
 
     // The allowlist guard: a new channel-specific key cannot be introduced
@@ -57,7 +57,7 @@ describe('fly config generator', () => {
     }
   });
 
-  it.fails('covers both deploy channels', async () => {
+  it('covers both deploy channels', async () => {
     const { channelValues } = await import('./generate.ts');
 
     expect(Object.keys(channelValues).sort()).toEqual(['beta', 'prod']);

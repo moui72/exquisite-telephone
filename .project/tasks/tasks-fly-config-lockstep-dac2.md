@@ -64,7 +64,7 @@ status: in-progress
   cannot be added without a deliberate test change. The generator does not
   exist yet; this test fails first.
 
-- [ ] T007 [artifacts: infrastructure] Implement the generator: one config
+- [x] T007 [artifacts: infrastructure] Implement the generator: one config
   template plus a per-channel values table mapping each channel to its `app`
   value and output filename (`exquisite-telephone` -> `fly.toml`,
   `exquisite-telephone-beta` -> `fly.staging.toml`). Resolve Open Question 1
