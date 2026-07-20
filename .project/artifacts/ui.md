@@ -132,8 +132,18 @@ The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
 separate modal) is reused for every host-configurable setting in the
 Lobby View above — the force-monochrome toggle, the turn timer
-selector, the laps-per-book control, and the prompt-mode control — so a host understands a
-setting's consequence before choosing a value, not just its label.
+selector, the laps-per-book control, the prompt-mode control, the
+phrases-per-player selector, the write-in toggle, and the small-game
+acknowledgement — so a host understands a setting's consequence before
+choosing a value, not just its label.
+
+"Every" is meant literally and is enforced, not merely asserted: a test
+derives the set of host settings from the rendered Lobby and fails if any
+one of them lacks an affordance, so a newly added setting cannot ship
+uncovered. One affordance per setting; a single tooltip covering a
+cluster of related settings was considered for the curated controls and
+rejected, since the explanation would then sit several controls away from
+the setting it describes.
 
 ## Moderation Panel
 
