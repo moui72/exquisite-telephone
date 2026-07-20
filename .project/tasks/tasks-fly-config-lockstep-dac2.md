@@ -1,7 +1,7 @@
 ---
 plan: plan-fly-config-lockstep-2026-07-20-8fbb.md
 generated: 2026-07-20
-status: ready
+status: in-progress
 ---
 
 # Tasks
