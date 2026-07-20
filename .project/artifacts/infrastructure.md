@@ -204,9 +204,45 @@ explicitly deferred past v1; PNG only for now.
 
 ## Deployment (Fly.io)
 
-The app deploys as a single Fly.io app running one process/container —
-matching Principle I (no premature scaling): one Dockerfile, one
-`fly.toml`. The Docker build is multi-stage: install and build
+**There are TWO Fly apps, not one.** Read this section before touching
+anything deployment-shaped: a change applied to only one channel is the
+single most repeated mistake in this repo's history.
+
+| | Production | Beta |
+|---|---|---|
+| Fly app | `exquisite-telephone` | `exquisite-telephone-beta` |
+| Config | `fly.toml` | `fly.staging.toml` |
+| CI token secret | `FLY_API_TOKEN_PROD` | `FLY_API_TOKEN_BETA` |
+| CI job (`.github/workflows/ci.yml`) | `deploy-prod` | `deploy-beta` |
+| Concurrency group | `deploy-prod` | `deploy-beta` |
+| Deploys from branch | `release` | `main` |
+| Volume | `vol_r681m3no1nq5ex14` | `vol_vp2l1gyjj3lw9me4` |
+| Custom domain | `ex-tel.ty-pe.com` | `beta-ex-tel.ty-pe.com` |
+
+Each channel has its own app, its own config, its own API token, and its
+own volume. Nothing is shared between them but the Dockerfile and the
+source tree.
+
+**Channel semantics.** Every push to `main` auto-deploys **beta** — so
+anything merged is live on beta within minutes, including any config
+mistake. Production deploys ONLY from the `release` branch, and `release`
+only ever receives a **fast-forward of `main`** — it is never developed
+on directly and never diverges. That is precisely why
+`.github/workflows/ci.yml` skips its `checks` job when
+`github.ref == 'refs/heads/release'`: the identical commits already
+passed those checks on their push to `main`, so re-running them would
+test the same tree twice. (Promoting `release` is currently a manual
+fast-forward; automating it is backlogged as `release-promotion-workflow`
+and is deliberately not built here.)
+
+**Principle I is still satisfied.** The earlier "single Fly.io app"
+phrasing in this section was simply wrong, not a scaling claim that has
+since lapsed: each app runs exactly **one machine, one process**, which
+is what Principle I (no premature scaling) actually asks for. Two
+channels of one machine each is not horizontal scaling — it is a staging
+environment.
+
+The Docker build is multi-stage: install and build
 `shared`/`server`/`client` via pnpm workspaces, then a slim runtime
 image running only the compiled server (which serves the client's
 static build, per the Overview above). The server reads its listen port
@@ -215,37 +251,54 @@ from the `PORT` environment variable (already supported by
 runtime.
 
 A Fly **volume** is mounted for the Curation Store (see above) — the
-only persistent disk this app uses. `CURATION_DATA_PATH` points at a
-file inside that mount (`/data/curation.json`). The volume is what
-carries curation data across the process restart every deploy causes;
-without it the file would be recreated empty on each release. Game state
-is deliberately *not* moved onto it.
+only persistent disk this app uses, and **one per channel**, never
+shared. `CURATION_DATA_PATH` (`/data/curation.json`) resolves inside
+that mount. The volume is what carries curation data across the process
+restart every deploy causes; without it, curation data would be
+recreated empty on each release — which is exactly what beta did
+silently until `fly.staging.toml` gained its `[mounts]` block and
+`CURATION_DATA_PATH`. Game state is deliberately *not* moved onto it.
 
-### One-time volume creation (required before the first deploy)
+Because the volume pins each app to the one machine that mounts it,
+`fly scale count 1` matters (see the note in `fly.toml`): a second
+machine would neither see that volume nor share its files. This is
+independent of, and additional to, the in-memory-room-state reason for
+running one machine.
 
-`fly deploy` does **not** create the volume for you. A deploy whose
-`fly.toml` declares a `[mounts]` entry with no matching volume fails at
-machine start, not at build time — so it looks like a healthy deploy
-right up until nothing comes back up. Create it once, by hand:
+### One-time MANUAL CLI steps — per app, not per repo
+
+These are **manual**, run by a human with `flyctl`, and are *not*
+performed by CI or by `fly deploy`. They are listed explicitly because
+they are precisely what gets forgotten when a second channel is added:
+CI deploys look healthy, and the omission surfaces later as a machine
+that will not start, or as data that silently goes nowhere.
+
+Run **once per app** — `exquisite-telephone` AND
+`exquisite-telephone-beta`:
 
 ```
-fly status                       # read the machine's ACTUAL region
-fly volumes create curation_data --size 1 --region <that region>
+fly status -a <app>                       # read the machine's ACTUAL region
+fly volumes create curation_data --app <app> --region <that region> --size 1
+fly scale count 1 -a <app>                # after the first deploy
 ```
 
-**The region must match the machine's**, not necessarily
-`primary_region` in `fly.toml`. A volume in a different region is
-invisible to the machine, which then fails to start with no obviously
-storage-related error. Always read the running machine's region from
-`fly status` rather than assuming it followed `primary_region`.
+**The volume region must match the RUNNING MACHINE's region**, read from
+`fly status`, and not necessarily `primary_region` in the config. A
+volume in a different region is invisible to the machine, which then
+fails to start with **no obviously storage-related error** — the deploy
+reports success right up until nothing comes back up.
 
-1GB is Fly's minimum volume size — far beyond what a few hundred
-counters need, but there is no smaller option and no reason to pick a
+1GB is Fly's minimum volume size — far beyond what a few hundred rating
+events need, but there is no smaller option and no reason to pick a
 larger one.
 
-Because the volume pins the app to the one machine that mounts it, this
-is also why `fly scale count 1` matters (see the note in `fly.toml`): a
-second machine would neither see this volume nor share the file.
+**Current state: both volumes already exist and are verified.** No
+`fly volumes create` is outstanding for either channel.
+
+| App | Volume ID | Size | Region | Machine region |
+|---|---|---|---|---|
+| `exquisite-telephone` | `vol_r681m3no1nq5ex14` | 1GB | `iad` | `iad` — matches |
+| `exquisite-telephone-beta` | `vol_vp2l1gyjj3lw9me4` | 1GB | `iad` | `iad` — matches |
 
 ## Production Annotations
 
