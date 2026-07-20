@@ -280,9 +280,14 @@
         </div>
 
         <div class="flex flex-col gap-1">
-          <label for="prompt-mode-select" class="text-sm font-medium text-ink/90">
-            Prompt Mode
-          </label>
+          <InfoTooltip
+            label="How does curated mode work?"
+            explanation="Curated deals every guest a private hand of phrases to choose from, and no two players are ever offered the same phrase."
+          >
+            <label for="prompt-mode-select" class="text-sm font-medium text-ink/90">
+              Prompt Mode
+            </label>
+          </InfoTooltip>
           <select
             id="prompt-mode-select"
             class="rounded-md border border-marigold/30 px-3 py-2 text-base"

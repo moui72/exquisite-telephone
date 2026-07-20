@@ -679,3 +679,48 @@ describe('Lobby prompt-mode host controls', () => {
     expect(screen.queryByLabelText(/prompt mode/i)).not.toBeInTheDocument();
   });
 });
+
+/**
+ * The prompt-mode control carries an info affordance like the other three
+ * host settings (ui.md Lobby View).
+ */
+describe('Lobby prompt-mode info affordance', () => {
+  it('exposes a tooltip with a distinct accessible name that reveals the curated explanation', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    const tooltip = screen.getByRole('button', { name: /how does curated mode work/i });
+    expect(tooltip).toBeInTheDocument();
+
+    await fireEvent.click(tooltip);
+    expect(screen.getByText(/private hand/i)).toBeInTheDocument();
+    expect(screen.getByText(/no two players/i)).toBeInTheDocument();
+
+    // The tooltip button must not break the select's label association --
+    // the control is still reachable by its own label.
+    expect(screen.getByLabelText(/prompt mode/i)).toBeInTheDocument();
+  });
+});

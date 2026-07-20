@@ -96,7 +96,7 @@ status: in-progress
   dependent controls are absent in free-form mode, present in curated
   mode, and that changing each emits the right event.
 
-- [ ] T008 [artifacts: ui] Attach an `InfoTooltip` info affordance to
+- [x] T008 [artifacts: ui] Attach an `InfoTooltip` info affordance to
   the prompt-mode control, matching the existing three host settings.
   Copy explains that curated deals each player a private hand to choose
   from and that no two players are ever offered the same phrase. Reuse
