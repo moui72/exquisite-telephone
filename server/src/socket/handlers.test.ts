@@ -1672,11 +1672,11 @@ describe('onSubmitEntry prompt rating', () => {
   function fakeCurationStore() {
     const calls: Array<[string, string, boolean]> = [];
     const store = {
-      snapshot: () => ({ ratings: {}, candidates: [] }),
       recordRating: (phrase: string, value: PromptRatingValue, isBank: boolean) => {
         calls.push([phrase, value, isBank]);
       },
-      flush: async () => {},
+      aggregate: async () => ({ ratings: {}, candidates: [] }),
+      settled: async () => {},
     } as CurationStore;
     return { store, calls };
   }
@@ -1766,7 +1766,7 @@ describe('onSubmitEntry prompt rating', () => {
     expect(calls[0]![0]).not.toBe(STROKE_DATA);
   });
 
-  it('routes a player-written opening phrase to the candidate pool', () => {
+  it('routes a player-written opening phrase to the candidate pool', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
     const { store, room, adasBook, drawerId } = roomAtPositionOne(written);
     const { store: curation, calls } = fakeCurationStore();
@@ -1926,7 +1926,11 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  function submitRatedDrawing(openingContent: string, rating: PromptRatingValue) {
+  function submitRatedDrawing(
+    openingContent: string,
+    rating: PromptRatingValue,
+    options: { maxEvents?: number } = {},
+  ) {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     joinRoom(store, { roomId: room.id, playerName: 'Grace' });
@@ -1957,7 +1961,8 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
 
     const adasBook = room.books.find((b) => b.originAuthorId === players[0].id)!;
     const drawer = computeNextEntry(room, adasBook)!;
-    const curation = createCurationStore(join(dir, 'c.json'), logger, { debounceMs: 60_000 });
+    const curation = createCurationStore(join(dir, 'c.json'), logger, options);
+    const ack = vi.fn();
 
     onSubmitEntry(
       makeFakeSocket(),
@@ -1970,55 +1975,91 @@ describe('onSubmitEntry rating routing (real curation store)', () => {
         content: STROKE_DATA,
         rating,
       },
-      vi.fn(),
+      ack,
       curation,
     );
 
-    return curation;
+    return { curation, ack };
   }
 
-  it('routes a curated-bank opening phrase to the bank tally', () => {
+  it('routes a curated-bank opening phrase to the bank tally', async () => {
     const phrase = CURATED_PHRASE_BANK[0]!;
 
-    const curation = submitRatedDrawing(phrase, 'up');
+    const { curation } = submitRatedDrawing(phrase, 'up');
 
-    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 1, down: 0 });
-    expect(curation.snapshot().candidates).toEqual([]);
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.ratings[phrase]).toEqual({ phrase, up: 1, down: 0 });
+    expect(aggregate.candidates).toEqual([]);
   });
 
-  it('routes a player-written opening phrase to the candidate pool', () => {
+  it('routes a player-written opening phrase to the candidate pool', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
 
-    const curation = submitRatedDrawing(written, 'up');
+    const { curation } = submitRatedDrawing(written, 'up');
 
-    expect(curation.snapshot().candidates).toEqual([
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.candidates).toEqual([
       { phrase: written, votes: 1, firstLoggedAt: expect.any(Number) },
     ]);
-    expect(curation.snapshot().ratings).toEqual({});
+    expect(aggregate.ratings).toEqual({});
   });
 
-  it('records a thumbs-down on a bank phrase against the bank tally', () => {
+  it('records a thumbs-down on a bank phrase against the bank tally', async () => {
     const phrase = CURATED_PHRASE_BANK[1]!;
 
-    const curation = submitRatedDrawing(phrase, 'down');
+    const { curation } = submitRatedDrawing(phrase, 'down');
 
-    expect(curation.snapshot().ratings[phrase]).toEqual({ phrase, up: 0, down: 1 });
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate.ratings[phrase]).toEqual({ phrase, up: 0, down: 1 });
   });
 
-  it('records a thumbs-down on a player-written phrase NOWHERE', () => {
+  it('records a thumbs-down on a player-written phrase NOWHERE', async () => {
     const written = 'a moose reading the evening news aloud to nobody';
 
-    const curation = submitRatedDrawing(written, 'down');
+    const { curation } = submitRatedDrawing(written, 'down');
 
-    expect(curation.snapshot()).toEqual({ ratings: {}, candidates: [] });
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    expect(aggregate).toEqual({ ratings: {}, candidates: [] });
   });
 
-  it('never tallies stroke data — nothing in the store resembles the drawing payload', () => {
+  it('a turn still submits successfully with the curation store at its limit', async () => {
+    // T016 / plan Open Question 2 -- curation is TELEMETRY. Reaching the
+    // accumulation bound must degrade curation and nothing else; it must
+    // never block, fail, or slow a game turn. Without this test the bound
+    // could be made blocking and every other curation test would still pass.
     const phrase = CURATED_PHRASE_BANK[0]!;
 
-    const curation = submitRatedDrawing(phrase, 'up');
+    // maxEvents: 0 -- the store is full before it has written anything.
+    const { curation, ack } = submitRatedDrawing(phrase, 'up', { maxEvents: 0 });
 
-    const serialized = JSON.stringify(curation.snapshot());
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    // The rating was silently discarded...
+    expect(aggregate).toEqual({ ratings: {}, candidates: [] });
+    // ...but the turn itself landed: the drawing is in the book.
+    expect(ack).toHaveBeenCalledWith(
+      expect.objectContaining({ entry: expect.objectContaining({ content: STROKE_DATA }) }),
+    );
+  });
+
+  it('never tallies stroke data — nothing in the store resembles the drawing payload', async () => {
+    const phrase = CURATED_PHRASE_BANK[0]!;
+
+    const { curation } = submitRatedDrawing(phrase, 'up');
+
+    await curation.settled();
+    const aggregate = await curation.aggregate();
+
+    const serialized = JSON.stringify(aggregate);
     expect(serialized).not.toContain('ops');
     expect(serialized).not.toContain('stroke');
   });
