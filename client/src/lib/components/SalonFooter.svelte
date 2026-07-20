@@ -12,6 +12,14 @@
   export let onShowRules: () => void;
   export let onShowModeration: (() => void) | null = null;
   export let roomCode: string | null = null;
+  /**
+   * The frozen-room signal (ui.md Moderation Panel). Now that the
+   * Moderation Panel is a modal the host must open, the host needs to see
+   * that the salon can't continue *without* opening it — so the gavel
+   * itself carries the indication. Purely presentational: this component
+   * has no session/store access, and App.svelte derives the value.
+   */
+  export let nonContinuable: boolean = false;
 </script>
 
 <footer
@@ -29,11 +37,22 @@
       {#if onShowModeration}
         <button
           type="button"
-          class="inline-flex min-h-9 min-w-9 items-center justify-center rounded-full text-butter/80 transition-colors hover:bg-marigold/15 hover:text-marigold focus-visible:text-marigold"
-          aria-label="Moderation"
+          class="relative inline-flex min-h-9 min-w-9 items-center justify-center rounded-full text-butter/80 transition-colors hover:bg-marigold/15 hover:text-marigold focus-visible:text-marigold"
+          aria-label={nonContinuable ? 'Moderation — this salon cannot continue' : 'Moderation'}
           on:click={onShowModeration}
         >
           <Gavel size={18} aria-hidden="true" />
+          {#if nonContinuable}
+            <!-- Not colour alone (Baseline Accessibility): a distinct glyph
+                 badge rides the gavel, so the frozen state survives both
+                 monochrome rendering and colour-vision differences. -->
+            <span
+              data-frozen-mark
+              aria-hidden="true"
+              class="pointer-events-none absolute -right-0.5 -top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-bubblegum text-[9px] font-bold leading-none text-white"
+              >!</span
+            >
+          {/if}
         </button>
       {/if}
       <button

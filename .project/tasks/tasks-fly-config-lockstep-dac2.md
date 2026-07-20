@@ -16,7 +16,7 @@ status: in-progress
   can't continue — assert on the accessible name, not on a CSS class. The prop
   does not exist yet; the test is expected to fail to compile/run until T002.
 
-- [ ] T002 [artifacts: ui] Add a `nonContinuable: boolean = false` prop to
+- [x] T002 [artifacts: ui] Add a `nonContinuable: boolean = false` prop to
   `SalonFooter.svelte` (its current props are `onShowRules`,
   `onShowModeration`, `roomCode` — it has no session/store access and must
   stay presentational) and render the frozen-room indication on the gavel when

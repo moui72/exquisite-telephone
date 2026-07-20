@@ -5,14 +5,12 @@ import SalonFooter from './SalonFooter.svelte';
 afterEach(() => cleanup());
 
 describe('SalonFooter — frozen-room signal on the gavel', () => {
-  // T001 red: unmarked in T002 once the prop and indication exist.
-  it.fails("names the gavel as 'the salon cannot continue' when nonContinuable is true", () => {
+  it("names the gavel as 'the salon cannot continue' when nonContinuable is true", () => {
     render(SalonFooter, {
       props: {
         onShowRules: vi.fn(),
         onShowModeration: vi.fn(),
         roomCode: 'ABCDE',
-        // @ts-expect-error nonContinuable prop is added in T002
         nonContinuable: true,
       },
     });
@@ -23,13 +21,12 @@ describe('SalonFooter — frozen-room signal on the gavel', () => {
     expect(screen.queryByRole('button', { name: /^Moderation$/ })).not.toBeInTheDocument();
   });
 
-  it.fails('conveys the frozen room by more than colour alone', () => {
+  it('conveys the frozen room by more than colour alone', () => {
     const { container } = render(SalonFooter, {
       props: {
         onShowRules: vi.fn(),
         onShowModeration: vi.fn(),
         roomCode: 'ABCDE',
-        // @ts-expect-error nonContinuable prop is added in T002
         nonContinuable: true,
       },
     });
@@ -45,7 +42,6 @@ describe('SalonFooter — frozen-room signal on the gavel', () => {
         onShowRules: vi.fn(),
         onShowModeration: vi.fn(),
         roomCode: 'ABCDE',
-        // @ts-expect-error nonContinuable prop is added in T002
         nonContinuable: false,
       },
     });
