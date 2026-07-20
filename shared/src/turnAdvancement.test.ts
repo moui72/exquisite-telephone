@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Book, Entry, Player, Room } from './types.js';
 import {
+  activePlayers,
   computeNextEntry,
   computeNextEntries,
   currentRoundFor,
@@ -361,5 +362,62 @@ describe('laps per book (multi-lap completion math)', () => {
     const room = makeRoom([bookA], null);
 
     expect(computeNextEntry(room, bookA)).not.toBeNull();
+  });
+});
+
+describe('activePlayers (kicked players excluded from rotation)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+
+  function makeRoom(players: Player[], books: Book[], lapsPerBook: number | null): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players,
+      status: 'writing',
+      books,
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it('returns an empty array for an empty roster', () => {
+    expect(activePlayers(makeRoom([], [], null))).toEqual([]);
+  });
+
+  it('returns all players, in order, when none are kicked', () => {
+    const room = makeRoom([ada, grace, lin], [], null);
+    expect(activePlayers(room)).toEqual([ada, grace, lin]);
+  });
+
+  it('excludes only the kicked players, preserving order of the rest', () => {
+    const room = makeRoom([ada, { ...grace, kicked: true }, lin], [], null);
+    expect(activePlayers(room)).toEqual([ada, lin]);
+  });
+
+  it('returns an empty array when every player is kicked', () => {
+    const room = makeRoom(
+      [
+        { ...ada, kicked: true },
+        { ...grace, kicked: true },
+      ],
+      [],
+      null,
+    );
+    expect(activePlayers(room)).toEqual([]);
   });
 });

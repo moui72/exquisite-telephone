@@ -1,4 +1,16 @@
-import type { Book, EntryType, Room } from './types.js';
+import type { Book, EntryType, Player, Room } from './types.js';
+
+/**
+ * The players who still participate in turn rotation: everyone in
+ * `Room.players` who hasn't been kicked (see datamodel.md Player.kicked).
+ * The single source of truth for "who counts" — turn assignment,
+ * completion math, timeout-vote membership, and roster rendering all
+ * derive from this rather than filtering `room.players` ad hoc, so a
+ * kicked player is excluded consistently. Preserves roster order.
+ */
+export function activePlayers(room: Room): Player[] {
+  return room.players.filter((p) => !p.kicked);
+}
 
 /**
  * The next Entry a Book needs, computed from Room.players order and the
