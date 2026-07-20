@@ -8,3 +8,4 @@ coverage/
 .project/.lock
 .claude/skills/ardd-*/
 .curation-data/
+.claude/worktrees/
