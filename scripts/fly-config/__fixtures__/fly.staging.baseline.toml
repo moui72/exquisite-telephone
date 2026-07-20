@@ -1,0 +1,63 @@
+# Beta/stage app — deployed automatically from `main` (see .github/workflows/ci.yml).
+# Prod (fly.toml) deploys only from `release`, which only ever receives a
+# fast-forward of `main`. See infrastructure.md Deployment for the full
+# two-app topology.
+#
+# This file is INTENDED to match fly.toml in everything except `app`, the
+# custom domain, and comments. Nothing enforces that: it is a convention
+# maintained by hand, and it has already drifted once — this app ran
+# without the [mounts] block and CURATION_DATA_PATH below, so the Curation
+# Store silently fell back to a path inside the ephemeral container and
+# every rating beta collected was discarded on each deploy. No error, no
+# missing volume, just no data.
+#
+# Treat any edit to fly.toml as an edit to this file too, until the
+# backlogged `fly-config-lockstep` feature makes that mechanical (lint the
+# two configs against each other, or generate both from one source). That
+# mechanism is deliberately NOT built here.
+#
+# After the very first deploy, run `fly scale count 1 -a exquisite-telephone-beta`
+# once — same in-memory room-state reasoning as fly.toml (see its comments).
+app = "exquisite-telephone-beta"
+primary_region = "iad"
+# Custom domain: beta-ex-tel.ty-pe.com (cert managed via `fly certs`, DNS
+# in Namecheap on ty-pe.com — not tracked here).
+
+[build]
+
+[env]
+  PORT = "3000"
+  # Inside the mounted volume below, so the Curation Store's data survives
+  # deploys. Everything else in this app is in-memory by design and is
+  # deliberately NOT written here (infrastructure.md Curation Store).
+  CURATION_DATA_PATH = "/data/curation.json"
+
+# The Curation Store's durable home on beta — mirrors fly.toml's block.
+# Beta's volume `vol_vp2l1gyjj3lw9me4` (1GB, iad, matching this app's
+# machine region) ALREADY EXISTS, so this mount has a volume behind it
+# from the first deploy that declares it. See infrastructure.md
+# Deployment for the per-app manual `fly volumes create` procedure and
+# the region-must-match-the-machine rule.
+[mounts]
+  source = "curation_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

@@ -35,7 +35,7 @@
 # Single Fly app per channel, single process group — matches constitution
 # Principle I (no premature scaling: one server instance holds all
 # in-memory room state, see infrastructure.md).
-app = "exquisite-telephone"
+app = "__APP__"
 primary_region = "iad"
 
 [build]

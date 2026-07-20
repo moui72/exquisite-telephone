@@ -1,43 +1,71 @@
-# Beta/stage app — deployed automatically from `main` (see .github/workflows/ci.yml).
-# Prod (fly.toml) deploys only from `release`, which only ever receives a
-# fast-forward of `main`. See infrastructure.md Deployment for the full
-# two-app topology.
+# GENERATED FILE — DO NOT EDIT BY HAND.
 #
-# This file is INTENDED to match fly.toml in everything except `app`, the
-# custom domain, and comments. Nothing enforces that: it is a convention
-# maintained by hand, and it has already drifted once — this app ran
-# without the [mounts] block and CURATION_DATA_PATH below, so the Curation
-# Store silently fell back to a path inside the ephemeral container and
-# every rating beta collected was discarded on each deploy. No error, no
+# Both fly.toml (prod) and fly.staging.toml (beta) are generated from
+# scripts/fly-config/fly.template.toml by `pnpm run gen:fly`. Edit the
+# template and regenerate; `pnpm run check:fly` fails CI if either file
+# has drifted from what the template produces.
+#
+# The two configs are INTENDED to be identical except for `app`, and the
+# generator is what enforces it: `app` is the only key in the per-channel
+# values table, so a channel-specific setting cannot be introduced by
+# accident. Before this was mechanical it was a hand-maintained
+# convention, and it had already drifted once — the beta app ran without
+# the [mounts] block and CURATION_DATA_PATH below, so the Curation Store
+# silently fell back to a path inside the ephemeral container and every
+# rating beta collected was discarded on each deploy. No error, no
 # missing volume, just no data.
 #
-# Treat any edit to fly.toml as an edit to this file too, until the
-# backlogged `fly-config-lockstep` feature makes that mechanical (lint the
-# two configs against each other, or generate both from one source). That
-# mechanism is deliberately NOT built here.
+# Deployment topology: pushing to `main` deploys beta automatically (see
+# .github/workflows/ci.yml). Prod deploys only from the `release` branch,
+# which only ever receives a fast-forward of `main`.
 #
-# After the very first deploy, run `fly scale count 1 -a exquisite-telephone-beta`
-# once — same in-memory room-state reasoning as fly.toml (see its comments).
+# To promote, run the "Promote main to release" workflow from the Actions
+# tab (.github/workflows/promote.yml, workflow_dispatch only). It replaces
+# the remembered `git push origin main:release`. The push is plain and
+# non-force: if `release` has diverged, the workflow fails and asks a human
+# to resolve it rather than merging or force-pushing — `release` skips CI,
+# and that is only safe while every commit on it already passed on `main`.
+#
+# See infrastructure.md Deployment for the full two-app topology.
+#
+# Custom domains (certs managed via `fly certs`, DNS in Namecheap on
+# ty-pe.com — not tracked here): prod is ex-tel.ty-pe.com, beta is
+# beta-ex-tel.ty-pe.com.
+#
+# Single Fly app per channel, single process group — matches constitution
+# Principle I (no premature scaling: one server instance holds all
+# in-memory room state, see infrastructure.md).
 app = "exquisite-telephone-beta"
 primary_region = "iad"
-# Custom domain: beta-ex-tel.ty-pe.com (cert managed via `fly certs`, DNS
-# in Namecheap on ty-pe.com — not tracked here).
 
 [build]
 
 [env]
   PORT = "3000"
-  # Inside the mounted volume below, so the Curation Store's data survives
+  # Inside the mounted volume below, so the Curation Store's file survives
   # deploys. Everything else in this app is in-memory by design and is
   # deliberately NOT written here (infrastructure.md Curation Store).
   CURATION_DATA_PATH = "/data/curation.json"
 
-# The Curation Store's durable home on beta — mirrors fly.toml's block.
-# Beta's volume `vol_vp2l1gyjj3lw9me4` (1GB, iad, matching this app's
-# machine region) ALREADY EXISTS, so this mount has a volume behind it
-# from the first deploy that declares it. See infrastructure.md
-# Deployment for the per-app manual `fly volumes create` procedure and
-# the region-must-match-the-machine rule.
+# The Curation Store's durable home — the only thing this app persists.
+#
+# IMPORTANT: `fly deploy` does NOT create this volume. It must be created
+# once per app, by hand, BEFORE the first deploy that references it, or
+# the machine fails to start:
+#
+#   fly volumes create curation_data --size 1
+#
+# and it MUST be created in the region the machine actually runs in. Read
+# that region from `fly status` rather than assuming it matches
+# `primary_region` above — a volume in the wrong region is invisible to
+# the machine, which then fails to start. See infrastructure.md
+# Deployment for the per-app manual procedure.
+#
+# Beta's volume `vol_vp2l1gyjj3lw9me4` (1GB, iad, matching that app's
+# machine region) already exists, so beta's mount has a volume behind it.
+#
+# 1GB is Fly's minimum and is far beyond what a few hundred counters need;
+# there is no smaller option, and no reason to pick a larger one.
 [mounts]
   source = "curation_data"
   destination = "/data"
@@ -45,10 +73,24 @@ primary_region = "iad"
 [http_service]
   internal_port = 3000
   force_https = true
+  # Kept always-on rather than scale-to-zero: room/game state lives only
+  # in this single process's memory (infrastructure.md), so suspending
+  # the machine mid-game would drop active players.
   auto_stop_machines = "off"
   auto_start_machines = true
   min_machines_running = 1
   processes = ["app"]
+
+  # IMPORTANT: a first `fly deploy`/`fly launch` against a fresh app
+  # provisions 2 machines by default (for HA), but this app's in-memory
+  # room state (Principle VI — single source of state, no shared
+  # adapter across processes) makes that a correctness bug, not just an
+  # HA nicety: Socket.IO requests round-robin between machines, so a
+  # room created on machine A 404s ("room-not-found") when a join lands
+  # on machine B. After the first deploy against a given app, run
+  # `fly scale count 1` once (add `-a <app>` for beta) to bring it down
+  # to a single machine — subsequent deploys update that machine in
+  # place rather than re-provisioning a second one.
 
   [[http_service.checks]]
     grace_period = "10s"

@@ -24,6 +24,12 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run typecheck
       - run: pnpm run test
+      # fly.toml and fly.staging.toml are generated from one template;
+      # this fails if either has been hand-edited. It sits in `checks`
+      # rather than its own job so it inherits the skip on `release`,
+      # which only ever receives a fast-forward of `main` whose tree
+      # already passed here.
+      - run: pnpm run check:fly
 
   deploy-beta:
     name: Deploy beta (main)

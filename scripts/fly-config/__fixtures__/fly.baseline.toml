@@ -1,0 +1,70 @@
+# Single Fly app, single process group — matches constitution Principle I
+# (no premature scaling: one server instance holds all in-memory room
+# state, see infrastructure.md). Update `app` after `fly launch`/`fly apps
+# create` assigns the real app name.
+app = "exquisite-telephone"
+primary_region = "iad"
+# Custom domain: ex-tel.ty-pe.com (cert managed via `fly certs`, DNS in
+# Namecheap on ty-pe.com — not tracked here).
+
+[build]
+
+[env]
+  PORT = "3000"
+  # Inside the mounted volume below, so the Curation Store's file survives
+  # deploys. Everything else in this app is in-memory by design and is
+  # deliberately NOT written here (infrastructure.md Curation Store).
+  CURATION_DATA_PATH = "/data/curation.json"
+
+# The Curation Store's durable home — the only thing this app persists.
+#
+# IMPORTANT: `fly deploy` does NOT create this volume. It must be created
+# once, by hand, BEFORE the first deploy that references it, or the
+# machine fails to start:
+#
+#   fly volumes create curation_data --size 1
+#
+# and it MUST be created in the region the machine actually runs in. Read
+# that region from `fly status` rather than assuming it matches
+# `primary_region` above — a volume in the wrong region is invisible to
+# the machine, which then fails to start. See infrastructure.md
+# Deployment.
+#
+# 1GB is Fly's minimum and is far beyond what a few hundred counters need;
+# there is no smaller option, and no reason to pick a larger one.
+[mounts]
+  source = "curation_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # Kept always-on rather than scale-to-zero: room/game state lives only
+  # in this single process's memory (infrastructure.md), so suspending
+  # the machine mid-game would drop active players.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+  # IMPORTANT: a first `fly deploy`/`fly launch` against a fresh app
+  # provisions 2 machines by default (for HA), but this app's in-memory
+  # room state (Principle VI — single source of state, no shared
+  # adapter across processes) makes that a correctness bug, not just an
+  # HA nicety: Socket.IO requests round-robin between machines, so a
+  # room created on machine A 404s ("room-not-found") when a join lands
+  # on machine B. After the first deploy, run `fly scale count 1` once
+  # to bring it down to a single machine — subsequent deploys update
+  # that machine in place rather than re-provisioning a second one.
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "15s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

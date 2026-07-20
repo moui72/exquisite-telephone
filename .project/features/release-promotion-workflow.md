@@ -1,6 +1,6 @@
 ---
 slug: release-promotion-workflow
-status: tasked
+status: implemented
 logged: 2026-07-20
 plan: plan-fly-config-lockstep-2026-07-20-8fbb.md
 tasks: tasks-fly-config-lockstep-dac2.md

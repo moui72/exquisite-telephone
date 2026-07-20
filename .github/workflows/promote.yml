@@ -1,0 +1,68 @@
+name: Promote main to release
+
+# Manual promotion only: prod (fly.toml, exquisite-telephone) deploys from
+# `release`, and `release` only ever receives a fast-forward of `main`.
+# This workflow replaces the remembered `git push origin main:release`.
+on:
+  workflow_dispatch:
+
+# Two dispatches must not race each other onto the same branch.
+concurrency:
+  group: promote-release
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Fast-forward release to main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+          # A shallow clone cannot compute fast-forwardness — git needs the
+          # full history of both branches to know whether release is an
+          # ancestor of main.
+          fetch-depth: 0
+          # NOT the default GITHUB_TOKEN: a push authenticated with it does
+          # not trigger further workflow runs (GitHub's recursion guard),
+          # so deploy-prod would never fire and promotion would silently
+          # deploy nothing. PROMOTE_TOKEN is a fine-grained PAT with
+          # Contents read/write, created by hand — see infrastructure.md.
+          token: ${{ secrets.PROMOTE_TOKEN }}
+
+      - name: Push main to release (fast-forward only)
+        run: |
+          set -euo pipefail
+
+          # A plain, non-force push. Git itself rejects a non-fast-forward
+          # update, which is exactly the behaviour we want: divergence means
+          # release holds a commit main does not have, and that commit never
+          # passed `checks` on main. That invariant is what lets release skip
+          # CI, so a human must resolve it — this workflow must never merge
+          # and never force-push.
+          if git push origin main:release; then
+            echo "release fast-forwarded to $(git rev-parse --short main)"
+            exit 0
+          fi
+
+          echo "::error::Promotion aborted: release could not be fast-forwarded from main."
+          cat >&2 <<'MSG'
+
+          release has diverged from main — it holds at least one commit that
+          main does not.
+
+          This is not something this workflow may repair. It will never merge
+          and never force-push: prod deploys from release WITHOUT re-running
+          checks, and that is only safe because every commit on release
+          already passed checks on main. A merge or force-push here would
+          deploy code that never did.
+
+          Resolve it by hand, then re-run this workflow:
+
+            git fetch origin
+            git log --oneline origin/main..origin/release   # what release has that main doesn't
+
+          Get those commits onto main (cherry-pick or revert them there) so
+          that release becomes a strict ancestor of main again.
+          MSG
+          exit 1
