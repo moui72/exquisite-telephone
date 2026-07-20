@@ -20,6 +20,7 @@ import {
   replayRoom,
   type RoomStore,
 } from '../domain/roomStore.js';
+import type { CurationStore } from '../domain/curationStore.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { resolveTimeoutVote } from '../domain/timerSweep.js';
 import type { Logger } from '../observability/logger.js';
@@ -609,6 +610,7 @@ export function onSubmitEntry(
   logger: Logger,
   input: SubmitEntryInput,
   ack: (response: SubmitEntryAck) => void,
+  _curationStore?: CurationStore,
 ): void {
   const room = store.getRoom(input.roomId);
   if (!room) {

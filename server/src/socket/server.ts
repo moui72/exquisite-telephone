@@ -1,5 +1,6 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server as SocketIOServer } from 'socket.io';
+import type { CurationStore } from '../domain/curationStore.js';
 import type { RoomStore } from '../domain/roomStore.js';
 import { createSessionTokenStore, type SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { createLogger, type Logger } from '../observability/logger.js';
@@ -70,6 +71,7 @@ export function createSocketServer(
   store: RoomStore,
   sessionStore: SessionTokenStore = createSessionTokenStore(),
   logger: Logger = createLogger(),
+  curationStore?: CurationStore,
 ): SocketIOServer {
   const io = new SocketIOServer(httpServer);
 
@@ -144,7 +146,7 @@ export function createSocketServer(
     );
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
-      onSubmitEntry(socket, store, logger, input, ack);
+      onSubmitEntry(socket, store, logger, input, ack, curationStore);
     });
 
     socket.on(

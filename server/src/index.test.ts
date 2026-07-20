@@ -1,7 +1,15 @@
+import { createServer } from 'node:http';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { createRoomStore, type RoomStore } from './domain/roomStore.js';
 import { startTimerSweep, type BroadcastServer } from './domain/timerSweep.js';
+import { createCurationStore } from './domain/curationStore.js';
+import { createSessionTokenStore } from './domain/sessionTokenStore.js';
+import { createLogger } from './observability/logger.js';
+import { createSocketServer } from './socket/server.js';
 
 /**
  * Bootstrap-level coverage for the 30-second background timer sweep
@@ -112,5 +120,48 @@ describe('startTimerSweep (30s background sweep)', () => {
     vi.advanceTimersByTime(30_000);
 
     expect(emit).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * Wiring-level coverage for the Curation Store (constitution Principle X
+ * — the entry point wires dependencies, it never defines them). The
+ * store's behavior is covered in `domain/curationStore.test.ts`; what
+ * matters here is that `index.ts` constructs it from config and hands it
+ * to the socket layer without doing any file I/O of its own.
+ */
+describe('curation store wiring (index.ts)', () => {
+  const indexSource = readFileSync(new URL('./index.ts', import.meta.url), 'utf8');
+
+  it('constructs the curation store from config and injects it into the socket layer', () => {
+    expect(indexSource).toMatch(/createCurationStore\(\s*config\.curationDataPath/);
+    expect(indexSource).toMatch(/createSocketServer\([^)]*curationStore/s);
+  });
+
+  it('performs no file I/O of its own — the store owns its persistence', () => {
+    expect(indexSource).not.toMatch(/\bfrom 'node:fs'/);
+    expect(indexSource).not.toMatch(/\bfrom 'node:fs\/promises'/);
+    expect(indexSource).not.toMatch(/readFileSync|writeFileSync|\bopen\(|\brename\(/);
+  });
+
+  it('createSocketServer accepts a curation store and starts with one injected', () => {
+    const httpServer = createServer();
+    const { logger } = { logger: createLogger(() => {}) };
+    const curationStore = createCurationStore(
+      join(mkdtempSync(join(tmpdir(), 'curation-wire-')), 'c.json'),
+      logger,
+    );
+
+    const io = createSocketServer(
+      httpServer,
+      createRoomStore(),
+      createSessionTokenStore(),
+      logger,
+      curationStore,
+    );
+
+    expect(io).toBeDefined();
+    io.close();
+    httpServer.close();
   });
 });

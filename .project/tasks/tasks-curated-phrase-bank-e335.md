@@ -24,7 +24,7 @@ status: in-progress
 ## Phase 3: Config and wiring
 
 - [x] T010 [artifacts: infrastructure] Failing test first in `server/src/config.test.ts`, then extend `loadConfig` with `curationDataPath` read from `CURATION_DATA_PATH`, defaulting to a local path. Resolves the plan's Open Question 2: pick a default that does not collide with existing `.gitignore` entries (`node_modules/`, `dist/`, `build/`, `.vite/`, `coverage/`, `.project/.lock`) and add the new path to `.gitignore` in this task.
-- [ ] T011 Construct the curation store in `server/src/index.ts` and inject it into the socket layer. Per constitution Principle X the entry point WIRES only — no store logic defined inline there. Test that the server starts with a store injected and that `index.ts` contains no file I/O of its own.
+- [x] T011 Construct the curation store in `server/src/index.ts` and inject it into the socket layer. Per constitution Principle X the entry point WIRES only — no store logic defined inline there. Test that the server starts with a store injected and that `index.ts` contains no file I/O of its own.
 - [ ] T012 Failing test first, then flush the store on graceful shutdown (SIGTERM/SIGINT) using T009's `flush()`, so a clean Fly deploy loses no ratings. Assert the handler is registered and that flush is awaited before exit.
 
 ## Phase 4: Server: origin resolution and submission handling
