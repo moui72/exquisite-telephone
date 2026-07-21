@@ -50,10 +50,13 @@ Rules Overview Panel below for the info-affordance convention shared by
 all four host settings here).
 
 The host sees player-count guidance ("recommend 4+ players, minimum
-3") next to the player list. Below 3 players, an "I know this won't
-really work but I want to test something" checkbox appears and must be
-checked before "start game" is enabled (see [[datamodel]] Normalization
-Rules); at 3 or more it's not shown and "start game" behaves as today.
+3") next to the player list. Below 3 *active* (non-kicked) players, an
+"I know this won't really work but I want to test something" checkbox
+appears and must be checked before "start game" is enabled (see
+[[datamodel]] Normalization Rules); at 3 or more active players it's not
+shown and "start game" behaves as today. A lobby kick lowers the active
+count, so kicking below 3 reveals the checkbox. (Wording aligned to the
+already-landed code and [[datamodel]] behavior, not new drift.)
 
 The host also sees a per-turn timer selector (off / 15m / 30m / 1hr /
 4hr / 12hr — off by default) that sets `Room.turnTimerMinutes`. Off
@@ -65,9 +68,10 @@ duration.
 
 The host also sees a "laps per book" control (1 / 2 / 3) that sets
 `Room.lapsPerBook`. Until the host explicitly picks a value, it shows a
-live-derived default that recalculates as players join or leave (2
-under 5 players, 1 otherwise — see [[datamodel]] Normalization Rules —
-Laps per book); the moment the host touches the control, it locks to
+live-derived default that recalculates as *active* (non-kicked) players
+join or leave — a lobby kick moves the count too (2 under 5 active
+players, 1 otherwise — see [[datamodel]] Normalization Rules — Laps per
+book); the moment the host touches the control, it locks to
 their choice and stops tracking player count for the rest of the
 room's life. An info affordance next to the control explains what a
 "lap" means in terms of how many times the book passes around the
