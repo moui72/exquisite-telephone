@@ -32,7 +32,7 @@ paired implementation commit.
 
 ## Phase 2: Server — the decorating phase
 
-- [ ] T003 [artifacts: datamodel, infrastructure] Write a failing test: when
+- [x] T003 [artifacts: datamodel, infrastructure] Write a failing test: when
   the final entry completes the game, `onSubmitEntry` transitions
   `Room.status` to `decorating` (NOT `reveal`), stamps
   `decorationWindowStartedAt`, and leaves reveal-only records

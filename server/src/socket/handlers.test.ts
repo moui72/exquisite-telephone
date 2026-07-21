@@ -492,6 +492,42 @@ describe("onSubmitEntry transition to 'reveal'", () => {
   });
 });
 
+describe("onSubmitEntry transition to 'decorating' (T003/T004 — cover decoration window)", () => {
+  // it.fails: red until T004 redirects the completion branch from
+  // writing→reveal to writing→decorating. Marker removed on the green
+  // commit (per the tasks-file it.fails convention).
+  it.fails(
+    "transitions to 'decorating' (not reveal), stamps decorationWindowStartedAt, and leaves reveal-only records empty",
+    () => {
+      const store = createRoomStore();
+      const room = createRoom(store, { hostName: 'Ada' });
+      room.status = 'writing';
+      room.lapsPerBook = 1;
+      room.books = createBooksForRoom(room);
+      const adaId = room.players[0]!.id;
+      const adaBook = room.books[0]!;
+
+      const before = Date.now();
+      onSubmitEntry(
+        makeFakeSocket(),
+        store,
+        createLogger(() => {}),
+        { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: 'final phrase' },
+        vi.fn(),
+      );
+      const after = Date.now();
+
+      expect(room.status).toBe('decorating');
+      expect(room.decorationWindowStartedAt).not.toBeNull();
+      expect(room.decorationWindowStartedAt!).toBeGreaterThanOrEqual(before);
+      expect(room.decorationWindowStartedAt!).toBeLessThanOrEqual(after);
+      // Reveal-only records stay empty — reveal hasn't happened yet.
+      expect(room.bookReads).toEqual({});
+      expect(room.currentlyReading).toEqual({});
+    },
+  );
+});
+
 describe('minimum player count (onStartGame)', () => {
   it('rejects starting with fewer than 3 players when acknowledgeSmallGame is not true', () => {
     const store = createRoomStore();
