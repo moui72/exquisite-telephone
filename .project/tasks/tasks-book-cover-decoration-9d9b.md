@@ -1,7 +1,7 @@
 ---
 plan: plan-book-cover-decoration-2026-07-21-589c.md
 generated: 2026-07-21
-status: ready
+status: in-progress
 ---
 
 # Tasks
