@@ -32,7 +32,7 @@ written and confirmed failing first.
   (b) a footer band with the "Exquisite Telephone" wordmark and the string
   `ex-tel.ty-pe.com`. Assert the footer URL is a fixed constant (present
   regardless of the running host/channel). Confirm red before implementation.
-- [ ] T004 [artifacts: infrastructure] Implement the branded frame border and
+- [x] T004 [artifacts: infrastructure] Implement the branded frame border and
   the wordmark + `ex-tel.ty-pe.com` footer in the same compositing pass as the
   dividers. The URL is a hard-coded production constant (never derived from the
   running host), with a `PRODUCTION ANNOTATION` comment at the constant per the

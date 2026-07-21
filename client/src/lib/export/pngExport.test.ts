@@ -296,9 +296,12 @@ describe('exportBookToPng (flatten to a single PNG)', () => {
 
     const dataUrl = exportBookToPng(book, players, createCanvas);
 
+    // The canvas is sized to the composited content plus the footer band
+    // (T004): the footer is drawn below the last panel, so the exporter
+    // must allocate FOOTER_HEIGHT of extra height for it.
     expect(createCanvas).toHaveBeenCalledWith(
       CANVAS_WIDTH,
-      TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT,
+      TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT + FOOTER_HEIGHT,
     );
     expect(fakeCanvas.toDataURL).toHaveBeenCalledWith('image/png');
     expect(dataUrl).toBe('data:image/png;base64,FAKE');
@@ -333,7 +336,7 @@ describe('renderBookOntoContext (T001: per-panel dividers)', () => {
 });
 
 describe('renderBookOntoContext (T003: branded frame + footer)', () => {
-  it.fails('frames the strip and stamps a wordmark + fixed production URL footer', () => {
+  it('frames the strip and stamps a wordmark + fixed production URL footer', () => {
     const book = makeFixtureBook();
     const contentHeight = TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT;
     const total = computeExportCanvasSize(book);

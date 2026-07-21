@@ -96,9 +96,11 @@ export function renderBookOntoContext(
   book: Book,
   players: Player[],
 ): void {
-  const { width, height } = computeCanvasSize(book);
+  const { width } = computeCanvasSize(book);
+  const { height: totalHeight } = computeExportCanvasSize(book);
+  const contentHeight = totalHeight - FOOTER_HEIGHT;
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, width, totalHeight);
 
   let y = 0;
   const ordered = [...book.entries].sort((a, b) => a.position - b.position);
@@ -144,6 +146,29 @@ export function renderBookOntoContext(
       y += DRAWING_ROW_HEIGHT;
     }
   }
+
+  // Footer band (infrastructure.md Export Pipeline — Strip styling): a
+  // band below the last panel bearing the wordmark and the canonical
+  // production URL, so a shared strip is self-identifying and points a
+  // recipient at the real game.
+  ctx.fillStyle = '#fdf6e3';
+  ctx.fillRect(0, contentHeight, width, FOOTER_HEIGHT);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText(WORDMARK, 12, contentHeight + 18);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(PRODUCTION_URL, 12, contentHeight + 33);
+
+  // Gilt frame border (infrastructure.md Export Pipeline — Strip styling):
+  // the same Marigold gilt-frame language as the in-app Gilt Frame,
+  // composited as a static border inset over the strip's outer edges.
+  // Drawn last so it frames over the content and footer.
+  ctx.fillStyle = MARIGOLD;
+  ctx.fillRect(0, 0, width, FRAME_BORDER_WIDTH); // top
+  ctx.fillRect(0, totalHeight - FRAME_BORDER_WIDTH, width, FRAME_BORDER_WIDTH); // bottom
+  ctx.fillRect(0, 0, FRAME_BORDER_WIDTH, totalHeight); // left
+  ctx.fillRect(width - FRAME_BORDER_WIDTH, 0, FRAME_BORDER_WIDTH, totalHeight); // right
 }
 
 function defaultCreateCanvas(width: number, height: number): ExportCanvas {
@@ -159,7 +184,7 @@ export function exportBookToPng(
   players: Player[],
   createCanvas: (width: number, height: number) => ExportCanvas = defaultCreateCanvas,
 ): string {
-  const size = computeCanvasSize(book);
+  const size = computeExportCanvasSize(book);
   const canvas = createCanvas(size.width, size.height);
   const ctx = canvas.getContext('2d');
   if (!ctx) {
