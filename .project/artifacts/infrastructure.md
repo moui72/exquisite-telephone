@@ -44,11 +44,20 @@ event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
 `onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSetLapsPerBook`,
 `onSetPromptMode`, `onSetCuratedPromptCount`,
-`onSetAllowPromptWriteIn`, `onSubmitEntry`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
+`onSetAllowPromptWriteIn`, `onSetReadingBook`, `onSubmitEntry`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
 `onKickPlayer`, `onRestartGame`, `onRejoin`, `onDisconnect`), not a single large
 switch. Drawing entries sync only once, in full, via `onSubmitEntry`
 when a player finishes their turn — there is no per-stroke real-time
 sync handler; stroke data never leaves the client mid-turn.
+
+`onSetReadingBook` is deliberately a *single* last-write-wins event
+(`{ roomId, playerId, bookId: string | null }`) rather than paired
+open/close events — the same reasoning as the no-`onRatePrompt` decision
+below: one event has no ordering hazard and no double-tap idempotency
+story to reconcile, whereas separate open and close events could arrive
+out of order or be duplicated. Open sets `currentlyReading`; close (or a
+switch) credits the reader's prior book to `bookReads` (see [[datamodel]]
+Normalization Rules — Reveal read-state).
 
 There is deliberately no `onRatePrompt` handler. A prompt rating rides
 along in the `onSubmitEntry` payload as an optional field, because it is

@@ -55,6 +55,8 @@ They are deliberately the only shapes here that outlive a process.
 | allowPromptWriteIn | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `true`, a write-your-own option is always offered alongside the dealt phrases, so curated mode restricts nobody who has their own idea. Only meaningful when `promptMode === 'curated'`. |
 | dealtPrompts | Record\<playerId, string[]\> | The phrases dealt to each non-kicked player at game start, from a single shuffle-then-partition of the fixed phrase bank — which is what guarantees no phrase reaches two players in the same game. Empty `{}` while `promptMode === 'free-form'`. Re-dealt on *Restart game*; see Normalization Rules — Curated prompts. |
 | lapsPerBook | number \| null | Host-configurable, set before `status` leaves `lobby`; `null` means the host hasn't explicitly chosen a value yet — see Normalization Rules for the live-default-until-overridden behavior. When non-`null`, one of `1 \| 2 \| 3`. Governs how many full rotations through `Room.players` each book completes before the game ends (see Normalization Rules — Laps per book). |
+| bookReads | Record\<bookId, playerId[]\> | Reveal-only. FK `Book.id` -> deduped FK `Player.id[]` who have *completed a read* of that book — opened its per-book modal and then closed it (see [[ui]] Reveal View and Normalization Rules — Reveal read-state). Keyed by `Book.id` because both consumers — the per-card "read by" badges and the host's unread-books warning — aggregate per book; per-player views stay derivable. Empty `{}` outside `status === 'reveal'`; a fresh `Room` from "Play again" starts empty like any other new room. |
+| currentlyReading | Record\<playerId, bookId\> | Reveal-only. FK `Player.id` -> FK `Book.id` currently open in that player's modal; an absent key means that player has no modal open. Keyed by `Player.id` — a reader has exactly one book open at a time. Drives the live "being read by" badge. Cleared for a player on disconnect (so the badge doesn't leak) *without* crediting a completed read. Empty `{}` outside `status === 'reveal'`. |
 
 ### Player
 
@@ -332,6 +334,23 @@ disliked this player's writing" serves no purpose the curator needs.
   sequence. Manual prev/next/skip controls (see [[ui]]) still work by
   jumping the *local* view ahead of or behind the clock-derived
   position; the clock only drives the default auto-advance pacing.
+- **Reveal read-state (completed reads, last-write-wins).** A player
+  *completes a read* of a book by opening its per-book modal and then
+  closing it — "read" means "looked at" (opened-and-closed), not
+  last-page-verified; paging is client-local and untrusted, so the server
+  never checks a last page was reached. Both open and close ride a single
+  last-write-wins `set_reading_book` event (`onSetReadingBook`,
+  [[infrastructure]]) rather than paired open/close events: a non-null
+  `bookId` sets `currentlyReading[playerId]` (modal opened, or switched);
+  a `null` `bookId` clears it (modal closed). On *either* a close or a
+  switch to a different book, the reader's *prior* open book is credited
+  as a completed read — `playerId` is appended, deduped, to
+  `bookReads[prevBookId]` — so a re-read never double-counts. A disconnect
+  clears `currentlyReading[playerId]` but does NOT credit a read (it is
+  not a chosen close; the reader resumes on reconnect). "Reveal all" then
+  closing counts as a completed read like any other close. Both records
+  are populated only while `status === 'reveal'` and reset empty on a
+  fresh "Play again" room.
 - **End-of-game controls (Reveal page).** Three distinct actions:
   - *Leave game* (non-host, `status === 'reveal'` only): client-local
     only — clears the leaving player's stored session token and
