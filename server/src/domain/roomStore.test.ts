@@ -37,6 +37,8 @@ function makeRoomWithPlayers(players: Player[]): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    bookReads: {},
+    currentlyReading: {},
     promptMode: 'free-form',
     curatedPromptCount: null,
     allowPromptWriteIn: true,
@@ -73,6 +75,13 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 
     expect(room.lapsPerBook).toBeNull();
+  });
+
+  it('create room starts with empty reveal read-state (bookReads/currentlyReading)', () => {
+    const room = createRoom(store, { hostName: 'Ada' });
+
+    expect(room.bookReads).toEqual({});
+    expect(room.currentlyReading).toEqual({});
   });
 
   it('player join adds to room.players', () => {
@@ -136,6 +145,8 @@ describe('replayRoom (host-only "Play again" — datamodel.md Normalization Rule
     expect(room.timerExtensions).toEqual({});
     expect(room.pendingTimeoutVote).toBeNull();
     expect(room.books).toEqual([]);
+    expect(room.bookReads).toEqual({});
+    expect(room.currentlyReading).toEqual({});
   });
 
   it('creates exactly one new Player per old player, preserving name and connected, with new id/sessionToken', () => {

@@ -61,6 +61,8 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     playAgainVotes: [],
     nonContinuable: false,
     revealStartedAt: null,
+    bookReads: {},
+    currentlyReading: {},
     promptMode: 'free-form',
     curatedPromptCount: null,
     allowPromptWriteIn: true,

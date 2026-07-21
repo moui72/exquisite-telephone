@@ -181,6 +181,25 @@ export interface Room {
    * each client running its own independent local timer.
    */
   revealStartedAt: number | null;
+  /**
+   * Reveal-only. FK Book.id -> deduped Player.id[] who have completed a
+   * read of that book — opened its per-book modal and then closed it (see
+   * ui.md Reveal View). Keyed by `Book.id` because both consumers (the
+   * per-card "read by" badges and the host's unread-books warning)
+   * aggregate per book; per-player views stay derivable. Empty `{}`
+   * outside `status === 'reveal'`; a fresh `Room` from "Play again" starts
+   * empty like any other new room.
+   */
+  bookReads: Record<string, string[]>;
+  /**
+   * Reveal-only. FK Player.id -> Book.id currently open in that player's
+   * modal — an absent key means that player has no modal open. Keyed by
+   * `Player.id` because a reader has exactly one book open at a time.
+   * Drives the live "being read by" badge; cleared for a player on
+   * disconnect (so the badge does not leak) without crediting a completed
+   * read. Empty `{}` outside `status === 'reveal'`.
+   */
+  currentlyReading: Record<string, string>;
 }
 
 /**

@@ -62,6 +62,8 @@ describe('startTimerSweep (30s background sweep)', () => {
       playAgainVotes: [],
       nonContinuable: false,
       revealStartedAt: null,
+      bookReads: {},
+      currentlyReading: {},
       promptMode: 'free-form',
       curatedPromptCount: null,
       allowPromptWriteIn: true,
