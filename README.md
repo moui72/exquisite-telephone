@@ -156,6 +156,8 @@ erDiagram
         int lapsPerBook "nullable, 1-3"
         boolean nonContinuable
         timestamp roundStartedAt
+        json bookReads "reveal: Book.id -> reader Player.id[]"
+        json currentlyReading "reveal: Player.id -> open Book.id"
     }
     PLAYER {
         string id "ephemeral, no account"
@@ -244,11 +246,13 @@ graph TD
     App --> SalonFooter[SalonFooter - always present]
     App --> Lobby[Lobby View]
     App --> WD[Writing / Drawing View]
-    App --> Reveal[Reveal View]
+    App --> Reveal[Reveal View - self-guided]
     App --> States[Terminal states - ended / kicked / error]
 
     SalonFooter -->|host gavel opens| ModPanel[ModerationPanel]
-    SalonFooter -->|? opens| Rules[RulesOverview panel]
+    SalonFooter -->|? opens| Rules[RulesOverview panel - tabbed]
+    Rules --> RulesTab[Rules tab - default]
+    Rules --> AboutTab[About tab - credits + repo/sponsor links]
 
     Lobby --> InfoTip[InfoTooltip - per host setting]
     Lobby -->|derives from activePlayers| Rules
@@ -257,8 +261,11 @@ graph TD
     WD --> TurnStatus[TurnStatus - whose turn]
     WD --> InfoTip
 
-    Reveal --> Gilt[GiltFrame - book viewer]
-    Lobby --> Gilt
+    Reveal --> CardGrid[Card grid - cover card per book, read/being-read badges]
+    CardGrid --> BookModal[Per-book modal - manual paging, save-to-PNG]
+
+    Lobby --> Gilt[GiltFrame]
     WD --> Gilt
     States --> Gilt
 ```
+
