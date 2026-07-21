@@ -1,16 +1,20 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**One `ready` tasks file: `tasks-2b0f-effb.md`
-(0/3) — the fix for the laps `book-complete` broken-contract
-(`d27f4eea`).** `onSubmitEntry`'s guard is laps-unaware and blocks
-multi-lap games (the default <5-player game is 2 laps, so the default is
-affected). The fix extracts a single `isBookComplete` helper both call
-sites share, rather than correcting the duplicated condition in place —
-the duplication is the root cause. Plan `plan-2b0f-2026-07-21-48cc.md` is
-`approved`. This is the only outstanding work.
+_Updated: 2026-07-21 (**`tasks-2b0f-effb.md` complete and merged — the
+laps `book-complete` broken-contract (`d27f4eea`) is fixed.**
+`onSubmitEntry` now calls a shared `isBookComplete(room, book)` helper
+instead of the laps-unaware `book.entries.length >= room.players.length`
+guard, so multi-lap games (including the default <5-player 2-lap game)
+advance through the submission path. Delegated worktree, 3/3, clean
+fast-forward, reaped; suite green (463 tests). The subagent's new handler
+test reproduced the bug before the fix (books froze at 3 entries, never
+entering lap 2) — the gap that let it ship. **Every tasks file is
+`completed`; no open feedback; nothing ready or in flight.**
 
 Earlier today: a fresh `/ardd-defects` pass cleared the seven old defects
-and found this one; all three diagrams were regenerated (now `current`).
+and found this one; all three diagrams were regenerated (now `current`);
+the `onStartGame` and Lobby active-count fixes merged and deployed to
+beta.
 
 Earlier today: `tasks-aed6-231c.md` completed and merged — the Lobby's
 live below-minimum warning and laps default now count active (non-kicked)
@@ -201,10 +205,10 @@ regeneration.
   game blocks at the start of lap 2. Shipped undetected because every
   full-game test pins `lapsPerBook = 1` and the `book-complete` unit test
   uses a 1-player room; the laps logic is unit-tested only in isolation.
-  **Now planned + tasked** in `plan-2b0f-2026-07-21-48cc.md` /
-  `tasks-2b0f-effb.md` (`ready`, 0/3) — extracts a shared `isBookComplete`
-  helper. Stays in `DEFECTS.md` until a `/ardd-defects` run after the fix
-  re-verifies it gone.
+  **Now fixed and merged** via `plan-2b0f-2026-07-21-48cc.md` /
+  `tasks-2b0f-effb.md` (**completed 3/3**) — a shared `isBookComplete`
+  helper both call sites use. Stays listed in `DEFECTS.md` until the next
+  `/ardd-defects` run regenerates the snapshot and re-verifies it gone.
 - `infrastructure.md`, `ui.md`, `constitution.md` — all clean this run.
 
 Two items were deliberately **not** recorded as defects (see `DEFECTS.md`
@@ -468,9 +472,8 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-- `tasks-2b0f-effb.md` — plan `plan-2b0f-2026-07-21-48cc.md`, no bound
-  features (**ready**, 0/3). The only `ready` file, so the matrix is
-  silent. Single phase, all tasks tagged `[defect: d27f4eea]`.
+_(empty — no `ready` tasks files. **All 26 tasks files in the project are
+`completed`.**)_
 
 Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
@@ -578,20 +581,19 @@ Carried forward, none blocking:
   session's work; cost a pre-commit-hook retry this pass. Worth a fix on
   its own at some point.
 
-**Current state:** `origin/main` and `release` are on an earlier build
-(beta and prod live and healthy on it). Local `main` is well ahead —
-the `onStartGame` active-count fix, the Lobby-display fix, the regenerated
-diagrams, the defects pass, and now the `plan-2b0f` plan/tasks — **not
-yet pushed**, so none of that is on beta or prod.
+**Current state:** beta is on the `onStartGame` + Lobby + diagrams build
+(`origin/main` at `55ee7e8`). The laps fix (`b328718`) is merged locally
+but **not yet pushed** — 3 commits ahead of `origin/main` — so it is on
+neither beta nor prod. Prod is a build behind beta.
 
-**Recommended next step:** `/ardd-implement` — execute
-`tasks-2b0f-effb.md` (0/3), the laps `book-complete` fix. Small,
-single-phase, test-first. `next_step_prompt: auto` is set and this is a
-runnable `/ardd-*` command, so it is being **auto-run** (delegated to a
-background worktree).
+**Recommended next step:** push `main` (deploys the laps fix to beta),
+then a prod promote to bring both channels current in one go — the whole
+session's work (onStartGame, Lobby display, laps fix, diagrams) would
+land on prod together. A push is not a runnable `/ardd-*` command, so
+`next_step_prompt: auto` does not fire here.
 
-Also outstanding, not blocking: the unpushed local commits (push to
-deploy to beta, then promote for prod). One backlogged feature
+Also, not blocking: `/ardd-defects` would re-verify `d27f4eea` gone and
+clear it from the snapshot. One backlogged feature
 (`curation-data-aggregation-pipe`, routed to `/ardd-research`). Diagrams
 all `current`.
 
