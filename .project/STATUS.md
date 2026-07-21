@@ -1,27 +1,25 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**Export-polish + About-tab plan approved and tasked;
-Reveal rework in flight.** A new approved plan
-`plan-export-polish-and-about-tab-2026-07-21-4c22.md` bundles three
-backlogged features — `branded-png-export-styling`, `export-panel-dividers`
-(both inside the client `exportBookToPng` path), and `about-tab-help-panel`
-— into an 8-task `ready` file. Their artifact edits are applied:
-`infrastructure.md` Export Pipeline now specifies strip dividers, a branded
-frame, and a wordmark + `ex-tel.ty-pe.com` footer; `ui.md` Rules Overview
-Panel becomes tabbed (Rules + About) with inspiration credits and
-repo/sponsor links.
+_Updated: 2026-07-21 (**Self-guided Reveal rework merged; export/About plan
+ready to implement.** The `reveal-self-guided-rework` run (F001–F003, 10/10)
+is **merged into `main`** and its worktree reaped — the self-guided card
+grid + per-book modal, participant-visible read/being-read badges, the host
+unread-books warning, and full removal of `Room.revealStartedAt` and the
+synchronized-clock pacing are all live. The merge hit one real content
+conflict in `ui.md`'s Reveal View (both sides edited it); resolved by taking
+the rework's rewrite and re-grafting the export-styling clause onto its new
+save-to-PNG sentence.
 
-`book-cover-decoration` was deliberately **deferred**, not dropped: it
-collides with the in-flight `reveal-self-guided-rework` (which rewrites the
-Reveal View and keeps `generateCoverArt` as the card face). Plan its cover
-design against that settled design in a later run.
+The **export-polish + About-tab** plan
+(`plan-export-polish-and-about-tab-2026-07-21-4c22.md`, 8-task `ready` file)
+is now **un-gated** — its Phase 1 dependency (the rework relocating the
+save-to-PNG call site) has landed. `/ardd-implement` can pick it up.
 
-The `reveal-self-guided-rework` run (F001–F003, self-guided Reveal) is
-**in flight in a worktree at 7/10** — a delegated subagent that stalled
-once and was resumed. It has not merged; its state rides its branch. Both
-new artifact edits touch `infrastructure.md`/`ui.md` in different sections
-than the rework, but the export **implementation** (Phase 1) is gated on
-that rework merging, since it relocates the save-to-PNG call site.)_
+New backlog idea logged this session: `pregenerated-book-cover-templa`
+(nine geometric/abstract cover-background templates; depends on
+`book-cover-decoration`; design mockup linked from the register entry).
+Both it and `book-cover-decoration` stay **deferred** until their cover
+design is planned against the now-settled Reveal card face.)_
 
 ## Artifacts Found
 
@@ -36,25 +34,26 @@ No `[OPEN: ...]` items outstanding in any artifact.
 
 ## Cross-Artifact Issues
 
-None. `infrastructure.md` Export Pipeline and `ui.md` Reveal save control /
-Rules Overview Panel edits are mutually consistent, and `lint-project`
-reports frontmatter schemas and `[artifacts: ...]` references valid.
+None. The merged Reveal rework (`datamodel.md` read-state fields +
+`ui.md` self-guided Reveal View) and the export/About edits
+(`infrastructure.md` Export Pipeline + `ui.md` Rules Overview Panel and
+grafted save-control note) are mutually consistent.
 
 ## Constitution Compliance
 
-No violations. The one shortcut introduced this session — the hard-coded
-`ex-tel.ty-pe.com` export footer URL — is recorded in the new plan's
-Production Annotation Summary and slated for a `PRODUCTION ANNOTATION`
-comment at its constant during implementation (T004).
+No violations. The one shortcut on the horizon — the hard-coded
+`ex-tel.ty-pe.com` export footer URL — is recorded in the export plan's
+Production Annotation Summary, to be annotated at its constant during
+implementation (T004).
 
 ## Diagrams
 
-- datamodel.md — current ✅
+- datamodel.md — stale ⚠️ (Reveal read-state fields added, `revealStartedAt` removed — run /ardd-diagram datamodel)
 - infrastructure.md — stale ⚠️ (Export Pipeline edits — run /ardd-diagram infrastructure)
-- ui.md — stale ⚠️ (Rules Overview Panel tabs — run /ardd-diagram ui)
+- ui.md — stale ⚠️ (self-guided Reveal View + Rules Overview Panel tabs — run /ardd-diagram ui)
 
-(Both marked stale during planning; a `/ardd-diagram` pass is a deliberate
-follow-up, not a plan task.)
+(A `/ardd-diagram` pass across all three is a deliberate follow-up, not a
+plan task.)
 
 ## Code-vs-Artifact Defects
 
@@ -63,44 +62,27 @@ follow-up, not a plan task.)
 
 ## Feature Backlog
 
-- 2 backlogged · 0 planned · 3 tasked · 14 implemented · 1 subsumed — see
+- 3 backlogged · 0 planned · 3 tasked · 14 implemented · 1 subsumed — see
   `.project/features/`. Target a backlogged slug with `/ardd-plan <slug>`.
-  - Backlogged: `book-cover-decoration` (deferred behind the Reveal rework),
-    `curation-data-aggregation-pipe`.
-  - Tasked (this plan): `branded-png-export-styling`, `export-panel-dividers`,
-    `about-tab-help-panel`.
+  - Backlogged: `book-cover-decoration` (deferred), `pregenerated-book-cover-templa`
+    (new; depends on `book-cover-decoration`), `curation-data-aggregation-pipe`.
+  - Tasked: `branded-png-export-styling`, `export-panel-dividers`,
+    `about-tab-help-panel` (the export/About plan, ready to implement).
 
 ## Work Queue
 
 - `tasks-export-polish-and-about-tab-08cc.md` — plan
   `plan-export-polish-and-about-tab-2026-07-21-4c22.md`, features
   `branded-png-export-styling, export-panel-dividers, about-tab-help-panel`:
-  - vs in-flight `tasks-reveal-self-guided-rework-82a4.md`: **shared-artifact**
-    (`infrastructure`, `ui`). Declared artifact overlap only — different
-    sections, but `merge_policy: auto` still governs at merge time. Phase 1
-    (export) is additionally gated on the rework merging first.
-
-(`independent` would mean no declared overlap only, not conflict-free.)
-
-## In Flight
-
-- Worktree `.claude/worktrees/agent-a581269beb8e41183`
-  (branch `worktree-agent-a581269beb8e41183`) —
-  `tasks-reveal-self-guided-rework-82a4.md` in-progress, 7/10. Delegated
-  subagent resumed after a stall; not yet merged. On completion the
-  coordinator merges (`merge_policy: auto`), reaps the worktree, and
-  re-runs `/ardd-status`.
-
-## ArDD Maintenance
-
-- ArDD update available: installed `0fc43f60`, source at `v1.0.4` (beta
-  channel) — run /ardd-update.
+  the only `ready` file; nothing else in flight to overlap with. Its Phase 1
+  gate (the Reveal rework merge) is satisfied — ready to run.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: **wait for the
-in-flight `reveal-self-guided-rework` run to finish and merge**, then run
-`/ardd-implement` and pick `tasks-export-polish-and-about-tab-08cc.md`
-(Phase 1's export work is gated on that merge; the About tab, Phase 2, is
-independent). `book-cover-decoration` gets its own `/ardd-plan` run after
-the rework lands.
+0 issues found. Safe to /plan: yes. Recommended next step: run
+`/ardd-implement` and pick `tasks-export-polish-and-about-tab-08cc.md` — now
+un-gated and the only ready work. `book-cover-decoration` and its sibling
+`pregenerated-book-cover-templa` each get their own `/ardd-plan` run against
+the now-settled Reveal card design. A `/ardd-diagram` pass would refresh the
+three stale diagrams; `/ardd-update` (installed `0fc43f60` → `v1.0.4`) is
+available when convenient.
