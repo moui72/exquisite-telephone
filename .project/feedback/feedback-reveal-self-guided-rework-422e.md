@@ -41,10 +41,47 @@ plan: null
     prominently than not-yet-viewed books, so a viewer can tell at a
     glance which books they still have to get to.
 
-  Note: the paging position, kept-place, and viewed/dirty state are all
-  *per-viewer, client-local* navigation state — each person explores
-  independently — so this is expected to be UI-only with no new persisted
-  `Room` state (contrast the removed shared clock). The plan should verify
-  that assumption. This is a large, decision-reversing redesign; it may be
-  worth an `/ardd-research` pass before `/ardd-plan` designs the artifact
-  changes. [artifacts: ui, datamodel]
+  Note on state: the paging *position* and kept-place can stay
+  per-viewer and client-local (each person explores independently). But
+  the read/viewed and being-read state is **not** client-local — F002
+  below requires it to be visible to *other* participants, so it must be
+  shared through the server. This redesign therefore does introduce new
+  synced/persisted per-player-per-book read state (contrast the original
+  "UI-only" read of this — corrected by F002). This is a large,
+  decision-reversing redesign; it is worth an `/ardd-research` pass before
+  `/ardd-plan` designs the artifact changes. [artifacts: ui, datamodel]
+
+- [ ] F002 **Read / being-read state is shared and visible to all
+  participants.** Building on F001's per-book viewed state, each
+  participant's read state is broadcast, not private:
+  - A **"read by \<player\>"** badge appears on a book's card once that
+    player has opened *and closed* its modal (a completed read).
+  - A **"being read by \<player\>"** badge shows while that book's modal
+    is currently open for a given player (live, real-time).
+
+  This reverses F001's initial "UI-only, no new `Room` state" note: it
+  needs shared per-player-per-book read tracking and a live
+  currently-open signal. Implications the plan/research should design
+  (shapes not prescribed here): new `Room`/`Player` state for
+  read-by-whom and currently-reading-what ([[datamodel]]), and real-time
+  modal open/close sync — new Socket.IO events broadcast to the room
+  ([[infrastructure]], whose handler list would gain entries), plus the
+  badges themselves ([[ui]]). [artifacts: ui, datamodel, infrastructure]
+
+- [ ] F003 **Warn the host before closing the lobby with unread books.**
+  When the host tries to start a new game or otherwise close/leave the
+  lobby and not every book has been read (per F002's completed-read
+  state), warn them — naming who hasn't read what — and, if every book
+  has been read but one is still open (being read), tell them that
+  instead. The host can **force** the new-game/end-lobby anyway; this is
+  a warning, not a hard gate (consistent with the existing
+  force-anyway moderation pattern, e.g. the small-game override).
+
+  Open question for the plan/research — the trigger phrasing is
+  ambiguous and should be pinned before design: does "read" mean *every
+  book read by at least one player* (a book nobody opened blocks), or
+  *every player has read every book* (per-player completeness)? The
+  warning copy ("who hasn't read what") reads per-player, but the
+  trigger ("not every book has been read by any player") reads
+  per-book-has-a-reader. These imply different state and different
+  messages; do not silently pick one. [artifacts: ui, datamodel]
