@@ -1,7 +1,6 @@
-<!-- ardd-badge-start -->
-[![built with ArDD](https://img.shields.io/badge/built%20with-ArDD-blue)](https://github.com/moui72/artifact-driven-dev)
-<!-- ardd-badge-end -->
-[![ArDD version](https://img.shields.io/github/v/release/moui72/artifact-driven-dev?include_prereleases&label=ArDD)](https://github.com/moui72/artifact-driven-dev/releases)
+<!-- ardd-badge-version-start -->
+[![built with ArDD](https://shieldcn.dev/badge/dynamic/json.svg?url=https://raw.githubusercontent.com/moui72/exquisite-telephone/main/.github/badges/ardd-version.json&query=%24.message&label=built%20with%20ArDD&color=yellow&labelColor=%232F4858&variant=secondary&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFyREQiPgo8IS0tIFNvdXJjZSBvZiB0cnV0aCBmb3IgdGhlIEFyREQgYmFkZ2UgbWFyazogdGhlIGJhZGdlIHdvcmtmbG93IGlubGluZXMgdGhpcyBmaWxlIHZlcmJhdGltIGFzIHRoZSBlbmRwb2ludCBKU09OJ3MgbG9nb1N2Zy4gRGFyay1iYWNrZ3JvdW5kIHZhcmlhbnQgKGJhZGdlIGxhYmVsIHNpZGUpOiB3aGl0ZSByaW5nL3JlY3Q7IHRoZSBmb3VydGggdHJpYW5nbGUgaXMgd2hpdGUsIG1hdGNoaW5nIHRoZSBsb2dvJ3MgZGFyay1jb250ZXh0IHRyZWF0bWVudC4gLS0%2BCjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNiIvPgo8cmVjdCB4PSI0MSIgeT0iMzkiIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmZmZmZmYiLz4KPHBvbHlnb24gcG9pbnRzPSIxMCwwIC04LC05IC04LDkiIGZpbGw9IiNmMjY0MTkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQxIDE3KSByb3RhdGUoLTE1KSIvPgo8cG9seWdvbiBwb2ludHM9IjEwLDAgLTgsLTkgLTgsOSIgZmlsbD0iI2Y2YWUyZCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTcgNDEpIHJvdGF0ZSgtNzUpIi8%2BCjxwb2x5Z29uIHBvaW50cz0iMTAsMCAtOCwtOSAtOCw5IiBmaWxsPSIjODZiYmQ4IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4MyA1OSkgcm90YXRlKDEwNSkiLz4KPHBvbHlnb24gcG9pbnRzPSIxMCwwIC04LC05IC04LDkiIGZpbGw9IiNmZmZmZmYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU5IDgzKSByb3RhdGUoMTY1KSIvPgo8L3N2Zz4K)](https://github.com/moui72/artifact-driven-dev)
+<!-- ardd-badge-version-end -->
 [![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
 
 ## Datamodel
