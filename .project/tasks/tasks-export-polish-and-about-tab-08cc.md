@@ -53,7 +53,7 @@ rework does not. Sequenced after Phase 1 only for a clean serial branch.
   structure: move the existing docent-voice rules copy under a Rules tab
   (default selected), add an empty About tab shell. Preserve all existing rules
   content and the Salon Footer "?" entry point unchanged. Make T005 pass.
-- [ ] T007 [artifacts: ui] Write a failing test asserting the About tab renders
+- [x] T007 [artifacts: ui] Write a failing test asserting the About tab renders
   the inspiration credits (Exquisite Corpse, Telephone, and Telestrations with
   explicit trademark-acknowledgment / non-affiliation wording) and two external
   links — repo `https://github.com/moui72/exquisite-telephone` and sponsor

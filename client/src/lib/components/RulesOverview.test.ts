@@ -137,3 +137,37 @@ describe('RulesOverview (T005: Rules + About tabs)', () => {
     expect(screen.queryByText(/an opening phrase/i)).not.toBeInTheDocument();
   });
 });
+
+describe('RulesOverview (T007: About tab content)', () => {
+  async function openAbout() {
+    const rendered = render(RulesOverview, { props: { onClose: vi.fn() } });
+    await fireEvent.click(screen.getByRole('tab', { name: /about/i }));
+    return rendered;
+  }
+
+  it.fails('credits the three inspirations with a non-affiliation / trademark statement', async () => {
+    const { container } = await openAbout();
+    const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
+
+    expect(copy).toMatch(/exquisite corpse/i);
+    expect(copy).toMatch(/telephone/i);
+    expect(copy).toMatch(/telestrations/i);
+    // Explicit trademark acknowledgment / non-affiliation wording.
+    expect(copy).toMatch(/trademark/i);
+    expect(copy).toMatch(/not affiliated|no affiliation|unaffiliated|not endorsed/i);
+  });
+
+  it.fails('links the repo and sponsor pages in a new tab with accessible labels', async () => {
+    await openAbout();
+
+    const repoLink = screen.getByRole('link', { name: /source|repo|repositor|github|code/i });
+    expect(repoLink).toHaveAttribute('href', 'https://github.com/moui72/exquisite-telephone');
+    expect(repoLink).toHaveAttribute('target', '_blank');
+    expect(repoLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
+
+    const sponsorLink = screen.getByRole('link', { name: /sponsor|support|donate/i });
+    expect(sponsorLink).toHaveAttribute('href', 'https://github.com/sponsors/moui72');
+    expect(sponsorLink).toHaveAttribute('target', '_blank');
+    expect(sponsorLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
+  });
+});
