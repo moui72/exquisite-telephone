@@ -17,6 +17,14 @@
   export let ops: DrawOps = [];
   export let onOpsChange: (next: DrawOps) => void = () => {};
   export let monochromeOnly = false;
+  /**
+   * The chosen background template id, or `null` for blank. Rendered as a
+   * low-opacity background beneath the ink. The picker and rendering land
+   * in T018; declared here so the T017 red test typechecks.
+   */
+  export let coverTemplate: string | null = null;
+  export let onTemplateChange: (id: string | null) => void = () => {};
+  $: void [coverTemplate, onTemplateChange];
 </script>
 
 <GiltFrame caption="The Easel — Your Book's Cover">

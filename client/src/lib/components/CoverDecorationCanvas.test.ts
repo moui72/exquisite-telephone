@@ -1,4 +1,4 @@
-import { cleanup, render } from '@testing-library/svelte';
+import { cleanup, fireEvent, render } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CoverDecorationCanvas from './CoverDecorationCanvas.svelte';
 
@@ -62,5 +62,68 @@ describe('CoverDecorationCanvas', () => {
     });
 
     expect(queryByRole('group', { name: /stroke color/i })).toBeInTheDocument();
+  });
+});
+
+describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
+  const NAMED = [
+    'Fan Deco',
+    'Damask Lattice',
+    'Marbled Endpaper',
+    'Star Chart',
+    'Herringbone Cloth',
+    'Halftone Bloom',
+    'Contour Field',
+    'Pennant Row',
+    'Houndstooth',
+  ];
+
+  it.fails('offers a picker with the nine named backgrounds plus a blank option', () => {
+    const { getByRole } = render(CoverDecorationCanvas, { props: { username: 'Ada', ops: [] } });
+
+    for (const name of NAMED) {
+      expect(getByRole('button', { name })).toBeInTheDocument();
+    }
+    expect(getByRole('button', { name: 'Blank' })).toBeInTheDocument();
+  });
+
+  it.fails('calls onTemplateChange with the selected template id', async () => {
+    const onTemplateChange = vi.fn();
+    const { getByRole } = render(CoverDecorationCanvas, {
+      props: { username: 'Ada', ops: [], onTemplateChange },
+    });
+
+    await fireEvent.click(getByRole('button', { name: 'Star Chart' }));
+
+    expect(onTemplateChange).toHaveBeenCalledWith('star-chart');
+  });
+
+  it.fails('renders the chosen template as a low-opacity background beneath the ink', () => {
+    const { container } = render(CoverDecorationCanvas, {
+      props: { username: 'Ada', ops: [], coverTemplate: 'star-chart' },
+    });
+
+    const bg = container.querySelector('[data-cover-template="star-chart"]');
+    expect(bg).not.toBeNull();
+    // Low-opacity so strokes stay legible.
+    expect(bg?.className ?? '').toMatch(/opacity-/);
+    // The canvas (the ink surface) is still present on top.
+    expect(container.querySelector('canvas')).not.toBeNull();
+  });
+
+  it.fails('switching templates does not clear the ink (onOpsChange is not called)', async () => {
+    const onOpsChange = vi.fn();
+    const { getByRole } = render(CoverDecorationCanvas, {
+      props: {
+        username: 'Ada',
+        ops: [{ type: 'stroke', points: [{ x: 0, y: 0 }, { x: 1, y: 1 }], color: '#000', width: 3 }],
+        onOpsChange,
+        coverTemplate: 'fan-deco',
+      },
+    });
+
+    await fireEvent.click(getByRole('button', { name: 'Star Chart' }));
+
+    expect(onOpsChange).not.toHaveBeenCalled();
   });
 });

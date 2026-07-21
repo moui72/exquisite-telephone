@@ -97,7 +97,7 @@ paired implementation commit.
 
 ## Phase 5: Pregenerated templates
 
-- [ ] T017 [artifacts: ui, datamodel] Write a failing test for a template
+- [x] T017 [artifacts: ui, datamodel] Write a failing test for a template
   picker above the decoration canvas offering the nine named backgrounds plus
   "blank"; selecting one sets `coverTemplate` and renders it as a low-opacity
   background beneath the ink, switchable without clearing the ink. Confirm red.
