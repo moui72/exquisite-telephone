@@ -1,52 +1,46 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (**One `ready` tasks file: `tasks-4663-bd86.md`
-(0/2) — `onStartGame` should count active players.** It consumes the lone
-open feedback item (lap default resolved off the full roster) and, by
-user decision at the plan checkpoint, the sibling minimum-player-gate bug
-one line above it: both `onStartGame` reads of `room.players.length` route
-through the `activePlayers` helper. Plan `plan-4663-2026-07-20-2b90.md` is
-`approved`. Prod and beta are both live on the defect-fix build (all 7
-fixed and merged); the CI actions were bumped to v5 (Node-20 deprecation
-gone). This is the only outstanding work.
+_Updated: 2026-07-21 (**`tasks-4663-bd86.md` is complete and merged —
+`onStartGame` now counts active (non-kicked) players for both the
+minimum-player gate and the laps-per-book default.** Delegated worktree,
+2/2, clean fast-forward, reaped; suite green (454 tests). `datamodel.md`'s
+Minimum-player and Laps-per-book rules were corrected to match.
+
+**That fix surfaced a follow-on, now the one open feedback item.** The
+T002 datamodel edit describes the Lobby's *live displays* (below-minimum
+warning, laps default) as counting active players — but
+`Lobby.svelte:40` and `:84` still use raw `players.length`, so a host who
+kicks a lobby down sees a display that contradicts what the server will
+do. `activePlayers` is already imported in that file (the roster render
+uses it), so the fix is small. Filed as
+`feedback-lobby-active-count-display-9e7d.md`.
 
 Earlier this session: **all 7 code-vs-artifact defects were fixed and
-merged to `main`.**
-`tasks-25a0-15f7.md` completed 10/10 in a delegated worktree, merged
-clean (fast-forward), worktree reaped. Verified post-merge: full suite
-green — 451 tests (shared 49 · server 202 · client 196 · root 4) — lint
-and typecheck clean, then pushed — **beta is live on the defect-fix
-build**. **Every tasks file in the project is `completed`; nothing is
-ready or in flight.** One **open feedback item** was filed afterward from
-an implementer finding (lap default vs kicked lobby players — see
-Feedback). The next `/ardd-defects` run will re-verify the seven gone and
-clear the snapshot.
+merged to `main`**; prod and beta are both live on the defect-fix build;
+CI actions bumped to v5 (Node-20 deprecation gone). Every tasks file is
+`completed`; nothing is ready or in flight.
 
-The kicked-player seam was fixed as one change, as planned: a shared
-`activePlayers(room)` helper in `shared/` that rotation, timeout-vote
-membership, and roster rendering all read from. Timer extensions are now
-**additive** (a 30m timer + 15m grant yields 45m, not 15) with
-`datamodel.md` corrected to match; the curation cap is recorded in
-`infrastructure.md`'s Production Annotations.
+That defect pass — `tasks-25a0-15f7.md`, 10/10 in a delegated worktree —
+fixed the kicked-player seam (a shared `activePlayers(room)` helper that
+rotation, timeout-vote membership, and roster rendering all read from),
+made timer extensions additive (a 30m timer + 15m grant yields 45m, not
+15), and recorded the curation cap in `infrastructure.md`'s Production
+Annotations. `plan-4663` above then extended the same active-player seam
+to `onStartGame`, and its follow-on (the Lobby display) is the one open
+feedback item.
 
-**Two implementer findings worth carrying forward (neither a defect, both
-out of scope of this plan):**
-1. **T003 turned out to be effectively a no-op in live play.**
-   `onStartGame` resolves `lapsPerBook` to a concrete value at game
-   start, so `computeNextEntry`'s `?? defaultLapsPerBook(...)` null branch
-   never fires mid-game. It is T002's `activeCount * laps` completion
-   count — not the lap default — that actually un-strands a restarted
-   room's books. The T003 change is correct for the pure function's
-   contract but changes no live behavior.
-2. **Latent, untouched:** `onStartGame` (`handlers.ts:160`) resolves the
-   lap default from `room.players.length`, not the active count. Since a
-   kick is allowed during `lobby`, a lobby-kick-then-start resolves the
-   default off the inflated roster and yields a shorter-than-intended
-   game. Low confidence, correctly left alone. Candidate for a
-   `/ardd-feedback` note if it matters.
+**One implementer finding from the defect pass, still worth knowing:**
+T003 turned out to be effectively a no-op in live play — `onStartGame`
+resolves `lapsPerBook` to a concrete value at game start, so
+`computeNextEntry`'s `?? defaultLapsPerBook(...)` null branch never fires
+mid-game. It is T002's `activeCount * laps` completion count — not the lap
+default — that actually un-strands a restarted room's books. (The other
+finding from that pass, the `onStartGame` lap default counting the full
+roster, is no longer latent: it was the `plan-4663` work above, now
+fixed.)
 
-Prod is deployed; the `/ardd-defects` pass that produced these findings
-is described below.
+Prod is deployed; the `/ardd-defects` pass that produced the seven
+defects is described below.
 
 Since the last update: both tasks files merged, `main` was pushed (beta
 deployed green, `check:fly` passing in CI for the first time), and the
@@ -191,19 +185,25 @@ view, so a stale-looking entry there is expected until then.
 
 ## Feedback
 
-**0 open feedback files.**
+**1 open feedback file** — will be picked up by the next `/ardd-plan`.
 
-- `feedback-lap-default-kicked-players-8005.md` (F001, Bug) is now
-  **planned** via `plan-4663-2026-07-20-2b90.md` /
-  `tasks-4663-bd86.md` (`ready`, 0/2). Reading the code during planning
-  turned up that the minimum-player gate one line above the lap default
-  has the *same* kicked-lobby-player bug — and arguably the worse half,
-  since it can let a below-minimum game start. The user chose to fix both
-  in the one plan, so it routes **both** `onStartGame` reads of
-  `room.players.length` through the `activePlayers` helper. Not yet
-  implemented.
+- `feedback-lobby-active-count-display-9e7d.md` (F001, Bug): the Lobby's
+  live below-minimum warning (`Lobby.svelte:40`) and live laps default
+  (`:84`) compute over the raw roster, not the active count — so after
+  `plan-4663` made the server and `datamodel.md` count active players, the
+  Lobby *display* a host reads before starting can contradict what the
+  server does. `activePlayers` is already imported in that file (roster
+  render uses it), so the fix is small. Tagged `[artifacts: ui]`.
+  Surfaced by the `plan-4663` T002 implementer as drift the artifact edit
+  exposed.
 
 _History below (all prior items resolved):_
+
+- `feedback-lap-default-kicked-players-8005.md` (F001, Bug) — the
+  `onStartGame` lap default (and, by user decision, the sibling
+  minimum-player gate) counting the full roster — is **fixed and merged**
+  via `plan-4663-2026-07-20-2b90.md` / `tasks-4663-bd86.md` (**completed
+  2/2**). Both `onStartGame` reads now route through `activePlayers`.
 
 - `feedback-main-338d.md` (F001: host gets no frozen-room signal after a
   kick, a regression from the Salon Footer refactor) is now **planned**
@@ -441,9 +441,8 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-- `tasks-4663-bd86.md` — plan `plan-4663-2026-07-20-2b90.md`, no bound
-  features (**ready**, 0/2). The only `ready` file, so the matrix is
-  silent. Single phase, both tasks tagged `[F001]`.
+_(empty — no `ready` tasks files. **All 24 tasks files in the project are
+`completed`.**)_
 
 Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
@@ -547,16 +546,17 @@ Carried forward, none blocking:
   session's work; cost a pre-commit-hook retry this pass. Worth a fix on
   its own at some point.
 
-**Current state:** `main`, `origin/main`, and `release` are all on the
-defect-fix build with the v5 CI bump; beta and prod are both live and
-healthy on it. The `plan-4663` commits (plan, tasks, feedback flip,
-this refresh) are local-only and ride the next push. Nothing is deployed
-that isn't also on origin except those docs commits.
+**Current state:** `origin/main` and `release` are on the defect-fix +
+v5-CI build (beta and prod both live and healthy). Local `main` is ahead
+by the `plan-4663` fix and this session's docs commits — **not yet
+pushed**, so the `onStartGame` active-count fix is not on beta or prod
+until the next push.
 
-**Recommended next step:** `/ardd-implement` — execute
-`tasks-4663-bd86.md` (0/2). It's a small, mechanical change against an
-existing helper; the one scope decision was already made at the plan
-checkpoint.
+**Recommended next step:** push `main` to deploy the `onStartGame` fix to
+beta, then `/ardd-plan feedback-lobby-active-count-display-9e7d.md` for
+the small Lobby-display follow-on. Neither is urgent — the open feedback
+item is a display-vs-server mismatch a host only hits by kicking during
+the lobby.
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
 drop out of the snapshot; `/ardd-research` for
