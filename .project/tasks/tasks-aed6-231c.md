@@ -1,7 +1,7 @@
 ---
 plan: plan-aed6-2026-07-21-2a6e.md
 generated: 2026-07-21
-status: ready
+status: in-progress
 ---
 
 # Tasks
