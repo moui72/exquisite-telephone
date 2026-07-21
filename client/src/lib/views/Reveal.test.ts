@@ -3,11 +3,10 @@ import { resolve } from 'node:path';
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { writable } from 'svelte/store';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Book, Room } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
-import { generateCoverArt } from '../reveal/coverArt.js';
 import Reveal from './Reveal.svelte';
 
 afterEach(() => cleanup());
@@ -35,249 +34,70 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
+    setReadingBook: vi.fn(async () => {}),
     kickPlayer: vi.fn(async () => {}),
     restartGame: vi.fn(async () => {}),
   };
 }
 
-describe('Reveal view', () => {
-  it("renders each book's full ordered chain of entries once \"show everything\" is clicked (reused full-grid code path)", async () => {
-    const strokes = serializeDrawOps([
+function makeRoom(overrides: Partial<Room> = {}): Room {
+  return {
+    id: roomId,
+    hostPlayerId: ada.id,
+    players: [ada, grace],
+    status: 'reveal',
+    books: [],
+    createdAt: Date.now(),
+    monochromeOnly: false,
+    turnTimerMinutes: null,
+    lapsPerBook: null,
+    roundStartedAt: null,
+    timerExtensions: {},
+    pendingTimeoutVote: null,
+    playAgainVotes: [],
+    nonContinuable: false,
+    revealStartedAt: null,
+    bookReads: {},
+    currentlyReading: {},
+    promptMode: 'free-form',
+    curatedPromptCount: null,
+    allowPromptWriteIn: true,
+    dealtPrompts: {},
+    ...overrides,
+  };
+}
+
+function twoBookBooks(): Book[] {
+  const bookA: Book = {
+    id: 'book-a',
+    roomId,
+    originAuthorId: ada.id,
+    entries: [
+      { id: 'ea0', bookId: 'book-a', authorId: ada.id, position: 0, type: 'text', content: 'phrase A' },
       {
-        type: 'stroke',
-        points: [
-          { x: 0, y: 0 },
-          { x: 5, y: 5 },
-        ],
-        color: '#1e293b',
-        width: 3,
+        id: 'ea1',
+        bookId: 'book-a',
+        authorId: grace.id,
+        position: 1,
+        type: 'drawing',
+        content: serializeDrawOps([]),
       },
-    ]);
-    const book: Book = {
-      id: 'book-1',
-      roomId,
-      originAuthorId: ada.id,
-      entries: [
-        {
-          id: 'e0',
-          bookId: 'book-1',
-          authorId: ada.id,
-          position: 0,
-          type: 'text',
-          content: 'a spoonful of sugar',
-        },
-        {
-          id: 'e1',
-          bookId: 'book-1',
-          authorId: grace.id,
-          position: 1,
-          type: 'drawing',
-          content: strokes,
-        },
-      ],
-    };
-    const room: Room = {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [book],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
-    const session = makeFakeSession({ room, player: ada, error: null });
+    ],
+  };
+  const bookB: Book = {
+    id: 'book-b',
+    roomId,
+    originAuthorId: grace.id,
+    entries: [
+      { id: 'eb0', bookId: 'book-b', authorId: grace.id, position: 0, type: 'text', content: 'phrase B' },
+    ],
+  };
+  return [bookA, bookB];
+}
 
-    render(Reveal, { props: { session } });
-
-    // Before "show everything", the animated default is showing only the
-    // book's cover (T010) — the entry content isn't visible yet.
-    expect(screen.queryByText('a spoonful of sugar')).not.toBeInTheDocument();
-
-    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
-
-    expect(screen.getByText('a spoonful of sugar')).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: /drawing preview/i })).toBeInTheDocument();
-  });
-
-  it('renders one section per book, in order', async () => {
-    const bookA: Book = {
-      id: 'book-a',
-      roomId,
-      originAuthorId: ada.id,
-      entries: [
-        {
-          id: 'ea',
-          bookId: 'book-a',
-          authorId: ada.id,
-          position: 0,
-          type: 'text',
-          content: 'phrase A',
-        },
-      ],
-    };
-    const bookB: Book = {
-      id: 'book-b',
-      roomId,
-      originAuthorId: grace.id,
-      entries: [
-        {
-          id: 'eb',
-          bookId: 'book-b',
-          authorId: grace.id,
-          position: 0,
-          type: 'text',
-          content: 'phrase B',
-        },
-      ],
-    };
-    const room: Room = {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [bookA, bookB],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    const { container } = render(Reveal, { props: { session } });
-    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
-
-    expect(screen.getByText('phrase A')).toBeInTheDocument();
-    expect(screen.getByText('phrase B')).toBeInTheDocument();
-
-    const frames = container.querySelectorAll('.gilt-frame');
-    expect(frames.length).toBe(2);
-    expect(frames[0]?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/ada/i);
-    expect(frames[1]?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/grace/i);
-  });
-
-  it('has a save control per book that calls the export pipeline with that book', async () => {
-    const bookA: Book = {
-      id: 'book-a',
-      roomId,
-      originAuthorId: ada.id,
-      entries: [
-        {
-          id: 'ea',
-          bookId: 'book-a',
-          authorId: ada.id,
-          position: 0,
-          type: 'text',
-          content: 'phrase A',
-        },
-      ],
-    };
-    const bookB: Book = {
-      id: 'book-b',
-      roomId,
-      originAuthorId: grace.id,
-      entries: [
-        {
-          id: 'eb',
-          bookId: 'book-b',
-          authorId: grace.id,
-          position: 0,
-          type: 'text',
-          content: 'phrase B',
-        },
-      ],
-    };
-    const room: Room = {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [bookA, bookB],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
-    const session = makeFakeSession({ room, player: ada, error: null });
-    const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
-
-    render(Reveal, { props: { session, exportFn } });
-    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
-
-    const saveButtons = screen.getAllByRole('button', { name: /preserve as keepsake/i });
-    expect(saveButtons).toHaveLength(2);
-
-    await fireEvent.click(saveButtons[0]!);
-
-    expect(exportFn).toHaveBeenCalledWith(bookA, room.players);
-  });
-
-  function makeMinimalRoom(overrides: Partial<Room> = {}): Room {
-    return {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-      ...overrides,
-    };
-  }
-
+describe('Reveal view — end-of-game controls', () => {
   it('shows a non-host "Leave game" and "Vote to play again", which call the corresponding session methods', async () => {
-    const room = makeMinimalRoom();
+    const room = makeRoom();
     const session = makeFakeSession({ room, player: grace, error: null });
 
     render(Reveal, { props: { session } });
@@ -295,7 +115,7 @@ describe('Reveal view', () => {
   });
 
   it('shows the host "End game" and "Play again" (not the non-host pair), which call the corresponding session methods', async () => {
-    const room = makeMinimalRoom();
+    const room = makeRoom();
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
@@ -313,7 +133,7 @@ describe('Reveal view', () => {
   });
 
   it('shows the host a readiness count reflecting playAgainVotes vs players, not shown to a non-host', () => {
-    const room = makeMinimalRoom({ playAgainVotes: [grace.id] });
+    const room = makeRoom({ playAgainVotes: [grace.id] });
 
     const hostSession = makeFakeSession({ room, player: ada, error: null });
     render(Reveal, { props: { session: hostSession } });
@@ -326,346 +146,56 @@ describe('Reveal view', () => {
   });
 });
 
-describe('Reveal view — animated one-book-at-a-time viewer (ui.md Reveal View)', () => {
-  function makeEntry(bookId: string, authorId: string, position: number, content: string) {
-    return {
-      id: `${bookId}-${position}`,
-      bookId,
-      authorId,
-      position,
-      type: 'text' as const,
-      content,
-    };
-  }
-
-  function makeTwoBookRoom(): Room {
-    const bookA: Book = {
-      id: 'book-a',
-      roomId,
-      originAuthorId: ada.id,
-      entries: [
-        makeEntry('book-a', ada.id, 0, 'a0'),
-        makeEntry('book-a', grace.id, 1, 'a1'),
-        makeEntry('book-a', ada.id, 2, 'a2'),
-        makeEntry('book-a', grace.id, 3, 'a3'),
-        makeEntry('book-a', ada.id, 4, 'a4'),
-      ],
-    };
-    const bookB: Book = {
-      id: 'book-b',
-      roomId,
-      originAuthorId: grace.id,
-      entries: [makeEntry('book-b', grace.id, 0, 'b0')],
-    };
-    return {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [bookA, bookB],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
-  }
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("on initial render, only the first book's cover is shown (author name + generateCoverArt output), no entries visible yet", async () => {
-    const room = makeTwoBookRoom();
+describe('Reveal view — self-guided card grid + per-book modal', () => {
+  it('renders one card per book with cover art, no entries until a card is opened', () => {
+    const room = makeRoom({ books: twoBookBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
-    await tick();
 
-    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
-    expect(screen.queryByText('a0')).not.toBeInTheDocument();
-    expect(screen.queryByText('b0')).not.toBeInTheDocument();
-    const art = generateCoverArt(ada.id);
-    // Scoped to the cover-art svg — decorative lucide icons elsewhere in
-    // the view also render <circle> elements.
-    expect(document.querySelectorAll('svg[aria-label="cover art"] circle')).toHaveLength(
-      art.shapes.length,
-    );
+    // A cover-art card per book, but no entry content is shown yet.
+    expect(document.querySelectorAll('svg[aria-label="cover art"]')).toHaveLength(2);
+    expect(screen.queryByText('phrase A')).not.toBeInTheDocument();
+    expect(screen.queryByText('phrase B')).not.toBeInTheDocument();
   });
 
-  it('reveals up to 2 entries after the 2.5s cover delay plus one 4s tick', async () => {
-    const room = makeTwoBookRoom();
+  it('opening a card shows page 1 (the origin prompt in isolation) and emits setReadingBook with the bookId', async () => {
+    const room = makeRoom({ books: twoBookBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
-    await tick();
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
 
-    vi.advanceTimersByTime(2500 + 4000);
-    await tick();
-
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a1')).toBeInTheDocument();
-    expect(screen.queryByText('a2')).not.toBeInTheDocument();
+    expect(screen.getByText('phrase A')).toBeInTheDocument();
+    // Page 1 is the prompt alone — the drawing that followed is not yet shown.
+    expect(screen.queryByRole('img', { name: /drawing preview/i })).not.toBeInTheDocument();
+    expect(session.setReadingBook).toHaveBeenCalledWith('book-a');
   });
 
-  it("fully reveals the book then advances to the next book's cover after enough ticks", async () => {
-    const room = makeTwoBookRoom();
+  it('closing the modal emits setReadingBook(null)', async () => {
+    const room = makeRoom({ books: twoBookBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
 
     render(Reveal, { props: { session } });
-    await tick();
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /close book/i }));
 
-    // cover delay + 3 ticks reveals all 5 entries of book A (2+2+1) and
-    // moves on to book B's cover.
-    vi.advanceTimersByTime(2500 + 4000 * 3);
-    await tick();
-
-    expect(screen.getByText(/grace.s book/i)).toBeInTheDocument();
-    expect(screen.queryByText('b0')).not.toBeInTheDocument();
+    expect(session.setReadingBook).toHaveBeenCalledWith(null);
   });
 
-  it('a "show everything" control immediately renders every book\'s full chain regardless of timer state', async () => {
-    const room = makeTwoBookRoom();
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    render(Reveal, { props: { session } });
-    await tick();
-
-    await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
-
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a4')).toBeInTheDocument();
-    expect(screen.getByText('b0')).toBeInTheDocument();
-  });
-
-  it('manual previous/next controls step between books without waiting for the timer', async () => {
-    const room = makeTwoBookRoom();
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    render(Reveal, { props: { session } });
-    await tick();
-
-    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
-    expect(screen.getByText(/grace.s book/i)).toBeInTheDocument();
-
-    await fireEvent.click(screen.getByRole('button', { name: /^previous$/i }));
-    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
-  });
-
-  it('has a save control for the currently displayed book that calls the export pipeline (ui.md: available in both modes)', async () => {
-    const room = makeTwoBookRoom();
+  it('save control on the last page calls the export pipeline with that book', async () => {
+    const room = makeRoom({ books: twoBookBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
     const exportFn = vi.fn(() => 'data:image/png;base64,FAKE');
 
     render(Reveal, { props: { session, exportFn } });
-    await tick();
+    // book-b has a single entry — page 1 is already the last page.
+    await fireEvent.click(screen.getByRole('button', { name: /open grace's book/i }));
 
     const saveButton = screen.getByRole('button', { name: /preserve as keepsake/i });
     await fireEvent.click(saveButton);
 
-    expect(exportFn).toHaveBeenCalledWith(room.books[0], room.players);
-  });
-
-  it("renders the current book inside a GiltFrame with a plaque caption naming the origin author", async () => {
-    const room = makeTwoBookRoom();
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    const { container } = render(Reveal, { props: { session } });
-    await tick();
-
-    const frame = container.querySelector('.gilt-frame');
-    expect(frame).not.toBeNull();
-    expect(frame?.querySelector('.gilt-frame-plaque')?.textContent).toMatch(/ada/i);
-  });
-
-  it('shows the decorative spotlight/curtain flourish class by default (motion not reduced)', async () => {
-    const room = makeTwoBookRoom();
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    const { container } = render(Reveal, { props: { session } });
-    await tick();
-
-    expect(container.querySelector('.reveal-spotlight')).not.toBeNull();
-  });
-
-  it('omits the decorative spotlight/curtain flourish class when prefers-reduced-motion is set, without affecting auto-advance pacing', async () => {
-    vi.stubGlobal(
-      'matchMedia',
-      vi.fn().mockImplementation((query: string) => ({
-        matches: true,
-        media: query,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    );
-    const room = makeTwoBookRoom();
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    const { container } = render(Reveal, { props: { session } });
-    await tick();
-
-    expect(container.querySelector('.reveal-spotlight')).toBeNull();
-
-    // Auto-advance pacing itself is unaffected by the motion preference.
-    vi.advanceTimersByTime(2500 + 4000);
-    await tick();
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a1')).toBeInTheDocument();
-    expect(screen.queryByText('a2')).not.toBeInTheDocument();
-
-    vi.unstubAllGlobals();
-  });
-});
-
-describe('Reveal view — position derived from Room.revealStartedAt, independent of mount time', () => {
-  function makeEntry(bookId: string, authorId: string, position: number, content: string) {
-    return {
-      id: `${bookId}-${position}`,
-      bookId,
-      authorId,
-      position,
-      type: 'text' as const,
-      content,
-    };
-  }
-
-  function makeTwoBookRoom(revealStartedAt: number | null): Room {
-    const bookA: Book = {
-      id: 'book-a',
-      roomId,
-      originAuthorId: ada.id,
-      entries: [
-        makeEntry('book-a', ada.id, 0, 'a0'),
-        makeEntry('book-a', grace.id, 1, 'a1'),
-        makeEntry('book-a', ada.id, 2, 'a2'),
-        makeEntry('book-a', grace.id, 3, 'a3'),
-        makeEntry('book-a', ada.id, 4, 'a4'),
-      ],
-    };
-    const bookB: Book = {
-      id: 'book-b',
-      roomId,
-      originAuthorId: grace.id,
-      entries: [makeEntry('book-b', grace.id, 0, 'b0')],
-    };
-    return {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [bookA, bookB],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
-  }
-
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('given a fixed revealStartedAt and fixed "now", two mounts at different real times produce the same visible state', async () => {
-    const revealStartedAt = 1_000_000;
-
-    // First mount: the component's own mount happens "soon" after
-    // revealStartedAt.
-    vi.setSystemTime(revealStartedAt + 1000);
-    const roomEarly = makeTwoBookRoom(revealStartedAt);
-    const sessionEarly = makeFakeSession({ room: roomEarly, player: ada, error: null });
-    const { unmount } = render(Reveal, { props: { session: sessionEarly } });
-    await tick();
-
-    // Advance the shared clock to a fixed elapsed time: cover delay (2.5s)
-    // plus one full 4s tick — 2 entries should be visible.
-    vi.setSystemTime(revealStartedAt + 2500 + 4000);
-    await tick();
-    // Force a recompute tick (the component polls every 250ms).
-    vi.advanceTimersByTime(300);
-    await tick();
-
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a1')).toBeInTheDocument();
-    expect(screen.queryByText('a2')).not.toBeInTheDocument();
-    unmount();
-    cleanup();
-
-    // Second mount: the component itself mounts much later in real time
-    // (simulating a client that joined/refreshed long after reveal
-    // started), but the room's revealStartedAt and "now" are identical to
-    // the first mount's final state above.
-    vi.setSystemTime(revealStartedAt + 2500 + 4000);
-    const roomLate = makeTwoBookRoom(revealStartedAt);
-    const sessionLate = makeFakeSession({ room: roomLate, player: ada, error: null });
-    render(Reveal, { props: { session: sessionLate } });
-    await tick();
-    vi.advanceTimersByTime(300);
-    await tick();
-
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a1')).toBeInTheDocument();
-    expect(screen.queryByText('a2')).not.toBeInTheDocument();
-  });
-
-  it('settles into showEverything once elapsed time exceeds every book\'s full reveal sequence', async () => {
-    const revealStartedAt = 2_000_000;
-    vi.setSystemTime(revealStartedAt);
-    const room = makeTwoBookRoom(revealStartedAt);
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    render(Reveal, { props: { session } });
-    await tick();
-
-    // Far beyond the time needed to fully reveal both books.
-    vi.setSystemTime(revealStartedAt + 10_000_000);
-    vi.advanceTimersByTime(300);
-    await tick();
-
-    expect(screen.getByText('a0')).toBeInTheDocument();
-    expect(screen.getByText('a4')).toBeInTheDocument();
-    expect(screen.getByText('b0')).toBeInTheDocument();
-  });
-
-  it('falls back to its own mount time when revealStartedAt is null, without throwing', async () => {
-    const room = makeTwoBookRoom(null);
-    const session = makeFakeSession({ room, player: ada, error: null });
-
-    render(Reveal, { props: { session } });
-    await tick();
-
-    expect(screen.getByText(/ada.s book/i)).toBeInTheDocument();
-    expect(screen.queryByText('a0')).not.toBeInTheDocument();
+    expect(exportFn).toHaveBeenCalledWith(room.books[1], room.players);
   });
 });
 
@@ -678,14 +208,10 @@ describe('theme regression guard (plan-1449)', () => {
 
 /**
  * Ratings are curation telemetry, not a scoreboard (ui.md, datamodel.md).
- * They are NEVER surfaced back to any player, in any view — not to the
- * rater, not to the phrase's author, not on Reveal, where every other
- * secret in the game is finally revealed. Surfacing one would turn a
- * party game into a judged one.
- *
- * These are absence assertions by design. There is no red phase to have:
- * the correct implementation is that nothing was ever built. What they
- * guard against is a future change that adds one.
+ * They are NEVER surfaced back to any player, in any view. These are
+ * absence assertions by design — there is no red phase; the correct
+ * implementation is that nothing was ever built. They guard against a
+ * future change that adds one.
  */
 describe('prompt ratings are never surfaced to players', () => {
   function revealRoom(): Room {
@@ -694,47 +220,11 @@ describe('prompt ratings are never surfaced to players', () => {
       roomId,
       originAuthorId: ada.id,
       entries: [
-        {
-          id: 'e0',
-          bookId: 'book-1',
-          authorId: ada.id,
-          position: 0,
-          type: 'text',
-          content: 'a spoonful of sugar',
-        },
-        {
-          id: 'e1',
-          bookId: 'book-1',
-          authorId: grace.id,
-          position: 1,
-          type: 'drawing',
-          content: serializeDrawOps([]),
-        },
+        { id: 'e0', bookId: 'book-1', authorId: ada.id, position: 0, type: 'text', content: 'a spoonful of sugar' },
+        { id: 'e1', bookId: 'book-1', authorId: grace.id, position: 1, type: 'drawing', content: serializeDrawOps([]) },
       ],
     };
-    return {
-      id: roomId,
-      hostPlayerId: ada.id,
-      players: [ada, grace],
-      status: 'reveal',
-      books: [book],
-      createdAt: Date.now(),
-      monochromeOnly: false,
-      turnTimerMinutes: null,
-      lapsPerBook: null,
-      roundStartedAt: null,
-      timerExtensions: {},
-      pendingTimeoutVote: null,
-      playAgainVotes: [],
-      nonContinuable: false,
-      revealStartedAt: null,
-      bookReads: {},
-      currentlyReading: {},
-      promptMode: 'free-form',
-      curatedPromptCount: null,
-      allowPromptWriteIn: true,
-      dealtPrompts: {},
-    };
+    return makeRoom({ books: [book] });
   }
 
   it('renders no rating data on Reveal — not to the rater, not to the author', async () => {
@@ -744,7 +234,8 @@ describe('prompt ratings are never surfaced to players', () => {
       cleanup();
       const session = makeFakeSession({ room, player: viewer, error: null });
       const { container } = render(Reveal, { props: { session } });
-      await fireEvent.click(screen.getByRole('button', { name: /show everything/i }));
+      await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+      await fireEvent.click(screen.getByRole('button', { name: /reveal all/i }));
       await tick();
 
       const text = container.textContent ?? '';
@@ -755,26 +246,17 @@ describe('prompt ratings are never surfaced to players', () => {
   });
 
   /**
-   * A structural guard, not a rendering one: the Reveal component must
-   * not so much as reference a rating. A future contributor wiring one in
-   * fails here even if they hide it behind a flag that renders nothing.
+   * A structural guard: the Reveal component must not so much as reference
+   * a rating. A future contributor wiring one in fails here even if they
+   * hide it behind a flag that renders nothing.
    */
   it('the Reveal component source references no rating concept at all', () => {
-    const source = readFileSync(
-      resolve(__dirname, './Reveal.svelte'),
-      'utf8',
-    );
+    const source = readFileSync(resolve(__dirname, './Reveal.svelte'), 'utf8');
 
     expect(source).not.toMatch(/PromptRating|promptRating|thumbsUp|thumbsDown|ThumbsUp|ThumbsDown/);
     expect(source).not.toMatch(/\.rating\b/);
   });
 
-  /**
-   * The deepest guard: a rating can only reach a client if it rides room
-   * state. `Room`, `Book`, and `Entry` carry no rating field, so there is
-   * no channel for one to arrive on — which is what makes the absence
-   * structural rather than merely a rendering choice.
-   */
   it('no rating field exists on any broadcast game type', () => {
     const room = revealRoom();
 

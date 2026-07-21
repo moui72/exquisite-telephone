@@ -32,6 +32,7 @@ function makeFakeSession(
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
+    setReadingBook: vi.fn(async () => {}),
     kickPlayer: vi.fn(async () => {}),
     restartGame: vi.fn(async () => {}),
   };
