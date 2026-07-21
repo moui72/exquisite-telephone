@@ -6,6 +6,7 @@ import {
   computeNextEntries,
   currentRoundFor,
   defaultLapsPerBook,
+  isBookComplete,
 } from './turnAdvancement.js';
 
 function makePlayer(id: string, roomId: string): Player {
@@ -362,6 +363,81 @@ describe('laps per book (multi-lap completion math)', () => {
     const room = makeRoom([bookA], null);
 
     expect(computeNextEntry(room, bookA)).not.toBeNull();
+  });
+});
+
+describe('isBookComplete (single-source completion predicate)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+  const players = [ada, grace, lin];
+
+  function makeRoom(
+    entryCount: number,
+    lapsPerBook: number | null,
+    roomPlayers: Player[] = players,
+  ): { room: Room; book: Book } {
+    const book: Book = {
+      id: 'bookA',
+      roomId,
+      originAuthorId: ada.id,
+      entries: Array.from({ length: entryCount }, (_, i) =>
+        makeEntry('bookA', roomPlayers[i % roomPlayers.length]!.id, i),
+      ),
+    };
+    const room: Room = {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: roomPlayers,
+      status: 'writing',
+      books: [book],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+    return { room, book };
+  }
+
+  it('is false at position activeCount*laps - 1 and true at activeCount*laps', () => {
+    // 3 active players, lapsPerBook 2 -> completion at 6 entries.
+    const almost = makeRoom(5, 2);
+    expect(isBookComplete(almost.room, almost.book)).toBe(false);
+
+    const done = makeRoom(6, 2);
+    expect(isBookComplete(done.room, done.book)).toBe(true);
+  });
+
+  it('is true when activeCount === 0 (no active players)', () => {
+    const kickedPlayers = players.map((p) => ({ ...p, kicked: true }));
+    const { room, book } = makeRoom(0, 2, kickedPlayers);
+    expect(isBookComplete(room, book)).toBe(true);
+  });
+
+  it('a book at entries.length === players.length in a lapsPerBook-2 room is NOT complete', () => {
+    // The regression the old players.length guard caused: 3 entries == 3
+    // players, but with 2 laps the book still needs 6.
+    const { room, book } = makeRoom(3, 2);
+    expect(isBookComplete(room, book)).toBe(false);
+  });
+
+  it('resolves laps from defaultLapsPerBook(activeCount) when lapsPerBook is null', () => {
+    // 3 active players -> defaultLapsPerBook(3) === 2, so 3 entries is not complete.
+    const { room, book } = makeRoom(3, null);
+    expect(isBookComplete(room, book)).toBe(false);
+    const done = makeRoom(6, null);
+    expect(isBookComplete(done.room, done.book)).toBe(true);
   });
 });
 

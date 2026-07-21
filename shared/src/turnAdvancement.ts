@@ -63,6 +63,26 @@ export function currentRoundFor(room: Room): number {
 }
 
 /**
+ * Whether `book` has received every entry it will ever get: no active
+ * players remain, or its entry count has reached the round-robin total
+ * of `activeCount * laps`. The single definition of "book complete" —
+ * `computeNextEntry`'s completion branch and the server's submit guard
+ * both call this so the boundary can't drift (the old server guard used
+ * `entries.length >= players.length`, which ignored laps and kicks;
+ * defect d27f4eea). `activeCount` and `laps` resolve exactly as in
+ * `computeNextEntry`: active roster count, and `Room.lapsPerBook` with
+ * `defaultLapsPerBook(activeCount)` as the pre-resolution fallback.
+ */
+export function isBookComplete(room: Room, book: Book): boolean {
+  const activeCount = activePlayers(room).length;
+  const laps = room.lapsPerBook ?? defaultLapsPerBook(activeCount);
+  // Round-robin runs over the *active* roster, so completion is reached
+  // after activeCount * laps entries — a kicked player's slot is never
+  // assigned and must not strand the book (restart continuability fix).
+  return activeCount === 0 || book.entries.length >= activeCount * laps;
+}
+
+/**
  * Computes the next Entry due on `book`, or null when the book is
  * complete (every player has contributed once) or when it has already
  * moved ahead of the room-wide current round and must wait for the rest
@@ -72,11 +92,7 @@ export function computeNextEntry(room: Room, book: Book): NextEntry | null {
   const active = activePlayers(room);
   const activeCount = active.length;
   const position = book.entries.length;
-  const laps = room.lapsPerBook ?? defaultLapsPerBook(activeCount);
-  // Round-robin runs over the *active* roster, so completion is reached
-  // after activeCount * laps entries — a kicked player's slot is never
-  // assigned and must not strand the book (restart continuability fix).
-  if (activeCount === 0 || position >= activeCount * laps) {
+  if (isBookComplete(room, book)) {
     return null;
   }
   if (position > currentRoundFor(room)) {
