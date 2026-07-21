@@ -13,6 +13,37 @@ export const CANVAS_WIDTH = 320;
 export const TEXT_ROW_HEIGHT = 60;
 export const DRAWING_ROW_HEIGHT = 240;
 
+/**
+ * Marigold — the theme's gold/foil frame accent (ui.md Visual Identity).
+ * Used in the export for the per-panel dividers and the gilt frame border,
+ * so the exported strip reads as intentional gallery framing.
+ */
+export const MARIGOLD = '#F5A623';
+
+/** Thickness in px of the divider band drawn at each internal panel seam. */
+export const DIVIDER_HEIGHT = 2;
+
+/** Thickness in px of the gilt frame border drawn around the whole strip. */
+export const FRAME_BORDER_WIDTH = 4;
+
+/** Height in px of the footer band below the last panel. */
+export const FOOTER_HEIGHT = 40;
+
+/** The "Exquisite Telephone" wordmark stamped into the export footer. */
+export const WORDMARK = 'Exquisite Telephone';
+
+/*
+ * PRODUCTION ANNOTATION: `PRODUCTION_URL` is the canonical production
+ * custom domain (infrastructure.md Deployment), written into the export
+ * footer as a *static* string rather than derived from the running host.
+ * This is intentional (plan Production Annotation Summary): a strip saved
+ * from the beta channel should still advertise the production URL a
+ * recipient can visit, not the beta host it happened to be exported from.
+ * It is a channel-agnostic constant a future multi-domain setup would
+ * need to revisit — do not replace it with `location.host` or similar.
+ */
+export const PRODUCTION_URL = 'ex-tel.ty-pe.com';
+
 /** The subset of CanvasRenderingContext2D this pipeline uses — kept
  * minimal so it's easy to fake in tests without a real canvas. */
 export interface MinimalCanvasContext {
@@ -46,6 +77,16 @@ export function computeCanvasSize(book: Book): { width: number; height: number }
   return { width: CANVAS_WIDTH, height };
 }
 
+/**
+ * Total export canvas size: the composited panel content plus the footer
+ * band beneath it. The frame border is drawn inset over the outer edges,
+ * so it does not add to the dimensions.
+ */
+export function computeExportCanvasSize(book: Book): { width: number; height: number } {
+  const content = computeCanvasSize(book);
+  return { width: content.width, height: content.height + FOOTER_HEIGHT };
+}
+
 function playerName(players: Player[], authorId: string): string {
   return players.find((p) => p.id === authorId)?.name ?? authorId;
 }
@@ -55,12 +96,25 @@ export function renderBookOntoContext(
   book: Book,
   players: Player[],
 ): void {
-  const { width, height } = computeCanvasSize(book);
+  const { width } = computeCanvasSize(book);
+  const { height: totalHeight } = computeExportCanvasSize(book);
+  const contentHeight = totalHeight - FOOTER_HEIGHT;
   ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, width, totalHeight);
 
   let y = 0;
-  for (const entry of [...book.entries].sort((a, b) => a.position - b.position)) {
+  const ordered = [...book.entries].sort((a, b) => a.position - b.position);
+  for (const [index, entry] of ordered.entries()) {
+    // Per-panel divider (infrastructure.md Export Pipeline — Strip
+    // styling): a Marigold band at each internal seam so an individual
+    // turn reads as its own framed panel rather than one continuous
+    // column. No band above the first panel — the frame border handles
+    // the outer edge.
+    if (index > 0) {
+      ctx.fillStyle = MARIGOLD;
+      ctx.fillRect(0, y, width, DIVIDER_HEIGHT);
+    }
+
     ctx.fillStyle = '#94a3b8';
     ctx.font = '12px sans-serif';
     ctx.fillText(playerName(players, entry.authorId), 12, y + 16);
@@ -92,6 +146,29 @@ export function renderBookOntoContext(
       y += DRAWING_ROW_HEIGHT;
     }
   }
+
+  // Footer band (infrastructure.md Export Pipeline — Strip styling): a
+  // band below the last panel bearing the wordmark and the canonical
+  // production URL, so a shared strip is self-identifying and points a
+  // recipient at the real game.
+  ctx.fillStyle = '#fdf6e3';
+  ctx.fillRect(0, contentHeight, width, FOOTER_HEIGHT);
+  ctx.fillStyle = '#0f172a';
+  ctx.font = 'bold 14px sans-serif';
+  ctx.fillText(WORDMARK, 12, contentHeight + 18);
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px sans-serif';
+  ctx.fillText(PRODUCTION_URL, 12, contentHeight + 33);
+
+  // Gilt frame border (infrastructure.md Export Pipeline — Strip styling):
+  // the same Marigold gilt-frame language as the in-app Gilt Frame,
+  // composited as a static border inset over the strip's outer edges.
+  // Drawn last so it frames over the content and footer.
+  ctx.fillStyle = MARIGOLD;
+  ctx.fillRect(0, 0, width, FRAME_BORDER_WIDTH); // top
+  ctx.fillRect(0, totalHeight - FRAME_BORDER_WIDTH, width, FRAME_BORDER_WIDTH); // bottom
+  ctx.fillRect(0, 0, FRAME_BORDER_WIDTH, totalHeight); // left
+  ctx.fillRect(width - FRAME_BORDER_WIDTH, 0, FRAME_BORDER_WIDTH, totalHeight); // right
 }
 
 function defaultCreateCanvas(width: number, height: number): ExportCanvas {
@@ -107,7 +184,7 @@ export function exportBookToPng(
   players: Player[],
   createCanvas: (width: number, height: number) => ExportCanvas = defaultCreateCanvas,
 ): string {
-  const size = computeCanvasSize(book);
+  const size = computeExportCanvasSize(book);
   const canvas = createCanvas(size.width, size.height);
   const ctx = canvas.getContext('2d');
   if (!ctx) {
