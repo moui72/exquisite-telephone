@@ -83,7 +83,7 @@ paired implementation commit.
   player's next turn becomes ready while mid-decoration a 30-second client-side
   grace countdown precedes the turn view taking over — with NO change to the
   turn-timer deadline. Confirm red.
-- [ ] T014 [artifacts: ui] Implement the waiting-state decoration entry point
+- [x] T014 [artifacts: ui] Implement the waiting-state decoration entry point
   and the client-side 30s grace countdown per T013. Make it pass.
 
 ## Phase 4: Reveal card face uses the cover

@@ -12,6 +12,7 @@
   import type { SessionStore } from '../stores/session.js';
   import { Send, ThumbsDown, ThumbsUp, Timer } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
+  import CoverDecorationCanvas from '../components/CoverDecorationCanvas.svelte';
   import TurnStatus from '../components/TurnStatus.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
   import InfoTooltip from '../components/InfoTooltip.svelte';
@@ -20,6 +21,14 @@
 
   let textValue = '';
   let drawnOps: DrawOps = [];
+
+  // Client-local draft cover ink (ui.md Cover Decoration). Decorated while
+  // round-gated waiting; finalized only via onSubmitCover in the decorating
+  // window, never per-stroke here.
+  let coverDraftOps: DrawOps = [];
+
+  /** Client-side grace before a ready turn takes over from decoration. */
+  const GRACE_MS = 30_000;
 
   // Ticks the countdown (ui.md Writing/Drawing View) once a second.
   // Registered/cleaned up across the component lifecycle (constitution
@@ -60,6 +69,46 @@
     state.room.books.some(
       (b) => b.originAuthorId === state.player!.id && b.entries.length < activeCount * laps,
     );
+
+  // The player's own book, for the waiting-state cover-decoration canvas.
+  $: myOwnBook =
+    state.room && state.player
+      ? (state.room.books.find((b) => b.originAuthorId === state.player!.id) ?? null)
+      : null;
+
+  // 30-second client-side grace (ui.md Cover Decoration; datamodel.md —
+  // Cover decoration): when a new turn becomes ready while the player is
+  // mid-decoration, a countdown precedes the turn view taking over. It is a
+  // view-transition courtesy ONLY — it never touches the server-side
+  // turn-timer deadline or the force-empty flow.
+  let wasDecorating = false;
+  let graceDeadline: number | null = null;
+  $: isWaitingDecoration = !myTurn && waitingForRoundToFinish;
+  $: {
+    if (isWaitingDecoration) {
+      // On the decoration screen — arm the grace for the next turn.
+      wasDecorating = true;
+    } else if (myTurn && wasDecorating && graceDeadline === null) {
+      // A turn became ready while decorating: hold the turn view back.
+      graceDeadline = Date.now() + GRACE_MS;
+      wasDecorating = false;
+    } else if (myTurn && graceDeadline === null) {
+      wasDecorating = false;
+    }
+  }
+  // Elapsed grace clears itself so the turn view takes over (`now` ticks).
+  $: if (graceDeadline !== null && now >= graceDeadline) {
+    graceDeadline = null;
+  }
+  $: graceActive = graceDeadline !== null && now < graceDeadline;
+  $: graceSecondsLeft =
+    graceDeadline !== null
+      ? Math.min(GRACE_MS / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
+      : null;
+
+  function handleCoverOpsChange(ops: DrawOps) {
+    coverDraftOps = ops;
+  }
 
   // Reset local draft state only when the *identity* of the assigned turn
   // changes (a genuinely new turn), not merely when `myTurn`'s object
@@ -224,9 +273,34 @@
     </div>
   {/if}
 
-  {#if !myTurn}
+  {#if graceActive}
+    <!-- A turn is ready, but the player was mid-decoration: a 30-second
+         client-side grace precedes the turn view taking over (ui.md Cover
+         Decoration). The turn-timer deadline above is untouched. -->
+    <p data-testid="grace-countdown" class="text-center text-lg text-ink/80">
+      Your next commission is ready — presenting your easel in {graceSecondsLeft}s…
+    </p>
+    {#if myOwnBook && state.player}
+      <CoverDecorationCanvas
+        username={state.player.name}
+        ops={coverDraftOps}
+        onOpsChange={handleCoverOpsChange}
+        monochromeOnly={state.room?.monochromeOnly ?? false}
+      />
+    {/if}
+  {:else if !myTurn}
     {#if waitingForRoundToFinish}
-      <p class="text-lg text-ink/75">Awaiting the round's conclusion…</p>
+      <p class="text-lg text-ink/75">
+        Awaiting the round's conclusion — adorn your book's cover while you wait.
+      </p>
+      {#if myOwnBook && state.player}
+        <CoverDecorationCanvas
+          username={state.player.name}
+          ops={coverDraftOps}
+          onOpsChange={handleCoverOpsChange}
+          monochromeOnly={state.room?.monochromeOnly ?? false}
+        />
+      {/if}
     {:else}
       <p class="text-lg text-ink/75">Awaiting your next commission…</p>
     {/if}
