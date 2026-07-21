@@ -1,17 +1,23 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**One open feedback file, now 3 items: a full
-self-guided rework of the Reveal / end-of-game experience**
-(`feedback-reveal-self-guided-rework-422e.md`, F001–F003). Replace the
-timed auto-advancing Reveal with a card-grid + per-book modal (F001);
-make read / being-read state visible to *all* participants via badges
-(F002); and warn the host before closing the lobby with unread books
-(F003). F002 is the pivotal addition — shared read-state means this is
-**not** UI-only: it spans `ui`, `datamodel` (per-player-per-book read
-tracking, `revealStartedAt` likely orphaned), and `infrastructure`
-(real-time modal open/close sync, new Socket.IO events). Large,
-decision-reversing, cross-artifact — `/ardd-research` first. Everything
-else is merged, deployed (beta + prod current), and clear.
+_Updated: 2026-07-21 (**The Reveal-rework research is done — route:
+`/ardd-plan`.** The open feedback
+(`feedback-reveal-self-guided-rework-422e.md`, F001–F003, the self-guided
+Reveal + participant-visible read state + lobby-close guard) was vetted in
+`research-reveal-self-guided-rework-2026-07-21-3dbf.md`. Findings that
+settle the artifact design: `Room.revealStartedAt` is **fully orphaned**
+(drop it); the shared state is just two reveal-only `Room` fields —
+`bookReads: Record<BookId, PlayerId[]>` and `currentlyReading:
+Record<PlayerId, BookId>` — synced by a single `setReadingBook`
+event (with `onDisconnect` clearing the reader); everything else
+(paging, kept-place, reveal-all, animations) stays client-local; and the
+research **recommends the per-book read definition** for F003 (per-player
+would nag), with the final call left to the `/ardd-plan` checkpoint.
+
+Also this session: **four inbox captures were drained to the backlog**
+(book cover decoration, branded PNG export, PNG panel dividers, About
+tab — see Feature Backlog). Everything else is merged, deployed (beta +
+prod current), and clear.
 
 Earlier today: **`tasks-2b0f-effb.md` complete and merged — the laps
 `book-complete` broken-contract (`d27f4eea`) is fixed**, and the full
@@ -242,9 +248,11 @@ wanted), and a stale "8-color" palette code comment.
     per-book-has-a-reader vs per-player-complete — to settle before
     design.
 
-  **Large, decision-reversing, and now cross-artifact** (all three, with
-  new synced state and handlers). `/ardd-research` first is clearly the
-  right move before `/ardd-plan`.
+  **Vetted** in `research-reveal-self-guided-rework-2026-07-21-3dbf.md`
+  (route: `/ardd-plan`) — see the header for the settled state design.
+  Still open at the plan checkpoint: F003's per-book vs per-player read
+  definition (research recommends per-book), plus two minor copy nuances
+  (own-book reads; whether reveal-all counts as a read).
 
 _History below (all prior items resolved):_
 
@@ -314,7 +322,21 @@ neither is reflected in the Feature Backlog counts below.
 
 ## Feature Backlog
 
-1 backlogged · 14 implemented · 1 subsumed — see `.project/features/`.
+5 backlogged · 14 implemented · 1 subsumed — see `.project/features/`.
+
+Four new entries were drained from the out-of-band inbox this session
+(all `/ardd-backlog`, 2026-07-21):
+- `book-cover-decoration` — decorate your book's cover during wait time
+  (30s next-turn grace; 2-min end-of-game window that gates reveal).
+- `branded-png-export-styling` — border + branding/URL footer on export
+  strips.
+- `export-panel-dividers` — visual dividers between turn panels in export
+  strips. (Overlaps `branded-png-export-styling` — both touch the PNG
+  export path; natural to plan together / an epic candidate.)
+- `about-tab-help-panel` — About tab crediting inspirations (Telestrations
+  as a trademark ack), GitHub + Sponsors links.
+
+Target any with `/ardd-plan <slug>`.
 
 - `fly-config-lockstep` (**implemented**) and `release-promotion-workflow`
   (**implemented**) — both bound to
@@ -610,15 +632,15 @@ Carried forward, none blocking:
 but **not yet pushed** — 3 commits ahead of `origin/main` — so it is on
 neither beta nor prod. Prod is a build behind beta.
 
-**Recommended next step (your call):** the Reveal rework is large and
-decision-reversing, so decide how to approach it before anything runs —
-`/ardd-research feedback-reveal-self-guided-rework-422e.md` to vet the
-design first (recommended for a reversal this size, and you'll likely
-want to shape its scope), or `/ardd-plan
-feedback-reveal-self-guided-rework-422e.md` to go straight to designing
-the artifact changes. This is framed as a decision, not a runnable
-command, so `next_step_prompt: auto` deliberately does **not** auto-run it
-— a redesign this big shouldn't kick off unattended.
+**Recommended next step (your call):** read the research doc
+(`research-reveal-self-guided-rework-2026-07-21-3dbf.md`), then
+`/ardd-plan feedback-reveal-self-guided-rework-422e.md` to design the
+artifact changes it recommends. Framed as a decision (not auto-run) so
+the plan doesn't design against research you haven't reviewed yet — and
+because F003's read-definition is decided at the plan checkpoint. The
+five backlog features (`/ardd-plan <slug>`) are the other plannable work;
+the two PNG-export ones (`branded-png-export-styling`,
+`export-panel-dividers`) are a natural pair.
 
 Everything else is done: beta and prod are both current on the full
 session's work; working tree clean; diagrams `current`. `d27f4eea` still
