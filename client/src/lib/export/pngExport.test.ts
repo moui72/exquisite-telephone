@@ -8,6 +8,8 @@ import {
   TEXT_ROW_HEIGHT,
   DRAWING_ROW_HEIGHT,
   CANVAS_WIDTH,
+  DIVIDER_HEIGHT,
+  MARIGOLD,
   type MinimalCanvasContext,
 } from './pngExport.js';
 
@@ -68,7 +70,7 @@ function makeFakeContext(
 ): MinimalCanvasContext & { calls: string[] } {
   const calls: string[] = [];
   const pixels = new Uint8ClampedArray(width * height * 4).fill(255);
-  return {
+  const ctx: MinimalCanvasContext & { calls: string[] } = {
     calls,
     fillStyle: '',
     strokeStyle: '',
@@ -76,7 +78,9 @@ function makeFakeContext(
     lineCap: 'round',
     font: '',
     fillRect(x, y, w, h) {
-      calls.push(`fillRect(${x},${y},${w},${h})`);
+      // Record the active fillStyle so tests can assert a divider/frame's
+      // colour, not just its geometry.
+      calls.push(`fillRect(${x},${y},${w},${h})@${String(ctx.fillStyle)}`);
     },
     fillText(text, x, y) {
       calls.push(`fillText(${text},${x},${y})`);
@@ -102,6 +106,7 @@ function makeFakeContext(
       void imageData;
     },
   };
+  return ctx;
 }
 
 describe('computeCanvasSize (fixed row per entry type)', () => {
@@ -294,5 +299,32 @@ describe('exportBookToPng (flatten to a single PNG)', () => {
     expect(fakeCanvas.toDataURL).toHaveBeenCalledWith('image/png');
     expect(dataUrl).toBe('data:image/png;base64,FAKE');
     expect(ctx.calls.length).toBeGreaterThan(0);
+  });
+});
+
+describe('renderBookOntoContext (T001: per-panel dividers)', () => {
+  // TDD red: dividers are implemented in T002. `.fails` is removed there.
+  it.fails('draws a Marigold divider at each internal panel boundary', () => {
+    // Fixture layout: text (row 0, h=60), drawing (row 60, h=240),
+    // text (row 300, h=60). Internal panel boundaries — between one
+    // turn's panel and the next — sit at y=60 and y=300. A single-panel
+    // book has no internal boundary, so no leading divider above the
+    // first panel.
+    const book = makeFixtureBook();
+    const ctx = makeFakeContext();
+
+    renderBookOntoContext(ctx, book, players);
+
+    const dividerAt = (y: number) =>
+      ctx.calls.some(
+        (c) =>
+          c === `fillRect(0,${y},${CANVAS_WIDTH},${DIVIDER_HEIGHT})@${MARIGOLD}`,
+      );
+
+    // A divider spanning the full width, in Marigold, at each internal seam.
+    expect(dividerAt(TEXT_ROW_HEIGHT)).toBe(true);
+    expect(dividerAt(TEXT_ROW_HEIGHT + DRAWING_ROW_HEIGHT)).toBe(true);
+    // No divider above the very first panel.
+    expect(dividerAt(0)).toBe(false);
   });
 });

@@ -13,6 +13,16 @@ export const CANVAS_WIDTH = 320;
 export const TEXT_ROW_HEIGHT = 60;
 export const DRAWING_ROW_HEIGHT = 240;
 
+/**
+ * Marigold — the theme's gold/foil frame accent (ui.md Visual Identity).
+ * Used in the export for the per-panel dividers and the gilt frame border,
+ * so the exported strip reads as intentional gallery framing.
+ */
+export const MARIGOLD = '#F5A623';
+
+/** Thickness in px of the divider band drawn at each internal panel seam. */
+export const DIVIDER_HEIGHT = 2;
+
 /** The subset of CanvasRenderingContext2D this pipeline uses — kept
  * minimal so it's easy to fake in tests without a real canvas. */
 export interface MinimalCanvasContext {

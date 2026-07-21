@@ -1,7 +1,7 @@
 ---
 plan: plan-export-polish-and-about-tab-2026-07-21-4c22.md
 generated: 2026-07-21
-status: ready
+status: in-progress
 ---
 
 # Tasks
@@ -15,7 +15,7 @@ land them after the rework merges. The constitution declares Test-First
 Development (Principle III): each implementation task is preceded by a test
 written and confirmed failing first.
 
-- [ ] T001 [artifacts: infrastructure] Write a failing test for the PNG
+- [x] T001 [artifacts: infrastructure] Write a failing test for the PNG
   exporter (`exportBookToPng`, client) asserting the composited strip renders
   a visible divider/border between each turn's panel — e.g. locate the export
   helper's per-panel layout and assert divider pixels/segments exist at each
