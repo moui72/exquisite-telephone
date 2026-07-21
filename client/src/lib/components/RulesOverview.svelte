@@ -32,6 +32,16 @@
    * two-copies-of-one-claim drift this plan exists to fix.
    */
   export let onClose: () => void;
+
+  /**
+   * The panel is tabbed (ui.md Rules Overview Panel): a Rules tab with the
+   * docent-voice game-loop copy (selected by default on open) and an About
+   * tab crediting the game's inspirations. Panels are conditionally
+   * rendered, not merely hidden, so only the active tab's copy is in the
+   * DOM.
+   */
+  type Tab = 'rules' | 'about';
+  let activeTab: Tab = 'rules';
 </script>
 
 <div
@@ -46,7 +56,37 @@
     aria-label="How this salon works"
   >
     <GiltFrame caption="A Docent's Explanation">
-      <div class="flex flex-col gap-3 text-sm text-ink/90">
+      <div role="tablist" aria-label="Salon information" class="mb-3 flex gap-1 border-b border-marigold/30">
+        <button
+          type="button"
+          role="tab"
+          id="rules-tab"
+          aria-selected={activeTab === 'rules'}
+          aria-controls="rules-panel"
+          class="chamfer-frame chamfer-slim min-h-9 px-4 text-sm font-medium {activeTab === 'rules'
+            ? 'bg-marigold/20 text-ink'
+            : 'text-ink/60 hover:text-ink'}"
+          on:click={() => (activeTab = 'rules')}
+        >
+          Rules
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="about-tab"
+          aria-selected={activeTab === 'about'}
+          aria-controls="about-panel"
+          class="chamfer-frame chamfer-slim min-h-9 px-4 text-sm font-medium {activeTab === 'about'
+            ? 'bg-marigold/20 text-ink'
+            : 'text-ink/60 hover:text-ink'}"
+          on:click={() => (activeTab = 'about')}
+        >
+          About
+        </button>
+      </div>
+
+      {#if activeTab === 'rules'}
+      <div id="rules-panel" role="tabpanel" aria-labelledby="rules-tab" class="flex flex-col gap-3 text-sm text-ink/90">
         <p>
           Every salon follows the same quiet ritual. A guest settles on an opening phrase — composed
           at the blank page, or chosen from a hand the house deals them, as the host has arranged
@@ -75,6 +115,13 @@
           every drawing, laid out together so the house can see exactly how far each idea drifted.
         </p>
       </div>
+      {/if}
+
+      {#if activeTab === 'about'}
+      <div id="about-panel" role="tabpanel" aria-labelledby="about-tab" class="flex flex-col gap-3 text-sm text-ink/90">
+        <!-- About content is added in T008. -->
+      </div>
+      {/if}
 
       <button
         slot="plaque-action"

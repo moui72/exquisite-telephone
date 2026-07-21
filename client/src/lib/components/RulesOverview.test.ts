@@ -111,7 +111,7 @@ describe('RulesOverview', () => {
 });
 
 describe('RulesOverview (T005: Rules + About tabs)', () => {
-  it.fails('renders Rules and About tabs with Rules selected by default', () => {
+  it('renders Rules and About tabs with Rules selected by default', () => {
     render(RulesOverview, { props: { onClose: vi.fn() } });
 
     const rulesTab = screen.getByRole('tab', { name: /rules/i });
@@ -125,7 +125,7 @@ describe('RulesOverview (T005: Rules + About tabs)', () => {
     expect(screen.getByText(/an opening phrase/i)).toBeInTheDocument();
   });
 
-  it.fails('switches to the About tab, revealing its panel and hiding the rules copy', async () => {
+  it('switches to the About tab, revealing its panel and hiding the rules copy', async () => {
     render(RulesOverview, { props: { onClose: vi.fn() } });
 
     await fireEvent.click(screen.getByRole('tab', { name: /about/i }));

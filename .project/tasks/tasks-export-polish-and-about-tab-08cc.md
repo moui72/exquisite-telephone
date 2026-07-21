@@ -49,7 +49,7 @@ rework does not. Sequenced after Phase 1 only for a clean serial branch.
   selected by default on open, and that switching to About shows its content
   while Rules is the initial view. Confirm red before implementation. Per
   [[ui]] Rules Overview Panel.
-- [ ] T006 [artifacts: ui] Refactor the Rules Overview Panel into a tabbed
+- [x] T006 [artifacts: ui] Refactor the Rules Overview Panel into a tabbed
   structure: move the existing docent-voice rules copy under a Rules tab
   (default selected), add an empty About tab shell. Preserve all existing rules
   content and the Salon Footer "?" entry point unchanged. Make T005 pass.
