@@ -119,7 +119,39 @@
 
       {#if activeTab === 'about'}
       <div id="about-panel" role="tabpanel" aria-labelledby="about-tab" class="flex flex-col gap-3 text-sm text-ink/90">
-        <!-- About content is added in T008. -->
+        <p>
+          This salon owes its pastimes to three older ones. From the Surrealists' <em
+            >Exquisite Corpse</em
+          > it takes the joy of a work assembled blind, each hand adding to what it cannot fully see.
+          From the parlour game of <em>Telephone</em> it takes the delicious drift of a message
+          whispered ear to ear until it arrives as something else entirely.
+        </p>
+        <p>
+          And it shares the alternating write-then-draw ritual with <em>Telestrations</em>. That
+          name is a trademark of its respective owner; Exquisite Telephone is an independent work,
+          not affiliated with, endorsed by, or sponsored by it — the nod is one of gratitude, not
+          association.
+        </p>
+        <p class="flex flex-wrap gap-x-4 gap-y-1">
+          <a
+            href="https://github.com/moui72/exquisite-telephone"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="View the Exquisite Telephone source code on GitHub (opens in a new tab)"
+            class="text-bubblegum underline hover:text-bubblegum/80"
+          >
+            Source code
+          </a>
+          <a
+            href="https://github.com/sponsors/moui72"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Support Exquisite Telephone on GitHub Sponsors (opens in a new tab)"
+            class="text-bubblegum underline hover:text-bubblegum/80"
+          >
+            Sponsor this project
+          </a>
+        </p>
       </div>
       {/if}
 

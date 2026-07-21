@@ -1,7 +1,7 @@
 ---
 plan: plan-export-polish-and-about-tab-2026-07-21-4c22.md
 generated: 2026-07-21
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -59,7 +59,7 @@ rework does not. Sequenced after Phase 1 only for a clean serial branch.
   links — repo `https://github.com/moui72/exquisite-telephone` and sponsor
   `https://github.com/sponsors/moui72` — each opening in a new tab with an
   accessible label naming its destination. Confirm red before implementation.
-- [ ] T008 [artifacts: ui] Implement the About tab content: the inspiration
+- [x] T008 [artifacts: ui] Implement the About tab content: the inspiration
   credits in docent voice with the Telestrations trademark/non-affiliation
   statement, and the repo + sponsor links (new tab, accessible labels). Make
   T007 pass. Per [[ui]] Rules Overview Panel — About tab.

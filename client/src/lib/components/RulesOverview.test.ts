@@ -145,7 +145,7 @@ describe('RulesOverview (T007: About tab content)', () => {
     return rendered;
   }
 
-  it.fails('credits the three inspirations with a non-affiliation / trademark statement', async () => {
+  it('credits the three inspirations with a non-affiliation / trademark statement', async () => {
     const { container } = await openAbout();
     const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
 
@@ -157,10 +157,10 @@ describe('RulesOverview (T007: About tab content)', () => {
     expect(copy).toMatch(/not affiliated|no affiliation|unaffiliated|not endorsed/i);
   });
 
-  it.fails('links the repo and sponsor pages in a new tab with accessible labels', async () => {
+  it('links the repo and sponsor pages in a new tab with accessible labels', async () => {
     await openAbout();
 
-    const repoLink = screen.getByRole('link', { name: /source|repo|repositor|github|code/i });
+    const repoLink = screen.getByRole('link', { name: /source|repositor|source code/i });
     expect(repoLink).toHaveAttribute('href', 'https://github.com/moui72/exquisite-telephone');
     expect(repoLink).toHaveAttribute('target', '_blank');
     expect(repoLink).toHaveAttribute('rel', expect.stringContaining('noopener'));
