@@ -442,7 +442,7 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
     return [decorated, undecorated];
   }
 
-  it.fails('renders the drawn cover (a read-only canvas) as the card face when Book.cover is non-null', () => {
+  it('renders the drawn cover (a read-only canvas) as the card face when Book.cover is non-null', () => {
     const room = makeRoom({ books: mixedCoverBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
     const { getAllByLabelText } = render(Reveal, { props: { session } });
@@ -451,7 +451,7 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
     expect(getAllByLabelText('Drawing preview').length).toBeGreaterThanOrEqual(1);
   });
 
-  it.fails('falls back to generateCoverArt only for the undecorated book (Book.cover === null)', () => {
+  it('falls back to generateCoverArt only for the undecorated book (Book.cover === null)', () => {
     const room = makeRoom({ books: mixedCoverBooks() });
     const session = makeFakeSession({ room, player: ada, error: null });
     const { getAllByRole } = render(Reveal, { props: { session } });

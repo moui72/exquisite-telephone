@@ -92,7 +92,7 @@ paired implementation commit.
   grid renders `Book.cover` (over `coverTemplate` when set) as the card face
   when `cover` is non-null, and falls back to the existing `generateCoverArt`
   abstract design when `cover` is null. Confirm red.
-- [ ] T016 [artifacts: ui] Implement the Reveal card-face cover-with-fallback
+- [x] T016 [artifacts: ui] Implement the Reveal card-face cover-with-fallback
   per T015. Make it pass; confirm undecorated books render exactly as before.
 
 ## Phase 5: Pregenerated templates

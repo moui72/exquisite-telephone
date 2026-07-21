@@ -277,22 +277,32 @@
             aria-label={`Open ${playerName(book.originAuthorId)}'s book`}
             on:click={() => openBookModal(book.id)}
           >
-            <svg
-              viewBox="0 0 100 100"
-              role="img"
-              aria-label="cover art"
-              class="h-40 w-full rounded bg-butter"
-            >
-              {#each art.shapes as shape, i (i)}
-                <circle
-                  cx={shape.cx}
-                  cy={shape.cy}
-                  r={shape.r}
-                  fill="hsl({shape.hue}, {shape.saturation}%, {shape.lightness}%)"
-                  opacity="0.85"
-                />
-              {/each}
-            </svg>
+            {#if book.cover}
+              <!-- The card face is the origin author's decorated cover
+                   (ui.md Reveal View): the drawn ops replayed read-only.
+                   The coverTemplate background beneath the ink lands in
+                   T020. -->
+              <div class="flex h-40 w-full items-center justify-center overflow-hidden rounded bg-white">
+                <DrawingCanvas ops={book.cover} readOnly />
+              </div>
+            {:else}
+              <svg
+                viewBox="0 0 100 100"
+                role="img"
+                aria-label="cover art"
+                class="h-40 w-full rounded bg-butter"
+              >
+                {#each art.shapes as shape, i (i)}
+                  <circle
+                    cx={shape.cx}
+                    cy={shape.cy}
+                    r={shape.r}
+                    fill="hsl({shape.hue}, {shape.saturation}%, {shape.lightness}%)"
+                    opacity="0.85"
+                  />
+                {/each}
+              </svg>
+            {/if}
             <p class="font-mono text-xs text-ink/80">{exhibitCaption(book, index)}</p>
           </button>
 
