@@ -23,7 +23,7 @@ paired implementation commit.
   (new rooms/books start with `cover=null`, `coverTemplate=null`,
   `decorationWindowStartedAt=null`, `coverSubmissions=[]`). Add/adjust a shared
   type test asserting the new shape and defaults.
-- [ ] T002 [artifacts: datamodel] [parallel] Add the nine-id cover-template
+- [x] T002 [artifacts: datamodel] [parallel] Add the nine-id cover-template
   constant to `shared/` (`fan-deco`, `damask-lattice`, `marbled-endpaper`,
   `star-chart`, `herringbone-cloth`, `halftone-bloom`, `contour-field`,
   `pennant-row`, `houndstooth`) as a static constant with an exported
