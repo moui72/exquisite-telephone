@@ -1,7 +1,7 @@
 ---
 plan: plan-reveal-self-guided-rework-2026-07-21-7cd8.md
 generated: 2026-07-21
-status: ready
+status: in-progress
 ---
 
 # Tasks
