@@ -23,6 +23,27 @@ export const MARIGOLD = '#F5A623';
 /** Thickness in px of the divider band drawn at each internal panel seam. */
 export const DIVIDER_HEIGHT = 2;
 
+/** Thickness in px of the gilt frame border drawn around the whole strip. */
+export const FRAME_BORDER_WIDTH = 4;
+
+/** Height in px of the footer band below the last panel. */
+export const FOOTER_HEIGHT = 40;
+
+/** The "Exquisite Telephone" wordmark stamped into the export footer. */
+export const WORDMARK = 'Exquisite Telephone';
+
+/*
+ * PRODUCTION ANNOTATION: `PRODUCTION_URL` is the canonical production
+ * custom domain (infrastructure.md Deployment), written into the export
+ * footer as a *static* string rather than derived from the running host.
+ * This is intentional (plan Production Annotation Summary): a strip saved
+ * from the beta channel should still advertise the production URL a
+ * recipient can visit, not the beta host it happened to be exported from.
+ * It is a channel-agnostic constant a future multi-domain setup would
+ * need to revisit — do not replace it with `location.host` or similar.
+ */
+export const PRODUCTION_URL = 'ex-tel.ty-pe.com';
+
 /** The subset of CanvasRenderingContext2D this pipeline uses — kept
  * minimal so it's easy to fake in tests without a real canvas. */
 export interface MinimalCanvasContext {
@@ -54,6 +75,16 @@ export function computeCanvasSize(book: Book): { width: number; height: number }
     0,
   );
   return { width: CANVAS_WIDTH, height };
+}
+
+/**
+ * Total export canvas size: the composited panel content plus the footer
+ * band beneath it. The frame border is drawn inset over the outer edges,
+ * so it does not add to the dimensions.
+ */
+export function computeExportCanvasSize(book: Book): { width: number; height: number } {
+  const content = computeCanvasSize(book);
+  return { width: content.width, height: content.height + FOOTER_HEIGHT };
 }
 
 function playerName(players: Player[], authorId: string): string {

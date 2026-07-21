@@ -27,7 +27,7 @@ written and confirmed failing first.
   existing off-screen compositing pass, using the Marigold theme accent
   ([[ui]] Visual Identity), as pure layout math over the existing per-panel
   geometry — no `Book`/`Entry` shape change. Make T001 pass.
-- [ ] T003 [artifacts: infrastructure] Write a failing test asserting the
+- [x] T003 [artifacts: infrastructure] Write a failing test asserting the
   exported strip carries (a) a branded frame border around the whole strip and
   (b) a footer band with the "Exquisite Telephone" wordmark and the string
   `ex-tel.ty-pe.com`. Assert the footer URL is a fixed constant (present

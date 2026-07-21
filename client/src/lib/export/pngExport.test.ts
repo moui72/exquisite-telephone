@@ -3,13 +3,17 @@ import type { Book, Player } from '@exquisite-telephone/shared';
 import { serializeDrawOps } from '@exquisite-telephone/shared';
 import {
   computeCanvasSize,
+  computeExportCanvasSize,
   exportBookToPng,
   renderBookOntoContext,
   TEXT_ROW_HEIGHT,
   DRAWING_ROW_HEIGHT,
   CANVAS_WIDTH,
   DIVIDER_HEIGHT,
+  FOOTER_HEIGHT,
   MARIGOLD,
+  PRODUCTION_URL,
+  WORDMARK,
   type MinimalCanvasContext,
 } from './pngExport.js';
 
@@ -325,5 +329,62 @@ describe('renderBookOntoContext (T001: per-panel dividers)', () => {
     expect(dividerAt(TEXT_ROW_HEIGHT + DRAWING_ROW_HEIGHT)).toBe(true);
     // No divider above the very first panel.
     expect(dividerAt(0)).toBe(false);
+  });
+});
+
+describe('renderBookOntoContext (T003: branded frame + footer)', () => {
+  it.fails('frames the strip and stamps a wordmark + fixed production URL footer', () => {
+    const book = makeFixtureBook();
+    const contentHeight = TEXT_ROW_HEIGHT * 2 + DRAWING_ROW_HEIGHT;
+    const total = computeExportCanvasSize(book);
+    const ctx = makeFakeContext(CANVAS_WIDTH, total.height);
+
+    renderBookOntoContext(ctx, book, players);
+
+    // (a) A branded (Marigold) frame border around the whole strip: at
+    // minimum a top and bottom edge band spanning the full width.
+    // Full-width Marigold bands: (x=0, w=CANVAS_WIDTH). Parse their y.
+    const marigoldBandYs = ctx.calls
+      .filter((c) => c.endsWith(`@${MARIGOLD}`))
+      .map((c) => /^fillRect\(0,(\d+),(\d+),/.exec(c))
+      .filter((m): m is RegExpExecArray => m !== null && Number(m[2]) === CANVAS_WIDTH)
+      .map((m) => Number(m[1]));
+
+    // Top frame edge at y=0; bottom frame edge in the lower band (below the
+    // composited panels — distinct from the internal panel dividers, which
+    // sit within the content rows).
+    const topEdge = marigoldBandYs.includes(0);
+    const bottomEdge = marigoldBandYs.some((y) => y >= contentHeight);
+    expect(topEdge, 'expected a Marigold top frame edge').toBe(true);
+    expect(bottomEdge, 'expected a Marigold bottom frame edge').toBe(true);
+
+    // (b) A footer below the last panel bearing the wordmark and the URL.
+    const wordmarkCall = ctx.calls.find((c) => c.includes(WORDMARK));
+    const urlCall = ctx.calls.find((c) => c.includes(PRODUCTION_URL));
+    expect(wordmarkCall, 'expected the "Exquisite Telephone" wordmark in the footer').toBeDefined();
+    expect(urlCall, 'expected the production URL in the footer').toBeDefined();
+
+    // The footer text sits below the composited panels (in the footer band).
+    const footerY = (call: string) => Number(call.slice(0, -1).split(',').pop());
+    expect(footerY(urlCall!)).toBeGreaterThanOrEqual(contentHeight);
+    expect(footerY(wordmarkCall!)).toBeGreaterThanOrEqual(contentHeight);
+  });
+
+  it('exposes the production URL as a fixed constant, not host-derived', () => {
+    // The footer URL is the canonical production domain, hard-coded so a
+    // strip saved from beta still advertises production (infrastructure.md
+    // Export Pipeline; plan Production Annotation Summary).
+    expect(PRODUCTION_URL).toBe('ex-tel.ty-pe.com');
+    expect(WORDMARK).toBe('Exquisite Telephone');
+    expect(FOOTER_HEIGHT).toBeGreaterThan(0);
+  });
+
+  it('grows the export canvas by the footer band below the content', () => {
+    const book = makeFixtureBook();
+    const content = computeCanvasSize(book);
+    const total = computeExportCanvasSize(book);
+
+    expect(total.width).toBe(content.width);
+    expect(total.height).toBe(content.height + FOOTER_HEIGHT);
   });
 });
