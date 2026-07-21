@@ -49,7 +49,6 @@ They are deliberately the only shapes here that outlive a process.
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
-| revealStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `reveal`; `null` otherwise. Gives every client a shared reference point to derive the Reveal page's animated pacing (current book index, revealed-entry count) as a pure function of `now - revealStartedAt`, rather than each client running its own independent local timer — see [[ui]] Reveal View and Normalization Rules below. |
 | promptMode | enum | `free-form` \| `curated` — Host-configurable, set before `status` leaves `lobby`; defaults `free-form` (players type their own opening phrase, the original behavior). When `curated`, each player instead picks their opening phrase from a dealt hand (see Normalization Rules — Curated prompts). |
 | curatedPromptCount | number \| null | Host-configurable, set before `status` leaves `lobby`; how many phrases each player is dealt. One of `2 \| 3 \| 4 \| 5` when set; `null` while `promptMode === 'free-form'`. Clamped at deal time (see Normalization Rules — Curated prompts). |
 | allowPromptWriteIn | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `true`, a write-your-own option is always offered alongside the dealt phrases, so curated mode restricts nobody who has their own idea. Only meaningful when `promptMode === 'curated'`. |
@@ -317,23 +316,6 @@ disliked this player's writing" serves no purpose the curator needs.
   `CandidatePhrase` back to the rater or the phrase's author — the
   curator needs the phrase and the count, not who said what.
 
-- **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
-  stamped the instant `status` transitions to `reveal` (the same
-  transition already logged as `game_completed` in `onSubmitEntry`).
-  Every client derives its Reveal-page animation position — which
-  book's cover/entries are showing — as a pure function of `now -
-  Room.revealStartedAt` against the same fixed cadence constants (cover
-  delay, per-tick duration, entries per tick; see [[ui]] Reveal View),
-  rather than incrementing local counters on that client's own
-  `setTimeout`/`setInterval` ticks. This guarantees every player sees
-  the same book at the same time regardless of when their own browser
-  mounted the page or how much clock drift accumulates locally —
-  reversed 2026-07-17 (feedback F001, `.project/feedback/
-  feedback-main-4258.md`) from the original per-client-local-timer
-  design, which let clients visibly diverge over a multi-book reveal
-  sequence. Manual prev/next/skip controls (see [[ui]]) still work by
-  jumping the *local* view ahead of or behind the clock-derived
-  position; the clock only drives the default auto-advance pacing.
 - **Reveal read-state (completed reads, last-write-wins).** A player
   *completes a read* of a book by opening its per-book modal and then
   closing it — "read" means "looked at" (opened-and-closed), not

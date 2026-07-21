@@ -297,46 +297,44 @@ instead.
 
 Opens on its own title-page moment — "The Gallery Opens" in the app's
 gilded title treatment (see Visual Identity below) plus a one-line
-docent-voice tagline ("Every book, unveiled.") — before the book grid
-itself. Framed as a gallery opening (see Visual Identity below) — each book is
-presented inside the Gilt Frame component with an engraved plaque
-caption underneath (mock-formal exhibit title, e.g. "Exhibit No. 3 —
-Untitled, Mixed Media, Anonymous"), unveiled one at a time under a
-spotlight moment before the view settles into the full gallery-wall
-grid described below. `prefers-reduced-motion` suppresses the
-decorative spotlight/curtain flourish around each unveil, but never the
-auto-advance pacing itself — that pacing is gameplay-load-bearing (see
-Reveal pacing below), not decorative, so it keeps running identically
-regardless of the user's motion preference; only the ornamental
-transition dressing is skipped. At `Room.status == 'reveal'`, the
-default mode is an animated,
-one-book-at-a-time viewer rather than showing everything statically at
-once: the current book opens on a "cover" (the origin author's name
-plus a randomly-but-deterministically generated colorful abstract
-design, seeded from the book's `originAuthorId` so it's stable across
-re-renders rather than reshuffling every time), shown for 2.5 seconds,
-then auto-advances every 4 seconds revealing up to 2 entries at a time
-(original phrase -> drawing -> guess -> drawing -> ...) until that
-book is fully shown, then moves to the next book's cover. This
-auto-advance pacing is derived identically on every client from
-`Room.revealStartedAt` (see [[datamodel]] Normalization Rules — Reveal
-pacing) — each client computes its current book index and revealed-entry
-count as a pure function of `now - Room.revealStartedAt` against these
-same fixed cadence constants, rather than running its own independent
-local timer, so every player sees the same book at the same time
-(reversed 2026-07-17, feedback F001 `.project/feedback/
-feedback-main-4258.md`, from the original per-client-local-timer design,
-which let clients visibly diverge — e.g. the host reaching the end while
-others were still mid-sequence — as clock drift accumulated). Manual
-previous/next controls and a "show everything" skip button are always
-available and jump the *local* view ahead of or behind the
-clock-derived position, so the pacing is a default, not a forced
-slideshow. Once every book has been shown (by auto-advance, skip, or
-manual navigation), the view settles into a static full-grid mode —
-every book's complete chain visible at once, matching the
-pre-redesign layout. Each book has a save control (available in both
-modes) that exports it as a PNG image strip (see [[infrastructure]]
-Export Pipeline).
+docent-voice tagline ("Every book, unveiled.") — before the card grid
+itself. At `Room.status == 'reveal'` the view is **self-guided**: no
+timed auto-advance and no synchronized clock. Every player browses at
+their own pace and sees their own position.
+
+**Card grid.** One card per book, laid out as a gallery wall. Each
+card's face is the origin author's deterministically-generated cover art
+(a colorful abstract design seeded from the book's `originAuthorId` so
+it's stable across re-renders rather than reshuffling every time) under
+a mock-formal exhibit plaque (e.g. "Exhibit No. 3 — Untitled, Mixed
+Media, Anonymous"). A card the local viewer has already opened renders
+dimmed (viewed/dirty dimming), so a browsing player can see at a glance
+which works they've been to. Clicking a card opens that book's modal.
+
+**Per-book modal.** The reader pages through the book manually — both
+click controls (previous / next) and the keyboard (arrow keys; Escape
+closes) — with a page-turn animation between pages. Page 1 shows the
+origin prompt in isolation; each later page shows the previous
+prompt-or-drawing above the newly revealed item, so the drift reads one
+step at a time. The last page offers the save-to-PNG control (see
+[[infrastructure]] Export Pipeline); a **"back to start"** control
+resets the book to page 1, and a **"reveal all"** control shows the
+whole chain at once (the full strip), which also offers the save
+control. Page position is **kept per book, per viewer, client-local** —
+closing the modal preserves the page and reopening resumes it; none of
+paging, kept-place, reveal-all, or card dimming is ever synced.
+
+**Read badges (shared).** Opening a book's modal emits `setReadingBook`
+with the book id and closing emits it with `null` (see [[datamodel]]
+Normalization Rules — Reveal read-state), so the read state below is
+live across clients. Each card shows a **"being read by <player>"** badge
+for anyone with that book currently open (`Room.currentlyReading`) and a
+**"read by <player>"** badge for everyone who has completed a read of it
+(`Room.bookReads`). Here "read" means "looked at" — the book was opened
+and then closed — not that the reader paged all the way to the last
+page; paging is client-local and untrusted, so a completed read is not
+last-page-verified. Opening "reveal all" and then closing counts as a
+completed read like any other close.
 
 Also on the Reveal page, host and non-host players see different
 end-of-game controls (see [[datamodel]] Normalization Rules — End-of-
@@ -399,7 +397,7 @@ Tailwind's defaults.
 | Name | Hex | Role |
 |---|---|---|
 | Ink | `#241B2F` | body text |
-| Velvet | `#2E1A47` | dark surfaces (header bands, spotlight backdrop) |
+| Velvet | `#2E1A47` | dark surfaces (header bands, modal backdrop) |
 | Marigold | `#F5A623` | gold/foil accent — frame borders, plaque rules |
 | Bubblegum | `#FF6F91` | primary call-to-action |
 | Butter | `#FFF3D6` | warm light card surface (not gray) |
