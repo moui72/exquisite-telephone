@@ -1,7 +1,7 @@
 ---
 plan: plan-reveal-self-guided-rework-2026-07-21-7cd8.md
 generated: 2026-07-21
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -23,4 +23,4 @@ status: in-progress
 ## Phase 3: Host unread-books warning
 
 - [x] T009 On the reveal page's host "Play again" (`onPlayAgain`) and "End game" (`onEndGame`) controls, add a client-side confirm derived from `Room.bookReads` / `Room.currentlyReading` using the **per-book** trigger (approved): warn when some book has no completed read by any player (naming the unread books), or — when every book has a completed read but a modal is still open — name the still-open book(s). The confirm has a force-through path that emits the action anyway (the small-game-override pattern). No server change — the server stays force-through. Tests: the confirm fires when a book has no completed read and when a modal is open; force-through still emits `onPlayAgain` / `onEndGame`; no warning when every book is read and no modal is open. [F003] [artifacts: ui]
-- [ ] T010 Revise `ui.md` to document the host unread-books warning on the reveal page — the per-book trigger, the two message variants (unread books; all-read-but-one-open), and the force-through behavior, cross-referencing the small-game override as the sibling force-anyway pattern. [F003] [artifacts: ui]
+- [x] T010 Revise `ui.md` to document the host unread-books warning on the reveal page — the per-book trigger, the two message variants (unread books; all-read-but-one-open), and the force-through behavior, cross-referencing the small-game override as the sibling force-anyway pattern. [F003] [artifacts: ui]

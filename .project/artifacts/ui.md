@@ -349,6 +349,24 @@ game controls):
   brand-new room, auto-joining every current player; available
   regardless of how many have voted).
 
+**Host unread-books warning.** Both host controls above ("End game" and
+"Play again") carry a client-side confirm derived from the shared read
+state (`Room.bookReads` / `Room.currentlyReading`), so the host doesn't
+close the salon while books nobody has seen are still on the wall. The
+trigger is **per-book**: it fires when *some* book has no completed read
+by any player — naming the unread books — or, when every book has been
+read but a reader still has a modal open, naming the still-open book(s).
+The two message variants correspond to those two cases. The confirm is
+advisory, not a gate: it offers a **force-through** path that emits the
+action anyway, the same "I know, do it regardless" affordance as the
+Lobby's small-game acknowledgement (see Lobby View — the sibling
+force-anyway pattern). It is a client concern only — no server change;
+`onEndGame` / `onPlayAgain` stay force-through server-side (see
+[[datamodel]] Normalization Rules — End-of-game controls). The trigger is
+per-book rather than per-player-complete deliberately: a
+per-player-complete check would fire near-constantly in larger rooms and
+train the host to click through it.
+
 ## States
 
 - **Empty**: Lobby with only the host present — waiting-for-players
