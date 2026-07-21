@@ -1,8 +1,11 @@
 # Exquisite Telephone — Project Status
 
 _Updated: 2026-07-21 (**ArDD updated v1.0.2 → v1.0.3** (beta channel, no
-migrations pending). Nothing else changed this pass — one open feedback
-item, nothing ready or in flight.
+migrations pending), then `--reconfigure` set **`next_step_prompt: auto`**
+— skills that recommend a runnable `/ardd-*` next step now run it directly
+instead of offering a one-keypress prompt (the other three workflow
+fields — `solo` / `eager` / `auto` — were kept). One open feedback item,
+nothing ready or in flight.
 
 Earlier today: **`tasks-4663-bd86.md` completed and merged —**
 `onStartGame` now counts active (non-kicked) players for both the
@@ -560,11 +563,14 @@ by the `plan-4663` fix and this session's docs commits — **not yet
 pushed**, so the `onStartGame` active-count fix is not on beta or prod
 until the next push.
 
-**Recommended next step:** push `main` to deploy the `onStartGame` fix to
-beta, then `/ardd-plan feedback-lobby-active-count-display-9e7d.md` for
-the small Lobby-display follow-on. Neither is urgent — the open feedback
-item is a display-vs-server mismatch a host only hits by kicking during
-the lobby.
+**Recommended next step:** push `main` — three commits ahead of
+`origin/main` (the `onStartGame` fix plus the ArDD-update docs), and the
+`onStartGame` fix isn't on beta or prod until pushed. After that,
+`/ardd-plan feedback-lobby-active-count-display-9e7d.md` for the small
+Lobby-display follow-on. Neither is urgent — the open feedback item is a
+display-vs-server mismatch a host only hits by kicking during the lobby.
+(The recommended step is a push, not a runnable `/ardd-*` command, so
+`next_step_prompt: auto` does not fire here.)
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
 drop out of the snapshot; `/ardd-research` for
