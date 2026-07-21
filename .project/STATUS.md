@@ -84,5 +84,4 @@ plan task.)
 un-gated and the only ready work. `book-cover-decoration` and its sibling
 `pregenerated-book-cover-templa` each get their own `/ardd-plan` run against
 the now-settled Reveal card design. A `/ardd-diagram` pass would refresh the
-three stale diagrams; `/ardd-update` (installed `0fc43f60` → `v1.0.4`) is
-available when convenient.
+three stale diagrams. ArDD install is current (`v1.0.5-beta.1`, `c0386d3`).
