@@ -128,7 +128,7 @@ describe('startTimerSweep (30s background sweep)', () => {
   // game (turnTimerMinutes === null), which the current writing-only guard
   // skips entirely — so the wired interval must handle decorating rooms
   // independently of the vote logic (advisor guidance).
-  it.fails(
+  it(
     'closes an expired decorating window (no timer) — transitions to reveal, clears the stamp, and broadcasts',
     () => {
       const { store, room } = makeStoreWithStalledRoom();
@@ -148,6 +148,22 @@ describe('startTimerSweep (30s background sweep)', () => {
       expect(emit).toHaveBeenCalledWith('roomUpdated', { room });
     },
   );
+
+  it('leaves a decorating window that has NOT yet expired open (T008)', () => {
+    const { store, room } = makeStoreWithStalledRoom();
+    room.status = 'decorating';
+    room.turnTimerMinutes = null;
+    room.decorationWindowStartedAt = Date.now() - 10_000; // well within 120000
+    room.coverSubmissions = [];
+    const emit = vi.fn();
+    const io: BroadcastServer = { to: vi.fn().mockReturnValue({ emit }) };
+
+    startTimerSweep(store, io);
+    vi.advanceTimersByTime(30_000);
+
+    expect(room.status).toBe('decorating');
+    expect(emit).not.toHaveBeenCalled();
+  });
 });
 
 /**

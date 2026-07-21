@@ -57,7 +57,7 @@ paired implementation commit.
   `now >= decorationWindowStartedAt + 120000`, it transitions `status` to
   `reveal`, clears `decorationWindowStartedAt`, and emits the reveal/completion
   log. Confirm red.
-- [ ] T008 [artifacts: infrastructure, datamodel] Implement the sweep's
+- [x] T008 [artifacts: infrastructure, datamodel] Implement the sweep's
   decorating-window close (reusing the existing sweep interval, no new timer).
   Make T007 pass; verify no regression in the existing timeout-vote sweep tests.
 

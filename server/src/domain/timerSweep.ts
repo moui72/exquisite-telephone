@@ -7,6 +7,7 @@ import {
   type TimeoutVote,
   type TimeoutVoteChoice,
 } from '@exquisite-telephone/shared';
+import { closeDecorationWindowIfExpired } from './decorationWindow.js';
 import type { Logger } from '../observability/logger.js';
 import type { RoomStore } from './roomStore.js';
 
@@ -230,6 +231,17 @@ export function startTimerSweep(
   const interval = setInterval(() => {
     const now = Date.now();
     for (const room of store.rooms.values()) {
+      // Decorating-window expiry close (infrastructure.md — Cover
+      // decoration). Handled independently of the turn-timer vote logic and
+      // — crucially — independently of `turnTimerMinutes`, so a no-timer
+      // game's decorating window still closes on expiry. The writing-only
+      // vote sweep below never sees a decorating room.
+      if (room.status === 'decorating') {
+        if (closeDecorationWindowIfExpired(room, now, logger)) {
+          io.to(room.id).emit('roomUpdated', { room });
+        }
+        continue;
+      }
       if (room.status !== 'writing' || room.turnTimerMinutes == null) {
         continue;
       }
