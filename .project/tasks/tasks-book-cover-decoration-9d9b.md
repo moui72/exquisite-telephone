@@ -50,7 +50,7 @@ paired implementation commit.
   `coverSubmissions` (deduped), and — when all active players have submitted —
   synchronously transitions `status` to `reveal` (clearing
   `decorationWindowStartedAt`). Confirm red.
-- [ ] T006 [artifacts: datamodel, infrastructure] Implement `onSubmitCover`
+- [x] T006 [artifacts: datamodel, infrastructure] Implement `onSubmitCover`
   per T005 and register it in the socket dispatch. Make T005 pass.
 - [ ] T007 [artifacts: infrastructure, datamodel] Write a failing test: the
   background sweep closes an expired `decorating` window — for a room where

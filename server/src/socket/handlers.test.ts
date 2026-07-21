@@ -2551,8 +2551,7 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
     { type: 'stroke', points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], color: '#ff6f91', width: 3 },
   ];
 
-  // it.fails: red until T006 replaces the stub with the real handler.
-  it.fails('stores cover + coverTemplate on the caller OWN book and appends to coverSubmissions', () => {
+  it('stores cover + coverTemplate on the caller OWN book and appends to coverSubmissions', () => {
     const { store, room, adaId, adaBook } = setUpDecoratingRoom();
     const ack = vi.fn();
     onSubmitCover(
@@ -2570,7 +2569,7 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
     expect(room.status).toBe('decorating');
   });
 
-  it.fails('rejects finalizing a book the caller does not own (originAuthorId mismatch)', () => {
+  it('rejects finalizing a book the caller does not own (originAuthorId mismatch)', () => {
     const { store, room, adaId, graceBook } = setUpDecoratingRoom();
     const ack = vi.fn();
     onSubmitCover(
@@ -2586,7 +2585,7 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
     expect(room.coverSubmissions).not.toContain(adaId);
   });
 
-  it.fails('rejects an oversize cover payload with the same drawing cap as onSubmitEntry', () => {
+  it('rejects an oversize cover payload with the same drawing cap as onSubmitEntry', () => {
     const { store, room, adaId, adaBook } = setUpDecoratingRoom();
     // A single stroke whose serialized form exceeds MAX_DRAWING_ENTRY_BYTES.
     const points = Array.from({ length: 200_000 }, (_, i) => ({ x: i, y: i }));
@@ -2607,7 +2606,7 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
     expect(room.coverSubmissions).not.toContain(adaId);
   });
 
-  it.fails('dedupes coverSubmissions when a player finalizes twice', () => {
+  it('dedupes coverSubmissions when a player finalizes twice', () => {
     const { store, room, adaId, adaBook } = setUpDecoratingRoom();
     for (let i = 0; i < 2; i++) {
       onSubmitCover(
@@ -2621,7 +2620,7 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
     expect(room.coverSubmissions!.filter((id) => id === adaId)).toHaveLength(1);
   });
 
-  it.fails('synchronously transitions to reveal once every active player has submitted', () => {
+  it('synchronously transitions to reveal once every active player has submitted', () => {
     const { store, room, adaId, graceId, adaBook, graceBook } = setUpDecoratingRoom();
     onSubmitCover(
       makeFakeSocket(),

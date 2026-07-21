@@ -22,6 +22,7 @@ import {
   onSetReadingBook,
   onSetTurnTimer,
   onStartGame,
+  onSubmitCover,
   onSubmitEntry,
   onVoteToPlayAgain,
   type CastTimeoutVoteAck,
@@ -56,6 +57,8 @@ import {
   type SetTurnTimerInput,
   type StartGameAck,
   type StartGameInput,
+  type SubmitCoverAck,
+  type SubmitCoverInput,
   type SubmitEntryAck,
   type SubmitEntryInput,
   type VoteToPlayAgainAck,
@@ -157,6 +160,10 @@ export function createSocketServer(
 
     socket.on('submitEntry', (input: SubmitEntryInput, ack: (response: SubmitEntryAck) => void) => {
       onSubmitEntry(socket, store, logger, input, ack, curationStore);
+    });
+
+    socket.on('submitCover', (input: SubmitCoverInput, ack: (response: SubmitCoverAck) => void) => {
+      onSubmitCover(socket, store, logger, input, ack);
     });
 
     socket.on(

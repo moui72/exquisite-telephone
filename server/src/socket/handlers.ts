@@ -9,6 +9,8 @@ import {
   defaultLapsPerBook,
   exceedsEntryContentLimit,
   isBookComplete,
+  isCoverTemplateId,
+  serializeDrawOps,
   type DrawOps,
   type Entry,
   type Player,
@@ -25,6 +27,7 @@ import {
   type RoomStore,
 } from '../domain/roomStore.js';
 import type { CurationStore } from '../domain/curationStore.js';
+import { transitionToReveal } from '../domain/decorationWindow.js';
 import { isBankPhrase } from '../domain/promptOrigin.js';
 import type { SessionTokenStore } from '../domain/sessionTokenStore.js';
 import { resolveTimeoutVote } from '../domain/timerSweep.js';
@@ -628,20 +631,89 @@ export interface SubmitCoverAck {
 }
 
 /**
- * STUB (T005 red). Real behavior lands in T006: own-book-only storage,
- * drawing-payload cap, deduped `coverSubmissions`, and synchronous
- * all-submitted early close to `reveal`. This placeholder exists only so
- * the T005 red test compiles and fails at runtime (an `it.fails` marker
- * cannot mask a compile error).
+ * Finalizes a player's OWN book cover during `status === 'decorating'`
+ * (infrastructure.md; datamodel.md Normalization Rules — Cover decoration).
+ * Own-book-only (the server checks `Book.originAuthorId`, never trusting a
+ * client claim), the cover payload is bounded by the SAME drawing cap as an
+ * entry drawing (measured on the serialized ops, ahead of room state), the
+ * player is appended deduped to `Room.coverSubmissions`, and — when every
+ * active player has finalized — the window closes synchronously to `reveal`
+ * via the shared `transitionToReveal` (the sweep is only the expiry
+ * backstop).
  */
 export function onSubmitCover(
-  _socket: Socket,
-  _store: RoomStore,
-  _logger: Logger,
-  _input: SubmitCoverInput,
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: SubmitCoverInput,
   ack: (response: SubmitCoverAck) => void,
 ): void {
-  ack({ error: 'not-implemented' });
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status !== 'decorating') {
+    ack({ error: 'not-decorating' });
+    return;
+  }
+  const book = room.books.find((b) => b.id === input.bookId);
+  if (!book) {
+    ack({ error: 'book-not-found' });
+    return;
+  }
+  // Own-book-only: "your book" is the one you started (originAuthorId).
+  if (book.originAuthorId !== input.playerId) {
+    ack({ error: 'not-your-book' });
+    return;
+  }
+  // Bound the cover payload BEFORE it touches room state, keyed on the
+  // drawing cap and measured on the serialized ops — exactly as
+  // onSubmitEntry bounds a drawing. Oversize is rejected, never truncated.
+  if (exceedsEntryContentLimit(serializeDrawOps(input.cover), 'drawing')) {
+    logger.log({
+      event: 'cover_submitted',
+      outcome: 'failure',
+      roomId: input.roomId,
+      playerId: input.playerId,
+      bookId: input.bookId,
+      reason: 'cover-too-large',
+    });
+    ack({ error: 'cover-too-large' });
+    return;
+  }
+  // A template must be one of the nine known ids or `null` (blank) — the
+  // client's claim is validated, not trusted.
+  if (input.coverTemplate !== null && !isCoverTemplateId(input.coverTemplate)) {
+    ack({ error: 'invalid-cover-template' });
+    return;
+  }
+
+  book.cover = input.cover;
+  book.coverTemplate = input.coverTemplate;
+
+  const submissions = room.coverSubmissions ?? (room.coverSubmissions = []);
+  if (!submissions.includes(input.playerId)) {
+    submissions.push(input.playerId);
+  }
+
+  logger.log({
+    event: 'cover_submitted',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: input.playerId,
+    bookId: input.bookId,
+  });
+
+  // Early close: once every active (non-kicked) player has finalized, close
+  // the window synchronously rather than waiting for the sweep's expiry.
+  const activeIds = activePlayers(room).map((p) => p.id);
+  if (activeIds.every((id) => submissions.includes(id))) {
+    transitionToReveal(room, logger);
+  }
+
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
 }
 
 /**
