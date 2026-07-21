@@ -17,6 +17,7 @@ function makeFakeSession(initial: SessionState): SessionStore {
     joinRoom: vi.fn(async () => {}),
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
+    submitCover: vi.fn(async () => {}),
 setMonochrome: vi.fn(async () => {}),
 setTurnTimer: vi.fn(async () => {}),
 setLapsPerBook: vi.fn(async () => {}),

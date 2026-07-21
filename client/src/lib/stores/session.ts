@@ -1,4 +1,10 @@
-import type { Player, PromptRatingValue, Room, TimeoutVoteChoice } from '@exquisite-telephone/shared';
+import type {
+  DrawOps,
+  Player,
+  PromptRatingValue,
+  Room,
+  TimeoutVoteChoice,
+} from '@exquisite-telephone/shared';
 import { get, writable, type Readable } from 'svelte/store';
 import type { GameSocket } from '../socket/types.js';
 
@@ -57,6 +63,12 @@ export interface SessionStore extends Readable<SessionState> {
   joinRoom(roomId: string, playerName: string): Promise<void>;
   startGame(acknowledgeSmallGame?: boolean): Promise<void>;
   submitEntry(bookId: string, content: string, rating?: PromptRatingValue): Promise<void>;
+  /**
+   * Finalizes this player's own book cover during `decorating` (datamodel.md
+   * — Cover decoration). One-shot, like submitEntry — the draft syncs only
+   * on this call, never per stroke.
+   */
+  submitCover(bookId: string, cover: DrawOps, coverTemplate: string | null): Promise<void>;
   setMonochrome(monochromeOnly: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
@@ -168,6 +180,16 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         // the field is ABSENT, so the server's optional handling is
         // exercised as designed instead of relying on null's falsiness.
         ...(rating ? { rating } : {}),
+      });
+    },
+    submitCover(bookId: string, cover: DrawOps, coverTemplate: string | null) {
+      const state = get(store);
+      return emitWithAck('submitCover', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        bookId,
+        cover,
+        coverTemplate,
       });
     },
     setMonochrome(monochromeOnly: boolean) {

@@ -69,7 +69,7 @@ paired implementation commit.
   without emitting per-stroke. Confirm red.
 - [x] T010 [artifacts: ui] Implement the cover-decoration canvas component per
   T009. Make it pass.
-- [ ] T011 [artifacts: ui, datamodel] Write a failing test for the
+- [x] T011 [artifacts: ui, datamodel] Write a failing test for the
   `decorating` full-view screen: renders the cover canvas, a 2-minute countdown
   derived from `Room.decorationWindowStartedAt`, a "Present your cover"
   submit-early control that emits `submit_cover` and then shows a
