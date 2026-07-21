@@ -1,8 +1,12 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**`tasks-4663-bd86.md` is complete and merged —
+_Updated: 2026-07-21 (**ArDD updated v1.0.2 → v1.0.3** (beta channel, no
+migrations pending). Nothing else changed this pass — one open feedback
+item, nothing ready or in flight.
+
+Earlier today: **`tasks-4663-bd86.md` completed and merged —**
 `onStartGame` now counts active (non-kicked) players for both the
-minimum-player gate and the laps-per-book default.** Delegated worktree,
+minimum-player gate and the laps-per-book default. Delegated worktree,
 2/2, clean fast-forward, reaped; suite green (454 tests). `datamodel.md`'s
 Minimum-player and Laps-per-book rules were corrected to match.
 
@@ -516,9 +520,13 @@ tree re-shipped).
 the artifact correction, and the regenerated `DEFECTS.md`. None affect
 runtime; the next push carries them to beta.
 
-**ArDD is up-to-date** on the beta channel — `v1.0.2`, commit `33ac9ae`
-(updated 2026-07-20 from `v1.0.1`/`9fd6fbb`). No migrations were pending;
-all eight were already applied.
+**ArDD is up-to-date** on the beta channel — `v1.0.3`, commit `0fc43f6`
+(updated 2026-07-21 from `v1.0.2`/`33ac9ae`). No migrations were pending;
+all eight were already applied. `install.sh` also rewrote `Source-Path`
+to the portable `~/` form and added `.project/README.md` (a reviewer
+guide). One standing note it reprinted: the old absolute source path
+remains in git history — this repo is public, so per the tool's own
+recommendation that's accepted, not worth a history rewrite.
 
 **All three of the help-text plan's open questions were settled during
 implementation**, each as a decision task whose output a later task
