@@ -448,40 +448,30 @@ describe('round timer bookkeeping (Room.roundStartedAt / timerExtensions / pendi
   });
 });
 
-describe('onSubmitEntry reveal pacing (Room.revealStartedAt)', () => {
-  it("stamps revealStartedAt when the last entry flips status to 'reveal'", () => {
+describe("onSubmitEntry transition to 'reveal'", () => {
+  it("flips status to 'reveal' when the last entry completes the game", () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     room.status = 'writing';
-    // Pin to a single lap: this test is about reveal-pacing timestamps,
-    // not laps-per-book behavior.
+    // Pin to a single lap: this test is about the reveal transition, not
+    // laps-per-book behavior.
     room.lapsPerBook = 1;
     room.books = createBooksForRoom(room);
     const adaId = room.players[0]!.id;
     const adaBook = room.books[0]!;
 
-    expect(room.revealStartedAt).toBeNull();
-
-    const socket = makeFakeSocket();
-    const logger = createLogger(() => {});
-    const before = Date.now();
-
     onSubmitEntry(
-      socket,
+      makeFakeSocket(),
       store,
-      logger,
+      createLogger(() => {}),
       { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: 'final phrase' },
       vi.fn(),
     );
 
-    const after = Date.now();
     expect(room.status).toBe('reveal');
-    expect(room.revealStartedAt).not.toBeNull();
-    expect(room.revealStartedAt!).toBeGreaterThanOrEqual(before);
-    expect(room.revealStartedAt!).toBeLessThanOrEqual(after);
   });
 
-  it('leaves revealStartedAt null when the submission does not complete the game', () => {
+  it('leaves status writing when the submission does not complete the game', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     joinRoom(store, { roomId: room.id, playerName: 'Grace' });
@@ -490,19 +480,15 @@ describe('onSubmitEntry reveal pacing (Room.revealStartedAt)', () => {
     const adaId = room.players[0]!.id;
     const adaBook = room.books.find((b) => b.originAuthorId === adaId)!;
 
-    const socket = makeFakeSocket();
-    const logger = createLogger(() => {});
-
     onSubmitEntry(
-      socket,
+      makeFakeSocket(),
       store,
-      logger,
+      createLogger(() => {}),
       { roomId: room.id, playerId: adaId, bookId: adaBook.id, content: 'not last' },
       vi.fn(),
     );
 
     expect(room.status).toBe('writing');
-    expect(room.revealStartedAt).toBeNull();
   });
 });
 

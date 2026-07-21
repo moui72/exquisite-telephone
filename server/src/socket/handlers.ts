@@ -750,7 +750,6 @@ export function onSubmitEntry(
 
   if (computeNextEntries(room).length === 0) {
     room.status = 'reveal';
-    room.revealStartedAt = Date.now();
     logger.log({ event: 'game_completed', outcome: 'success', roomId: input.roomId });
   }
 

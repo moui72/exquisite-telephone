@@ -56,7 +56,6 @@ function makeRoom(overrides: Partial<Room> = {}): Room {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
-    revealStartedAt: null,
     bookReads: {},
     currentlyReading: {},
     promptMode: 'free-form',

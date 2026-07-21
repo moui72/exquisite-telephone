@@ -36,7 +36,6 @@ function makeRoomWithPlayers(players: Player[]): Room {
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
-    revealStartedAt: null,
     bookReads: {},
     currentlyReading: {},
     promptMode: 'free-form',

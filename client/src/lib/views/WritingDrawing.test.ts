@@ -66,7 +66,6 @@ function makeRoom(books: Book[], players = [ada, grace], overrides: Partial<Room
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
-    revealStartedAt: null,
     bookReads: {},
     currentlyReading: {},
     promptMode: 'free-form',

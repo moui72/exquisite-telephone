@@ -174,14 +174,6 @@ export interface Room {
    */
   nonContinuable: boolean;
   /**
-   * Epoch ms marking when `status` transitioned to `reveal`; `null`
-   * otherwise. Gives every client a shared reference point to derive the
-   * Reveal page's animated pacing (current book index, revealed-entry
-   * count) as a pure function of `now - revealStartedAt`, rather than
-   * each client running its own independent local timer.
-   */
-  revealStartedAt: number | null;
-  /**
    * Reveal-only. FK Book.id -> deduped Player.id[] who have completed a
    * read of that book — opened its per-book modal and then closed it (see
    * ui.md Reveal View). Keyed by `Book.id` because both consumers (the
