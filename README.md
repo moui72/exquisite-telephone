@@ -10,26 +10,28 @@
 erDiagram
     ROOM ||--o{ PLAYER : "players"
     ROOM ||--o{ BOOK : "books"
-    ROOM ||--o| TIMEOUTVOTE : "pendingTimeoutVote"
-    PLAYER ||--o{ BOOK : "originAuthorId"
+    ROOM }o--|| PLAYER : "hostPlayerId"
+    ROOM |o--o| TIMEOUTVOTE : "pendingTimeoutVote"
     BOOK ||--o{ ENTRY : "entries"
-    PLAYER ||--o{ ENTRY : "authorId"
+    BOOK }o--|| PLAYER : "originAuthorId"
+    ENTRY }o--|| PLAYER : "authorId"
+    RATINGEVENT |o--o| PROMPTRATING : "folds when origin=bank"
+    RATINGEVENT |o--o| CANDIDATEPHRASE : "folds when origin=player-written"
 
     ROOM {
-        string id
+        string id "short room code"
         string hostPlayerId FK
-        string status
-        timestamp createdAt
+        enum status "lobby|writing|reveal|ended"
+        enum promptMode "free-form|curated"
         boolean monochromeOnly
-        number turnTimerMinutes
-        number lapsPerBook
+        int turnTimerMinutes "nullable"
+        int lapsPerBook "nullable, 1-3"
+        boolean nonContinuable
         timestamp roundStartedAt
         timestamp revealStartedAt
-        boolean nonContinuable
-        string playAgainVotes
     }
     PLAYER {
-        string id
+        string id "ephemeral, no account"
         string roomId FK
         string name
         boolean connected
@@ -40,21 +42,38 @@ erDiagram
         string id
         string roomId FK
         string originAuthorId FK
+        Entry entries "ordered chain"
     }
     ENTRY {
         string id
         string bookId FK
         string authorId FK
-        integer position
-        string type
-        string content
+        int position "0-indexed"
+        enum type "text|drawing"
+        string content "phrase or draw-ops"
         boolean emptyByTimeout
     }
     TIMEOUTVOTE {
         string stalledPlayerIds
         string eligibleVoterIds
-        string votes
+        json votes
         timestamp voteDeadline
+    }
+    RATINGEVENT {
+        string phrase "verbatim"
+        enum value "up|down"
+        enum origin "bank|player-written"
+        timestamp ratedAt
+    }
+    PROMPTRATING {
+        string phrase "bank phrase, key"
+        int up
+        int down
+    }
+    CANDIDATEPHRASE {
+        string phrase "player-written, key"
+        int votes
+        timestamp firstLoggedAt
     }
 ```
 
@@ -62,52 +81,56 @@ erDiagram
 
 ```mermaid
 graph TD
-    Client[Svelte Client<br/>served as static dist/]
-    Server[Node/TypeScript Server<br/>single process]
-    SocketIO[Socket.IO Realtime Layer<br/>incl. onKickPlayer/onRestartGame]
-    RoomStore[In-Memory Room/Game Store]
-    SessionStore[In-Memory Session Store<br/>reconnect tolerance]
-    TimerSweep[Turn Timer Sweep<br/>30s interval]
-    ExportPipeline[Client-Side PNG Export]
-    Fly[Fly.io<br/>single machine deployment]
+    subgraph client[Browser - Svelte SPA]
+        UI[Client app]
+        PNG[PNG export - client-side rasterize]
+    end
 
-    Client -- "user actions (join, submit, draw, kick, restart)" --> SocketIO
-    SocketIO -- "room/game state broadcasts" --> Client
-    SocketIO --> Server
-    Server --> RoomStore
-    Server --> SessionStore
-    Server --> TimerSweep
-    TimerSweep -- "opens/resolves timeout votes" --> RoomStore
-    SessionStore -- "sessionToken -> playerId, roomId" --> RoomStore
-    Client -- "replays stroke/text data" --> ExportPipeline
-    ExportPipeline -- "PNG download" --> Client
-    Fly -- "hosts" --> Server
-```
+    subgraph proc[Single Node process - one port]
+        SIO[Socket.IO realtime layer]
+        STATIC[Serves built client dist/]
+        STATE[In-memory game state - Rooms/Books/Entries]
+        SESS[Session store - token to player, short TTL]
+        SWEEP[Turn timer sweep - 30s setInterval]
+        CUR[Curation store - append-only JSON events]
+    end
+
+    VOL[(Fly volume - curation.json)]
+    FLY[Fly.io - beta from main, prod from release]
+
+    UI -->|"socket events (join, submit entry)"| SIO
+    STATIC -->|serves build| UI
+    SIO --> STATE
+    SIO --> SESS
+    SWEEP -->|advances stalled rounds| STATE
+    SIO -->|"rating rides onSubmitEntry"| CUR
+    CUR -->|one file per event| VOL
+    UI --> PNG
+    proc -->|deployed as one app| FLY
 
 ## UI
 
 ```mermaid
 graph TD
-  App[App.svelte]
+    App[App.svelte - routes by Room.status]
+    App --> SalonFooter[SalonFooter - always present]
+    App --> Lobby[Lobby View]
+    App --> WD[Writing / Drawing View]
+    App --> Reveal[Reveal View]
+    App --> States[Terminal states - ended / kicked / error]
 
-  App --> Lobby[Lobby View]
-  App --> WD["Writing / Drawing View"]
-  App --> Reveal[Reveal View]
-  App --> States["States: Empty / Ended / Error / Kicked"]
+    SalonFooter -->|host gavel opens| ModPanel[ModerationPanel]
+    SalonFooter -->|? opens| Rules[RulesOverview panel]
 
-  Lobby --> LobbyFrame[GiltFrame] -->|room code + player list| LobbyPlaque[plaque caption]
-  Lobby --> Mod[Moderation Panel]
+    Lobby --> InfoTip[InfoTooltip - per host setting]
+    Lobby -->|derives from activePlayers| Rules
 
-  WD --> WDFrame[GiltFrame] -->|canvas or text prompt, the 'easel'| WDPlaque[plaque caption]
-  WD --> Canvas[Drawing Canvas]
-  WD --> Turn[Turn Status]
-  Canvas -->|Entry.type draw ops, Room.monochromeOnly| WDFrame
-  WD --> Mod
+    WD --> Canvas[DrawingCanvas - draw ops]
+    WD --> TurnStatus[TurnStatus - whose turn]
+    WD --> InfoTip
 
-  Reveal --> RevealFrame[GiltFrame] -->|per-book chain + exhibit title| RevealPlaque[plaque caption]
-  RevealFrame -->|prefersReducedMotion| Spotlight[spotlight / curtain flourish]
-  Reveal --> Mod
-
-  States -->|Room.status, Player.kicked| App
-```
+    Reveal --> Gilt[GiltFrame - book viewer]
+    Lobby --> Gilt
+    WD --> Gilt
+    States --> Gilt
 
