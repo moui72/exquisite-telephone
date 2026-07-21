@@ -416,3 +416,48 @@ describe('prompt ratings are never surfaced to players', () => {
     expect(JSON.stringify(room)).not.toMatch(/rating/i);
   });
 });
+
+describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/T016)', () => {
+  function mixedCoverBooks(): Book[] {
+    const decorated: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        { id: 'ea0', bookId: 'book-a', authorId: ada.id, position: 0, type: 'text', content: 'phrase A' },
+      ],
+      cover: [{ type: 'stroke', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }], color: '#ff6f91', width: 3 }],
+      coverTemplate: null,
+    };
+    const undecorated: Book = {
+      id: 'book-b',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [
+        { id: 'eb0', bookId: 'book-b', authorId: grace.id, position: 0, type: 'text', content: 'phrase B' },
+      ],
+      cover: null,
+      coverTemplate: null,
+    };
+    return [decorated, undecorated];
+  }
+
+  it.fails('renders the drawn cover (a read-only canvas) as the card face when Book.cover is non-null', () => {
+    const room = makeRoom({ books: mixedCoverBooks() });
+    const session = makeFakeSession({ room, player: ada, error: null });
+    const { getAllByLabelText } = render(Reveal, { props: { session } });
+
+    // The decorated book's face is its drawn cover, replayed read-only.
+    expect(getAllByLabelText('Drawing preview').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it.fails('falls back to generateCoverArt only for the undecorated book (Book.cover === null)', () => {
+    const room = makeRoom({ books: mixedCoverBooks() });
+    const session = makeFakeSession({ room, player: ada, error: null });
+    const { getAllByRole } = render(Reveal, { props: { session } });
+
+    // Exactly one abstract cover-art fallback — for the undecorated book only.
+    const coverArt = getAllByRole('img', { name: 'cover art' });
+    expect(coverArt).toHaveLength(1);
+  });
+});

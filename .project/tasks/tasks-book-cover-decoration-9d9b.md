@@ -88,7 +88,7 @@ paired implementation commit.
 
 ## Phase 4: Reveal card face uses the cover
 
-- [ ] T015 [artifacts: ui, datamodel] Write a failing test: the Reveal card
+- [x] T015 [artifacts: ui, datamodel] Write a failing test: the Reveal card
   grid renders `Book.cover` (over `coverTemplate` when set) as the card face
   when `cover` is non-null, and falls back to the existing `generateCoverArt`
   abstract design when `cover` is null. Confirm red.
