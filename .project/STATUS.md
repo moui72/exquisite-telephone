@@ -1,13 +1,17 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**`tasks-aed6-231c.md` complete and merged — the
-Lobby's live below-minimum warning and laps default now count active
-(non-kicked) players**, closing the display half of the seam whose logic
-half landed in `plan-4663`. Delegated worktree, 2/2, clean fast-forward,
-reaped; suite green (457 tests). `Lobby.svelte` routes both reads through
-the already-imported `activePlayers`; `ui.md`'s Lobby wording was aligned
-to match `datamodel.md`. **Every tasks file is `completed`; no open
-feedback; nothing ready or in flight.**
+_Updated: 2026-07-21 (**A fresh `/ardd-defects` pass cleared the seven
+old defects and found one new broken-contract — `d27f4eea`, now the one
+thing worth acting on.** `onSubmitEntry`'s `book-complete` guard is
+laps-unaware, so **multi-lap games can't advance past lap 1 via
+submission** — and the default <5-player game is 2 laps, so the default
+is affected. All three diagrams were also regenerated this pass (now
+`current`). No open feedback, nothing ready or in flight.
+
+Earlier today: `tasks-aed6-231c.md` completed and merged — the Lobby's
+live below-minimum warning and laps default now count active (non-kicked)
+players, closing the display half of the seam whose logic half landed in
+`plan-4663`. Suite green (457 tests). Every tasks file is `completed`.
 
 This was the first `next_step_prompt: auto` chain: `/ardd-plan` →
 `/ardd-status` recommended `/ardd-implement` → it auto-ran without a
@@ -179,32 +183,28 @@ fences natively; worth a glance at the rendered README.)_
 
 ## Code-vs-Artifact Defects
 
-**7 defects** as of 2026-07-20, from a full four-artifact survey — see
-`.project/DEFECTS.md`. The two prior entries were re-verified as fixed
-and dropped out.
+**1 defect** as of 2026-07-21, from a fresh four-artifact survey — see
+`.project/DEFECTS.md`. The seven prior entries were all re-verified as
+fixed (`plan-25a0` / `plan-4663` / `plan-aed6`) and dropped out on the
+regeneration.
 
-- `datamodel.md` — 2. Kicked players aren't excluded from timeout-vote
-  membership; and **restart-game doesn't restore continuability**
-  (`createBooksForRoom` filters kicked players as book *origins*, but
-  author rotation runs over the unfiltered roster) — **broken-contract**.
-- `infrastructure.md` — 1. The curation store caps at 65,536 events and
-  **silently drops** every rating past it; the code carries its own
-  `PRODUCTION ANNOTATION` comment but no artifact does, which the
-  constitution's annotation rule exists to prevent.
-- `ui.md` — 4. Kicked players still appear in `Lobby`/`TurnStatus`
-  (filtered only in the Moderation Panel); timer extensions **replace**
-  rather than add to the base duration; the "waiting for the round to
-  finish" state misfires for the entire second lap of a default 3–4
-  player game; the rejoin-a-dead-room screen is a dead end with no return
-  control.
-- `constitution.md` — clean. All ten declared principles verified against
-  real code.
+- `datamodel.md` — 1, **broken-contract** (`d27f4eea`): `onSubmitEntry`'s
+  `book-complete` guard (`book.entries.length >= room.players.length`,
+  `handlers.ts` ~L640) is laps-unaware and runs *ahead* of the correct
+  laps-aware `computeNextEntry`. So a book can never advance past one
+  rotation via the submission path — and since `defaultLapsPerBook` is 2
+  for <5-player games, the **default small game is affected**: a 3-player
+  game blocks at the start of lap 2. Shipped undetected because every
+  full-game test pins `lapsPerBook = 1` and the `book-complete` unit test
+  uses a 1-player room; the laps logic is unit-tested only in isolation.
+- `infrastructure.md`, `ui.md`, `constitution.md` — all clean this run.
 
-All seven are now **fixed and merged** via
-`plan-25a0-2026-07-20-1822.md` / `tasks-25a0-15f7.md` (completed 10/10).
-`DEFECTS.md` still lists them until a fresh `/ardd-defects` run
-regenerates the snapshot — the file is a point-in-time record, not a live
-view, so a stale-looking entry there is expected until then.
+Two items were deliberately **not** recorded as defects (see `DEFECTS.md`
+"Not defects — routed elsewhere"): the Reveal play-again readiness count
+uses the raw roster (a kicked-during-reveal player inflates the
+denominator, but `ui.md` doesn't specify active-only there, so no
+contract is violated — a candidate `/ardd-feedback` if the consistency is
+wanted), and a stale "8-color" palette code comment.
 
 ## Feedback
 
@@ -575,20 +575,20 @@ by the `plan-4663` fix and this session's docs commits — **not yet
 pushed**, so the `onStartGame` active-count fix is not on beta or prod
 until the next push.
 
-**Recommended next step:** push `main` — 5 commits ahead of `origin/main`
-(the Lobby display fix plus this session's plan/status docs), and the fix
-isn't on beta or prod until pushed. A prod promote can follow once beta
-looks right. (A push is not a runnable `/ardd-*` command, so
-`next_step_prompt: auto` does not fire here.)
+**Recommended next step:** `/ardd-plan defect:d27f4eea` — plan the fix
+for the laps `book-complete` guard, the one open defect and a
+default-affecting broken-contract. `next_step_prompt: auto` is set and
+this is a runnable `/ardd-*` command, so it is being **auto-run**;
+`/ardd-plan`'s own approval checkpoint still gates before anything is
+tasked.
 
-Nothing else is outstanding: no open feedback, no ready tasks, one
+Also outstanding but not blocking: local `main` is well ahead of
+`origin/main` (this session's plan/status/diagram/defects docs and the
+merged fixes) — push to deploy to beta, then promote for prod. One
 backlogged feature (`curation-data-aggregation-pipe`, routed to
-`/ardd-research`). All three diagrams were regenerated this pass (now
-`current`); a fresh `/ardd-defects` pass would clear the seven now-fixed
-entries from the snapshot.
+`/ardd-research`). Diagrams are all `current`.
 
-Then, in no particular order: `/ardd-defects` to re-verify the seven now
-drop out of the snapshot, and `/ardd-research` for
+Then, in no particular order: `/ardd-research` for
 `curation-data-aggregation-pipe`'s sanitization boundary. The
 `handlers.ts:160` lap-default
 finding (see header) is a candidate `/ardd-feedback` note.
