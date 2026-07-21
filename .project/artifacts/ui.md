@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-20
-diagram_status: current
+last_updated: 2026-07-21
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -121,16 +121,18 @@ footer.
 
 ## Rules Overview Panel
 
-A dismissible panel explaining the core game loop in docent voice: a
-player writes a phrase, the next player draws it having never seen the
-original text, the next player writes a new phrase from only the
-drawing, and so on around the circle — Reveal then shows the whole
-chain, phrase to drawing to phrase, so everyone sees how far it
-drifted. Opened as an overlay from the Salon Footer's "?" button (see
-above) — so it is reachable from every view, including mid-turn and
-during Reveal, not just before the game starts. Not shown
-automatically; a player who already knows the game is never
-interrupted by it.
+A dismissible panel opened as an overlay from the Salon Footer's "?"
+button (see above) — so it is reachable from every view, including
+mid-turn and during Reveal, not just before the game starts. Not shown
+automatically; a player who already knows the game is never interrupted
+by it. The panel is **tabbed**, with two tabs: **Rules** (the default,
+selected on open) and **About** (see below).
+
+The **Rules** tab explains the core game loop in docent voice: a player
+writes a phrase, the next player draws it having never seen the original
+text, the next player writes a new phrase from only the drawing, and so
+on around the circle — Reveal then shows the whole chain, phrase to
+drawing to phrase, so everyone sees how far it drifted.
 
 The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
@@ -149,6 +151,27 @@ cluster of related settings was considered for the curated controls and
 rejected, since the explanation would then sit several controls away from
 the setting it describes.
 
+The **About** tab credits the game's inspirations and points at its
+source, in the same docent voice as the rest of the panel:
+
+- **Inspirations.** It names the real-world games this one descends from —
+  *Exquisite Corpse* (the Surrealist drawing game the salon theme draws
+  on), *Telephone* (the whispered-message drift), and *Telestrations*.
+  Telestrations is a registered trademark of its publisher; the copy
+  acknowledges it as a **trademark acknowledgment, not an affiliation or
+  endorsement claim** — this game is an independent, unaffiliated homage.
+  The wording makes the non-affiliation explicit rather than implied.
+- **Source link.** A link to the open-source repository at
+  `https://github.com/moui72/exquisite-telephone`.
+- **Sponsor link.** A GitHub Sponsors link at
+  `https://github.com/sponsors/moui72`, framed as an optional patronage
+  of the salon rather than a paywall — the game itself is free and fully
+  playable without it.
+
+Both links open in a new tab (an external destination, leaving the game
+in place) and carry accessible labels naming where they lead. The About
+tab is informational only; it carries none of the info-affordance
+controls, which belong to the Lobby settings.
 ## Moderation Panel
 
 A host-only modal overlay, opened from the Salon Footer's gavel button
@@ -336,7 +359,9 @@ manual navigation), the view settles into a static full-grid mode —
 every book's complete chain visible at once, matching the
 pre-redesign layout. Each book has a save control (available in both
 modes) that exports it as a PNG image strip (see [[infrastructure]]
-Export Pipeline).
+Export Pipeline) — a framed, per-panel-divided, branded strip carrying
+the wordmark and the `ex-tel.ty-pe.com` footer, not a bare stack of
+panels.
 
 Also on the Reveal page, host and non-host players see different
 end-of-game controls (see [[datamodel]] Normalization Rules — End-of-

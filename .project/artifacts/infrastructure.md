@@ -1,8 +1,8 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-20
-diagram_status: current
+last_updated: 2026-07-21
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -202,6 +202,31 @@ client's view of the room: drawing entries are stroke data (see
 rendered text captions, then flattened to a single PNG — avoiding a
 server-side rendering dependency. HTML/SVG/PDF export formats are
 explicitly deferred past v1; PNG only for now.
+
+**Strip styling — dividers and branding.** The composited strip is not a
+bare stack of panels; it carries three presentational elements, all drawn
+client-side in the same compositing pass (no new data, no server work):
+
+- **Per-panel dividers.** Each turn's panel is visually separated from the
+  next by a clear border/divider, so an individual turn is distinguishable
+  in the strip rather than the panels reading as one continuous column.
+  Dividers use the theme's frame accent (Marigold — see [[ui]] Visual
+  Identity) so the seam reads as intentional gallery framing, not a raw
+  gap.
+- **A branded border decoration** framing the whole strip — the same
+  gilt-frame visual language as the in-app Gilt Frame ([[ui]]), rendered
+  in the export as a static composited border rather than the live CSS
+  component.
+- **A footer** below the last panel bearing the "Exquisite Telephone"
+  wordmark and the canonical URL `ex-tel.ty-pe.com`, so a shared export
+  is self-identifying and doubles as organic promotion for the game. The
+  URL is the production custom domain (see Deployment below); it is a
+  static string in the exporter, not derived from the running host, so a
+  strip saved from beta still carries the production URL a recipient can
+  visit.
+
+These are styling concerns entirely inside the client exporter; the
+`Book`/`Entry` data it reads is unchanged.
 
 ## Deployment (Fly.io)
 
