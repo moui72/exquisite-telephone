@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import {
+  activePlayers,
   computeNextEntries,
   computeNextEntry,
   CURATED_PHRASE_BANK,
@@ -151,13 +152,18 @@ export function onStartGame(
     ack({ error: 'not-host' });
     return;
   }
-  if (room.players.length < MINIMUM_RECOMMENDED_PLAYERS && input.acknowledgeSmallGame !== true) {
+  // Kicked players don't count toward the minimum-player floor or the
+  // laps-per-book live default — both are measured against the active
+  // roster (datamodel.md Normalization Rules). createBooksForRoom and the
+  // curated deal already filter kicked players independently.
+  const active = activePlayers(room).length;
+  if (active < MINIMUM_RECOMMENDED_PLAYERS && input.acknowledgeSmallGame !== true) {
     ack({ error: 'too-few-players' });
     return;
   }
 
   room.status = 'writing';
-  room.lapsPerBook = room.lapsPerBook ?? defaultLapsPerBook(room.players.length);
+  room.lapsPerBook = room.lapsPerBook ?? defaultLapsPerBook(active);
   room.books = createBooksForRoom(room);
   dealCuratedPrompts(room);
   room.roundStartedAt = Date.now();

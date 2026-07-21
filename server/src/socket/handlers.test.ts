@@ -470,6 +470,81 @@ describe('onStartGame resolves Room.lapsPerBook (datamodel.md Normalization Rule
   });
 });
 
+describe('onStartGame counts active (non-kicked) players (datamodel.md Normalization Rules)', () => {
+  it('resolves lapsPerBook from the active count: 5-player lobby with 1 kicked (4 active) -> 2 laps, not 1', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    joinRoom(store, { roomId: room.id, playerName: 'Kay' });
+    joinRoom(store, { roomId: room.id, playerName: 'Mae' });
+    const adaId = room.players[0]!.id;
+    room.players[4]!.kicked = true; // 5 players, 1 kicked -> 4 active
+    expect(room.lapsPerBook).toBeNull();
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(
+      socket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      ack,
+    );
+
+    // 4 active -> defaultLapsPerBook(4) === 2. Raw players.length (5) would give 1.
+    expect(room.lapsPerBook).toBe(2);
+  });
+
+  it('measures the minimum-player gate against the active roster: 3-player lobby with 1 kicked (2 active)', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    const adaId = room.players[0]!.id;
+    room.players[2]!.kicked = true; // 3 players, 1 kicked -> 2 active
+
+    // Without the acknowledgement, 2 active < 3 is rejected — even though
+    // raw players.length (3) would clear the floor.
+    const rejectSocket = makeFakeSocket();
+    const rejectAck = vi.fn();
+    onStartGame(rejectSocket, store, { roomId: room.id, playerId: adaId }, rejectAck);
+    expect(rejectAck).toHaveBeenCalledWith({ error: 'too-few-players' });
+    expect(room.status).toBe('lobby');
+
+    // With the acknowledgement, the small game starts.
+    const startSocket = makeFakeSocket();
+    const startAck = vi.fn();
+    onStartGame(
+      startSocket,
+      store,
+      { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true },
+      startAck,
+    );
+    expect(room.status).toBe('writing');
+    expect(startAck).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+  });
+
+  it('regression: an all-present 5-player lobby resolves gate and laps exactly as before (5 active -> 1 lap)', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    joinRoom(store, { roomId: room.id, playerName: 'Kay' });
+    joinRoom(store, { roomId: room.id, playerName: 'Mae' });
+    const adaId = room.players[0]!.id;
+    expect(room.lapsPerBook).toBeNull();
+
+    // No acknowledgement needed: 5 active clears the floor.
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onStartGame(socket, store, { roomId: room.id, playerId: adaId }, ack);
+
+    expect(room.status).toBe('writing');
+    // 5 active -> defaultLapsPerBook(5) === 1.
+    expect(room.lapsPerBook).toBe(1);
+  });
+});
+
 describe('onSetTurnTimer', () => {
   it('lets the host set Room.turnTimerMinutes while the room is in lobby', () => {
     const store = createRoomStore();
