@@ -1067,4 +1067,81 @@ describe('Lobby host-setting info affordances', () => {
     expect(screen.getByText('Lin')).toBeInTheDocument();
     expect(screen.queryByText('Grace')).not.toBeInTheDocument();
   });
+
+  // T001: the live Lobby displays (below-minimum acknowledgement + live
+  // laps-per-book default) count only active (non-kicked) players, matching
+  // datamodel.md's Minimum-player and Laps-per-book rules and the roster
+  // render (which already uses activePlayers). A lobby kick moves the count.
+  function makeRoomFromFlags(kickedFlags: boolean[]): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: kickedFlags.map((kicked, i) => ({
+        id: `p${i + 1}`,
+        roomId: 'ABCDE',
+        name: `Player${i + 1}`,
+        connected: true,
+        sessionToken: `t${i + 1}`,
+        kicked,
+      })),
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      revealStartedAt: null,
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it('laps live default counts active players: 5 players with 1 kicked (active 4) shows 2 laps, not 1', () => {
+    // 5 raw players -> defaultLapsPerBook(5) === 1; active 4 -> 2. The active
+    // count must win.
+    const room = makeRoomFromFlags([false, false, false, false, true]);
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    expect(select.value).toBe('2');
+  });
+
+  it('below-minimum acknowledgement counts active players: 3 players with 1 kicked (active 2) shows the checkbox', () => {
+    // 3 raw players would clear the minimum; active 2 (< 3) must reveal the
+    // small-game acknowledgement.
+    const room = makeRoomFromFlags([false, false, true]);
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    expect(
+      screen.getByRole('checkbox', {
+        name: /aware this salon is intimately attended.*wish to proceed nonetheless/i,
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('all-present regression: no kicks renders both live displays exactly as before', () => {
+    // 4 present players: defaultLapsPerBook(4) === 2 and >= minimum, so no
+    // acknowledgement checkbox — active count equals raw count here.
+    const room = makeRoomFromFlags([false, false, false, false]);
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/laps per book/i) as HTMLSelectElement;
+    expect(select.value).toBe('2');
+    expect(
+      screen.queryByRole('checkbox', { name: /aware this salon is intimately attended/i }),
+    ).not.toBeInTheDocument();
+  });
 });

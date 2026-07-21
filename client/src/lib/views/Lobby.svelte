@@ -37,7 +37,8 @@
   $: state = $session;
   $: isHost =
     state.room !== null && state.player !== null && state.player.id === state.room.hostPlayerId;
-  $: belowMinimumPlayers = (state.room?.players.length ?? 0) < MINIMUM_RECOMMENDED_PLAYERS;
+  $: belowMinimumPlayers =
+    (state.room ? activePlayers(state.room).length : 0) < MINIMUM_RECOMMENDED_PLAYERS;
 
   async function handleSubmit() {
     if (mode === 'create') {
@@ -81,7 +82,8 @@
   // Lobby View, datamodel.md Normalization Rules — Laps per book): tracks
   // player count until the host's own selection locks it in.
   $: lapsPerBookValue =
-    state.room?.lapsPerBook ?? defaultLapsPerBook(state.room?.players.length ?? 0);
+    state.room?.lapsPerBook ??
+    defaultLapsPerBook(state.room ? activePlayers(state.room).length : 0);
 
   async function handleLapsPerBookChange(event: Event) {
     const raw = (event.target as HTMLSelectElement).value;
