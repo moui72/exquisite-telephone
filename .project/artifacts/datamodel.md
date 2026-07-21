@@ -204,11 +204,15 @@ disliked this player's writing" serves no purpose the curator needs.
   bound on curation event accumulation (see [[infrastructure]]): a
   bounded phrase submitted many times is still unbounded disk.
 - **Minimum player count.** `Room.status` may not transition out of
-  `lobby` (`start_game`) with fewer than 3 players unless the host
-  explicitly overrides — no persisted override flag; it's a one-time
-  acknowledgment on the `start_game` request itself, not room state.
-  Recommended: 4+. Floor: 1 (a solo host can still override-start for
-  testing). See [[ui]] Lobby View.
+  `lobby` (`start_game`) with fewer than 3 *active* (non-kicked) players
+  unless the host explicitly overrides — the floor is measured against
+  the active roster (`activePlayers(room)`), so a kicked lobby player
+  does not count toward the minimum. No persisted override flag; it's a
+  one-time acknowledgment on the `start_game` request itself, not room
+  state. Recommended: 4+. Floor: 1 (a solo host can still override-start
+  for testing). See [[ui]] Lobby View. (The active-count wording resolves
+  the "live player count" ambiguity flagged in feedback and matches the
+  `onStartGame` code, which reads `activePlayers(room).length`.)
 - **Turn timer (optional).** When `Room.turnTimerMinutes` is set, each
   player still short of the current round has an individual deadline of
   `Room.roundStartedAt + Room.turnTimerMinutes * 60000 +
@@ -247,14 +251,17 @@ disliked this player's writing" serves no purpose the curator needs.
   `position` simply keeps counting up past one full rotation. While
   `Room.lapsPerBook` is `null` (the host hasn't explicitly chosen a
   value), the Lobby derives and displays a *live* default from the
-  current player count — 2 when fewer than 5 players, 1 otherwise —
-  recalculating as players join or leave; the moment the host sets an
-  explicit value (1–3), it locks to that number for the room's
-  remaining life and no longer tracks player count. `onStartGame`
-  resolves `Room.lapsPerBook` to a concrete number the same way (using
-  player count at start time) if it's still `null` when the game
+  current *active* (non-kicked) player count — 2 when fewer than 5
+  active players, 1 otherwise — recalculating as players join, leave, or
+  are kicked; the moment the host sets an explicit value (1–3), it locks
+  to that number for the room's remaining life and no longer tracks
+  player count. `onStartGame` resolves `Room.lapsPerBook` to a concrete
+  number the same way (using the active count at start time via
+  `activePlayers(room).length`) if it's still `null` when the game
   starts, so `computeNextEntry`/`computeNextEntries` never have to
-  handle a `null` value themselves.
+  handle a `null` value themselves. (The active-count wording resolves
+  the "live player count" ambiguity flagged in feedback and matches the
+  `onStartGame` code.)
 - **Curated prompts.** Applies to **`Entry.position === 0` only** — a
   book's opening phrase. Every later text entry is a blind guess written
   from only the drawing before it, so there is nothing to curate there;
