@@ -122,6 +122,32 @@ describe('startTimerSweep (30s background sweep)', () => {
 
     expect(emit).not.toHaveBeenCalled();
   });
+
+  // it.fails: red until T008 teaches the interval loop to close decorating
+  // windows regardless of turnTimerMinutes. The critical case is a NO-TIMER
+  // game (turnTimerMinutes === null), which the current writing-only guard
+  // skips entirely — so the wired interval must handle decorating rooms
+  // independently of the vote logic (advisor guidance).
+  it.fails(
+    'closes an expired decorating window (no timer) — transitions to reveal, clears the stamp, and broadcasts',
+    () => {
+      const { store, room } = makeStoreWithStalledRoom();
+      room.status = 'decorating';
+      room.turnTimerMinutes = null;
+      room.decorationWindowStartedAt = Date.now() - 130_000; // past +120000
+      room.coverSubmissions = [];
+      const emit = vi.fn();
+      const io: BroadcastServer = { to: vi.fn().mockReturnValue({ emit }) };
+
+      startTimerSweep(store, io);
+      vi.advanceTimersByTime(30_000);
+
+      expect(room.status).toBe('reveal');
+      expect(room.decorationWindowStartedAt).toBeNull();
+      expect(io.to).toHaveBeenCalledWith(room.id);
+      expect(emit).toHaveBeenCalledWith('roomUpdated', { room });
+    },
+  );
 });
 
 /**
