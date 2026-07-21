@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-21
-plan: null
+plan: plan-aed6-2026-07-21-2a6e.md
 ---
 
 # Feedback
 
 ## Bugs
 
-- [ ] F001 The Lobby's two live displays — the below-minimum-players
+- [x] F001 The Lobby's two live displays — the below-minimum-players
   warning and the live laps-per-book default — compute over the raw
   roster, not the active (non-kicked) count, so they disagree with both
   the server and `datamodel.md`. `Lobby.svelte:40`
