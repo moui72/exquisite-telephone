@@ -227,6 +227,11 @@ describe('onSubmitEntry round-gating', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     room.status = 'writing';
+    // Pin to a single lap: this test asserts book-complete after one full
+    // rotation. With lapsPerBook left null, defaultLapsPerBook(1) === 2
+    // would (correctly) require 2 entries — that laps-aware behavior is
+    // covered by the multi-lap tests below.
+    room.lapsPerBook = 1;
     room.books = createBooksForRoom(room);
     const adaId = room.players[0]!.id;
     const adaBook = room.books[0]!;
@@ -251,6 +256,112 @@ describe('onSubmitEntry round-gating', () => {
       ack,
     );
 
+    expect(ack).toHaveBeenCalledWith({ error: 'book-complete' });
+  });
+});
+
+describe('onSubmitEntry book-complete guard is laps-aware (defect d27f4eea)', () => {
+  it('a 3-player defaulted-2-laps game accepts the first lap-2 submission and only completes after players.length * 2 entries', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    // onStartGame resolves the still-null lapsPerBook to
+    // defaultLapsPerBook(3) === 2 and lays out one book per player.
+    onStartGame(socket, store, { roomId: room.id, playerId: adaId }, vi.fn());
+    expect(room.lapsPerBook).toBe(2);
+
+    const playerCount = room.players.length; // 3
+    const totalPositions = playerCount * (room.lapsPerBook as number); // 6
+
+    // Drive the whole game through onSubmitEntry in lockstep rounds (turns
+    // are round-gated, so every book must reach position p before any book
+    // advances to p+1). Capture the ack of the FIRST lap-2 submission — the
+    // position-3 entry, submitted when entries.length === 3 === playerCount,
+    // the exact spot the old `entries.length >= players.length` guard
+    // wrongly rejected as book-complete.
+    let firstLapTwoAck: unknown;
+    for (let position = 0; position < totalPositions; position++) {
+      for (const book of room.books) {
+        const next = computeNextEntry(room, book);
+        expect(next).not.toBeNull();
+        expect(next!.position).toBe(position);
+        const ack = vi.fn();
+        onSubmitEntry(
+          socket,
+          store,
+          logger,
+          { roomId: room.id, playerId: next!.authorId, bookId: book.id, content: `p${position}-${book.id}` },
+          ack,
+        );
+        if (position === playerCount && firstLapTwoAck === undefined) {
+          firstLapTwoAck = ack.mock.calls[0]?.[0];
+        }
+      }
+    }
+
+    // The first lap-2 submission was accepted, not rejected as complete.
+    expect(firstLapTwoAck).toBeDefined();
+    expect(firstLapTwoAck).not.toEqual({ error: 'book-complete' });
+
+    // Now every book has playerCount * 2 === 6 entries: a further submit
+    // returns book-complete, and the game has flipped to reveal.
+    expect(room.books.every((b) => b.entries.length === totalPositions)).toBe(true);
+    expect(room.status).toBe('reveal');
+    const ack = vi.fn();
+    onSubmitEntry(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: room.books[0]!.id, content: 'too late' },
+      ack,
+    );
+    expect(ack).toHaveBeenCalledWith({ error: 'book-complete' });
+  });
+
+  it('a lapsPerBook=1 game still returns book-complete after one full rotation (regression guard)', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    joinRoom(store, { roomId: room.id, playerName: 'Lin' });
+    room.lapsPerBook = 1;
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const playerCount = room.players.length; // 3
+
+    // One full rotation: every book reaches position playerCount - 1.
+    for (let position = 0; position < playerCount; position++) {
+      for (const book of room.books) {
+        const next = computeNextEntry(room, book);
+        expect(next).not.toBeNull();
+        onSubmitEntry(
+          socket,
+          store,
+          logger,
+          { roomId: room.id, playerId: next!.authorId, bookId: book.id, content: `p${position}-${book.id}` },
+          vi.fn(),
+        );
+      }
+    }
+
+    // Book is full at playerCount entries with a single lap.
+    const ack = vi.fn();
+    onSubmitEntry(
+      socket,
+      store,
+      logger,
+      { roomId: room.id, playerId: adaId, bookId: room.books[0]!.id, content: 'too late' },
+      ack,
+    );
     expect(ack).toHaveBeenCalledWith({ error: 'book-complete' });
   });
 });

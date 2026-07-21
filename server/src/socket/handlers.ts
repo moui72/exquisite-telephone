@@ -8,6 +8,7 @@ import {
   dealPrompts,
   defaultLapsPerBook,
   exceedsEntryContentLimit,
+  isBookComplete,
   type Entry,
   type Player,
   type Room,
@@ -637,7 +638,7 @@ export function onSubmitEntry(
     return;
   }
 
-  if (book.entries.length >= room.players.length) {
+  if (isBookComplete(room, book)) {
     ack({ error: 'book-complete' });
     return;
   }
