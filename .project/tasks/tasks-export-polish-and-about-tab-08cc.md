@@ -22,7 +22,7 @@ written and confirmed failing first.
   panel boundary for a multi-entry `Book`. Confirm it fails (red) before any
   implementation. Per [[infrastructure]] Export Pipeline (PNG) "Strip styling
   — dividers and branding".
-- [ ] T002 [artifacts: infrastructure] Implement per-panel dividers in
+- [x] T002 [artifacts: infrastructure] Implement per-panel dividers in
   `exportBookToPng`: draw a divider/border between each turn's panel in the
   existing off-screen compositing pass, using the Marigold theme accent
   ([[ui]] Visual Identity), as pure layout math over the existing per-panel

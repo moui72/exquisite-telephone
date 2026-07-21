@@ -303,8 +303,7 @@ describe('exportBookToPng (flatten to a single PNG)', () => {
 });
 
 describe('renderBookOntoContext (T001: per-panel dividers)', () => {
-  // TDD red: dividers are implemented in T002. `.fails` is removed there.
-  it.fails('draws a Marigold divider at each internal panel boundary', () => {
+  it('draws a Marigold divider at each internal panel boundary', () => {
     // Fixture layout: text (row 0, h=60), drawing (row 60, h=240),
     // text (row 300, h=60). Internal panel boundaries — between one
     // turn's panel and the next — sit at y=60 and y=300. A single-panel

@@ -70,7 +70,18 @@ export function renderBookOntoContext(
   ctx.fillRect(0, 0, width, height);
 
   let y = 0;
-  for (const entry of [...book.entries].sort((a, b) => a.position - b.position)) {
+  const ordered = [...book.entries].sort((a, b) => a.position - b.position);
+  for (const [index, entry] of ordered.entries()) {
+    // Per-panel divider (infrastructure.md Export Pipeline — Strip
+    // styling): a Marigold band at each internal seam so an individual
+    // turn reads as its own framed panel rather than one continuous
+    // column. No band above the first panel — the frame border handles
+    // the outer edge.
+    if (index > 0) {
+      ctx.fillStyle = MARIGOLD;
+      ctx.fillRect(0, y, width, DIVIDER_HEIGHT);
+    }
+
     ctx.fillStyle = '#94a3b8';
     ctx.font = '12px sans-serif';
     ctx.fillText(playerName(players, entry.authorId), 12, y + 16);
