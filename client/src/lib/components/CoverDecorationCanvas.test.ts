@@ -78,7 +78,7 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     'Houndstooth',
   ];
 
-  it.fails('offers a picker with the nine named backgrounds plus a blank option', () => {
+  it('offers a picker with the nine named backgrounds plus a blank option', () => {
     const { getByRole } = render(CoverDecorationCanvas, { props: { username: 'Ada', ops: [] } });
 
     for (const name of NAMED) {
@@ -87,7 +87,7 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     expect(getByRole('button', { name: 'Blank' })).toBeInTheDocument();
   });
 
-  it.fails('calls onTemplateChange with the selected template id', async () => {
+  it('calls onTemplateChange with the selected template id', async () => {
     const onTemplateChange = vi.fn();
     const { getByRole } = render(CoverDecorationCanvas, {
       props: { username: 'Ada', ops: [], onTemplateChange },
@@ -98,7 +98,7 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     expect(onTemplateChange).toHaveBeenCalledWith('star-chart');
   });
 
-  it.fails('renders the chosen template as a low-opacity background beneath the ink', () => {
+  it('renders the chosen template as a low-opacity background beneath the ink', () => {
     const { container } = render(CoverDecorationCanvas, {
       props: { username: 'Ada', ops: [], coverTemplate: 'star-chart' },
     });
@@ -111,7 +111,7 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     expect(container.querySelector('canvas')).not.toBeNull();
   });
 
-  it.fails('switching templates does not clear the ink (onOpsChange is not called)', async () => {
+  it('switching templates does not clear the ink (onOpsChange is not called)', async () => {
     const onOpsChange = vi.fn();
     const { getByRole } = render(CoverDecorationCanvas, {
       props: {

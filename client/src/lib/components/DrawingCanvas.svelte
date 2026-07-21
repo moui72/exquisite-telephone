@@ -50,6 +50,13 @@
    * Drawing View).
    */
   export let monochromeOnly = false;
+  /**
+   * When true, the canvas element has no opaque white background, so a
+   * template background rendered behind it (cover decoration — ui.md) shows
+   * through where there is no ink. Default false keeps the opaque white
+   * "page" surface for turn drawings and Reveal replays.
+   */
+  export let transparent = false;
 
   let canvasEl: HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D | null = null;
@@ -242,7 +249,8 @@
   bind:this={canvasEl}
   width="320"
   height="240"
-  class="touch-none rounded-md border-2 border-marigold/70 bg-white"
+  class="touch-none rounded-md border-2 border-marigold/70"
+  class:bg-white={!transparent}
   role="img"
   aria-label={readOnly ? 'Drawing preview' : 'Drawing canvas'}
 ></canvas>
