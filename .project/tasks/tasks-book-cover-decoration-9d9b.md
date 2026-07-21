@@ -63,7 +63,7 @@ paired implementation commit.
 
 ## Phase 3: Client — decoration canvas and window
 
-- [ ] T009 [artifacts: ui] Write a failing test for a cover-decoration canvas
+- [x] T009 [artifacts: ui] Write a failing test for a cover-decoration canvas
   component that reuses `DrawingCanvas`, is pre-stamped "<username>'s book",
   honors `Room.monochromeOnly`, and edits a client-local draft cover (draw ops)
   without emitting per-stroke. Confirm red.
