@@ -109,3 +109,31 @@ describe('RulesOverview', () => {
     expect(onClose).toHaveBeenCalled();
   });
 });
+
+describe('RulesOverview (T005: Rules + About tabs)', () => {
+  it.fails('renders Rules and About tabs with Rules selected by default', () => {
+    render(RulesOverview, { props: { onClose: vi.fn() } });
+
+    const rulesTab = screen.getByRole('tab', { name: /rules/i });
+    const aboutTab = screen.getByRole('tab', { name: /about/i });
+
+    // Rules is the initial view.
+    expect(rulesTab).toHaveAttribute('aria-selected', 'true');
+    expect(aboutTab).toHaveAttribute('aria-selected', 'false');
+
+    // The rules copy is visible on open.
+    expect(screen.getByText(/an opening phrase/i)).toBeInTheDocument();
+  });
+
+  it.fails('switches to the About tab, revealing its panel and hiding the rules copy', async () => {
+    render(RulesOverview, { props: { onClose: vi.fn() } });
+
+    await fireEvent.click(screen.getByRole('tab', { name: /about/i }));
+
+    expect(screen.getByRole('tab', { name: /about/i })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: /rules/i })).toHaveAttribute('aria-selected', 'false');
+    // Rules is the initial view, not the About view — its copy is gone once
+    // About is selected (panels are conditionally rendered, not merely hidden).
+    expect(screen.queryByText(/an opening phrase/i)).not.toBeInTheDocument();
+  });
+});

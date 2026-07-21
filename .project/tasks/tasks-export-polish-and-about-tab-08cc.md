@@ -44,7 +44,7 @@ written and confirmed failing first.
 Independent of Phase 1; touches the Rules Overview Panel, which the Reveal
 rework does not. Sequenced after Phase 1 only for a clean serial branch.
 
-- [ ] T005 [artifacts: ui] Write a failing test for the Rules Overview Panel
+- [x] T005 [artifacts: ui] Write a failing test for the Rules Overview Panel
   (client) asserting it renders two tabs — Rules and About — with Rules
   selected by default on open, and that switching to About shows its content
   while Rules is the initial view. Confirm red before implementation. Per
