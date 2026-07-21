@@ -2,7 +2,7 @@
 name: infrastructure
 status: stable
 last_updated: 2026-07-21
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -44,9 +44,20 @@ event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
 `onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSetLapsPerBook`,
 `onSetPromptMode`, `onSetCuratedPromptCount`,
-`onSetAllowPromptWriteIn`, `onSetReadingBook`, `onSubmitEntry`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
+`onSetAllowPromptWriteIn`, `onSetReadingBook`, `onSubmitEntry`, `onSubmitCover`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
 `onKickPlayer`, `onRestartGame`, `onRejoin`, `onDisconnect`), not a single large
-switch. Drawing entries sync only once, in full, via `onSubmitEntry`
+switch. `onSubmitCover` (host or any player, for their *own* book only —
+the server checks `Book.originAuthorId` matches the caller) finalizes that
+player's book cover during `status === 'decorating'`: it stores the
+submitted `cover` draw ops and `coverTemplate` on the book and appends the
+player to `Room.coverSubmissions` (see [[datamodel]] Normalization Rules —
+Cover decoration). Cover draw-op payloads are bounded at this submission
+boundary by the **same drawing-payload cap** as `onSubmitEntry`
+drawings — the cap protects in-memory state ahead of the store, exactly as
+for entries (see [[datamodel]] Normalization Rules — `Entry.content`
+maximum length). If every active player has now submitted, the same
+handler closes the window early (`status = 'reveal'`); otherwise the
+sweep below closes it on expiry. Drawing entries sync only once, in full, via `onSubmitEntry`
 when a player finishes their turn — there is no per-stroke real-time
 sync handler; stroke data never leaves the client mid-turn.
 
@@ -129,6 +140,19 @@ persistent timer/queue infrastructure (e.g. Redis-backed job scheduler)
 is introduced — a single in-process interval is sufficient at this
 app's scale (Principle I), consistent with everything else here living
 in one process's memory.
+
+The **same sweep also closes the cover-decoration window** (see
+[[datamodel]] Normalization Rules — Cover decoration). For each room at
+`status === 'decorating'`, if `decorationWindowStartedAt + 120000` ms has
+passed, the sweep transitions the room to `reveal` (clearing
+`decorationWindowStartedAt`, stamping the reveal transition and its
+`game_completed`/reveal log the same way `onSubmitEntry`'s completion path
+does) and broadcasts. This reuses the existing interval and its
+already-connected-independence property — the window must close even if
+every remaining player has gone offline mid-decoration — rather than
+introducing a second timer. Early close (all active players submitted)
+happens synchronously in `onSubmitCover`; the sweep is only the
+expiry backstop.
 
 ## Curation Store
 

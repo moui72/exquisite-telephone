@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-20
-diagram_status: current
+last_updated: 2026-07-21
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -39,7 +39,7 @@ They are deliberately the only shapes here that outlive a process.
 | id | string | Short human-shareable room code (e.g. 4-6 chars), not a UUID |
 | hostPlayerId | string | FK -> Player.id |
 | players | Player[] | |
-| status | enum | `lobby` \| `writing` \| `reveal` \| `ended` — a room-wide phase only; there is no room-wide `drawing` phase, since a player is individually writing or drawing at any given moment depending on `Entry.type` (see below). Turn *progression*, however, is round-gated (see Normalization Rules) — not asynchronous. |
+| status | enum | `lobby` \| `writing` \| `decorating` \| `reveal` \| `ended` — a room-wide phase only; there is no room-wide `drawing` phase, since a player is individually writing or drawing at any given moment depending on `Entry.type` (see below). `decorating` is the book-cover window between `writing` and `reveal` (see Normalization Rules — Cover decoration): when the last entry completes the game, `status` transitions to `decorating` rather than straight to `reveal`. Turn *progression*, however, is round-gated (see Normalization Rules) — not asynchronous. |
 | books | Book[] | One per player's original prompt |
 | createdAt | timestamp | |
 | monochromeOnly | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `false`. When `true`, the drawing tool's color palette is hidden and all strokes render in the default ink color — see [[ui]] Writing/Drawing View. |
@@ -56,6 +56,8 @@ They are deliberately the only shapes here that outlive a process.
 | lapsPerBook | number \| null | Host-configurable, set before `status` leaves `lobby`; `null` means the host hasn't explicitly chosen a value yet — see Normalization Rules for the live-default-until-overridden behavior. When non-`null`, one of `1 \| 2 \| 3`. Governs how many full rotations through `Room.players` each book completes before the game ends (see Normalization Rules — Laps per book). |
 | bookReads | Record\<bookId, playerId[]\> | Reveal-only. FK `Book.id` -> deduped FK `Player.id[]` who have *completed a read* of that book — opened its per-book modal and then closed it (see [[ui]] Reveal View and Normalization Rules — Reveal read-state). Keyed by `Book.id` because both consumers — the per-card "read by" badges and the host's unread-books warning — aggregate per book; per-player views stay derivable. Empty `{}` outside `status === 'reveal'`; a fresh `Room` from "Play again" starts empty like any other new room. |
 | currentlyReading | Record\<playerId, bookId\> | Reveal-only. FK `Player.id` -> FK `Book.id` currently open in that player's modal; an absent key means that player has no modal open. Keyed by `Player.id` — a reader has exactly one book open at a time. Drives the live "being read by" badge. Cleared for a player on disconnect (so the badge doesn't leak) *without* crediting a completed read. Empty `{}` outside `status === 'reveal'`. |
+| decorationWindowStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `decorating`; `null` otherwise. Drives the 2-minute cover-decoration window's sweep-resolved close (see Normalization Rules — Cover decoration and [[infrastructure]] Turn Timer Sweep) — every client also derives the shared countdown from `now - decorationWindowStartedAt`. Reset to `null` when the window closes and `status` becomes `reveal`. |
+| coverSubmissions | string[] | FK -> Player.id, deduplicated. Active (non-kicked) players who have *finalized* their book cover during `decorating` (via `onSubmitCover` — see [[infrastructure]]). Reveal is gated until this covers every active player **or** the window expires (see Normalization Rules — Cover decoration). Distinct from whether `Book.cover` carries ink: a player may submit a blank cover, which finalizes their slot without decorating. Empty `[]` outside `decorating`; a fresh `Room` from "Play again" starts empty. |
 
 ### Player
 
@@ -76,6 +78,8 @@ They are deliberately the only shapes here that outlive a process.
 | roomId | string | FK -> Room.id |
 | originAuthorId | string | FK -> Player.id — whoever started this book's chain |
 | entries | Entry[] | Ordered chain: text, drawing, text, drawing, ... |
+| cover | DrawOp[] \| null | The book's origin author's decorated cover, drawn on a canvas pre-stamped "<originAuthor.name>'s book" (see [[ui]] Cover decoration). Same ordered `stroke`/`fill` draw-op shape as an `Entry` drawing's `content` (see `Entry` above) — replayable, rasterized only at export/render time, and bounded by the **same drawing-payload cap** as an entry drawing at the submission boundary (see Normalization Rules — `Entry.content` maximum length). `null` when the origin author never decorated: the Reveal card face then falls back to the deterministic `generateCoverArt` abstract design (see [[ui]] Reveal View). |
+| coverTemplate | string \| null | The pregenerated background template the cover was started from — one of a fixed set of named ids (`fan-deco` \| `damask-lattice` \| `marbled-endpaper` \| `star-chart` \| `herringbone-cloth` \| `halftone-bloom` \| `contour-field` \| `pennant-row` \| `houndstooth`), a static constant in `shared/` like the phrase bank (Principle VI). Rendered as a low-opacity background *beneath* `cover`'s ink so strokes stay legible. `null` = blank canvas (no template chosen). Independent of `cover`: a template may be chosen with no ink on top, or ink drawn with no template. |
 
 ### Entry
 
@@ -333,6 +337,47 @@ disliked this player's writing" serves no purpose the curator needs.
   closing counts as a completed read like any other close. Both records
   are populated only while `status === 'reveal'` and reset empty on a
   fresh "Play again" room.
+- **Cover decoration.** Each `Book` can carry a `cover` (draw ops) and a
+  `coverTemplate`, both authored by that book's `originAuthorId` — "your
+  book" is the one you started. Decoration happens in two windows, and
+  the cover is synced only on *finalize* (via `onSubmitCover`,
+  [[infrastructure]]) — never per-stroke — exactly like an `Entry`
+  drawing; between windows a player's in-progress cover is client-local
+  draft state.
+  - **During `writing` (opportunistic).** While a player is round-gated
+    *waiting* (their entry submitted, the round not yet advanced — see
+    Turns are round-gated), they may decorate their own book's cover
+    instead of staring at a waiting screen. This is purely optional client
+    activity; it changes no server state until a finalize. **The 30s grace
+    is client-side only:** when the round advances and a new turn is ready
+    for a player who is mid-decoration, their client gives a 30-second
+    countdown before the turn view takes over. It does **not** extend or
+    alter the server-side turn-timer deadline or the `force-empty` flow (a
+    decorating player still owes their turn on the same clock — see Turn
+    timer); the grace is a view-transition courtesy, not a state change,
+    so it needs no server field.
+  - **The `decorating` window (2 minutes, at game end).** When the last
+    entry completes the game (`computeNextEntries(room).length === 0`),
+    `status` transitions to `decorating` rather than straight to `reveal`,
+    and `decorationWindowStartedAt` is stamped. Every active player gets a
+    final 2-minute window to finish their cover. A player **submits early**
+    (finalizes) at any time, appending their `Player.id` to
+    `Room.coverSubmissions`. **Reveal is gated** until either every active
+    (non-kicked) player is in `coverSubmissions` *or* the window expires
+    (`decorationWindowStartedAt + 120000` ms) — whichever comes first. The
+    same background sweep that resolves timeout votes ([[infrastructure]]
+    Turn Timer Sweep) closes the window on expiry: it sets `status =
+    'reveal'`, clears `decorationWindowStartedAt`, and stamps the reveal
+    transition. A player who never finalized simply has `Book.cover ===
+    null`, and their Reveal card falls back to `generateCoverArt` (see
+    [[ui]] Reveal View). The window is skippable in the sense that early
+    submission by everyone closes it before the 2 minutes elapse; there is
+    no host override — the window is short and self-resolving.
+  - Covers follow the same *Play again* / *Restart game* lifecycle as
+    other per-book state: *Play again* mints a brand-new room whose books
+    have no covers; *Restart game* regenerates `books`, discarding covers
+    with the old chain. `coverSubmissions` and `decorationWindowStartedAt`
+    are cleared to `[]`/`null` outside `decorating`.
 - **End-of-game controls (Reveal page).** Three distinct actions:
   - *Leave game* (non-host, `status === 'reveal'` only): client-local
     only — clears the leaving player's stored session token and

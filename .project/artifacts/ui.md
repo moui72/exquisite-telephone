@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-20
-diagram_status: current
+last_updated: 2026-07-21
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -281,7 +281,14 @@ revealing content — mirrors the "pass the folded paper" mechanic. Turn
 progression is round-gated (see [[datamodel]] Normalization Rules): a
 player who finishes their entry before the rest of the room finishes
 the current round sees a "waiting for the round to finish" state
-rather than being moved on to another book.
+rather than being moved on to another book. **That waiting state offers
+the cover-decoration canvas** (see Cover Decoration below) so the idle
+time becomes play rather than a spinner — optional, and its ink is
+client-local draft until finalized. When the round advances and this
+player's next turn is ready while they are mid-decoration, a **30-second
+grace countdown** appears before the turn view takes over (client-side
+only — it does not extend the turn-timer deadline; see [[datamodel]]
+Normalization Rules — Cover decoration).
 
 When `Room.turnTimerMinutes` is set, each still-working player sees a
 countdown to their individual deadline (`Room.roundStartedAt` +
@@ -293,6 +300,46 @@ force empty now); in the edge case where no one has submitted yet this
 round, every player (including the stalled ones) sees the vote prompt
 instead.
 
+## Cover Decoration
+
+Each player decorates the cover of **their own** book (the one they
+started — `Book.originAuthorId`) on a drawing canvas **pre-stamped
+"<username>'s book"** in the plaque lettering, framed as the easel's
+GiltFrame like the writing/drawing surface. The canvas reuses the same
+`DrawingCanvas` component and toolbar as a turn drawing — color palette
+(honoring `Room.monochromeOnly`), line widths, and fill — since a cover
+is just draw ops (`Book.cover`, see [[datamodel]]). Ink is client-local
+draft until the player finalizes; finalizing sends `onSubmitCover`
+([[infrastructure]]).
+
+**Template picker.** Above the blank canvas, a small palette offers the
+pregenerated background templates (Fan Deco, Damask Lattice, Marbled
+Endpaper, Star Chart, Herringbone Cloth, Halftone Bloom, Contour Field,
+Pennant Row, Houndstooth) as starting points, plus a "blank" option. The
+chosen template (`Book.coverTemplate`) renders as a **low-opacity
+background beneath the ink** so strokes stay legible; picking one never
+places ink, and a player can draw on blank with no template. Switching
+templates mid-decoration only swaps the background, never the ink.
+
+The canvas appears in **two contexts**, both editing the same draft cover:
+
+- **While waiting during `writing`** (see Writing / Drawing View) — the
+  round-gated waiting state surfaces the canvas so idle time is play. When
+  the player's next turn is ready mid-decoration, a **30-second grace
+  countdown** precedes the turn view taking over (client-side only).
+- **The decoration window (`Room.status === 'decorating'`)** — after the
+  last entry completes the game, a dedicated full-view decoration screen
+  opens with a docent-voice heading, the cover canvas, and a **shared
+  2-minute countdown** derived on every client from
+  `Room.decorationWindowStartedAt` (see [[datamodel]] Normalization Rules
+  — Cover decoration). A **"Present your cover" (submit early)** control
+  finalizes and then shows a waiting-for-others state; the view also
+  reports how many players have submitted (from `Room.coverSubmissions`).
+  Reveal opens for everyone at once when all active players have submitted
+  or the window expires — the server drives the transition, the client
+  never advances itself. A player who does nothing simply lands in Reveal
+  with `Book.cover === null` (their card shows the fallback abstract art).
+
 ## Reveal View
 
 Opens on its own title-page moment — "The Gallery Opens" in the app's
@@ -303,11 +350,14 @@ timed auto-advance and no synchronized clock. Every player browses at
 their own pace and sees their own position.
 
 **Card grid.** One card per book, laid out as a gallery wall. Each
-card's face is the origin author's deterministically-generated cover art
-(a colorful abstract design seeded from the book's `originAuthorId` so
-it's stable across re-renders rather than reshuffling every time) under
-a mock-formal exhibit plaque (e.g. "Exhibit No. 3 — Untitled, Mixed
-Media, Anonymous"). A card the local viewer has already opened renders
+card's face is the origin author's **decorated cover** when they made one
+(`Book.cover` draw ops rendered over the `Book.coverTemplate` background,
+if any — see [[datamodel]] and Cover Decoration below), and **falls back**
+to the deterministically-generated abstract cover art (a colorful design
+seeded from the book's `originAuthorId` so it's stable across re-renders
+rather than reshuffling every time) when `Book.cover` is `null`. Either
+way the face sits under a mock-formal exhibit plaque (e.g. "Exhibit No. 3
+— Untitled, Mixed Media, Anonymous"). A card the local viewer has already opened renders
 dimmed (viewed/dirty dimming), so a browsing player can see at a glance
 which works they've been to. Clicking a card opens that book's modal.
 
