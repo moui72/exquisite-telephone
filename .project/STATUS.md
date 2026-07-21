@@ -1,16 +1,17 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**One open feedback item, and it's a big one: a
-full self-guided rework of the Reveal experience**
-(`feedback-reveal-self-guided-rework-422e.md`, F001, Reconsidered).
-Replace the timed auto-advancing Reveal with a card-grid + per-book modal:
-manual paging (click + keyboard, animated), initial prompt in isolation
-then each page pairing the previous item above the new reveal, save-to-PNG
-on the last page, per-book kept-place / back-to-start / reveal-all, and
-viewed/dirty card state. Reverses `ui.md`'s Reveal View and likely
-orphans `datamodel.md`'s `revealStartedAt` clock pacing. Large and
-decision-reversing — a candidate `/ardd-research` before `/ardd-plan`.
-Everything else is merged, deployed (beta + prod current), and clear.
+_Updated: 2026-07-21 (**One open feedback file, now 3 items: a full
+self-guided rework of the Reveal / end-of-game experience**
+(`feedback-reveal-self-guided-rework-422e.md`, F001–F003). Replace the
+timed auto-advancing Reveal with a card-grid + per-book modal (F001);
+make read / being-read state visible to *all* participants via badges
+(F002); and warn the host before closing the lobby with unread books
+(F003). F002 is the pivotal addition — shared read-state means this is
+**not** UI-only: it spans `ui`, `datamodel` (per-player-per-book read
+tracking, `revealStartedAt` likely orphaned), and `infrastructure`
+(real-time modal open/close sync, new Socket.IO events). Large,
+decision-reversing, cross-artifact — `/ardd-research` first. Everything
+else is merged, deployed (beta + prod current), and clear.
 
 Earlier today: **`tasks-2b0f-effb.md` complete and merged — the laps
 `book-complete` broken-contract (`d27f4eea`) is fixed**, and the full
@@ -223,16 +224,27 @@ wanted), and a stale "8-color" palette code comment.
 
 **1 open feedback file** — will be picked up by the next `/ardd-plan`.
 
-- `feedback-reveal-self-guided-rework-422e.md` (F001, **Reconsidered**,
-  `[artifacts: ui, datamodel]`): replace the timed auto-advancing Reveal
-  with a self-guided card-grid + per-book modal (manual animated paging,
-  previous-item-above-new-reveal pages, save-to-PNG on the last page,
-  per-book kept-place/back-to-start/reveal-all, viewed/dirty card state).
-  Reverses `ui.md`'s Reveal View and likely orphans `datamodel.md`'s
-  `revealStartedAt` clock pacing. **Large and decision-reversing** — worth
-  an `/ardd-research` pass to vet the design before `/ardd-plan` writes
-  the artifact changes. The per-viewer place/viewed state is expected to
-  be UI-only (no new `Room` state), to be confirmed in planning.
+- `feedback-reveal-self-guided-rework-422e.md` — **3 items** (F001–F003),
+  one integrated Reveal/end-of-game redesign, `[artifacts: ui, datamodel,
+  infrastructure]`:
+  - **F001** (Reconsidered): replace the timed auto-advancing Reveal with
+    a self-guided card-grid + per-book modal (manual animated paging,
+    previous-item-above-new-reveal pages, save-to-PNG on the last page,
+    per-book kept-place/back-to-start/reveal-all, viewed/dirty card
+    state). Reverses `ui.md`'s Reveal View and likely orphans
+    `datamodel.md`'s `revealStartedAt` clock pacing.
+  - **F002**: read-by / being-read-by badges **visible to all
+    participants** — which reverses F001's "UI-only" note: needs shared
+    per-player-per-book read state (`datamodel`) and real-time modal
+    open/close sync (`infrastructure`, new Socket.IO events).
+  - **F003**: warn the host on closing the lobby with unread books
+    (force allowed). Carries an **open question** — "read" as
+    per-book-has-a-reader vs per-player-complete — to settle before
+    design.
+
+  **Large, decision-reversing, and now cross-artifact** (all three, with
+  new synced state and handlers). `/ardd-research` first is clearly the
+  right move before `/ardd-plan`.
 
 _History below (all prior items resolved):_
 
