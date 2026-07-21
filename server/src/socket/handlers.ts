@@ -749,8 +749,16 @@ export function onSubmitEntry(
   });
 
   if (computeNextEntries(room).length === 0) {
-    room.status = 'reveal';
-    logger.log({ event: 'game_completed', outcome: 'success', roomId: input.roomId });
+    // The game is over, but Reveal is gated behind the cover-decoration
+    // window (datamodel.md Normalization Rules — Cover decoration): enter
+    // `decorating` and stamp the window start rather than going straight to
+    // `reveal`. The `game_completed` log moves to `transitionToReveal`,
+    // emitted when the window closes (all-submitted early close in
+    // `onSubmitCover`, or the sweep's expiry backstop).
+    room.status = 'decorating';
+    room.decorationWindowStartedAt = Date.now();
+    room.coverSubmissions = [];
+    logger.log({ event: 'decoration_window_opened', outcome: 'success', roomId: input.roomId });
   }
 
   socket.to(input.roomId).emit('roomUpdated', { room });

@@ -37,7 +37,7 @@ paired implementation commit.
   `Room.status` to `decorating` (NOT `reveal`), stamps
   `decorationWindowStartedAt`, and leaves reveal-only records
   (`bookReads`/`currentlyReading`) empty. Confirm red.
-- [ ] T004 [artifacts: datamodel, infrastructure] Implement the completion
+- [x] T004 [artifacts: datamodel, infrastructure] Implement the completion
   branch change in `onSubmitEntry`: `writing → decorating` with
   `decorationWindowStartedAt = now`, replacing the direct `writing → reveal`.
   Make T003 pass; keep the existing `game_completed`/reveal logging tied to the

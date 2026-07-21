@@ -262,7 +262,7 @@ describe('onSubmitEntry', () => {
     expect(ack.error).toBe('not-your-turn');
   });
 
-  it('moves the room to reveal once every book is complete', async () => {
+  it('moves the room to decorating once every book is complete (reveal is gated behind the cover window — T004)', async () => {
     const { roomId, adaId, graceId, books } = await setUpTwoPlayerGame();
     const adaBook = books.find((b) => b.originAuthorId === adaId)!;
     const graceBook = books.find((b) => b.originAuthorId === graceId)!;
@@ -295,7 +295,8 @@ describe('onSubmitEntry', () => {
       content: 'stroke-data-2',
     })) as SubmitEntryAck;
 
-    expect(finalAck.room?.status).toBe('reveal');
+    expect(finalAck.room?.status).toBe('decorating');
+    expect(finalAck.room?.decorationWindowStartedAt).not.toBeNull();
   });
 });
 
@@ -507,7 +508,7 @@ describe('observability (structured log events)', () => {
     return lines.map((line) => JSON.parse(line));
   }
 
-  it('logs room creation, join, turn advance, and game completion with outcome and identifiers', async () => {
+  it('logs room creation, join, turn advance, and decoration-window opening with outcome and identifiers', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
     const createAck = (await clientA
@@ -575,8 +576,10 @@ describe('observability (structured log events)', () => {
     expect(
       events.filter((e) => e.event === 'turn_advanced' && e.outcome === 'success'),
     ).toHaveLength(4);
+    // Completion now opens the cover-decoration window (reveal is gated
+    // behind it — T004); the game_completed log moves to window-close.
     expect(events).toContainEqual(
-      expect.objectContaining({ event: 'game_completed', outcome: 'success', roomId }),
+      expect.objectContaining({ event: 'decoration_window_opened', outcome: 'success', roomId }),
     );
   });
 

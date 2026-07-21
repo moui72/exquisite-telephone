@@ -312,9 +312,10 @@ describe('onSubmitEntry book-complete guard is laps-aware (defect d27f4eea)', ()
     expect(firstLapTwoAck).not.toEqual({ error: 'book-complete' });
 
     // Now every book has playerCount * 2 === 6 entries: a further submit
-    // returns book-complete, and the game has flipped to reveal.
+    // returns book-complete, and the game has flipped to decorating (the
+    // cover-decoration window now gates reveal — T004).
     expect(room.books.every((b) => b.entries.length === totalPositions)).toBe(true);
-    expect(room.status).toBe('reveal');
+    expect(room.status).toBe('decorating');
     const ack = vi.fn();
     onSubmitEntry(
       socket,
@@ -448,13 +449,13 @@ describe('round timer bookkeeping (Room.roundStartedAt / timerExtensions / pendi
   });
 });
 
-describe("onSubmitEntry transition to 'reveal'", () => {
-  it("flips status to 'reveal' when the last entry completes the game", () => {
+describe("onSubmitEntry transition on completion", () => {
+  it("flips status to 'decorating' when the last entry completes the game (T004)", () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     room.status = 'writing';
-    // Pin to a single lap: this test is about the reveal transition, not
-    // laps-per-book behavior.
+    // Pin to a single lap: this test is about the completion transition,
+    // not laps-per-book behavior.
     room.lapsPerBook = 1;
     room.books = createBooksForRoom(room);
     const adaId = room.players[0]!.id;
@@ -468,7 +469,7 @@ describe("onSubmitEntry transition to 'reveal'", () => {
       vi.fn(),
     );
 
-    expect(room.status).toBe('reveal');
+    expect(room.status).toBe('decorating');
   });
 
   it('leaves status writing when the submission does not complete the game', () => {
@@ -493,10 +494,7 @@ describe("onSubmitEntry transition to 'reveal'", () => {
 });
 
 describe("onSubmitEntry transition to 'decorating' (T003/T004 — cover decoration window)", () => {
-  // it.fails: red until T004 redirects the completion branch from
-  // writing→reveal to writing→decorating. Marker removed on the green
-  // commit (per the tasks-file it.fails convention).
-  it.fails(
+  it(
     "transitions to 'decorating' (not reveal), stamps decorationWindowStartedAt, and leaves reveal-only records empty",
     () => {
       const store = createRoomStore();
