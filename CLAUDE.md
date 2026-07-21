@@ -15,23 +15,23 @@ free-form subjects and is not worth rewriting.
 
 **Types**
 
-| Type | Use for |
-|---|---|
-| `feat` | A new user-facing capability |
-| `fix` | A bug fix |
-| `refactor` | Behavior-preserving code change |
-| `test` | Adding or correcting tests only |
-| `docs` | Documentation, including `.project/` artifacts and plans |
-| `build` | Dockerfile, `fly.toml`, deps, workspace config |
-| `ci` | `.github/workflows/` |
-| `chore` | Anything else with no production effect |
+| Type       | Use for                                                  |
+| ---------- | -------------------------------------------------------- |
+| `feat`     | A new user-facing capability                             |
+| `fix`      | A bug fix                                                |
+| `refactor` | Behavior-preserving code change                          |
+| `test`     | Adding or correcting tests only                          |
+| `docs`     | Documentation, including `.project/` artifacts and plans |
+| `build`    | Dockerfile, `fly.toml`, deps, workspace config           |
+| `ci`       | `.github/workflows/`                                     |
+| `chore`    | Anything else with no production effect                  |
 
 **Scopes** — the workspace package or area touched: `shared`, `server`,
 `client`, `project` (ArDD state under `.project/`), `deploy`, `ci`.
 Omit the scope when a change genuinely spans everything.
 
 **Subject** — imperative mood, lowercase, no trailing period. Explain
-*why* in the body when the reason isn't obvious from the diff; this repo
+_why_ in the body when the reason isn't obvious from the diff; this repo
 already leans on substantive commit bodies and that shouldn't change.
 
 ### ArDD task commits keep their task ID
@@ -54,13 +54,6 @@ The pre-commit hook runs lint, type-check, and tests — it does not check
 commit-message format. This is convention, not a gate. If it starts
 drifting, a `commit-msg` hook is the fix, but that adds a dependency for
 a problem we don't have yet (constitution Principle I).
-
-## Commit signing
-
-Signing guidance lives in the user's global `~/.claude/CLAUDE.md` and
-applies here unchanged — sign with the on-disk key at
-`~/.ssh/id_claude_signing`, which works when 1Password is locked. Not
-duplicated here so the two can't drift.
 
 ## Deployment is dual-channel
 
