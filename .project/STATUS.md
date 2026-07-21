@@ -1,23 +1,24 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**Export polish + About tab shipped.** The
-`plan-export-polish-and-about-tab-2026-07-21-4c22.md` tasks file (8 tasks,
-TDD) is `completed` and **merged into `main`**, worktree reaped. Live now:
-PNG export strips carry Marigold per-panel dividers, a gilt frame border, and
-a wordmark + `ex-tel.ty-pe.com` footer (`client/src/lib/export/pngExport.ts`);
-the Rules Overview Panel is tabbed (Rules default + About), the About tab
-crediting Exquisite Corpse / Telephone / Telestrations with an explicit
-non-affiliation statement and linking the repo and sponsor pages. Full suite
-green (477 tests). Features `branded-png-export-styling`,
-`export-panel-dividers`, and `about-tab-help-panel` → `implemented`.
+_Updated: 2026-07-21 (**Book cover decoration + templates planned and
+tasked.** `plan-book-cover-decoration-2026-07-21-589c.md` (approved) bundles
+`book-cover-decoration` and `pregenerated-book-cover-templa` into a 20-task,
+5-phase `ready` file (`tasks-book-cover-decoration-9d9b.md`). Artifact design
+applied across all three renderable artifacts: `datamodel` gains
+`Book.cover`/`coverTemplate`, a new `Room.status` value `decorating`, and
+`decorationWindowStartedAt`/`coverSubmissions`; `infrastructure` adds
+`onSubmitCover` and the sweep's window-close; `ui` adds the Cover Decoration
+section, the decorating-window view, waiting-state decoration + a client-side
+30s grace, the Reveal card-face cover-with-fallback, and the template picker.
 
-Nothing is in flight and no tasks file is ready — the queue is empty. The
-backlog holds three items, two of which (`book-cover-decoration` and its
-sibling `pregenerated-book-cover-templa`) are still deferred pending a plan
-against the now-settled self-guided Reveal card design.
+Confirmed decisions: the drawn cover **replaces** `generateCoverArt` (falling
+back to it only when a book is undecorated); the 30s grace is **client-side
+only** (never touches the turn-timer deadline). The new `decorating` phase is
+hosted by the existing turn-timer sweep — no second timer.
 
-Local `main` is 9 commits ahead of `origin/main` (this merge + the 8 task
-commits) — unpushed.)_
+Nothing is in flight. **Both prod and beta are current** — prod was promoted
+this session (run 29872934116, success), carrying the self-guided Reveal +
+export/About work to `ex-tel.ty-pe.com`.)_
 
 ## Artifacts Found
 
@@ -28,24 +29,32 @@ commits) — unpushed.)_
 | infrastructure.md | stable ✅ | — |
 | ui.md | stable ✅ | — |
 
-No `[OPEN: ...]` items outstanding in any artifact.
+No `[OPEN: ...]` items outstanding in any artifact. (Two design questions are
+tracked in the plan's Open Questions — cover serialization shape and template
+artwork — to settle during implementation, not artifact gaps.)
 
 ## Cross-Artifact Issues
 
-None. The shipped export styling matches `infrastructure.md` Export Pipeline,
-and the tabbed panel matches `ui.md` Rules Overview Panel.
+None. The cover-decoration concepts (`Book.cover`/`coverTemplate`,
+`decorating` phase, `decorationWindowStartedAt`, `coverSubmissions`,
+`onSubmitCover`) are defined in `datamodel`/`infrastructure` and referenced
+consistently in `ui`; lint clean.
 
 ## Constitution Compliance
 
-No violations. The hard-coded `ex-tel.ty-pe.com` export footer URL landed with
-its `PRODUCTION ANNOTATION` comment at the constant, as the plan's Production
-Annotation Summary required.
+No violations. The new `decorating` phase reuses the existing sweep rather
+than adding a timer (Principle I), the cover canvas reuses `DrawingCanvas`
+(Principle II), and the two justified deviations are recorded in the plan's
+Complexity Tracking. No new production shortcut (covers are in-memory game
+state, covered by the existing annotation).
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (Reveal read-state fields added, `revealStartedAt` removed — run /ardd-diagram datamodel)
-- infrastructure.md — current ✅
-- ui.md — stale ⚠️ (self-guided Reveal View + tabbed Rules/About panel — run /ardd-diagram ui)
+- datamodel.md — stale ⚠️ (cover fields + `decorating` phase — run /ardd-diagram datamodel)
+- infrastructure.md — stale ⚠️ (`onSubmitCover` + sweep window-close — run /ardd-diagram infrastructure)
+- ui.md — stale ⚠️ (Cover Decoration view — run /ardd-diagram ui)
+
+(A `/ardd-diagram` pass is a deliberate follow-up, not a plan task.)
 
 ## Code-vs-Artifact Defects
 
@@ -54,21 +63,28 @@ Annotation Summary required.
 
 ## Feature Backlog
 
-- 3 backlogged · 0 planned · 0 tasked · 17 implemented · 1 subsumed — see
+- 1 backlogged · 0 planned · 2 tasked · 17 implemented · 1 subsumed — see
   `.project/features/`. Target a backlogged slug with `/ardd-plan <slug>`.
-  - Backlogged: `book-cover-decoration` (deferred behind Reveal),
-    `pregenerated-book-cover-templa` (depends on `book-cover-decoration`),
-    `curation-data-aggregation-pipe`.
+  - Backlogged: `curation-data-aggregation-pipe` (independent; the only
+    unplanned item).
+  - Tasked: `book-cover-decoration`, `pregenerated-book-cover-templa` (this
+    plan, ready to implement).
+
+## Work Queue
+
+- `tasks-book-cover-decoration-9d9b.md` — plan
+  `plan-book-cover-decoration-2026-07-21-589c.md`, features
+  `book-cover-decoration, pregenerated-book-cover-templa`: the only `ready`
+  file; nothing else in flight to overlap.
 
 ## In Flight
 
-Nothing in flight — no worktrees, no ready or in-progress tasks files.
+Nothing in flight — no worktrees, no in-progress tasks files.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: **push `main`** (9
-commits ahead of `origin`) to ship the export/About work to beta, then either
-`/ardd-plan curation-data-aggregation-pipe` (the one backlog item with no
-dependency) or refresh the two stale diagrams with `/ardd-diagram`.
-`book-cover-decoration` and `pregenerated-book-cover-templa` can now be planned
-against the merged Reveal design whenever you want them.
+0 issues found. Safe to /plan: yes. Recommended next step: run
+`/ardd-implement` and pick `tasks-book-cover-decoration-9d9b.md` (20 tasks,
+TDD, delegates to a background worktree). `curation-data-aggregation-pipe`
+remains to plan whenever you want it; a `/ardd-diagram` pass would refresh the
+three diagrams the artifact edits left stale.
