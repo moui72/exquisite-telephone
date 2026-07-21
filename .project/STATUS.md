@@ -165,13 +165,17 @@ a plan.)_
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (run /ardd-diagram datamodel — two new
-  persisted entities this pass, plus the four `Room` fields from the
-  prior pass)
-- infrastructure.md — stale ⚠️ (run /ardd-diagram infrastructure — the
-  Curation Store and its volume are a genuinely new node and edge)
-- ui.md — stale ⚠️ (run /ardd-diagram ui — textual-only changes, so the
-  diagram content won't actually change, just its `current` stamp)
+- datamodel.md — current ✅ (regenerated 2026-07-21 — ER now carries the
+  curated-prompt/moderation `Room` fields and the persisted
+  RatingEvent/PromptRating/CandidatePhrase entities)
+- infrastructure.md — current ✅ (regenerated 2026-07-21 —
+  single-process + curation-volume + Fly dual-channel topology)
+- ui.md — current ✅ (regenerated 2026-07-21 — actual `App.svelte`
+  routing and shared-component tree)
+
+_(All three rendered into `README.md`. Not machine-validated — headless
+Chrome isn't available in this environment — but GitHub renders the
+fences natively; worth a glance at the rendered README.)_
 
 ## Code-vs-Artifact Defects
 
@@ -579,16 +583,14 @@ looks right. (A push is not a runnable `/ardd-*` command, so
 
 Nothing else is outstanding: no open feedback, no ready tasks, one
 backlogged feature (`curation-data-aggregation-pipe`, routed to
-`/ardd-research`). The three renderable diagrams are stale — `datamodel`,
-`ui`, and `infrastructure` all changed across this session's work — and a
-fresh `/ardd-defects` pass would clear the seven now-fixed entries from
-the snapshot.
+`/ardd-research`). All three diagrams were regenerated this pass (now
+`current`); a fresh `/ardd-defects` pass would clear the seven now-fixed
+entries from the snapshot.
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
-drop out of the snapshot; `/ardd-research` for
-`curation-data-aggregation-pipe`'s sanitization boundary; and
-`/ardd-diagram datamodel` + `/ardd-diagram infrastructure` for the two
-diagrams whose shape actually changed. The `handlers.ts:160` lap-default
+drop out of the snapshot, and `/ardd-research` for
+`curation-data-aggregation-pipe`'s sanitization boundary. The
+`handlers.ts:160` lap-default
 finding (see header) is a candidate `/ardd-feedback` note.
 
 One standing suggestion from the ArDD reinstall, not yet acted on: the
