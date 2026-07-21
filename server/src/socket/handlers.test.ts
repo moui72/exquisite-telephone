@@ -30,6 +30,7 @@ import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
 import {
   onCastTimeoutVote,
+  onDisconnect,
   onEndGame,
   onKickPlayer,
   onRestartGame,
@@ -2482,5 +2483,27 @@ describe('onSetReadingBook (reveal read-state, datamodel.md / infrastructure.md)
       ack,
     );
     expect(ack).toHaveBeenCalledWith({ error: 'room-not-found' });
+  });
+});
+
+describe('onDisconnect reveal read-state cleanup (datamodel.md)', () => {
+  it('removes a mid-read player from currentlyReading without crediting a completed read', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'reveal';
+    room.books = createBooksForRoom(room);
+    const playerId = room.players[0]!.id;
+    const bookId = room.books[0]!.id;
+    room.currentlyReading[playerId] = bookId;
+
+    const socket = makeFakeSocket();
+    socket.data.playerId = playerId;
+    socket.data.roomId = room.id;
+
+    onDisconnect(socket, store, createLogger(() => {}));
+
+    expect(room.currentlyReading[playerId]).toBeUndefined();
+    expect(room.bookReads[bookId]).toBeUndefined();
+    expect(room.players[0]!.connected).toBe(false);
   });
 });

@@ -917,6 +917,11 @@ export function onDisconnect(socket: Socket, store: RoomStore, logger: Logger): 
     return;
   }
   player.connected = false;
+  // Clear any open reveal-modal entry so the "being read by" badge does
+  // not leak for a departed reader (datamodel.md). A disconnect is NOT a
+  // chosen close, so it deliberately does NOT credit a completed read to
+  // `bookReads` — the player resumes their book on reconnect.
+  delete room.currentlyReading[playerId];
   logger.log({ event: 'player_left', outcome: 'success', roomId, playerId });
   socket.to(roomId).emit('roomUpdated', { room });
 }
