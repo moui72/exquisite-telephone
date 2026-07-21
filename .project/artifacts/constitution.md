@@ -23,7 +23,7 @@ name: constitution
 status: stable
 last_updated: 2026-07-19
 workflow_mode: solo
-next_step_prompt: true
+next_step_prompt: auto
 delegation: eager
 merge_policy: auto
 ---
