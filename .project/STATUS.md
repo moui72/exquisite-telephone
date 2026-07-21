@@ -1,6 +1,17 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-20 (**All 7 defects are fixed and merged to `main`.**
+_Updated: 2026-07-20 (**One `ready` tasks file: `tasks-4663-bd86.md`
+(0/2) — `onStartGame` should count active players.** It consumes the lone
+open feedback item (lap default resolved off the full roster) and, by
+user decision at the plan checkpoint, the sibling minimum-player-gate bug
+one line above it: both `onStartGame` reads of `room.players.length` route
+through the `activePlayers` helper. Plan `plan-4663-2026-07-20-2b90.md` is
+`approved`. Prod and beta are both live on the defect-fix build (all 7
+fixed and merged); the CI actions were bumped to v5 (Node-20 deprecation
+gone). This is the only outstanding work.
+
+Earlier this session: **all 7 code-vs-artifact defects were fixed and
+merged to `main`.**
 `tasks-25a0-15f7.md` completed 10/10 in a delegated worktree, merged
 clean (fast-forward), worktree reaped. Verified post-merge: full suite
 green — 451 tests (shared 49 · server 202 · client 196 · root 4) — lint
@@ -180,16 +191,17 @@ view, so a stale-looking entry there is expected until then.
 
 ## Feedback
 
-**1 open feedback file** — will be picked up by the next `/ardd-plan`.
+**0 open feedback files.**
 
-- `feedback-lap-default-kicked-players-8005.md` (F001, Bug): `onStartGame`
-  resolves `defaultLapsPerBook` from `room.players.length`, not the active
-  count, so a lobby-kick-then-start yields a shorter-than-intended game.
-  Surfaced by the `plan-25a0` defect-fix implementer as latent and
-  out-of-scope; low confidence it matters in practice. Tagged
-  `[artifacts: datamodel]` — the "live player count" wording there doesn't
-  settle whether a kicked lobby player counts. Natural fix routes the call
-  site through the `activePlayers` helper the defect pass introduced.
+- `feedback-lap-default-kicked-players-8005.md` (F001, Bug) is now
+  **planned** via `plan-4663-2026-07-20-2b90.md` /
+  `tasks-4663-bd86.md` (`ready`, 0/2). Reading the code during planning
+  turned up that the minimum-player gate one line above the lap default
+  has the *same* kicked-lobby-player bug — and arguably the worse half,
+  since it can let a below-minimum game start. The user chose to fix both
+  in the one plan, so it routes **both** `onStartGame` reads of
+  `room.players.length` through the `activePlayers` helper. Not yet
+  implemented.
 
 _History below (all prior items resolved):_
 
@@ -429,8 +441,9 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(empty — no `ready` tasks files. **All 22 tasks files in the project are
-`completed`.**)_
+- `tasks-4663-bd86.md` — plan `plan-4663-2026-07-20-2b90.md`, no bound
+  features (**ready**, 0/2). The only `ready` file, so the matrix is
+  silent. Single phase, both tasks tagged `[F001]`.
 
 Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
@@ -534,16 +547,16 @@ Carried forward, none blocking:
   session's work; cost a pre-commit-hook retry this pass. Worth a fix on
   its own at some point.
 
-**Current state:** `main` at `68f47a5` is pushed through `2315fc9`
-(beta live and healthy on the defect-fix build); the one commit after
-that (`68f47a5`, the feedback file) is docs-only and rides the next
-push. Prod is on the earlier promotion, one build behind — a promote
-dispatch ships the defect fixes there once beta looks right.
+**Current state:** `main`, `origin/main`, and `release` are all on the
+defect-fix build with the v5 CI bump; beta and prod are both live and
+healthy on it. The `plan-4663` commits (plan, tasks, feedback flip,
+this refresh) are local-only and ride the next push. Nothing is deployed
+that isn't also on origin except those docs commits.
 
-**Recommended next step:** `/ardd-plan` — one open feedback item
-(`feedback-lap-default-kicked-players-8005.md`) is now the only plannable
-input. It is small and low-confidence, so it can also reasonably wait and
-be batched with whatever comes next; there is no urgency.
+**Recommended next step:** `/ardd-implement` — execute
+`tasks-4663-bd86.md` (0/2). It's a small, mechanical change against an
+existing helper; the one scope decision was already made at the plan
+checkpoint.
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
 drop out of the snapshot; `/ardd-research` for
