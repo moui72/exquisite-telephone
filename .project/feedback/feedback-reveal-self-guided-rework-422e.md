@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-21
-plan: null
+plan: plan-reveal-self-guided-rework-2026-07-21-7cd8.md
 ---
 
 # Feedback
 
 ## Reconsidered
 
-- [ ] F001 **Replace the timed, auto-advancing Reveal with a fully
+- [x] F001 **Replace the timed, auto-advancing Reveal with a fully
   self-guided card-and-modal experience.** The current Reveal
   auto-advances on a synchronized clock (`Room.revealStartedAt`-derived
   pacing, cover art, one book at a time) — the timers are confusing and
@@ -51,7 +51,7 @@ plan: null
   decision-reversing redesign; it is worth an `/ardd-research` pass before
   `/ardd-plan` designs the artifact changes. [artifacts: ui, datamodel]
 
-- [ ] F002 **Read / being-read state is shared and visible to all
+- [x] F002 **Read / being-read state is shared and visible to all
   participants.** Building on F001's per-book viewed state, each
   participant's read state is broadcast, not private:
   - A **"read by \<player\>"** badge appears on a book's card once that
@@ -68,7 +68,7 @@ plan: null
   ([[infrastructure]], whose handler list would gain entries), plus the
   badges themselves ([[ui]]). [artifacts: ui, datamodel, infrastructure]
 
-- [ ] F003 **Warn the host before closing the lobby with unread books.**
+- [x] F003 **Warn the host before closing the lobby with unread books.**
   When the host tries to start a new game or otherwise close/leave the
   lobby and not every book has been read (per F002's completed-read
   state), warn them — naming who hasn't read what — and, if every book
