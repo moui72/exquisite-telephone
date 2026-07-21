@@ -19,6 +19,7 @@ import {
   onSetLapsPerBook,
   onSetMonochrome,
   onSetPromptMode,
+  onSetReadingBook,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -49,6 +50,8 @@ import {
   type SetMonochromeInput,
   type SetPromptModeAck,
   type SetPromptModeInput,
+  type SetReadingBookAck,
+  type SetReadingBookInput,
   type SetTurnTimerAck,
   type SetTurnTimerInput,
   type StartGameAck,
@@ -142,6 +145,13 @@ export function createSocketServer(
       'set_allow_prompt_write_in',
       (input: SetAllowPromptWriteInInput, ack: (response: SetAllowPromptWriteInAck) => void) => {
         onSetAllowPromptWriteIn(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_reading_book',
+      (input: SetReadingBookInput, ack: (response: SetReadingBookAck) => void) => {
+        onSetReadingBook(socket, store, logger, input, ack);
       },
     );
 

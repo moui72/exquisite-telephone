@@ -921,6 +921,84 @@ export function onDisconnect(socket: Socket, store: RoomStore, logger: Logger): 
   socket.to(roomId).emit('roomUpdated', { room });
 }
 
+export interface SetReadingBookInput {
+  roomId: string;
+  playerId: string;
+  /** Book.id being opened, or `null` when the reader closes their modal. */
+  bookId: string | null;
+}
+
+export interface SetReadingBookAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Records a reader's reveal-page modal state (datamodel.md — completed
+ * reads / last-write-wins sync). One last-write-wins event covers both
+ * open and close, deliberately not paired open/close events with their
+ * own idempotency story — same reasoning as the no-`onRatePrompt`
+ * decision (infrastructure.md): a single event has no ordering hazard and
+ * no double-tap to reconcile.
+ *
+ * - A non-null `bookId` opens (or switches to) that book: it credits the
+ *   reader's *prior* open book, if any and different, as a completed read
+ *   (deduped append to `bookReads`), then sets `currentlyReading`.
+ * - A `null` `bookId` closes: it credits the reader's prior open book and
+ *   clears `currentlyReading`.
+ *
+ * Guards: `room-not-found`, non-`reveal` status, and an unknown non-null
+ * `bookId`.
+ */
+export function onSetReadingBook(
+  socket: Socket,
+  store: RoomStore,
+  logger: Logger,
+  input: SetReadingBookInput,
+  ack: (response: SetReadingBookAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status !== 'reveal') {
+    ack({ error: 'room-not-in-reveal' });
+    return;
+  }
+  if (input.bookId !== null && !room.books.some((b) => b.id === input.bookId)) {
+    ack({ error: 'book-not-found' });
+    return;
+  }
+
+  // Credit the reader's PRIOR open book as a completed read whenever they
+  // leave it — a close (null) or a switch to a different book. Deduped so
+  // a re-read never double-counts the same player.
+  const prevBookId = room.currentlyReading[input.playerId];
+  if (prevBookId !== undefined && prevBookId !== input.bookId) {
+    const readers = room.bookReads[prevBookId] ?? [];
+    if (!readers.includes(input.playerId)) {
+      room.bookReads[prevBookId] = [...readers, input.playerId];
+    }
+  }
+
+  if (input.bookId === null) {
+    delete room.currentlyReading[input.playerId];
+  } else {
+    room.currentlyReading[input.playerId] = input.bookId;
+  }
+
+  logger.log({
+    event: 'book_read_state',
+    outcome: 'success',
+    roomId: input.roomId,
+    playerId: input.playerId,
+    bookId: input.bookId,
+  });
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface SetPromptModeInput {
   roomId: string;
   playerId: string;

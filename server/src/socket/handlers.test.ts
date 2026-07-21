@@ -37,6 +37,7 @@ import {
   onSetCuratedPromptCount,
   onSetLapsPerBook,
   onSetPromptMode,
+  onSetReadingBook,
   onSetTurnTimer,
   onStartGame,
   onSubmitEntry,
@@ -2373,5 +2374,113 @@ describe('onSubmitEntry content length cap (datamodel.md Normalization Rules)', 
     expect(ack).not.toHaveBeenCalledWith({ error: 'entry-too-large' });
     expect(adaBook.entries).toHaveLength(2);
     expect(adaBook.entries[1]!.content).toBe(dense);
+  });
+});
+
+describe('onSetReadingBook (reveal read-state, datamodel.md / infrastructure.md)', () => {
+  function revealRoomWithBook() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    room.status = 'reveal';
+    room.books = createBooksForRoom(room);
+    return { store, room, bookId: room.books[0]!.id, playerId: room.players[0]!.id };
+  }
+
+  it('opening a book sets currentlyReading for that player', () => {
+    const { store, room, bookId, playerId } = revealRoomWithBook();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+    const ack = vi.fn();
+
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId }, ack);
+
+    expect(room.currentlyReading[playerId]).toBe(bookId);
+    expect(room.bookReads).toEqual({});
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('closing (null) appends the player to bookReads deduped and clears currentlyReading', () => {
+    const { store, room, bookId, playerId } = revealRoomWithBook();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId }, vi.fn());
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId: null }, vi.fn());
+
+    expect(room.bookReads[bookId]).toEqual([playerId]);
+    expect(room.currentlyReading[playerId]).toBeUndefined();
+  });
+
+  it('a second close for an already-recorded player does not duplicate', () => {
+    const { store, room, bookId, playerId } = revealRoomWithBook();
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId }, vi.fn());
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId: null }, vi.fn());
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId }, vi.fn());
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId: null }, vi.fn());
+
+    expect(room.bookReads[bookId]).toEqual([playerId]);
+  });
+
+  it('switching directly to another book credits the prior book as a completed read', () => {
+    const { store, room, playerId } = revealRoomWithBook();
+    const [bookA, bookB] = [room.books[0]!.id, room.books[1]!.id];
+    const socket = makeFakeSocket();
+    const logger = createLogger(() => {});
+
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId: bookA }, vi.fn());
+    onSetReadingBook(socket, store, logger, { roomId: room.id, playerId, bookId: bookB }, vi.fn());
+
+    expect(room.bookReads[bookA]).toEqual([playerId]);
+    expect(room.currentlyReading[playerId]).toBe(bookB);
+  });
+
+  it('rejects when the room status is not reveal', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    room.status = 'writing';
+    room.books = createBooksForRoom(room);
+    const ack = vi.fn();
+
+    onSetReadingBook(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: room.players[0]!.id, bookId: room.books[0]?.id ?? 'x' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
+  });
+
+  it('rejects an unknown book id', () => {
+    const { store, room, playerId } = revealRoomWithBook();
+    const ack = vi.fn();
+
+    onSetReadingBook(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId, bookId: 'no-such-book' },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'book-not-found' });
+    expect(room.currentlyReading[playerId]).toBeUndefined();
+  });
+
+  it('rejects an unknown room', () => {
+    const ack = vi.fn();
+    onSetReadingBook(
+      makeFakeSocket(),
+      createRoomStore(),
+      createLogger(() => {}),
+      { roomId: 'NOPE', playerId: 'p', bookId: null },
+      ack,
+    );
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-found' });
   });
 });
