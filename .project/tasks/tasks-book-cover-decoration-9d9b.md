@@ -67,7 +67,7 @@ paired implementation commit.
   component that reuses `DrawingCanvas`, is pre-stamped "<username>'s book",
   honors `Room.monochromeOnly`, and edits a client-local draft cover (draw ops)
   without emitting per-stroke. Confirm red.
-- [ ] T010 [artifacts: ui] Implement the cover-decoration canvas component per
+- [x] T010 [artifacts: ui] Implement the cover-decoration canvas component per
   T009. Make it pass.
 - [ ] T011 [artifacts: ui, datamodel] Write a failing test for the
   `decorating` full-view screen: renders the cover canvas, a 2-minute countdown
