@@ -74,6 +74,11 @@ export interface SessionStore extends Readable<SessionState> {
   leaveGame(): void;
   voteToPlayAgain(): Promise<void>;
   playAgain(): Promise<void>;
+  /**
+   * Reveal-only: report this player's per-book modal state (datamodel.md
+   * Reveal read-state). A non-null `bookId` opens/switches; `null` closes.
+   */
+  setReadingBook(bookId: string | null): Promise<void>;
 }
 
 export function createSessionStore(socket: GameSocket): SessionStore {
@@ -259,6 +264,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
       return emitWithAck('playAgain', {
         roomId: state.room?.id,
         playerId: state.player?.id,
+      });
+    },
+    setReadingBook(bookId: string | null) {
+      const state = get(store);
+      return emitWithAck('set_reading_book', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        bookId,
       });
     },
   };

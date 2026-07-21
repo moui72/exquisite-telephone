@@ -49,12 +49,13 @@ They are deliberately the only shapes here that outlive a process.
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |
 | playAgainVotes | string[] | FK -> Player.id, deduplicated. Non-host players who've clicked "vote to play again" on the Reveal page (see [[ui]] Reveal View). Purely informational — shown to the host as a readiness count, does not gate `Room.status`. Never populated outside `status === 'reveal'`; a fresh `Room` created by "Play again" starts with an empty array like any other new room. |
 | nonContinuable | boolean | Set `true` the moment a host kicks a player while `status === 'writing'` (see Normalization Rules — Moderation); `false` otherwise, including after "restart game" clears it. Never set outside `writing`; a kick during `lobby` or `reveal` has nothing to make non-continuable. |
-| revealStartedAt | timestamp \| null | Epoch ms marking when `status` transitioned to `reveal`; `null` otherwise. Gives every client a shared reference point to derive the Reveal page's animated pacing (current book index, revealed-entry count) as a pure function of `now - revealStartedAt`, rather than each client running its own independent local timer — see [[ui]] Reveal View and Normalization Rules below. |
 | promptMode | enum | `free-form` \| `curated` — Host-configurable, set before `status` leaves `lobby`; defaults `free-form` (players type their own opening phrase, the original behavior). When `curated`, each player instead picks their opening phrase from a dealt hand (see Normalization Rules — Curated prompts). |
 | curatedPromptCount | number \| null | Host-configurable, set before `status` leaves `lobby`; how many phrases each player is dealt. One of `2 \| 3 \| 4 \| 5` when set; `null` while `promptMode === 'free-form'`. Clamped at deal time (see Normalization Rules — Curated prompts). |
 | allowPromptWriteIn | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `true`, a write-your-own option is always offered alongside the dealt phrases, so curated mode restricts nobody who has their own idea. Only meaningful when `promptMode === 'curated'`. |
 | dealtPrompts | Record\<playerId, string[]\> | The phrases dealt to each non-kicked player at game start, from a single shuffle-then-partition of the fixed phrase bank — which is what guarantees no phrase reaches two players in the same game. Empty `{}` while `promptMode === 'free-form'`. Re-dealt on *Restart game*; see Normalization Rules — Curated prompts. |
 | lapsPerBook | number \| null | Host-configurable, set before `status` leaves `lobby`; `null` means the host hasn't explicitly chosen a value yet — see Normalization Rules for the live-default-until-overridden behavior. When non-`null`, one of `1 \| 2 \| 3`. Governs how many full rotations through `Room.players` each book completes before the game ends (see Normalization Rules — Laps per book). |
+| bookReads | Record\<bookId, playerId[]\> | Reveal-only. FK `Book.id` -> deduped FK `Player.id[]` who have *completed a read* of that book — opened its per-book modal and then closed it (see [[ui]] Reveal View and Normalization Rules — Reveal read-state). Keyed by `Book.id` because both consumers — the per-card "read by" badges and the host's unread-books warning — aggregate per book; per-player views stay derivable. Empty `{}` outside `status === 'reveal'`; a fresh `Room` from "Play again" starts empty like any other new room. |
+| currentlyReading | Record\<playerId, bookId\> | Reveal-only. FK `Player.id` -> FK `Book.id` currently open in that player's modal; an absent key means that player has no modal open. Keyed by `Player.id` — a reader has exactly one book open at a time. Drives the live "being read by" badge. Cleared for a player on disconnect (so the badge doesn't leak) *without* crediting a completed read. Empty `{}` outside `status === 'reveal'`. |
 
 ### Player
 
@@ -315,23 +316,23 @@ disliked this player's writing" serves no purpose the curator needs.
   `CandidatePhrase` back to the rater or the phrase's author — the
   curator needs the phrase and the count, not who said what.
 
-- **Reveal pacing (synchronized clock).** `Room.revealStartedAt` is
-  stamped the instant `status` transitions to `reveal` (the same
-  transition already logged as `game_completed` in `onSubmitEntry`).
-  Every client derives its Reveal-page animation position — which
-  book's cover/entries are showing — as a pure function of `now -
-  Room.revealStartedAt` against the same fixed cadence constants (cover
-  delay, per-tick duration, entries per tick; see [[ui]] Reveal View),
-  rather than incrementing local counters on that client's own
-  `setTimeout`/`setInterval` ticks. This guarantees every player sees
-  the same book at the same time regardless of when their own browser
-  mounted the page or how much clock drift accumulates locally —
-  reversed 2026-07-17 (feedback F001, `.project/feedback/
-  feedback-main-4258.md`) from the original per-client-local-timer
-  design, which let clients visibly diverge over a multi-book reveal
-  sequence. Manual prev/next/skip controls (see [[ui]]) still work by
-  jumping the *local* view ahead of or behind the clock-derived
-  position; the clock only drives the default auto-advance pacing.
+- **Reveal read-state (completed reads, last-write-wins).** A player
+  *completes a read* of a book by opening its per-book modal and then
+  closing it — "read" means "looked at" (opened-and-closed), not
+  last-page-verified; paging is client-local and untrusted, so the server
+  never checks a last page was reached. Both open and close ride a single
+  last-write-wins `set_reading_book` event (`onSetReadingBook`,
+  [[infrastructure]]) rather than paired open/close events: a non-null
+  `bookId` sets `currentlyReading[playerId]` (modal opened, or switched);
+  a `null` `bookId` clears it (modal closed). On *either* a close or a
+  switch to a different book, the reader's *prior* open book is credited
+  as a completed read — `playerId` is appended, deduped, to
+  `bookReads[prevBookId]` — so a re-read never double-counts. A disconnect
+  clears `currentlyReading[playerId]` but does NOT credit a read (it is
+  not a chosen close; the reader resumes on reconnect). "Reveal all" then
+  closing counts as a completed read like any other close. Both records
+  are populated only while `status === 'reveal'` and reset empty on a
+  fresh "Play again" room.
 - **End-of-game controls (Reveal page).** Three distinct actions:
   - *Leave game* (non-host, `status === 'reveal'` only): client-local
     only — clears the leaving player's stored session token and

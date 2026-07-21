@@ -28,7 +28,6 @@ erDiagram
         int lapsPerBook "nullable, 1-3"
         boolean nonContinuable
         timestamp roundStartedAt
-        timestamp revealStartedAt
     }
     PLAYER {
         string id "ephemeral, no account"

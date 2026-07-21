@@ -32,6 +32,7 @@ function makeFakeSession(
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
+    setReadingBook: vi.fn(async () => {}),
     kickPlayer: vi.fn(async () => {}),
     restartGame: vi.fn(async () => {}),
   };
@@ -65,7 +66,8 @@ function makeRoom(books: Book[], players = [ada, grace], overrides: Partial<Room
     pendingTimeoutVote: null,
     playAgainVotes: [],
     nonContinuable: false,
-    revealStartedAt: null,
+    bookReads: {},
+    currentlyReading: {},
     promptMode: 'free-form',
     curatedPromptCount: null,
     allowPromptWriteIn: true,
