@@ -198,6 +198,94 @@ describe('Reveal view — self-guided card grid + per-book modal', () => {
   });
 });
 
+function threeEntryBook(): Book {
+  return {
+    id: 'book-a',
+    roomId,
+    originAuthorId: ada.id,
+    entries: [
+      { id: 'ea0', bookId: 'book-a', authorId: ada.id, position: 0, type: 'text', content: 'origin one' },
+      {
+        id: 'ea1',
+        bookId: 'book-a',
+        authorId: grace.id,
+        position: 1,
+        type: 'drawing',
+        content: serializeDrawOps([]),
+      },
+      { id: 'ea2', bookId: 'book-a', authorId: ada.id, position: 2, type: 'text', content: 'guess two' },
+    ],
+  };
+}
+
+describe('Reveal view — read badges from shared state', () => {
+  it('renders "read by" from bookReads and "being read by" from currentlyReading', () => {
+    const room = makeRoom({
+      books: twoBookBooks(),
+      bookReads: { 'book-a': [grace.id] },
+      currentlyReading: { [grace.id]: 'book-b' },
+    });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+
+    expect(screen.getByText(/^Read by Grace$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Being read by Grace$/)).toBeInTheDocument();
+  });
+});
+
+describe('Reveal view — paging (click + keyboard) and kept-place', () => {
+  it('advancing by click shows the previous item above the newly revealed one', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    // Page 1: prompt alone.
+    expect(screen.getByText('origin one')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: /drawing preview/i })).not.toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    // Page 2: the prompt (previous) is still shown, above the new drawing.
+    expect(screen.getByText('origin one')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: /drawing preview/i })).toBeInTheDocument();
+  });
+
+  it('advances the page with the ArrowRight key and retreats with ArrowLeft', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+
+    await fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await fireEvent.keyDown(window, { key: 'ArrowRight' });
+    // Page 3 (last): the final guess is shown, and the save control appears.
+    expect(screen.getByText('guess two')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /preserve as keepsake/i })).toBeInTheDocument();
+
+    await fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    // Back on page 2 — the final guess is no longer shown.
+    expect(screen.queryByText('guess two')).not.toBeInTheDocument();
+  });
+
+  it('keeps each viewer\'s place: reopening a book resumes the page it was left on', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: /close book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+
+    // Resumes on page 2, not reset to page 1.
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+  });
+});
+
 describe('theme regression guard (plan-1449)', () => {
   it('contains no leftover default-Tailwind slate- classes', () => {
     const source = readFileSync(resolve(__dirname, './Reveal.svelte'), 'utf-8');
