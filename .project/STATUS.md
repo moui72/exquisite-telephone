@@ -1,12 +1,16 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**A fresh `/ardd-defects` pass cleared the seven
-old defects and found one new broken-contract — `d27f4eea`, now the one
-thing worth acting on.** `onSubmitEntry`'s `book-complete` guard is
-laps-unaware, so **multi-lap games can't advance past lap 1 via
-submission** — and the default <5-player game is 2 laps, so the default
-is affected. All three diagrams were also regenerated this pass (now
-`current`). No open feedback, nothing ready or in flight.
+_Updated: 2026-07-21 (**One `ready` tasks file: `tasks-2b0f-effb.md`
+(0/3) — the fix for the laps `book-complete` broken-contract
+(`d27f4eea`).** `onSubmitEntry`'s guard is laps-unaware and blocks
+multi-lap games (the default <5-player game is 2 laps, so the default is
+affected). The fix extracts a single `isBookComplete` helper both call
+sites share, rather than correcting the duplicated condition in place —
+the duplication is the root cause. Plan `plan-2b0f-2026-07-21-48cc.md` is
+`approved`. This is the only outstanding work.
+
+Earlier today: a fresh `/ardd-defects` pass cleared the seven old defects
+and found this one; all three diagrams were regenerated (now `current`).
 
 Earlier today: `tasks-aed6-231c.md` completed and merged — the Lobby's
 live below-minimum warning and laps default now count active (non-kicked)
@@ -197,6 +201,10 @@ regeneration.
   game blocks at the start of lap 2. Shipped undetected because every
   full-game test pins `lapsPerBook = 1` and the `book-complete` unit test
   uses a 1-player room; the laps logic is unit-tested only in isolation.
+  **Now planned + tasked** in `plan-2b0f-2026-07-21-48cc.md` /
+  `tasks-2b0f-effb.md` (`ready`, 0/3) — extracts a shared `isBookComplete`
+  helper. Stays in `DEFECTS.md` until a `/ardd-defects` run after the fix
+  re-verifies it gone.
 - `infrastructure.md`, `ui.md`, `constitution.md` — all clean this run.
 
 Two items were deliberately **not** recorded as defects (see `DEFECTS.md`
@@ -460,8 +468,9 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(empty — no `ready` tasks files. **All 25 tasks files in the project are
-`completed`.**)_
+- `tasks-2b0f-effb.md` — plan `plan-2b0f-2026-07-21-48cc.md`, no bound
+  features (**ready**, 0/3). The only `ready` file, so the matrix is
+  silent. Single phase, all tasks tagged `[defect: d27f4eea]`.
 
 Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
@@ -569,24 +578,22 @@ Carried forward, none blocking:
   session's work; cost a pre-commit-hook retry this pass. Worth a fix on
   its own at some point.
 
-**Current state:** `origin/main` and `release` are on the defect-fix +
-v5-CI build (beta and prod both live and healthy). Local `main` is ahead
-by the `plan-4663` fix and this session's docs commits — **not yet
-pushed**, so the `onStartGame` active-count fix is not on beta or prod
-until the next push.
+**Current state:** `origin/main` and `release` are on an earlier build
+(beta and prod live and healthy on it). Local `main` is well ahead —
+the `onStartGame` active-count fix, the Lobby-display fix, the regenerated
+diagrams, the defects pass, and now the `plan-2b0f` plan/tasks — **not
+yet pushed**, so none of that is on beta or prod.
 
-**Recommended next step:** `/ardd-plan defect:d27f4eea` — plan the fix
-for the laps `book-complete` guard, the one open defect and a
-default-affecting broken-contract. `next_step_prompt: auto` is set and
-this is a runnable `/ardd-*` command, so it is being **auto-run**;
-`/ardd-plan`'s own approval checkpoint still gates before anything is
-tasked.
+**Recommended next step:** `/ardd-implement` — execute
+`tasks-2b0f-effb.md` (0/3), the laps `book-complete` fix. Small,
+single-phase, test-first. `next_step_prompt: auto` is set and this is a
+runnable `/ardd-*` command, so it is being **auto-run** (delegated to a
+background worktree).
 
-Also outstanding but not blocking: local `main` is well ahead of
-`origin/main` (this session's plan/status/diagram/defects docs and the
-merged fixes) — push to deploy to beta, then promote for prod. One
-backlogged feature (`curation-data-aggregation-pipe`, routed to
-`/ardd-research`). Diagrams are all `current`.
+Also outstanding, not blocking: the unpushed local commits (push to
+deploy to beta, then promote for prod). One backlogged feature
+(`curation-data-aggregation-pipe`, routed to `/ardd-research`). Diagrams
+all `current`.
 
 Then, in no particular order: `/ardd-research` for
 `curation-data-aggregation-pipe`'s sanitization boundary. The
