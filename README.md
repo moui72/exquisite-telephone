@@ -81,7 +81,7 @@ erDiagram
 graph TD
     subgraph client[Browser - Svelte SPA]
         UI[Client app]
-        PNG[PNG export - client-side rasterize]
+        PNG[PNG export - client-side rasterize, branded/divided strip]
     end
 
     subgraph proc[Single Node process - one port]
@@ -105,6 +105,7 @@ graph TD
     CUR -->|one file per event| VOL
     UI --> PNG
     proc -->|deployed as one app| FLY
+```
 
 ## UI
 
