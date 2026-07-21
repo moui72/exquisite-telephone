@@ -1,11 +1,21 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**ArDD updated v1.0.2 → v1.0.3** (beta channel, no
-migrations pending), then `--reconfigure` set **`next_step_prompt: auto`**
+_Updated: 2026-07-21 (**One `ready` tasks file: `tasks-aed6-231c.md`
+(0/2) — the Lobby's live displays should count active players.** It
+consumes the lone open feedback item: `Lobby.svelte`'s below-minimum
+warning (`:40`) and live laps default (`:84`) compute over the raw
+roster, so after `plan-4663` made the server and `datamodel.md` count
+active players, the Lobby *display* a host reads before starting can
+contradict what the server does. `activePlayers` is already imported in
+that file, so the fix is small; T002 also aligns `ui.md`'s Lobby wording.
+Plan `plan-aed6-2026-07-21-2a6e.md` is `approved`. This is the only
+outstanding work.
+
+Earlier this session: **ArDD updated v1.0.2 → v1.0.3** (beta channel, no
+migrations pending), and `--reconfigure` set **`next_step_prompt: auto`**
 — skills that recommend a runnable `/ardd-*` next step now run it directly
-instead of offering a one-keypress prompt (the other three workflow
-fields — `solo` / `eager` / `auto` — were kept). One open feedback item,
-nothing ready or in flight.
+instead of offering a one-keypress prompt (the other three fields —
+`solo` / `eager` / `auto` — kept).
 
 Earlier today: **`tasks-4663-bd86.md` completed and merged —**
 `onStartGame` now counts active (non-kicked) players for both the
@@ -192,17 +202,15 @@ view, so a stale-looking entry there is expected until then.
 
 ## Feedback
 
-**1 open feedback file** — will be picked up by the next `/ardd-plan`.
+**0 open feedback files.**
 
-- `feedback-lobby-active-count-display-9e7d.md` (F001, Bug): the Lobby's
-  live below-minimum warning (`Lobby.svelte:40`) and live laps default
-  (`:84`) compute over the raw roster, not the active count — so after
-  `plan-4663` made the server and `datamodel.md` count active players, the
-  Lobby *display* a host reads before starting can contradict what the
-  server does. `activePlayers` is already imported in that file (roster
-  render uses it), so the fix is small. Tagged `[artifacts: ui]`.
-  Surfaced by the `plan-4663` T002 implementer as drift the artifact edit
-  exposed.
+- `feedback-lobby-active-count-display-9e7d.md` (F001, Bug) is now
+  **planned** via `plan-aed6-2026-07-21-2a6e.md` / `tasks-aed6-231c.md`
+  (`ready`, 0/2): the Lobby's live below-minimum warning (`Lobby.svelte:40`)
+  and laps default (`:84`) compute over the raw roster, contradicting the
+  server and `datamodel.md` after `plan-4663`. `activePlayers` is already
+  imported there, so the fix is small; T002 also aligns `ui.md`'s Lobby
+  wording. Not yet implemented.
 
 _History below (all prior items resolved):_
 
@@ -448,8 +456,9 @@ merged — see Feature Backlog.
 
 ## Work Queue
 
-_(empty — no `ready` tasks files. **All 24 tasks files in the project are
-`completed`.**)_
+- `tasks-aed6-231c.md` — plan `plan-aed6-2026-07-21-2a6e.md`, no bound
+  features (**ready**, 0/2). The only `ready` file, so the matrix is
+  silent. Single phase, both tasks tagged `[F001]`.
 
 Calibration point, still worth remembering: the last fanned-out pair's
 `shared-artifact` verdict turned out benign — they were fanned out in
@@ -563,14 +572,15 @@ by the `plan-4663` fix and this session's docs commits — **not yet
 pushed**, so the `onStartGame` active-count fix is not on beta or prod
 until the next push.
 
-**Recommended next step:** push `main` — three commits ahead of
-`origin/main` (the `onStartGame` fix plus the ArDD-update docs), and the
-`onStartGame` fix isn't on beta or prod until pushed. After that,
-`/ardd-plan feedback-lobby-active-count-display-9e7d.md` for the small
-Lobby-display follow-on. Neither is urgent — the open feedback item is a
-display-vs-server mismatch a host only hits by kicking during the lobby.
-(The recommended step is a push, not a runnable `/ardd-*` command, so
-`next_step_prompt: auto` does not fire here.)
+**Recommended next step:** `/ardd-implement` — execute
+`tasks-aed6-231c.md` (0/2), the Lobby active-count display fix. Small,
+mechanical, against an already-imported helper. Because
+`next_step_prompt: auto` is set and this is a runnable `/ardd-*` command,
+it is being **auto-run** rather than offered as a prompt.
+
+(The `plan-aed6` commits are local-only, ahead of `origin/main`; they
+ride the next push. Prod and beta are current on the `onStartGame`
+build.)
 
 Then, in no particular order: `/ardd-defects` to re-verify the seven now
 drop out of the snapshot; `/ardd-research` for
