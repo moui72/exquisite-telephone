@@ -5,8 +5,16 @@
  * the server and the client import from here rather than retyping.
  */
 
-/** Lifecycle stage of a Room, per datamodel.md. */
-export type RoomStatus = 'lobby' | 'writing' | 'reveal' | 'ended';
+import type { DrawOps } from './strokeData.js';
+
+/**
+ * Lifecycle stage of a Room, per datamodel.md. `decorating` is the
+ * book-cover window between `writing` and `reveal` (see datamodel.md
+ * Normalization Rules — Cover decoration): when the last entry completes
+ * the game, `status` transitions to `decorating` rather than straight to
+ * `reveal`.
+ */
+export type RoomStatus = 'lobby' | 'writing' | 'decorating' | 'reveal' | 'ended';
 
 /** Whether an Entry is a written phrase or a drawing of one. */
 export type EntryType = 'text' | 'drawing';
@@ -42,6 +50,25 @@ export interface Book {
   roomId: string;
   originAuthorId: string;
   entries: Entry[];
+  /**
+   * The book's origin author's decorated cover (datamodel.md Book.cover):
+   * the same ordered `stroke`/`fill` draw-op shape as an `Entry` drawing,
+   * bounded by the same drawing-payload cap at the `onSubmitCover`
+   * boundary. `null` when the origin author never decorated — the Reveal
+   * card face then falls back to `generateCoverArt`. Optional in the type
+   * for test-literal ergonomics; every factory-built Book sets it to
+   * `null` explicitly (see roomStore.ts).
+   */
+  cover?: DrawOps | null;
+  /**
+   * The pregenerated background template the cover was started from — one
+   * of the nine `CoverTemplateId`s (datamodel.md Book.coverTemplate),
+   * rendered as a low-opacity background beneath `cover`'s ink. `null` =
+   * blank canvas. Typed `string | null` here to keep this type independent
+   * of the template constant; the picker and validation use
+   * `CoverTemplateId`.
+   */
+  coverTemplate?: string | null;
 }
 
 /** An ephemeral, session-scoped participant in a Room. */
@@ -192,6 +219,23 @@ export interface Room {
    * read. Empty `{}` outside `status === 'reveal'`.
    */
   currentlyReading: Record<string, string>;
+  /**
+   * Epoch ms marking when `status` transitioned to `decorating`; `null`
+   * otherwise. Drives the 2-minute cover-decoration window's sweep-resolved
+   * close (datamodel.md — Cover decoration) and the shared per-client
+   * countdown (`now - decorationWindowStartedAt`). Reset to `null` when the
+   * window closes and `status` becomes `reveal`. Optional in the type for
+   * test-literal ergonomics; every factory-built Room sets it explicitly.
+   */
+  decorationWindowStartedAt?: number | null;
+  /**
+   * FK -> Player.id, deduplicated. Active (non-kicked) players who have
+   * *finalized* their book cover during `decorating` (via `onSubmitCover`).
+   * Reveal is gated until this covers every active player OR the window
+   * expires. Empty `[]` outside `decorating`; a fresh `Room` from "Play
+   * again" starts empty.
+   */
+  coverSubmissions?: string[];
 }
 
 /**

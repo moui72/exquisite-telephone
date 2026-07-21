@@ -14,7 +14,7 @@ paired implementation commit.
 
 ## Phase 1: Shared state and types
 
-- [ ] T001 [artifacts: datamodel] Add reveal/decoration fields to the shared
+- [x] T001 [artifacts: datamodel] Add reveal/decoration fields to the shared
   `Room` and `Book` types: `Book.cover` (draw-op array, same `stroke`/`fill`
   shape as an entry drawing; nullable), `Book.coverTemplate` (nullable string
   id), the `Room.status` union gains `'decorating'`, and

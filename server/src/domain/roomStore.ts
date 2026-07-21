@@ -67,6 +67,8 @@ export function createRoom(store: RoomStore, input: CreateRoomInput): Room {
     curatedPromptCount: null,
     allowPromptWriteIn: true,
     dealtPrompts: {},
+    decorationWindowStartedAt: null,
+    coverSubmissions: [],
   };
 
   store.rooms.set(room.id, room);
@@ -176,6 +178,8 @@ export function replayRoom(store: RoomStore, oldRoom: Room): ReplayRoomResult {
     curatedPromptCount: null,
     allowPromptWriteIn: true,
     dealtPrompts: {},
+    decorationWindowStartedAt: null,
+    coverSubmissions: [],
   };
 
   store.rooms.set(room.id, room);
@@ -200,5 +204,7 @@ export function createBooksForRoom(room: Room): Book[] {
       roomId: room.id,
       originAuthorId: player.id,
       entries: [],
+      cover: null,
+      coverTemplate: null,
     }));
 }

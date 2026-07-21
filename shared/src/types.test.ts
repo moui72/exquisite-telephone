@@ -45,6 +45,59 @@ describe('datamodel types (datamodel.md)', () => {
     expect(book.entries[0]?.id).toBe('entry-1');
   });
 
+  it('Book carries an optional cover (draw ops) and coverTemplate (datamodel.md Book)', () => {
+    const undecorated: Book = {
+      id: 'book-1',
+      roomId: 'room-1',
+      originAuthorId: 'player-1',
+      entries: [],
+      cover: null,
+      coverTemplate: null,
+    };
+    expect(undecorated.cover).toBeNull();
+    expect(undecorated.coverTemplate).toBeNull();
+
+    const decorated: Book = {
+      ...undecorated,
+      cover: [{ type: 'stroke', points: [{ x: 0, y: 0 }, { x: 1, y: 1 }], color: '#000', width: 3 }],
+      coverTemplate: 'fan-deco',
+    };
+    expect(decorated.cover).toHaveLength(1);
+    expect(decorated.cover?.[0]?.type).toBe('stroke');
+    expect(decorated.coverTemplate).toBe('fan-deco');
+  });
+
+  it('Room carries the decoration-window fields (datamodel.md Room)', () => {
+    const room: Room = {
+      id: 'room-1',
+      hostPlayerId: 'player-1',
+      players: [],
+      status: 'decorating',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+      decorationWindowStartedAt: 1_700_000_000_000,
+      coverSubmissions: ['player-1'],
+    };
+
+    expect(room.status).toBe('decorating');
+    expect(room.decorationWindowStartedAt).toBe(1_700_000_000_000);
+    expect(room.coverSubmissions).toEqual(['player-1']);
+  });
+
   it('Player requires id, roomId, name, connected, sessionToken, kicked', () => {
     const player: Player = {
       id: 'player-1',
@@ -91,8 +144,15 @@ describe('datamodel types (datamodel.md)', () => {
       dealtPrompts: {},
     };
 
-    const validStatuses: Room['status'][] = ['lobby', 'writing', 'reveal', 'ended'];
+    const validStatuses: Room['status'][] = [
+      'lobby',
+      'writing',
+      'decorating',
+      'reveal',
+      'ended',
+    ];
     expect(validStatuses).toContain(room.status);
+    expect(validStatuses).toContain('decorating');
     expect(room.players).toHaveLength(1);
     expect(room.playAgainVotes).toHaveLength(0);
     expect(room.nonContinuable).toBe(false);
