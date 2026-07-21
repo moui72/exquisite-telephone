@@ -110,9 +110,24 @@ Issues and pull requests are welcome.
   (ArDD) workflow; `.project/README.md` is a guide to reading those files. If
   a change alters product behavior or architecture, update the relevant
   artifact alongside the code.
+- **Contribution licensing:** because the project is dual-licensed
+  (noncommercial for everyone, commercial by separate arrangement — see
+  [License](#license)), contributions must come in under terms that let the
+  maintainer relicense them commercially. By opening a pull request you agree
+  your contribution may be offered under both the noncommercial license and
+  any commercial license the maintainer grants.
 
 If you enjoy the game, you can support development via
 [GitHub Sponsors](https://github.com/sponsors/moui72).
+
+## License
+
+This project is **source-available, not open source**. It is licensed under
+the [PolyForm Noncommercial License 1.0.0](./LICENSE.md): you may use, fork,
+modify, and share it freely for any **noncommercial** purpose. **Commercial
+use requires a separate license** from the copyright holder — open an issue
+or reach out via [github.com/moui72](https://github.com/moui72) to arrange
+one. See [`LICENSE.md`](./LICENSE.md) for the full terms.
 
 ## Datamodel
 
