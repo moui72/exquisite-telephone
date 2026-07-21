@@ -17,6 +17,8 @@ import {
   entryContentBytes,
   MAX_DRAWING_ENTRY_BYTES,
   MAX_TEXT_ENTRY_BYTES,
+  serializeDrawOps,
+  type DrawOps,
   type Player,
   type PromptRatingValue,
   type Room,
@@ -41,6 +43,7 @@ import {
   onSetReadingBook,
   onSetTurnTimer,
   onStartGame,
+  onSubmitCover,
   onSubmitEntry,
   onVoteToPlayAgain,
   type CreateRoomAck,
@@ -2525,5 +2528,119 @@ describe('onDisconnect reveal read-state cleanup (datamodel.md)', () => {
     expect(room.currentlyReading[playerId]).toBeUndefined();
     expect(room.bookReads[bookId]).toBeUndefined();
     expect(room.players[0]!.connected).toBe(false);
+  });
+});
+
+describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
+  // Builds a 2-player room in the `decorating` window with fresh books.
+  function setUpDecoratingRoom() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    room.status = 'decorating';
+    room.decorationWindowStartedAt = Date.now();
+    room.coverSubmissions = [];
+    room.books = createBooksForRoom(room);
+    const [adaId, graceId] = room.players.map((p) => p.id);
+    const adaBook = room.books.find((b) => b.originAuthorId === adaId)!;
+    const graceBook = room.books.find((b) => b.originAuthorId === graceId)!;
+    return { store, room, adaId: adaId!, graceId: graceId!, adaBook, graceBook };
+  }
+
+  const sampleCover: DrawOps = [
+    { type: 'stroke', points: [{ x: 1, y: 1 }, { x: 2, y: 2 }], color: '#ff6f91', width: 3 },
+  ];
+
+  // it.fails: red until T006 replaces the stub with the real handler.
+  it.fails('stores cover + coverTemplate on the caller OWN book and appends to coverSubmissions', () => {
+    const { store, room, adaId, adaBook } = setUpDecoratingRoom();
+    const ack = vi.fn();
+    onSubmitCover(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, cover: sampleCover, coverTemplate: 'fan-deco' },
+      ack,
+    );
+
+    expect(adaBook.cover).toEqual(sampleCover);
+    expect(adaBook.coverTemplate).toBe('fan-deco');
+    expect(room.coverSubmissions).toContain(adaId);
+    // Not everyone has submitted yet — still decorating.
+    expect(room.status).toBe('decorating');
+  });
+
+  it.fails('rejects finalizing a book the caller does not own (originAuthorId mismatch)', () => {
+    const { store, room, adaId, graceBook } = setUpDecoratingRoom();
+    const ack = vi.fn();
+    onSubmitCover(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: graceBook.id, cover: sampleCover, coverTemplate: null },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'not-your-book' });
+    expect(graceBook.cover ?? null).toBeNull();
+    expect(room.coverSubmissions).not.toContain(adaId);
+  });
+
+  it.fails('rejects an oversize cover payload with the same drawing cap as onSubmitEntry', () => {
+    const { store, room, adaId, adaBook } = setUpDecoratingRoom();
+    // A single stroke whose serialized form exceeds MAX_DRAWING_ENTRY_BYTES.
+    const points = Array.from({ length: 200_000 }, (_, i) => ({ x: i, y: i }));
+    const huge: DrawOps = [{ type: 'stroke', points, color: '#000000', width: 3 }];
+    expect(serializeDrawOps(huge).length).toBeGreaterThan(MAX_DRAWING_ENTRY_BYTES);
+
+    const ack = vi.fn();
+    onSubmitCover(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, cover: huge, coverTemplate: null },
+      ack,
+    );
+
+    expect(ack).toHaveBeenCalledWith({ error: 'cover-too-large' });
+    expect(adaBook.cover ?? null).toBeNull();
+    expect(room.coverSubmissions).not.toContain(adaId);
+  });
+
+  it.fails('dedupes coverSubmissions when a player finalizes twice', () => {
+    const { store, room, adaId, adaBook } = setUpDecoratingRoom();
+    for (let i = 0; i < 2; i++) {
+      onSubmitCover(
+        makeFakeSocket(),
+        store,
+        createLogger(() => {}),
+        { roomId: room.id, playerId: adaId, bookId: adaBook.id, cover: sampleCover, coverTemplate: null },
+        vi.fn(),
+      );
+    }
+    expect(room.coverSubmissions!.filter((id) => id === adaId)).toHaveLength(1);
+  });
+
+  it.fails('synchronously transitions to reveal once every active player has submitted', () => {
+    const { store, room, adaId, graceId, adaBook, graceBook } = setUpDecoratingRoom();
+    onSubmitCover(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: adaId, bookId: adaBook.id, cover: sampleCover, coverTemplate: null },
+      vi.fn(),
+    );
+    expect(room.status).toBe('decorating');
+
+    onSubmitCover(
+      makeFakeSocket(),
+      store,
+      createLogger(() => {}),
+      { roomId: room.id, playerId: graceId, bookId: graceBook.id, cover: [], coverTemplate: null },
+      vi.fn(),
+    );
+
+    expect(room.status).toBe('reveal');
+    expect(room.decorationWindowStartedAt).toBeNull();
   });
 });

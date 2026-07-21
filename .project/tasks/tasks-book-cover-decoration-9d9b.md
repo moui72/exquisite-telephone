@@ -42,7 +42,7 @@ paired implementation commit.
   `decorationWindowStartedAt = now`, replacing the direct `writing → reveal`.
   Make T003 pass; keep the existing `game_completed`/reveal logging tied to the
   eventual `→ reveal` transition (now emitted when the window closes).
-- [ ] T005 [artifacts: datamodel, infrastructure] Write a failing test for a
+- [x] T005 [artifacts: datamodel, infrastructure] Write a failing test for a
   new `onSubmitCover` handler: accepts `{ roomId, playerId, bookId, cover,
   coverTemplate }`, stores them on the caller's OWN book only (rejects when
   `Book.originAuthorId !== playerId`), rejects an oversize cover payload with

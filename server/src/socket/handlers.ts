@@ -9,6 +9,7 @@ import {
   defaultLapsPerBook,
   exceedsEntryContentLimit,
   isBookComplete,
+  type DrawOps,
   type Entry,
   type Player,
   type Room,
@@ -604,6 +605,43 @@ export interface SubmitEntryAck {
   room?: Room;
   entry?: Entry;
   error?: string;
+}
+
+/**
+ * Wire payload for `onSubmitCover` (infrastructure.md): a player finalizes
+ * their OWN book's cover during `decorating`. `cover` is the parsed draw-op
+ * array (same shape as an `Entry` drawing, bounded by the same drawing
+ * cap); `coverTemplate` is one of the nine `CoverTemplateId`s or `null`
+ * (blank).
+ */
+export interface SubmitCoverInput {
+  roomId: string;
+  playerId: string;
+  bookId: string;
+  cover: DrawOps;
+  coverTemplate: string | null;
+}
+
+export interface SubmitCoverAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * STUB (T005 red). Real behavior lands in T006: own-book-only storage,
+ * drawing-payload cap, deduped `coverSubmissions`, and synchronous
+ * all-submitted early close to `reveal`. This placeholder exists only so
+ * the T005 red test compiles and fails at runtime (an `it.fails` marker
+ * cannot mask a compile error).
+ */
+export function onSubmitCover(
+  _socket: Socket,
+  _store: RoomStore,
+  _logger: Logger,
+  _input: SubmitCoverInput,
+  ack: (response: SubmitCoverAck) => void,
+): void {
+  ack({ error: 'not-implemented' });
 }
 
 /**
