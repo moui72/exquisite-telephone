@@ -1,7 +1,118 @@
 <!-- ardd-badge-version-start -->
+
 [![built with ArDD](https://shieldcn.dev/badge/dynamic/json.svg?url=https://raw.githubusercontent.com/moui72/exquisite-telephone/main/.github/badges/ardd-version.json&query=%24.message&label=built%20with%20ArDD&color=yellow&labelColor=%232F4858&variant=secondary&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFyREQiPgo8IS0tIFNvdXJjZSBvZiB0cnV0aCBmb3IgdGhlIEFyREQgYmFkZ2UgbWFyazogdGhlIGJhZGdlIHdvcmtmbG93IGlubGluZXMgdGhpcyBmaWxlIHZlcmJhdGltIGFzIHRoZSBlbmRwb2ludCBKU09OJ3MgbG9nb1N2Zy4gRGFyay1iYWNrZ3JvdW5kIHZhcmlhbnQgKGJhZGdlIGxhYmVsIHNpZGUpOiB3aGl0ZSByaW5nL3JlY3Q7IHRoZSBmb3VydGggdHJpYW5nbGUgaXMgd2hpdGUsIG1hdGNoaW5nIHRoZSBsb2dvJ3MgZGFyay1jb250ZXh0IHRyZWF0bWVudC4gLS0%2BCjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNmZmZmZmYiIHN0cm9rZS13aWR0aD0iNiIvPgo8cmVjdCB4PSI0MSIgeT0iMzkiIHdpZHRoPSIxOCIgaGVpZ2h0PSIyMiIgcng9IjMiIGZpbGw9IiNmZmZmZmYiLz4KPHBvbHlnb24gcG9pbnRzPSIxMCwwIC04LC05IC04LDkiIGZpbGw9IiNmMjY0MTkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDQxIDE3KSByb3RhdGUoLTE1KSIvPgo8cG9seWdvbiBwb2ludHM9IjEwLDAgLTgsLTkgLTgsOSIgZmlsbD0iI2Y2YWUyZCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTcgNDEpIHJvdGF0ZSgtNzUpIi8%2BCjxwb2x5Z29uIHBvaW50cz0iMTAsMCAtOCwtOSAtOCw5IiBmaWxsPSIjODZiYmQ4IiB0cmFuc2Zvcm09InRyYW5zbGF0ZSg4MyA1OSkgcm90YXRlKDEwNSkiLz4KPHBvbHlnb24gcG9pbnRzPSIxMCwwIC04LC05IC04LDkiIGZpbGw9IiNmZmZmZmYiIHRyYW5zZm9ybT0idHJhbnNsYXRlKDU5IDgzKSByb3RhdGUoMTY1KSIvPgo8L3N2Zz4K)](https://github.com/moui72/artifact-driven-dev)
 <!-- ardd-badge-version-end -->
+
 [![sponsor](https://shieldcn.dev/badge/sponsor-%E2%9D%A4-ea4aaa.svg?variant=secondary&theme=pink)](https://github.com/sponsors/moui72)
+
+# Exquisite Telephone
+
+A browser-based multiplayer party game in the spirit of Telestrations and
+skribbl.io: players alternate **writing a phrase** and **drawing it**, each
+"book" passes around the circle, and at the end everyone sees how a phrase
+drifted through the chain of translation. Sessions are small private groups
+joining by a room code — no accounts, no persistent identity beyond a
+session.
+
+Play it now:
+
+- **Production** — <https://ex-tel.ty-pe.com>
+- **Beta** (latest `main`) — <https://beta-ex-tel.ty-pe.com>
+
+## Tech stack
+
+A pnpm workspace of three packages — `shared` (types/logic), `server`
+(Node + Socket.IO), and `client` (Svelte + Vite). One Node process hosts the
+realtime layer and, in production, serves the built client itself. Game state
+lives in server memory; there is no database. See the architecture diagrams
+below (generated from the design docs in `.project/artifacts/`).
+
+## Running locally
+
+**Prerequisites:** Node 22 (see `.nvmrc`) and [pnpm](https://pnpm.io).
+
+```bash
+pnpm install
+```
+
+The server and client run as two dev processes. In separate terminals:
+
+```bash
+pnpm dev:server   # game server on http://localhost:3000
+pnpm dev:client   # Vite dev server on http://localhost:5173
+```
+
+Then open **<http://localhost:5173>**. The client connects to the socket
+server same-origin (`io()`); in dev, Vite proxies `/socket.io` traffic to the
+server on port 3000, so no extra configuration is needed. Open a second
+browser (or an incognito window) to join the same room code as another
+player.
+
+To run the production shape locally — one process serving the built client:
+
+```bash
+pnpm build
+pnpm --filter server start   # serves the built client on PORT (default 3000)
+```
+
+## Checks
+
+```bash
+pnpm lint         # eslint
+pnpm typecheck    # shared build + tsc across all packages
+pnpm test         # full workspace test suite
+```
+
+A Husky pre-commit hook runs all three, in that order, before a commit is
+accepted. The same lint / type-check / test suite runs in CI on every push
+and pull request, and **CI is the gate of record** — the hook is a local
+convenience that catches the same issues earlier.
+
+## Deployment
+
+The app deploys to [Fly.io](https://fly.io) as **two separate apps**, one per
+channel:
+
+|              | Production                 | Beta                            |
+| ------------ | -------------------------- | ------------------------------- |
+| URL          | <https://ex-tel.ty-pe.com> | <https://beta-ex-tel.ty-pe.com> |
+| Fly app      | `exquisite-telephone`      | `exquisite-telephone-beta`      |
+| Config       | `fly.toml`                 | `fly.staging.toml`              |
+| Deploys from | `release` branch           | `main` branch                   |
+| Trigger      | manual workflow dispatch   | automatic on every push         |
+
+- **Beta deploys automatically:** every push to `main` deploys beta within
+  minutes (`.github/workflows/ci.yml`), so anything merged is live on beta
+  right away.
+- **Production is an explicit human act:** it deploys only via the
+  `promote.yml` workflow (manual dispatch), which fast-forwards `release`
+  from `main` and then runs `flyctl deploy` against `fly.toml`. `release` only
+  ever receives a fast-forward of `main` and is never developed on directly.
+
+The two Fly configs are meant to differ in exactly one key (`app`), so they
+are **generated from a single template** rather than hand-maintained — run
+`pnpm gen:fly` to regenerate and `pnpm check:fly` to verify; CI fails if the
+committed files drift from the generated output.
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+- **Commit messages** follow [Conventional Commits](https://www.conventionalcommits.org)
+  (`feat`, `fix`, `refactor`, `docs`, …) — see `CLAUDE.md` for the scopes used
+  here.
+- **Tests come first:** every behavior change is expected to be accompanied by
+  a test (the project follows a test-first paradigm). Make sure `pnpm lint`,
+  `pnpm typecheck`, and `pnpm test` all pass before opening a PR — CI will run
+  them.
+- **Design decisions** live in `.project/artifacts/` and are managed with the
+  [Artifact-Driven Development](https://github.com/moui72/artifact-driven-dev)
+  (ArDD) workflow; `.project/README.md` is a guide to reading those files. If
+  a change alters product behavior or architecture, update the relevant
+  artifact alongside the code.
+
+If you enjoy the game, you can support development via
+[GitHub Sponsors](https://github.com/sponsors/moui72).
 
 ## Datamodel
 
@@ -132,4 +243,4 @@ graph TD
     Lobby --> Gilt
     WD --> Gilt
     States --> Gilt
-
+```
