@@ -286,6 +286,63 @@ describe('Reveal view — paging (click + keyboard) and kept-place', () => {
   });
 });
 
+describe('Reveal view — host unread-books warning (F003)', () => {
+  const allRead = { 'book-a': [ada.id], 'book-b': [ada.id] };
+
+  it('warns and does not emit when a book has no completed read, then force-through emits End game', async () => {
+    const room = makeRoom({ books: twoBookBooks(), bookReads: {} });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /^close the exhibition$/i }));
+
+    expect(session.endGame).not.toHaveBeenCalled();
+    expect(screen.getByRole('alertdialog', { name: /unread books warning/i })).toBeInTheDocument();
+
+    await fireEvent.click(screen.getByRole('button', { name: /close anyway/i }));
+    expect(session.endGame).toHaveBeenCalled();
+  });
+
+  it('warns when every book is read but a modal is still open', async () => {
+    const room = makeRoom({
+      books: twoBookBooks(),
+      bookReads: allRead,
+      currentlyReading: { [grace.id]: 'book-a' },
+    });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /^close the exhibition$/i }));
+
+    expect(screen.getByRole('alertdialog', { name: /unread books warning/i })).toBeInTheDocument();
+    expect(screen.getByText(/still open/i)).toBeInTheDocument();
+    expect(session.endGame).not.toHaveBeenCalled();
+  });
+
+  it('force-through still emits Play again', async () => {
+    const room = makeRoom({ books: twoBookBooks(), bookReads: {} });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /^stage an encore$/i }));
+    expect(session.playAgain).not.toHaveBeenCalled();
+
+    await fireEvent.click(screen.getByRole('button', { name: /encore anyway/i }));
+    expect(session.playAgain).toHaveBeenCalled();
+  });
+
+  it('does not warn when every book is read and no modal is open', async () => {
+    const room = makeRoom({ books: twoBookBooks(), bookReads: allRead, currentlyReading: {} });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /^close the exhibition$/i }));
+
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(session.endGame).toHaveBeenCalled();
+  });
+});
+
 describe('theme regression guard (plan-1449)', () => {
   it('contains no leftover default-Tailwind slate- classes', () => {
     const source = readFileSync(resolve(__dirname, './Reveal.svelte'), 'utf-8');

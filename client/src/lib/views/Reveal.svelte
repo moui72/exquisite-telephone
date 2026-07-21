@@ -140,16 +140,61 @@
     session.leaveGame();
   }
 
-  async function handleEndGame() {
-    await session.endGame();
-  }
-
   async function handleVoteToPlayAgain() {
     await session.voteToPlayAgain();
   }
 
-  async function handlePlayAgain() {
-    await session.playAgain();
+  // Host unread-books warning (ui.md Reveal View — F003). A client-side,
+  // per-book confirm before "End game" / "Play again": no server change,
+  // and a force-through path emits the action anyway (the small-game
+  // override pattern). Derived purely from the shared read state.
+  function bookName(bookId: string): string {
+    const book = room?.books.find((b) => b.id === bookId);
+    return book ? `${playerName(book.originAuthorId)}'s book` : bookId;
+  }
+
+  $: unreadWarning = ((): string | null => {
+    if (!room) return null;
+    const unread = room.books.filter((b) => (room.bookReads[b.id] ?? []).length === 0);
+    if (unread.length > 0) {
+      const names = unread.map((b) => bookName(b.id)).join(', ');
+      return `${names} ${unread.length === 1 ? 'has' : 'have'} not been read by anyone yet.`;
+    }
+    const openIds = [...new Set(Object.values(room.currentlyReading))];
+    if (openIds.length > 0) {
+      const names = openIds.map((id) => bookName(id)).join(', ');
+      return `Every book has been read, but ${names} ${openIds.length === 1 ? 'is' : 'are'} still open.`;
+    }
+    return null;
+  })();
+
+  let pendingAction: 'end' | 'playAgain' | null = null;
+
+  function runHostAction(action: 'end' | 'playAgain') {
+    if (action === 'end') {
+      void session.endGame();
+    } else {
+      void session.playAgain();
+    }
+  }
+
+  function requestHostAction(action: 'end' | 'playAgain') {
+    if (unreadWarning) {
+      pendingAction = action;
+      return;
+    }
+    runHostAction(action);
+  }
+
+  function forceHostAction() {
+    if (pendingAction) {
+      runHostAction(pendingAction);
+    }
+    pendingAction = null;
+  }
+
+  function cancelHostAction() {
+    pendingAction = null;
   }
 </script>
 
@@ -174,7 +219,7 @@
         <button
           type="button"
           class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
-          on:click={handleEndGame}
+          on:click={() => requestHostAction('end')}
         >
           <span class="inline-flex items-center gap-1.5">
             <DoorOpen size={16} aria-hidden="true" />
@@ -184,7 +229,7 @@
         <button
           type="button"
           class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
-          on:click={handlePlayAgain}
+          on:click={() => requestHostAction('playAgain')}
         >
           <span class="inline-flex items-center gap-1.5">
             <Repeat size={16} aria-hidden="true" />
@@ -265,6 +310,41 @@
           </div>
         </div>
       {/each}
+    </div>
+  {/if}
+
+  {#if pendingAction && unreadWarning}
+    <div
+      class="fixed inset-0 z-30 flex items-center justify-center bg-velvet/70 p-4"
+      role="alertdialog"
+      aria-modal="true"
+      aria-label="Unread books warning"
+    >
+      <div class="flex w-full max-w-md flex-col gap-4 rounded-lg border-4 border-marigold bg-butter p-5">
+        <h2 class="font-title text-lg text-ink">Before the doors close…</h2>
+        <p class="text-sm text-ink/80">{unreadWarning}</p>
+        <p class="text-sm text-ink/60">
+          {pendingAction === 'end'
+            ? 'Close the exhibition anyway?'
+            : 'Stage an encore anyway?'}
+        </p>
+        <div class="flex flex-wrap justify-end gap-3">
+          <button
+            type="button"
+            class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
+            on:click={cancelHostAction}
+          >
+            Keep viewing
+          </button>
+          <button
+            type="button"
+            class="rounded-md bg-bubblegum px-4 py-2 text-sm font-medium text-white"
+            on:click={forceHostAction}
+          >
+            {pendingAction === 'end' ? 'Close anyway' : 'Encore anyway'}
+          </button>
+        </div>
+      </div>
     </div>
   {/if}
 
