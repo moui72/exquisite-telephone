@@ -1043,3 +1043,106 @@ describe('prompt rating control', () => {
     }
   });
 });
+
+describe('cover decoration during writing (T013/T014)', () => {
+  function makeEntry(bookId: string, authorId: string, position: number): Entry {
+    return { id: `${bookId}-${position}`, bookId, authorId, position, type: 'text', content: `p${position}` };
+  }
+
+  // Ada has submitted her own book's opening entry; Grace's book is still
+  // empty, so the room is at round 0 and Ada is round-gated waiting.
+  function waitingRoom(overrides: Partial<Room> = {}): Room {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('book-ada', ada.id, 0)],
+      cover: null,
+      coverTemplate: null,
+    };
+    const graceBook: Book = {
+      id: 'book-grace',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [],
+      cover: null,
+      coverTemplate: null,
+    };
+    return makeRoom([adaBook, graceBook], [ada, grace], { lapsPerBook: 1, ...overrides });
+  }
+
+  // Both opening entries are in: round advances to 1 and Ada is now due to
+  // draw Grace's book (2-player rotation: author of position 1 = the other
+  // player).
+  function adaTurnReadyRoom(overrides: Partial<Room> = {}): Room {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [makeEntry('book-ada', ada.id, 0)],
+      cover: null,
+      coverTemplate: null,
+    };
+    const graceBook: Book = {
+      id: 'book-grace',
+      roomId,
+      originAuthorId: grace.id,
+      entries: [makeEntry('book-grace', grace.id, 0)],
+      cover: null,
+      coverTemplate: null,
+    };
+    return makeRoom([adaBook, graceBook], [ada, grace], { lapsPerBook: 1, ...overrides });
+  }
+
+  it.fails('offers the cover-decoration canvas in the round-gated waiting state', () => {
+    const session = makeFakeSession({ room: waitingRoom(), player: ada, error: null });
+    const { getByText, container } = render(WritingDrawing, { props: { session } });
+
+    // Reused DrawingCanvas, pre-stamped with the player's name.
+    expect(getByText("Ada's book")).toBeInTheDocument();
+    expect(container.querySelector('canvas')).not.toBeNull();
+  });
+
+  it.fails('shows a 30-second grace countdown when the next turn becomes ready mid-decoration, before the turn view', async () => {
+    const { tick } = await import('svelte');
+    const session = makeFakeSession({ room: waitingRoom(), player: ada, error: null });
+    const { queryByRole, getByTestId } = render(WritingDrawing, { props: { session } });
+
+    // Now Ada's turn becomes ready while she was decorating.
+    session.store.set({ reconnecting: false, room: adaTurnReadyRoom(), player: ada, error: null });
+    await tick();
+
+    // A 30-second grace countdown precedes the turn view taking over.
+    const grace = getByTestId('grace-countdown');
+    expect(grace.textContent ?? '').toMatch(/(29|30)/);
+    // The turn easel's submit control is NOT shown yet — the grace holds it back.
+    expect(queryByRole('button', { name: /present your contribution/i })).not.toBeInTheDocument();
+  });
+
+  it.fails('does not change the turn-timer deadline during the grace — the two countdowns are independent', async () => {
+    const { tick } = await import('svelte');
+    const roundStartedAt = Date.now();
+    const session = makeFakeSession({
+      room: waitingRoom({ turnTimerMinutes: 15, roundStartedAt }),
+      player: ada,
+      error: null,
+    });
+    const { getByTestId } = render(WritingDrawing, { props: { session } });
+
+    session.store.set({
+      reconnecting: false,
+      room: adaTurnReadyRoom({ turnTimerMinutes: 15, roundStartedAt }),
+      player: ada,
+      error: null,
+    });
+    await tick();
+
+    // The turn-timer countdown is still present and driven purely by room
+    // state (roundStartedAt + turnTimerMinutes) — the client-side grace is a
+    // separate countdown and never extends it.
+    expect(getByTestId('turn-timer-countdown')).toBeInTheDocument();
+    expect(getByTestId('grace-countdown')).toBeInTheDocument();
+    // The grace is a view courtesy, not a submission: nothing is emitted.
+    expect(session.submitEntry).not.toHaveBeenCalled();
+  });
+});
