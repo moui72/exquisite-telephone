@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-20
-plan: null
+plan: plan-4663-2026-07-20-2b90.md
 ---
 
 # Feedback
 
 ## Bugs
 
-- [ ] F001 `onStartGame` resolves the lap default from the full roster,
+- [x] F001 `onStartGame` resolves the lap default from the full roster,
   not the active (non-kicked) player count. `handlers.ts:160` calls
   `defaultLapsPerBook(room.players.length)`; since a host can kick a
   player during `lobby`, a lobby-kick-then-start computes the default off
