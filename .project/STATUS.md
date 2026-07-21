@@ -1,30 +1,31 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**`tasks-2b0f-effb.md` complete and merged — the
-laps `book-complete` broken-contract (`d27f4eea`) is fixed.**
-`onSubmitEntry` now calls a shared `isBookComplete(room, book)` helper
-instead of the laps-unaware `book.entries.length >= room.players.length`
-guard, so multi-lap games (including the default <5-player 2-lap game)
-advance through the submission path. Delegated worktree, 3/3, clean
-fast-forward, reaped; suite green (463 tests). The subagent's new handler
-test reproduced the bug before the fix (books froze at 3 entries, never
-entering lap 2) — the gap that let it ship. **Every tasks file is
-`completed`; no open feedback; nothing ready or in flight.**
+_Updated: 2026-07-21 (**One open feedback item, and it's a big one: a
+full self-guided rework of the Reveal experience**
+(`feedback-reveal-self-guided-rework-422e.md`, F001, Reconsidered).
+Replace the timed auto-advancing Reveal with a card-grid + per-book modal:
+manual paging (click + keyboard, animated), initial prompt in isolation
+then each page pairing the previous item above the new reveal, save-to-PNG
+on the last page, per-book kept-place / back-to-start / reveal-all, and
+viewed/dirty card state. Reverses `ui.md`'s Reveal View and likely
+orphans `datamodel.md`'s `revealStartedAt` clock pacing. Large and
+decision-reversing — a candidate `/ardd-research` before `/ardd-plan`.
+Everything else is merged, deployed (beta + prod current), and clear.
 
-Earlier today: a fresh `/ardd-defects` pass cleared the seven old defects
-and found this one; all three diagrams were regenerated (now `current`);
-the `onStartGame` and Lobby active-count fixes merged and deployed to
-beta.
+Earlier today: **`tasks-2b0f-effb.md` complete and merged — the laps
+`book-complete` broken-contract (`d27f4eea`) is fixed**, and the full
+session's work (onStartGame, Lobby display, laps fix, diagrams, ArDD
+v1.0.3) is live on both beta and prod. Every prior tasks file is
+`completed`; the Reveal feedback above is the only open item.
 
-Earlier today: `tasks-aed6-231c.md` completed and merged — the Lobby's
-live below-minimum warning and laps default now count active (non-kicked)
-players, closing the display half of the seam whose logic half landed in
-`plan-4663`. Suite green (457 tests). Every tasks file is `completed`.
-
-This was the first `next_step_prompt: auto` chain: `/ardd-plan` →
-`/ardd-status` recommended `/ardd-implement` → it auto-ran without a
-prompt, and the whole active-player-count story (server, datamodel, and
-now client display) is closed.
+The laps fix in one line: `onSubmitEntry` now calls a shared
+`isBookComplete(room, book)` helper instead of the laps-unaware
+`book.entries.length >= room.players.length` guard — the subagent's new
+handler test reproduced the bug first (books froze at 3 entries, never
+entering lap 2), the gap that let it ship. It closed the active-player /
+laps arc: the seven `/ardd-defects` findings, the `onStartGame` and Lobby
+active-count fixes, and this — server, datamodel, and client display now
+all agree on who counts and how many laps a book takes.
 
 Earlier this session: the 7 code-vs-artifact defects were fixed and
 merged; ArDD updated v1.0.2 → v1.0.3 (beta); `--reconfigure` set
@@ -220,15 +221,26 @@ wanted), and a stale "8-color" palette code comment.
 
 ## Feedback
 
-**0 open feedback files.**
+**1 open feedback file** — will be picked up by the next `/ardd-plan`.
+
+- `feedback-reveal-self-guided-rework-422e.md` (F001, **Reconsidered**,
+  `[artifacts: ui, datamodel]`): replace the timed auto-advancing Reveal
+  with a self-guided card-grid + per-book modal (manual animated paging,
+  previous-item-above-new-reveal pages, save-to-PNG on the last page,
+  per-book kept-place/back-to-start/reveal-all, viewed/dirty card state).
+  Reverses `ui.md`'s Reveal View and likely orphans `datamodel.md`'s
+  `revealStartedAt` clock pacing. **Large and decision-reversing** — worth
+  an `/ardd-research` pass to vet the design before `/ardd-plan` writes
+  the artifact changes. The per-viewer place/viewed state is expected to
+  be UI-only (no new `Room` state), to be confirmed in planning.
+
+_History below (all prior items resolved):_
 
 - `feedback-lobby-active-count-display-9e7d.md` (F001, Bug) is **fixed and
   merged** via `plan-aed6-2026-07-21-2a6e.md` / `tasks-aed6-231c.md`
   (**completed 2/2**): the Lobby's live below-minimum warning and laps
   default now count active players, and `ui.md`'s Lobby wording matches
   `datamodel.md`.
-
-_History below (all prior items resolved):_
 
 - `feedback-lap-default-kicked-players-8005.md` (F001, Bug) — the
   `onStartGame` lap default (and, by user decision, the sibling
@@ -586,11 +598,20 @@ Carried forward, none blocking:
 but **not yet pushed** — 3 commits ahead of `origin/main` — so it is on
 neither beta nor prod. Prod is a build behind beta.
 
-**Recommended next step:** push `main` (deploys the laps fix to beta),
-then a prod promote to bring both channels current in one go — the whole
-session's work (onStartGame, Lobby display, laps fix, diagrams) would
-land on prod together. A push is not a runnable `/ardd-*` command, so
-`next_step_prompt: auto` does not fire here.
+**Recommended next step (your call):** the Reveal rework is large and
+decision-reversing, so decide how to approach it before anything runs —
+`/ardd-research feedback-reveal-self-guided-rework-422e.md` to vet the
+design first (recommended for a reversal this size, and you'll likely
+want to shape its scope), or `/ardd-plan
+feedback-reveal-self-guided-rework-422e.md` to go straight to designing
+the artifact changes. This is framed as a decision, not a runnable
+command, so `next_step_prompt: auto` deliberately does **not** auto-run it
+— a redesign this big shouldn't kick off unattended.
+
+Everything else is done: beta and prod are both current on the full
+session's work; working tree clean; diagrams `current`. `d27f4eea` still
+shows in `DEFECTS.md` until the next `/ardd-defects` regenerates the
+snapshot (it's fixed).
 
 Also, not blocking: `/ardd-defects` would re-verify `d27f4eea` gone and
 clear it from the snapshot. One backlogged feature
