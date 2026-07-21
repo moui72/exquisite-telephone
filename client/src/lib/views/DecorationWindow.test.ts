@@ -71,7 +71,7 @@ function decoratingRoom(overrides: Partial<Room> = {}): Room {
 }
 
 describe('DecorationWindow (Room.status === decorating)', () => {
-  it.fails("renders the player's own cover canvas, pre-stamped with their name", () => {
+  it("renders the player's own cover canvas, pre-stamped with their name", () => {
     const session = makeFakeSession({ room: decoratingRoom(), player: ada, error: null });
     const { getByText, container } = render(DecorationWindow, { props: { session } });
 
@@ -79,7 +79,7 @@ describe('DecorationWindow (Room.status === decorating)', () => {
     expect(container.querySelector('canvas')).not.toBeNull();
   });
 
-  it.fails('shows a 2-minute countdown derived from decorationWindowStartedAt', () => {
+  it('shows a 2-minute countdown derived from decorationWindowStartedAt', () => {
     const session = makeFakeSession({
       room: decoratingRoom({ decorationWindowStartedAt: Date.now() }),
       player: ada,
@@ -92,7 +92,7 @@ describe('DecorationWindow (Room.status === decorating)', () => {
     expect(countdown.textContent ?? '').toMatch(/[12]:\d\d/);
   });
 
-  it.fails('reports how many players have submitted (from coverSubmissions)', () => {
+  it('reports how many players have submitted (from coverSubmissions)', () => {
     const session = makeFakeSession({
       room: decoratingRoom({ coverSubmissions: ['grace'] }),
       player: ada,
@@ -103,7 +103,7 @@ describe('DecorationWindow (Room.status === decorating)', () => {
     expect(getByText(/1 of 2/)).toBeInTheDocument();
   });
 
-  it.fails('emits submitCover for the player OWN book on "Present your cover", then shows a waiting state', async () => {
+  it('emits submitCover for the player OWN book on "Present your cover", then shows a waiting state', async () => {
     const session = makeFakeSession({ room: decoratingRoom(), player: ada, error: null });
     const { getByRole, getByText } = render(DecorationWindow, { props: { session } });
 

@@ -76,7 +76,7 @@ paired implementation commit.
   waiting-for-others state, and a submitted-count readout from
   `Room.coverSubmissions`. The client never advances to reveal itself — it
   waits for the server's `status` change. Confirm red.
-- [ ] T012 [artifacts: ui, datamodel] Implement the `decorating` window view
+- [x] T012 [artifacts: ui, datamodel] Implement the `decorating` window view
   and route `App` to it on `Room.status === 'decorating'`. Make T011 pass.
 - [ ] T013 [artifacts: ui] Write a failing test: during `writing`, the
   round-gated waiting state offers the cover-decoration canvas, and when the

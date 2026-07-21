@@ -1,6 +1,7 @@
 <script lang="ts">
   import Lobby from './lib/views/Lobby.svelte';
   import WritingDrawing from './lib/views/WritingDrawing.svelte';
+  import DecorationWindow from './lib/views/DecorationWindow.svelte';
   import Reveal from './lib/views/Reveal.svelte';
   import SalonFooter from './lib/components/SalonFooter.svelte';
   import RulesOverview from './lib/components/RulesOverview.svelte';
@@ -61,6 +62,8 @@
   <Lobby {session} />
 {:else if state.room.status === 'writing'}
   <WritingDrawing {session} />
+{:else if state.room.status === 'decorating'}
+  <DecorationWindow {session} />
 {:else if state.room.status === 'reveal'}
   <Reveal {session} />
 {:else if state.room.status === 'ended'}
