@@ -1,7 +1,16 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: 1.0.1 → 1.1.0
+Version change: 1.1.0 → 1.1.1
+Modified sections: Project Scope & Intent — clarification (PATCH, no
+principle added or redefined): maintainer/dev tooling that runs in Claude
+Code (the ArDD skills, audit-help-text, and the curation ingestion skill)
+is not part of the app runtime, so app-scope constraints — small private
+party game, no premature scaling — bound the shipped server/client, not
+maintainer tools. Prompted by the curation-data-aggregation-pipe plan,
+which adds an LLM-backed ingestion skill as maintainer tooling.
+
+Prior: Version change: 1.0.1 → 1.1.0
 Modified sections: Quality Standards — removed two standards found
 non-load-bearing on /ardd-refine --review: "Performance Budgets" (never
 satisfied across 5+ features shipped since it was written; a prior plan
@@ -21,7 +30,7 @@ exclusion, not a design gap)
 ---
 name: constitution
 status: stable
-last_updated: 2026-07-19
+last_updated: 2026-07-22
 workflow_mode: solo
 next_step_prompt: auto
 delegation: eager
@@ -40,6 +49,13 @@ translation. Sessions are small private groups joining via a room code —
 no accounts, no persistent identity beyond a session. Public lobbies and
 matchmaking are a possible future direction but are explicitly out of
 scope for v1 — no design work should assume or block on them arriving.
+
+"The app" means the shipped server and client. **Maintainer/dev tooling
+that runs in Claude Code — the ArDD skills, `audit-help-text`, and the
+curation ingestion skill ([[infrastructure]] Curation Store) — is not app
+runtime**: it ships no dependency into the server, touches no game state,
+and is not bound by app-scope constraints. So an LLM-backed maintainer
+tool is in scope even though the app itself runs no LLM.
 
 ## Core Principles
 
@@ -174,4 +190,4 @@ repository. Amendments require:
    for clarifications or wording fixes.
 4. `last_updated` date updated in frontmatter.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-13 | **Last Amended**: 2026-07-19
+**Version**: 1.1.1 | **Ratified**: 2026-07-13 | **Last Amended**: 2026-07-22

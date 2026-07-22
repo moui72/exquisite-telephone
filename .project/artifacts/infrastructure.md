@@ -1,8 +1,8 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-21
-diagram_status: current
+last_updated: 2026-07-22
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -224,6 +224,64 @@ directory is the normal first-run case, not a failure: it is created on
 first write, and a read that finds nothing yields an empty aggregate.
 Nothing about curation storage is ever fatal to boot — a lost curation
 file must never keep the game from starting.
+
+### Aggregation Pipe
+
+A deterministic, agent-free CLI (a `server`-package script) is the aggregate
+view's only reader (the store's `createCurationStore` reserves this — no
+boot-time fold). It reads `CURATION_DATA_PATH`'s event directory, folds it via
+the existing `aggregateEvents` (no new fold logic), and produces a
+**consolidated snapshot** of the curation view (`CurationData` — see
+[[datamodel]]). Three responsibilities:
+
+- **Sanitize for display.** Candidate `phrase` text is verbatim untrusted
+  player input; the pipe is the single chokepoint that neutralizes it for any
+  reader (a human curator's terminal today; an agent tomorrow — see Ingestion
+  Skill). Deterministic display-safety only: strip C0/C1 control chars and ESC
+  (`0x1B`) (terminal/ANSI injection), neutralize bidi overrides
+  (`U+202A–202E`, `U+2066–2069`) and zero-width characters (display spoofing).
+  **Output only** — never the fold's exact-text dedup key (which the fold
+  keeps distinct on purpose; normalizing it would silently merge phrases — see
+  [[datamodel]] Persisted Entities).
+- **Archive folded events (the `MAX_CURATION_EVENTS` remedy).** Write the
+  snapshot durably first (temp + `fsync` + atomic `rename`), *then* `rename`
+  the folded event files into a `curation-events-archive/<snapshot-ts>/`
+  directory on the same volume. "Folded" = successfully read, parsed, and
+  incorporated; a corrupt/skipped event is **not** folded and is left in place
+  (a lost rating stays visible, never swept away). Moving folded events out of
+  the live dir resets the count so the store accepts new ratings again;
+  archived events still occupy the volume (a later, out-of-scope offload
+  concern under the 50 MiB budget).
+- **Restart to refresh the cached count.** The running server seeds its
+  in-memory event count once and never re-reads the directory, so after an
+  archive run its cache is stale until the process restarts. The pipe is run
+  in a deploy/restart window; the deploy's restart re-seeds the count from the
+  now-smaller directory. No server↔pipe signaling is introduced (Principle I).
+
+### Ingestion Skill
+
+A repo-local Claude Code **maintainer tool** (a `.claude/skills/` skill, like
+`audit-help-text`) — **not app runtime**: it runs in Claude Code during
+curation, ships no dependency into the server, and touches no game state, so
+the "no LLM in the app" scope ([[constitution]]) is unchanged. It **read-only**
+fetches the pipe's snapshot from the Fly volume (`fly ssh sftp`/`console` —
+never a mutating `fly` command; dev reads the local path), analyzes the counts,
+and **recommends** deck additions (strong-vote `CandidatePhrase` entries judged
+against `shared/PROMPT_CRITERIA.md`) and removals (down-heavy bank
+`PromptRating` entries) as a **report a human applies** — it never edits
+`shared/src/phraseBank.ts`.
+
+Because it is an LLM ingesting untrusted player text, its design is the
+injection boundary the curation `Why:` describes. The defense is
+**architectural, not a string filter**: candidate text is fed as structured
+data (never instruction position), the skill treats candidate text as data
+that is *never* an instruction, it holds **no deck-write and no mutating-`fly`
+privilege**, and a human approves every change — so a successful injection
+degrades to at worst a rejected recommendation. It keeps a **ledger** of
+logged-but-not-decked candidates (disposition pending/rejected/promoted) and a
+separate **offensive-quarantine** file; both are **gitignored volume
+artifacts, never committed** to this public repo (see [[datamodel]] Persisted
+Entities).
 
 ## Export Pipeline (PNG)
 
@@ -488,9 +546,18 @@ above, and all of them are done.
   curation data is read by one human every few weeks, so losing the tail
   after 65,536 ratings is tolerable and the write path stays simple (a
   game turn that triggers a full store still succeeds and never learns
-  curation is full — it fails safely, logging once). The intended remedy
-  is the backlogged `curation-data-aggregation-pipe`, which would drain
-  and truncate the log on a schedule. The behavior and its inline
-  `PRODUCTION ANNOTATION` comment already exist at
-  `server/src/domain/curationStore.ts:225`; this records it where the
-  constitution requires a production annotation to live.
+  curation is full — it fails safely, logging once). The remedy is the
+  **Aggregation Pipe** (see Curation Store above): it archives folded events
+  out of the live directory, which resets the count so the store accepts new
+  ratings again — draining the cap without deleting evidence. The drop
+  behavior and its inline `PRODUCTION ANNOTATION` comment remain the
+  fallback for the window between pipe runs (and if the pipe is never run);
+  the cap has never been approached in practice (one human, every few weeks).
+- **Curation ingestion is recommend-only (human-in-the-loop)**: the ingestion
+  skill (see Curation Store — Ingestion Skill) never writes the deck or issues
+  a mutating `fly` command; it emits recommendations a human applies. This is
+  the deliberate safety boundary for feeding untrusted player text to an LLM —
+  a successful prompt-injection degrades to a rejected recommendation, never a
+  compromised deck. In production with higher volume or an automated apply
+  path, this would need a stronger provenance/authorization story before any
+  recommendation could land unattended.

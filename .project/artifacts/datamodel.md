@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-21
-diagram_status: current
+last_updated: 2026-07-22
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -169,6 +169,39 @@ There is no negative counterpart. A thumbs-down on a player-written
 phrase is not recorded anywhere: it has no destination (the phrase isn't
 in the bank, so there's no tally to decrement) and recording "someone
 disliked this player's writing" serves no purpose the curator needs.
+
+### Consolidated view sanitization (Aggregation Pipe)
+
+The Aggregation Pipe ([[infrastructure]] Curation Store) is the only reader
+of the aggregate view, and it sanitizes each `CandidatePhrase.phrase` for
+safe display before any reader sees it (control/escape and bidi/zero-width
+neutralization). **This is an output transform only — never the fold key.**
+The fold upserts candidates by *exact* text on purpose (near-miss wordings
+stay distinct — see `CandidatePhrase` above); sanitizing or normalizing the
+key would silently merge phrases the design keeps separate. `up`/`votes`
+counts and `firstLoggedAt` are unaffected.
+
+### CurationLedger and OffensiveQuarantine (maintainer artifacts)
+
+Two more shapes that outlive a process — but they are **maintainer tooling
+state, not game or curation-write state**: nothing in a running game or in the
+write path touches them; only the ingestion skill ([[infrastructure]] Curation
+Store — Ingestion Skill) reads and writes them, during curation.
+
+- **CurationLedger** — one entry per player-written candidate that has been
+  logged but is not in `CURATED_PHRASE_BANK`: `{ phrase (verbatim),
+  votes, firstSeenAt, disposition: pending | rejected | promoted }`. It is the
+  skill's durable review record — a candidate now in the deck becomes
+  `promoted` and drops out; the rest carry their disposition so a pass reviews
+  only genuinely new material ("new" = absent from the ledger).
+- **OffensiveQuarantine** — candidates the skill flags as potentially
+  offensive, kept in a **separate file** out of the normal review flow, never
+  auto-promoted.
+
+Both live beside `CURATION_DATA_PATH` on the Fly volume and are **gitignored,
+never committed** — this repo is public, and player-submitted-but-unaccepted
+text (the quarantine especially) must not enter its git history. Only
+human-approved additions ever reach the committed `CURATED_PHRASE_BANK`.
 
 ## Normalization Rules
 
