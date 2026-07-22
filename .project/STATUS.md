@@ -1,17 +1,17 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Slim-image curation-CLI fix planned and tasked.**
-`plan-curation-cli-prod-entrypoint-2026-07-22-bc34.md` (approved) →
-`tasks-curation-cli-prod-entrypoint-2206.md` (`ready`, 4 tasks). The bug: the
-scheduled/manual aggregate invoked `tsx src/curation/cli.ts`, absent from the
-slim prod image. The fix is small — the server `tsc` build already emits
-`server/dist/curation/cli.js` and the runtime image already copies
-`server/dist`, so it just repoints the workflow + SKILL + `infrastructure.md`
-at `node server/dist/curation/cli.js` (dev keeps `tsx`) and adds a regression
-guard. No behavior change, no image change. The consuming feedback is now
-`planned`; no open feedback remains.
+_Updated: 2026-07-22 (**Slim-image curation-CLI fix shipped to `main`; all
+queues empty.** `tasks-curation-cli-prod-entrypoint-2206.md` (4 tasks) is
+`completed` and merged, worktree reaped. The scheduled/on-machine aggregate now
+invokes the compiled `node server/dist/curation/cli.js` (workflow + SKILL +
+`infrastructure.md` updated); a new guard test (`server/src/curation/
+cli-dist.test.ts`, verified fail-if-absent) plus a `curation:aggregate:dist`
+script keep the compiled entrypoint from silently vanishing. Suite green (234
+server). This closes the curation feature's last thread — the scheduled
+aggregation is now genuinely runnable in prod.
 
-Nothing is in flight. Prod is on `v0.2.0`; beta has the tab restyle.)_
+Nothing is in flight. Backlog, feedback, and work queue are all empty. Prod on
+`v0.2.0`; beta on latest `main`.)_
 
 ## Artifacts Found
 
@@ -40,38 +40,33 @@ No violations.
 
 ## Code-vs-Artifact Defects
 
-- 0 recorded in DEFECTS.md (verified 2026-07-22). The slim-image CLI bug is
-  now captured as planned feedback (not recorded drift).
+- 0 defects — DEFECTS.md verified 2026-07-22. Artifacts match the code.
 
 ## Feedback
 
-- No open feedback — `feedback-curation-cli-slim-image-996e.md` is `planned`,
-  consumed by the plan above.
+- No open feedback.
 
 ## Feature Backlog
 
 - 0 backlogged · 0 planned · 0 tasked · 21 implemented · 1 subsumed — see
   `.project/features/`. Backlog empty.
 
-## Work Queue
-
-- `tasks-curation-cli-prod-entrypoint-2206.md` — plan
-  `plan-curation-cli-prod-entrypoint-2026-07-22-bc34.md`, no bound features
-  (feedback-driven): the only `ready` file; nothing else in flight.
-
 ## In Flight
 
-Nothing in flight — no worktrees, no in-progress tasks files.
+Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Deployment
 
 - **Prod:** `v0.2.0` at `ex-tel.ty-pe.com`.
-- **Beta:** current `main` at `beta-ex-tel.ty-pe.com` (tab restyle live once the
-  push's deploy finishes).
+- **Beta:** current `main` at `beta-ex-tel.ty-pe.com` (redeploys on the next
+  code push).
+- Local `main` is ahead of `origin` by this session's unpushed commits
+  (curation-CLI fix + docs) — the fix touches real code, so a push redeploys
+  beta.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: `/ardd-implement`
-the `tasks-curation-cli-prod-entrypoint-2206.md` fix (4 tasks) — this makes the
-scheduled aggregate actually runnable in prod. Then a `/ardd-diagram` pass for
-the three stale diagrams. Backlog and feedback are otherwise empty.
+0 issues found. Nothing planned or in flight. The only open loop is a
+`/ardd-diagram` pass to refresh the three stale diagrams (datamodel,
+infrastructure, ui) after this session's feature work; otherwise the project is
+at a clean rest. Push `main` to ship the fix to beta when ready.
