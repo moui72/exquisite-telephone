@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-cli-prod-entrypoint-2026-07-22-bc34.md
 generated: 2026-07-22
-status: ready
+status: in-progress
 ---
 
 # Tasks
