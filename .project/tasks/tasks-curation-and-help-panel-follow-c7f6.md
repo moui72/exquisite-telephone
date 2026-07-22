@@ -14,7 +14,7 @@ Principle III documentation/no-behavior-change exception.
 
 ## Phase 1: Curation-review skill fixes
 
-- [ ] T001 Fix the `curation-review` SKILL.md "Invoking the helper" snippet so
+- [x] T001 Fix the `curation-review` SKILL.md "Invoking the helper" snippet so
   the documented invocation actually runs: rewrite the `pnpm --filter server
   exec tsx -e '...'` example to avoid top-level `await` (wrap in an async IIFE,
   or point it at a small file). Verify by running the corrected snippet end to

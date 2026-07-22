@@ -105,20 +105,31 @@ committed.
 ### Invoking the helper
 
 The deterministic steps live in `server/src/curation/ledger.ts` and
-`server/src/curation/pipe.ts`. Run them with the server package's `tsx`,
-e.g. a short script:
+`server/src/curation/pipe.ts`. Run them with the server package's `tsx`.
+
+Build the shared package once first (`pnpm --filter shared build`) so
+`@exquisite-telephone/shared` resolves, then run a short script:
 
 ```
 pnpm --filter server exec tsx -e '
-  import { CURATED_PHRASE_BANK } from "@exquisite-telephone/shared";
-  import { readSnapshot, readLedger, reconcileLedger, analyzeCounts, ledgerPaths } from "./src/curation/ledger.js";
-  const dataPath = process.env.CURATION_DATA_PATH ?? "../.curation-data/curation.json";
-  const snapshot = await readSnapshot(dataPath);
-  const { ledgerPath } = ledgerPaths(dataPath);
-  const prior = await readLedger(ledgerPath);
-  const { ledger, promoted } = reconcileLedger(prior, snapshot, CURATED_PHRASE_BANK);
-  const { removalCandidates, additionCandidates } = analyzeCounts(snapshot);
-  console.log(JSON.stringify({ ledger, promoted, removalCandidates, additionCandidates }, null, 2));
+  // Two shapes are load-bearing here, do not "tidy" them away:
+  //  - the awaits live inside an async IIFE, because `tsx -e` compiles to
+  //    CJS and top-level await is a hard error there;
+  //  - the modules are pulled in with dynamic `await import(...)`, not
+  //    static `import`, because in the CJS eval path the static resolver
+  //    will not map the `./…​.js` specifier onto the `.ts` source.
+  void (async () => {
+    const { CURATED_PHRASE_BANK } = await import("@exquisite-telephone/shared");
+    const { readSnapshot, readLedger, reconcileLedger, analyzeCounts, ledgerPaths } =
+      await import("./src/curation/ledger.js");
+    const dataPath = process.env.CURATION_DATA_PATH ?? "../.curation-data/curation.json";
+    const snapshot = await readSnapshot(dataPath);
+    const { ledgerPath } = ledgerPaths(dataPath);
+    const prior = await readLedger(ledgerPath);
+    const { ledger, promoted } = reconcileLedger(prior, snapshot, CURATED_PHRASE_BANK);
+    const { removalCandidates, additionCandidates } = analyzeCounts(snapshot);
+    console.log(JSON.stringify({ ledger, promoted, removalCandidates, additionCandidates }, null, 2));
+  })();
 '
 ```
 
