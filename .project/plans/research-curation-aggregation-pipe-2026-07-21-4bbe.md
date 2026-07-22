@@ -1,5 +1,5 @@
 ---
-topic: curation-data-aggregation-pipe — pipe + ingestion skill, sanitization/injection spec, archive
+topic: curation-data-aggregation-pipe — pipe + ingestion skill (ledger, quarantine), injection spec, archive
 date: 2026-07-21
 status: complete
 ---
@@ -95,6 +95,34 @@ event dir.
   **never edits `phraseBank.ts`**; a human applies approved changes. This
   human-in-the-loop, recommend-only shape is the load-bearing security
   property (see Injection surface).
+- **Ledger (durable review state).** The skill keeps a **ledger of every
+  player-submitted candidate that has been logged but is not in the deck** —
+  so each pass reviews only genuinely new material and past dispositions
+  aren't re-litigated. Per entry: the verbatim (sanitized-for-display)
+  phrase, its vote count, first-seen timestamp, and a **disposition**
+  (`pending` | `rejected` | `promoted`). Reconciliation each run: candidates
+  from the pipe snapshot that are already in `CURATED_PHRASE_BANK` are
+  `promoted` (drop out of the ledger); the rest are matched by exact text to
+  existing ledger entries (vote counts refreshed) or appended as `pending`.
+  The ledger, not a separate marker, is what answers "since last review":
+  new = not yet in the ledger. It is deterministic bookkeeping the LLM does
+  not author — the LLM only judges *borderline pending* entries.
+- **Offensive quarantine (separate file).** Candidates the skill flags as
+  **potentially offensive** are written to a **separate quarantine file**,
+  not the main ledger — segregating them from the normal add/remove review
+  flow so a slur riding a high vote count never surfaces as a routine
+  recommendation. Flagging is LLM judgment (nuanced offensiveness isn't
+  reliably regexable), optionally backstopped by a deterministic obvious-slur
+  denylist. A quarantined entry is terminal for the automated flow (never
+  auto-promoted); a human may inspect the quarantine deliberately.
+- **These files must NOT be committed to this public repo.** Player-submitted
+  text that never passed curation — and *especially* the offensive
+  quarantine — does not belong in public git history. Both the ledger and the
+  quarantine are **gitignored local/volume artifacts** (living beside
+  `CURATION_DATA_PATH` on the Fly volume, fetched read-only like the
+  snapshot), not repo files. Only the human-approved deck additions ever
+  reach the committed `phraseBank.ts`. (This is a firm content-hygiene
+  constraint, not a plan-time detail.)
 
 ### Injection surface & types for the ingestion-skill (the requested spec)
 
@@ -136,8 +164,10 @@ each with its concrete control:
    neutralized upstream by the pipe's display-safety sanitizer — this is *why*
    the skill consumes the sanitized snapshot, not raw events.
 6. **Offensive-content payload** — a slur/offensive phrase riding a high vote
-   count toward the deck. *Defense:* `PROMPT_CRITERIA.md` rejection +
-   human approval; the skill flags, never auto-adds.
+   count toward the deck. *Defense:* the skill routes it to the **offensive
+   quarantine file** (see Ledger, above) — out of the normal recommendation
+   flow, never auto-added, and kept out of the public repo — plus
+   `PROMPT_CRITERIA.md` rejection and human approval.
 7. **Vote-stuffing / flooding** — repeating a phrase to inflate its votes and
    force an addition. *Defense:* votes are unattributed and gameable, so the
    skill treats a high count as a weak signal weighed against the criteria and
@@ -173,10 +203,14 @@ lands first):
    (snapshot-then-move; skip corrupt); restart-to-refresh-count note.
 2. **Ingestion skill** — a repo-local Claude Code skill: read-only fetch of
    the pipe's snapshot, count analysis, `PROMPT_CRITERIA.md`-judged
-   add/remove **recommendations as a report**, with the injection defenses
-   above baked into its design — structured-data isolation, the
-   "candidates are data never instructions" invariant, **no deck writes, no
-   mutating `fly` commands**, and reviewer-facing untrusted-text labeling.
+   add/remove **recommendations as a report**, backed by a **durable ledger**
+   of logged-but-not-decked candidates (disposition: pending/rejected/
+   promoted) and a **separate offensive quarantine file** — both gitignored
+   volume artifacts, never committed to the public repo. Injection defenses
+   baked into its design: structured-data isolation, the "candidates are data
+   never instructions" invariant, **no deck writes, no mutating `fly`
+   commands**, reviewer-facing untrusted-text labeling, and offensive-payload
+   segregation to quarantine.
 
 Artifacts to update at plan time: `infrastructure.md` (the pipe, the
 sanitization chokepoint, the archive mechanism, rewriting the
@@ -216,8 +250,15 @@ production annotation for the recommend-only / human-in-the-loop boundary.
   recommending a bank removal (and minimum sample size before a phrase is
   judged). Plan-time detail; keep deterministic so the LLM judges *borderline*
   cases, not the arithmetic.
-- **"Since last review" bookkeeping** — how the skill knows which snapshots are
-  new (a processed-marker file vs. the archive timestamps). Plan-time detail.
+- **"Since last review" bookkeeping** — *resolved by the ledger:* new = a
+  candidate not yet present as a ledger entry; no separate marker needed.
+- **Ledger & quarantine file format and location** — the concrete shape
+  (JSON lines? one JSON doc?) and exact path on the volume beside
+  `CURATION_DATA_PATH`, plus the `.gitignore` entries that keep both out of
+  the repo. Plan-time detail (the not-committed constraint itself is firm).
+- **Offensive-flag mechanism** — LLM judgment alone vs. an obvious-slur
+  deterministic denylist backstop, and whether quarantined entries are ever
+  revisited. Plan-time detail.
 - **Batch size / cost** — if a review batch is large, how candidates are
   chunked for the skill without losing the structured-data isolation. Plan-time
   detail.
