@@ -21,7 +21,8 @@ async function main(): Promise<void> {
     `[curation:aggregate] snapshot: ${result.jsonPath}\n` +
       `[curation:aggregate] summary:  ${result.summaryPath}\n` +
       `[curation:aggregate] folded ${result.foldedNames.length}, ` +
-      `skipped ${result.skippedNames.length}`,
+      `skipped ${result.skippedNames.length}` +
+      (result.archivedTo ? `\n[curation:aggregate] archived to ${result.archivedTo}` : ''),
   );
 }
 

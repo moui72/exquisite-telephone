@@ -1,4 +1,4 @@
-import { open, readdir, readFile, rename } from 'node:fs/promises';
+import { mkdir, open, readdir, readFile, rename } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { sanitizeForDisplay } from '@exquisite-telephone/shared';
 import {
@@ -117,6 +117,31 @@ export async function writeFileDurable(path: string, contents: string): Promise<
 }
 
 /**
+ * Moves the folded event files out of the live dir into
+ * `curation-events-archive/<snapshot-ts>/` via `rename` (same volume, so
+ * the rename is atomic and cheap). Only folded (parsed) names are passed
+ * in; corrupt/skipped files are never moved, so a lost rating stays
+ * visible in the live dir. Draining the live dir is what lets the store
+ * accept new ratings again (the `MAX_CURATION_EVENTS` remedy).
+ *
+ * Returns the archive directory, or `undefined` when nothing folded.
+ */
+export async function archiveFoldedEvents(
+  eventsDir: string,
+  foldedNames: string[],
+  snapshotTs: number,
+): Promise<string | undefined> {
+  if (foldedNames.length === 0) return undefined;
+  const archiveDir = join(dirname(eventsDir), 'curation-events-archive', String(snapshotTs));
+  await mkdir(archiveDir, { recursive: true });
+  for (const name of foldedNames) {
+    // resolveEventPath re-validates the name shape before we touch it.
+    await rename(resolveEventPath(eventsDir, name), join(archiveDir, name));
+  }
+  return archiveDir;
+}
+
+/**
  * The pipe entrypoint: fold the events under `dataPath`, sanitize
  * candidate text for display, and write the snapshot (JSON + readable
  * summary) durably. The archive step (Phase 3) runs after this.
@@ -134,6 +159,7 @@ export async function runAggregatePipe(
   summaryPath: string;
   foldedNames: string[];
   skippedNames: string[];
+  archivedTo: string | undefined;
 }> {
   const now = deps.now ?? Date.now;
   const writeFile = deps.writeFile ?? writeFileDurable;
@@ -150,15 +176,21 @@ export async function runAggregatePipe(
   await writeFile(jsonPath, `${JSON.stringify(snapshot, null, 2)}\n`);
   await writeFile(summaryPath, buildSummary(snapshot, generatedAt));
 
+  // Only AFTER the snapshot is durable: move the folded events aside,
+  // draining the live dir below the cap. `generatedAt` names the archive
+  // subdir so it correlates with the snapshot it was taken from.
+  const archivedTo = await archiveFoldedEvents(eventsDir, foldedNames, generatedAt);
+
   deps.logger.log({
     event: 'curation_pipe_snapshot',
     outcome: 'success',
     path: jsonPath,
     folded: foldedNames.length,
     skipped: skippedNames.length,
+    archivedTo: archivedTo ?? null,
   });
 
-  return { jsonPath, summaryPath, foldedNames, skippedNames };
+  return { jsonPath, summaryPath, foldedNames, skippedNames, archivedTo };
 }
 
 export type { CurationData, RatingEvent };

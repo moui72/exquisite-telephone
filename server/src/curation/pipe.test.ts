@@ -72,7 +72,7 @@ describe('aggregation pipe fold + display sanitization (T003)', () => {
 });
 
 describe('aggregation pipe archive of folded events (T005)', () => {
-  it.fails('archives folded events, leaves corrupt ones live, drains the dir', async () => {
+  it('archives folded events, leaves corrupt ones live, drains the dir', async () => {
     const dataPath = join(eventsDir, 'curation.json');
     const liveDir = join(eventsDir, 'curation-events');
     mkdirSync(liveDir);

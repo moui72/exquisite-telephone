@@ -48,7 +48,7 @@ exception and carry no test.
   event is NOT moved (left in the live dir), and the live event count is drained
   to only the un-folded remainder. Assert snapshot-before-move ordering (a
   failure to write the snapshot leaves events untouched). Confirm red.
-- [ ] T006 [artifacts: infrastructure] Implement the archive step in the pipe:
+- [x] T006 [artifacts: infrastructure] Implement the archive step in the pipe:
   durable snapshot (temp + fsync + atomic rename) first, then `rename` folded
   events into the archive subdir; skip corrupt/unfolded events. Make T005 pass.
 
