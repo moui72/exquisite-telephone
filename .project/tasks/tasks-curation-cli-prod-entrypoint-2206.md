@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-cli-prod-entrypoint-2026-07-22-bc34.md
 generated: 2026-07-22
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -12,7 +12,7 @@ compiled entrypoint runs from `server/dist`).
 
 ## Phase 1: Point machine-side callers at the compiled CLI
 
-- [ ] T001 [artifacts: infrastructure] Change
+- [x] T001 [artifacts: infrastructure] Change
   `.github/workflows/curation-aggregate.yml`'s aggregate step to run the
   compiled entrypoint on the machine — `fly ssh console -C 'node
   server/dist/curation/cli.js'` (working dir `/app`) — instead of `pnpm
@@ -20,14 +20,14 @@ compiled entrypoint runs from `server/dist`).
   present in the slim runtime image). Keep the per-channel jobs and the
   post-aggregate `fly apps restart`. Validate the workflow YAML parses.
   (feedback F001)
-- [ ] T002 [artifacts: infrastructure] Revise `infrastructure.md` Aggregation
+- [x] T002 [artifacts: infrastructure] Revise `infrastructure.md` Aggregation
   Pipe: state that the **prod / on-machine** run is the compiled `node
   server/dist/curation/cli.js` (emitted by the server `tsc` build — which
   excludes only tests — and copied into the slim runtime image), while `pnpm
   --filter server curation:aggregate` (`tsx`) is the **dev/local** form. Note
   that the `tsx` path does not exist on the deployed machine (no `src/`, no
   `tsx`). (feedback F001)
-- [ ] T003 Update the `curation-review` SKILL.md where it references running the
+- [x] T003 Update the `curation-review` SKILL.md where it references running the
   aggregation pipe: the on-machine/prod command is `node
   server/dist/curation/cli.js` (via `fly ssh console -C`), dev stays `pnpm
   --filter server curation:aggregate`. Keep the no-mutating-`fly` boundary
@@ -37,7 +37,7 @@ compiled entrypoint runs from `server/dist`).
 
 ## Phase 2: Guard against silent regression
 
-- [ ] T004 Add a guard so a future `tsconfig`/Dockerfile change that stops
+- [x] T004 Add a guard so a future `tsconfig`/Dockerfile change that stops
   emitting or shipping the compiled CLI fails loudly rather than breaking the
   next scheduled prod aggregate. Preferred: a server test (run after build, or
   that builds) asserting `server/dist/curation/cli.js` exists and is
