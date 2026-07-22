@@ -32,7 +32,7 @@ covered by the Phase-1 pure-function tests).
   defined and non-empty in a client build/test context. (test-after acceptable
   here — the define is build config; keep the composer's logic in the
   T001-tested function.)
-- [ ] T004 [artifacts: infrastructure] Declare `ARG APP_VERSION`,
+- [x] T004 [artifacts: infrastructure] Declare `ARG APP_VERSION`,
   `ARG BUILD_CHANNEL`, `ARG BUILD_SHA` in the Dockerfile and expose them (as
   env) to the client build step so Vite reads them. Verify the build still
   succeeds with and without the args set (args absent → dev fallback).

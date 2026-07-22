@@ -34,6 +34,17 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
 FROM base AS build
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile
+# App version build inputs (infrastructure.md — App Versioning), passed by
+# the deploying workflow as --build-arg and read by the client's Vite build
+# (client/vite.config.ts) to bake the channel-aware version string into the
+# bundle. All absent → the build falls back to the root package.json version
+# with channel=dev, so an arg-less `docker build` still succeeds.
+ARG APP_VERSION
+ARG BUILD_CHANNEL
+ARG BUILD_SHA
+ENV APP_VERSION=$APP_VERSION \
+    BUILD_CHANNEL=$BUILD_CHANNEL \
+    BUILD_SHA=$BUILD_SHA
 RUN pnpm run build
 
 # Slim runtime: only the compiled output and pruned node_modules needed
