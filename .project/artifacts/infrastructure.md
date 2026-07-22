@@ -275,7 +275,7 @@ single most repeated mistake in this repo's history.
 | Deploying workflow | `promote.yml` (manual dispatch) | `ci.yml` job `deploy-beta` (automatic) |
 | Concurrency group | `promote-release` | `deploy-beta` |
 | Deploys from branch | `release` | `main` |
-| Trigger | a human dispatches | any push to `main` |
+| Trigger | a human dispatches | any push to `main` that changes code |
 | Volume | `vol_r681m3no1nq5ex14` | `vol_vp2l1gyjj3lw9me4` |
 | Custom domain | `ex-tel.ty-pe.com` | `beta-ex-tel.ty-pe.com` |
 
@@ -283,9 +283,20 @@ Each channel has its own app, its own config, its own API token, and its
 own volume. Nothing is shared between them but the Dockerfile and the
 source tree.
 
-**Channel semantics.** Every push to `main` auto-deploys **beta** — so
-anything merged is live on beta within minutes, including any config
-mistake. Production deploys ONLY from the `release` branch, and `release`
+**Channel semantics.** Every push to `main` **that changes code**
+auto-deploys **beta** — so anything code-affecting merged is live on beta
+within minutes, including any config mistake. A **non-code push**
+(anything touching only `.project/` ArDD state, `README.md`, `CLAUDE.md`,
+`LICENSE.md`, or `.github/` — workflows and badges included, since a CI or
+badge change doesn't alter the running app) **skips the beta deploy** — it
+would only re-ship an identical app. The gate is a `changes` job in
+`ci.yml` that diffs the pushed range and sets an output the `deploy-beta`
+job's `if` consults; `pnpm-lock.yaml`, the Dockerfile, and the fly configs
+live at repo root (not under `.github/`) and are deliberately **not**
+treated as docs, so a change to any of them still deploys. The `checks` job (lint,
+type-check, test, config-lockstep) still runs on **every** push and PR —
+only the *deploy* is gated, so a docs-only PR never stalls waiting on a
+skipped required check. Production deploys ONLY from the `release` branch, and `release`
 only ever receives a **fast-forward of `main`** — it is never developed
 on directly and never diverges. `.github/workflows/ci.yml` does not run
 on `release` at all: it triggers on pushes to `main` and on pull

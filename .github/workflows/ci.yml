@@ -33,10 +33,59 @@ jobs:
       # already passed here.
       - run: pnpm run check:fly
 
+  # Gate the beta deploy on whether a push actually changed code. Beta was
+  # auto-deploying on *every* push to main, including pushes that touch only
+  # docs / repo metadata (`.project/` ArDD state, README, `.github/`
+  # workflows and badges), which re-ship an identical app for no reason.
+  # `checks` still runs on every push — only the deploy is gated — so a
+  # docs-only PR never stalls waiting on a skipped required check.
+  changes:
+    name: Detect code changes
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Need history for both ends of the pushed range to diff them.
+          fetch-depth: 0
+      - id: filter
+        # "Code" is everything EXCEPT docs / ArDD project state / `.github/`
+        # repo metadata. Note pnpm-lock.yaml is NOT excluded (it lives at
+        # repo root, not under .github/), so a lockfile-only change counts
+        # as code and deploys; the Dockerfile and fly configs likewise stay
+        # code. When the base is unknown (first push, force push), deploy to
+        # be safe rather than silently skip.
+        run: |
+          base='${{ github.event.before }}'
+          if [ -z "$base" ] || [ "$base" = '0000000000000000000000000000000000000000' ]; then
+            base="$(git rev-parse HEAD~1 2>/dev/null || true)"
+          fi
+          if [ -z "$base" ]; then
+            echo 'no comparison base; treating as a code change' >&2
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed="$(git diff --name-only "$base" '${{ github.sha }}')"
+          echo 'changed files:'
+          printf '%s\n' "$changed"
+          # Lines that are NOT docs/project state are code. `|| true` keeps
+          # the step from failing when grep selects nothing (exit 1).
+          code_files="$(printf '%s\n' "$changed" | grep -vE '^(\.project/|\.github/|README\.md$|CLAUDE\.md$|LICENSE\.md$)' || true)"
+          if [ -n "$code_files" ]; then
+            echo 'code changes detected:'
+            printf '%s\n' "$code_files"
+            echo 'code=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'docs-only push — skipping beta deploy'
+            echo 'code=false' >> "$GITHUB_OUTPUT"
+          fi
+
   deploy-beta:
     name: Deploy beta (main)
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: checks
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.code == 'true'
+    needs: [checks, changes]
     runs-on: ubuntu-latest
     concurrency: deploy-beta
     steps:
