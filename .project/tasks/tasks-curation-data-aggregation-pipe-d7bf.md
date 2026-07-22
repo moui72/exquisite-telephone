@@ -15,7 +15,7 @@ exception and carry no test.
 
 ## Phase 1: Display-safety sanitizer (pure)
 
-- [ ] T001 [artifacts: datamodel] Write a failing test for a pure
+- [x] T001 [artifacts: datamodel] Write a failing test for a pure
   `sanitizeForDisplay(phrase: string): string` in `shared/` — asserts it strips
   C0/C1 control characters and ESC (`0x1B`), removes bidi overrides
   (`U+202A–202E`, `U+2066–2069`) and zero-width chars (`U+200B–200D`, `U+FEFF`),
