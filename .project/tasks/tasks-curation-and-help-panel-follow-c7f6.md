@@ -40,7 +40,7 @@ Principle III documentation/no-behavior-change exception.
   restart after aggregating, or document the staleness) and which channel(s) it
   targets (see the plan's Open Questions — settle at implementation). Validate
   the workflow YAML parses. (feedback F003, curation)
-- [ ] T004 [artifacts: infrastructure] Revise `infrastructure.md` Aggregation
+- [x] T004 [artifacts: infrastructure] Revise `infrastructure.md` Aggregation
   Pipe: replace the "run in a deploy/restart window" manual-run wording with the
   scheduled-workflow model (naming `curation-aggregate.yml`, the weekly cadence,
   and the cached-count/restart handling chosen in T003). (feedback F003,

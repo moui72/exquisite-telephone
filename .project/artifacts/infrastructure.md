@@ -254,9 +254,15 @@ the existing `aggregateEvents` (no new fold logic), and produces a
   concern under the 50 MiB budget).
 - **Restart to refresh the cached count.** The running server seeds its
   in-memory event count once and never re-reads the directory, so after an
-  archive run its cache is stale until the process restarts. The pipe is run
-  in a deploy/restart window; the deploy's restart re-seeds the count from the
-  now-smaller directory. No server↔pipe signaling is introduced (Principle I).
+  archive run its cache is stale until the process restarts. A scheduled
+  GitHub Actions workflow (`.github/workflows/curation-aggregate.yml`) owns
+  this: weekly (a fixed-UTC cron, ~Sunday 02:00 America/New_York with an
+  accepted ±1h DST drift) plus manual `workflow_dispatch`, it runs the pipe
+  via `fly ssh console` and then `fly apps restart`s the app so the count
+  re-seeds from the now-smaller directory. It runs per channel — beta and
+  prod each own a separate volume, so each is aggregated and restarted with
+  its own Fly token. No server↔pipe signaling is introduced (Principle I);
+  the restart is the whole coupling.
 
 ### Ingestion Skill
 
