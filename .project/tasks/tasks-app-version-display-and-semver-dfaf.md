@@ -21,7 +21,7 @@ covered by the Phase-1 pure-function tests).
   `vX.Y.Z-beta+<sha>` for `channel==='beta'`; `vX.Y.Z-dev` for
   `channel==='dev'` (or absent). Assert each form and that a missing sha on
   beta degrades gracefully. Confirm red.
-- [ ] T002 [artifacts: infrastructure] Implement the composer per T001. Make it
+- [x] T002 [artifacts: infrastructure] Implement the composer per T001. Make it
   pass.
 - [ ] T003 [artifacts: infrastructure] Add a Vite `define` in
   `client/vite.config.ts` that supplies `{ version, channel, sha }` from

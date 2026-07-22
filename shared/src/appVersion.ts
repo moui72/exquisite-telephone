@@ -24,7 +24,10 @@ export interface VersionInputs {
  *   - beta → `vX.Y.Z-beta+<sha>` (or `vX.Y.Z-beta` when sha is absent)
  *   - dev / absent / anything else → `vX.Y.Z-dev`
  */
-export function composeVersionString(_inputs: VersionInputs): string {
-  // Not implemented (T001 red stub — real logic lands in T002).
-  return '';
+export function composeVersionString({ version, channel, sha }: VersionInputs): string {
+  const base = `v${version}`;
+  if (channel === 'prod') return base;
+  if (channel === 'beta') return sha ? `${base}-beta+${sha}` : `${base}-beta`;
+  // dev, absent, or anything unrecognized.
+  return `${base}-dev`;
 }
