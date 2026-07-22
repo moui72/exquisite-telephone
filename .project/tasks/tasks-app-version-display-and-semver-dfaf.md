@@ -23,7 +23,7 @@ covered by the Phase-1 pure-function tests).
   beta degrades gracefully. Confirm red.
 - [x] T002 [artifacts: infrastructure] Implement the composer per T001. Make it
   pass.
-- [ ] T003 [artifacts: infrastructure] Add a Vite `define` in
+- [x] T003 [artifacts: infrastructure] Add a Vite `define` in
   `client/vite.config.ts` that supplies `{ version, channel, sha }` from
   `process.env` (`APP_VERSION`, `BUILD_CHANNEL`, `BUILD_SHA`), defaulting
   `version` to the root `package.json` version and `channel` to `dev` when the
