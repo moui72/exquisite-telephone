@@ -1,30 +1,21 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**App version display + semver releases shipped to
-`main`.** `tasks-app-version-display-and-semver-dfaf.md` (11 tasks, TDD) is
-`completed` and merged, worktree reaped. Feature
-`app-version-display-and-semver` → `implemented`. Full suite green.
+_Updated: 2026-07-22 (**v0.2.0 shipped to prod; follow-up plan tasked.** The
+prod promotion cut the first real semver release — `package.json` bumped to
+`0.2.0`, tag `v0.2.0`, GitHub release, prod deployed. Local `main` rebased onto
+the bump (linear history preserved).
 
-Delivered: a channel-aware version composer (`shared/appVersion.ts`) — prod
-`v0.1.0`, beta `v0.1.0-beta+<sha>`, dev `v0.1.0-dev` — baked into the client at
-build time via a Vite `define` fed by Dockerfile `ARG`s; shown muted in the
-Salon Footer and prominently in the About tab; `ci.yml` `deploy-beta` passes
-the beta build-args (version + sha) while keeping the code-change deploy gate;
-`promote.yml` gains a `bump` dispatch input (default `patch`) and, on
-promotion, auto-bumps `package.json`, commits to `main`, fast-forwards
-`release`, tags `vX.Y.Z`, creates the GitHub release, and versions the prod
-deploy. The subagent caught and fixed a real bug (empty-string build env vs.
-`undefined` → `v-dev`).
+Both open feedback files were consumed into one approved plan,
+`plan-curation-and-help-panel-follow-2026-07-22-4cab.md` →
+`tasks-curation-and-help-panel-follow-c7f6.md` (`ready`, 6 tasks, 3 independent
+phases): (1) fix the `curation-review` SKILL.md `tsx -e` snippet + add a
+read-only snapshot self-fetch offer; (2) a weekly `curation-aggregate.yml`
+workflow replacing the manual aggregate run (revises the infrastructure
+Aggregation Pipe model — a reconsidered decision); (3) restyle the help-panel
+Rules|About tab buttons via `/frontend-design` (revises ui Rules Overview
+Panel). No open feedback remains.
 
-**`/ardd-defects` ran clean** (2026-07-22): a full artifact-vs-code survey
-found no other drift from that `git checkout --theirs` merge — the About-tab
-restoration was the only casualty and it's fixed. Safe to cut a tagged prod
-release. The curation follow-up feedback
-(`feedback-curation-pipe-followups-b8ae.md`, 3 items) is still open for its own
-run.
-
-Nothing is in flight. `main` is pushed to `origin` (beta deploy triggered by
-that push); prod not yet promoted.)_
+Nothing is in flight.)_
 
 ## Artifacts Found
 
@@ -35,52 +26,59 @@ that push); prod not yet promoted.)_
 | infrastructure.md | stable ✅ | — |
 | ui.md | stable ✅ | — |
 
-No `[OPEN: ...]` items outstanding.
+No `[OPEN: ...]` items outstanding. (The plan carries 3 Open Questions —
+aggregation channel targeting, cached-count/restart handling, exact UTC cron
+time — to settle at implementation.)
 
 ## Cross-Artifact Issues
 
-None (lint clean). The shipped version plumbing matches `infrastructure.md`
-App Versioning and `ui.md` Salon Footer / Rules Overview Panel.
+None (lint clean).
 
 ## Constitution Compliance
 
-No violations. Build-time injection (Principle I); `package.json` as version
-source (Manifest/Script Hygiene); the `promote.yml` bump-commit deviation is
-recorded in the plan's Complexity Tracking.
+No violations.
 
 ## Diagrams
 
 - datamodel.md — stale ⚠️ (curation ledger/quarantine — run /ardd-diagram datamodel)
 - infrastructure.md — stale ⚠️ (curation pipe/skill + App Versioning — run /ardd-diagram infrastructure)
-- ui.md — stale ⚠️ (About tab restored + version display — run /ardd-diagram ui)
+- ui.md — stale ⚠️ (About tab + version display — run /ardd-diagram ui)
 
 ## Code-vs-Artifact Defects
 
-- 0 defects — DEFECTS.md verified 2026-07-22. A full artifact-vs-code survey
-  (extra scrutiny on `ui.md` after the About-tab drift) found **no other
-  merge-loss drift**; every artifact matches the code.
+- 0 defects — DEFECTS.md verified 2026-07-22. Artifacts match the code.
 
 ## Feedback
 
-- 2 open feedback files (unrelated — plan separately):
-  - `feedback-curation-pipe-followups-b8ae.md` (3 items: SKILL.md `tsx -e` bug;
-    skill self-fetch UX; weekly scheduled aggregate workflow).
-  - `feedback-help-pane-tab-button-styling-8637.md` (1 UX item: restyle the
-    About/help panel tab buttons via the frontend-design skill).
+- No open feedback — both files (`feedback-curation-pipe-followups-b8ae.md`,
+  `feedback-help-pane-tab-button-styling-8637.md`) are `planned`, consumed by
+  the plan above.
 
 ## Feature Backlog
 
 - 0 backlogged · 0 planned · 0 tasked · 21 implemented · 1 subsumed — see
-  `.project/features/`. Backlog and work queue are both empty.
+  `.project/features/`. Backlog empty.
+
+## Work Queue
+
+- `tasks-curation-and-help-panel-follow-c7f6.md` — plan
+  `plan-curation-and-help-panel-follow-2026-07-22-4cab.md`, no bound features
+  (feedback-driven): the only `ready` file; nothing else in flight.
 
 ## In Flight
 
-Nothing in flight — no worktrees, no ready or in-progress tasks files.
+Nothing in flight — no worktrees, no in-progress tasks files.
+
+## Deployment
+
+- **Prod:** `v0.2.0` (promoted this session) at `ex-tel.ty-pe.com`.
+- **Beta:** current `main` at `beta-ex-tel.ty-pe.com`.
+- Local `main` is ahead of `origin` by unpushed `.project/` docs commits (the
+  v0.2.0 rebase + this plan run) — docs-only, so pushing won't redeploy beta.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. No ready work remains. Recommended next
-steps, in rough priority: (1) **promote to prod** — `main` is pushed and
-beta-deployed, defects are clean, so a `promote.yml` dispatch will cut the
-first real semver tag; (2) plan the curation follow-up feedback; (3) a
-`/ardd-diagram` pass for the three stale diagrams.
+0 issues found. Safe to /plan: yes. Recommended next step: `/ardd-implement`
+the `tasks-curation-and-help-panel-follow-c7f6.md` file (6 tasks; Phase 3
+invokes `/frontend-design` for the tab buttons). Then a `/ardd-diagram` pass
+for the three stale diagrams. Backlog and feedback are both empty.
