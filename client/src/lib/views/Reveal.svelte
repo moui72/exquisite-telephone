@@ -8,6 +8,7 @@
   import GiltFrame from '../components/GiltFrame.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
+  import { coverTemplateBackground } from '../covers/templateArt.js';
 
   /**
    * Renders Room.status == 'reveal' (ui.md Reveal View): a self-guided
@@ -279,11 +280,20 @@
           >
             {#if book.cover}
               <!-- The card face is the origin author's decorated cover
-                   (ui.md Reveal View): the drawn ops replayed read-only.
-                   The coverTemplate background beneath the ink lands in
-                   T020. -->
-              <div class="flex h-40 w-full items-center justify-center overflow-hidden rounded bg-white">
-                <DrawingCanvas ops={book.cover} readOnly />
+                   (ui.md Reveal View): the drawn ops replayed read-only over
+                   the coverTemplate background, if any (parity with the
+                   easel — the ink stays on top and legible). -->
+              {@const templateBg = coverTemplateBackground(book.coverTemplate ?? null)}
+              <div class="relative flex h-40 w-full items-center justify-center overflow-hidden rounded bg-white">
+                {#if templateBg}
+                  <div
+                    data-cover-template={book.coverTemplate}
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-0 opacity-20"
+                    style="background: {templateBg};"
+                  ></div>
+                {/if}
+                <DrawingCanvas ops={book.cover} readOnly transparent={templateBg !== ''} />
               </div>
             {:else}
               <svg

@@ -463,7 +463,7 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
 });
 
 describe('Reveal card face — template background parity (T019/T020)', () => {
-  it.fails('renders the coverTemplate background beneath the ink on the card face', () => {
+  it('renders the coverTemplate background beneath the ink on the card face', () => {
     const templated: Book = {
       id: 'book-a',
       roomId,

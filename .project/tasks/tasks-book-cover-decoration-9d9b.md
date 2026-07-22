@@ -1,7 +1,7 @@
 ---
 plan: plan-book-cover-decoration-2026-07-21-589c.md
 generated: 2026-07-21
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -106,5 +106,5 @@ paired implementation commit.
 - [x] T019 [artifacts: ui] Write a failing test that a templated cover renders
   its `coverTemplate` background beneath the ink on the Reveal card face too
   (parity with the easel). Confirm red.
-- [ ] T020 [artifacts: ui] Implement the template background rendering on the
+- [x] T020 [artifacts: ui] Implement the template background rendering on the
   Reveal card face per T019. Make it pass.

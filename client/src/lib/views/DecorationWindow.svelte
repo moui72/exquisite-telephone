@@ -23,9 +23,12 @@
   const WINDOW_MS = 120_000;
 
   let draftOps: DrawOps = [];
-  // Templates land in T018; the window submits `null` until then.
   let coverTemplate: string | null = null;
   let presented = false;
+
+  function handleTemplateChange(id: string | null) {
+    coverTemplate = id;
+  }
 
   // Ticks the shared countdown once a second (registered/torn down across
   // the component lifecycle — constitution touch/timer cleanup standard).
@@ -97,6 +100,8 @@
       ops={draftOps}
       onOpsChange={handleOpsChange}
       monochromeOnly={room?.monochromeOnly ?? false}
+      {coverTemplate}
+      onTemplateChange={handleTemplateChange}
     />
   {/if}
 

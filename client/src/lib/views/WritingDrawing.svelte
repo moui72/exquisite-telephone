@@ -106,8 +106,14 @@
       ? Math.min(GRACE_MS / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
       : null;
 
+  // Client-local draft cover template (ui.md Cover Decoration), paired with
+  // the draft ink; both are finalized later, in the decorating window.
+  let coverDraftTemplate: string | null = null;
   function handleCoverOpsChange(ops: DrawOps) {
     coverDraftOps = ops;
+  }
+  function handleCoverTemplateChange(id: string | null) {
+    coverDraftTemplate = id;
   }
 
   // Reset local draft state only when the *identity* of the assigned turn
@@ -286,6 +292,8 @@
         ops={coverDraftOps}
         onOpsChange={handleCoverOpsChange}
         monochromeOnly={state.room?.monochromeOnly ?? false}
+          coverTemplate={coverDraftTemplate}
+          onTemplateChange={handleCoverTemplateChange}
       />
     {/if}
   {:else if !myTurn}
@@ -299,6 +307,8 @@
           ops={coverDraftOps}
           onOpsChange={handleCoverOpsChange}
           monochromeOnly={state.room?.monochromeOnly ?? false}
+          coverTemplate={coverDraftTemplate}
+          onTemplateChange={handleCoverTemplateChange}
         />
       {/if}
     {:else}

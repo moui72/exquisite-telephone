@@ -1,6 +1,6 @@
 ---
 slug: book-cover-decoration
-status: tasked
+status: implemented
 logged: 2026-07-21
 plan: plan-book-cover-decoration-2026-07-21-589c.md
 tasks: tasks-book-cover-decoration-9d9b.md
