@@ -9,6 +9,7 @@
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
   import { coverTemplateBackground } from '../covers/templateArt.js';
+  import { SvelteSet } from 'svelte/reactivity';
 
   /**
    * Renders Room.status == 'reveal' (ui.md Reveal View): a self-guided
@@ -36,7 +37,7 @@
   let openBookId: string | null = null;
   let pageByBook: Record<string, number> = {};
   let revealAll = false;
-  let viewedBooks = new Set<string>();
+  let viewedBooks = new SvelteSet<string>();
 
   function sortedEntries(book: Book): Entry[] {
     return [...book.entries].sort((a, b) => a.position - b.position);
@@ -76,7 +77,7 @@
     if (!(bookId in pageByBook)) {
       pageByBook = { ...pageByBook, [bookId]: 0 };
     }
-    viewedBooks = new Set(viewedBooks).add(bookId);
+    viewedBooks.add(bookId);
     revealAll = false;
     openBookId = bookId;
     void session.setReadingBook(bookId);
