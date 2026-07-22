@@ -21,7 +21,7 @@
     "@testing-library/svelte": "^5.2.4",
     "@tsconfig/svelte": "^5.0.8",
     "@types/node": "^24.13.2",
-    "autoprefixer": "^10.4.20",
+    "autoprefixer": "^10.5.4",
     "jsdom": "^25.0.1",
     "postcss": "^8.4.47",
     "svelte": "^5.56.4",
