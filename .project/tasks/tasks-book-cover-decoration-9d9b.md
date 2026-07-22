@@ -103,7 +103,7 @@ paired implementation commit.
   background beneath the ink, switchable without clearing the ink. Confirm red.
 - [x] T018 [artifacts: ui] Implement the template picker and low-opacity
   background rendering on the decoration canvas per T017. Make it pass.
-- [ ] T019 [artifacts: ui] Write a failing test that a templated cover renders
+- [x] T019 [artifacts: ui] Write a failing test that a templated cover renders
   its `coverTemplate` background beneath the ink on the Reveal card face too
   (parity with the easel). Confirm red.
 - [ ] T020 [artifacts: ui] Implement the template background rendering on the

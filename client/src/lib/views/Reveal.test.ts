@@ -461,3 +461,28 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
     expect(coverArt).toHaveLength(1);
   });
 });
+
+describe('Reveal card face — template background parity (T019/T020)', () => {
+  it.fails('renders the coverTemplate background beneath the ink on the card face', () => {
+    const templated: Book = {
+      id: 'book-a',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        { id: 'ea0', bookId: 'book-a', authorId: ada.id, position: 0, type: 'text', content: 'phrase A' },
+      ],
+      cover: [{ type: 'stroke', points: [{ x: 0, y: 0 }, { x: 5, y: 5 }], color: '#000', width: 3 }],
+      coverTemplate: 'houndstooth',
+    };
+    const room = makeRoom({ books: [templated] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+    const { container, getAllByLabelText } = render(Reveal, { props: { session } });
+
+    // The template background is present on the card face...
+    const bg = container.querySelector('[data-cover-template="houndstooth"]');
+    expect(bg).not.toBeNull();
+    expect(bg?.className ?? '').toMatch(/opacity-/);
+    // ...with the drawn ink replayed on top (parity with the easel).
+    expect(getAllByLabelText('Drawing preview').length).toBeGreaterThanOrEqual(1);
+  });
+});
