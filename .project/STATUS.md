@@ -16,14 +16,15 @@ promotion, auto-bumps `package.json`, commits to `main`, fast-forwards
 deploy. The subagent caught and fixed a real bug (empty-string build env vs.
 `undefined` → `v-dev`).
 
-**Still to run:** a `/ardd-defects` pass — the About-tab drift fixed last plan
-means the earlier Reveal-rework merge (`git checkout --theirs` on `ui.md`) may
-have dropped other artifact content the same way. The curation follow-up
-feedback (`feedback-curation-pipe-followups-b8ae.md`, 3 items) is still open
-for its own run.
+**`/ardd-defects` ran clean** (2026-07-22): a full artifact-vs-code survey
+found no other drift from that `git checkout --theirs` merge — the About-tab
+restoration was the only casualty and it's fixed. Safe to cut a tagged prod
+release. The curation follow-up feedback
+(`feedback-curation-pipe-followups-b8ae.md`, 3 items) is still open for its own
+run.
 
-Nothing is in flight. Local `main` is 38 commits ahead of `origin`, none
-deployed yet.)_
+Nothing is in flight. `main` is pushed to `origin` (beta deploy triggered by
+that push); prod not yet promoted.)_
 
 ## Artifacts Found
 
@@ -55,9 +56,9 @@ recorded in the plan's Complexity Tracking.
 
 ## Code-vs-Artifact Defects
 
-- 0 recorded in DEFECTS.md (last checked 2026-07-21). **A `/ardd-defects` pass
-  is due** — the About-tab drift found this session is evidence the
-  Reveal-rework merge may have dropped other artifact content.
+- 0 defects — DEFECTS.md verified 2026-07-22. A full artifact-vs-code survey
+  (extra scrutiny on `ui.md` after the About-tab drift) found **no other
+  merge-loss drift**; every artifact matches the code.
 
 ## Feedback
 
@@ -76,8 +77,7 @@ Nothing in flight — no worktrees, no ready or in-progress tasks files.
 ## Summary
 
 0 issues found. Safe to /plan: yes. No ready work remains. Recommended next
-steps, in rough priority: (1) **push `main`** (38 commits — curation + app
-version) to ship to beta, then eyeball `beta-ex-tel.ty-pe.com` and promote to
-prod (which will cut the first real semver tag); (2) **`/ardd-defects`** to
-check for other merge-loss drift; (3) plan the curation follow-up feedback;
-(4) a `/ardd-diagram` pass for the three stale diagrams.
+steps, in rough priority: (1) **promote to prod** — `main` is pushed and
+beta-deployed, defects are clean, so a `promote.yml` dispatch will cut the
+first real semver tag; (2) plan the curation follow-up feedback; (3) a
+`/ardd-diagram` pass for the three stale diagrams.
