@@ -91,7 +91,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --config fly.staging.toml --remote-only
+      # Bake the channel-aware version into the beta bundle (infrastructure.md
+      # — App Versioning). The X.Y.Z is the last tagged release (the current
+      # root package.json value) and the short sha identifies exactly which
+      # beta build a report came from, so the composed string is
+      # vX.Y.Z-beta+<sha>.
+      - name: Deploy beta
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          sha="$(git rev-parse --short=7 HEAD)"
+          flyctl deploy --config fly.staging.toml --remote-only \
+            --build-arg APP_VERSION="$version" \
+            --build-arg BUILD_CHANNEL=beta \
+            --build-arg BUILD_SHA="$sha"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
 

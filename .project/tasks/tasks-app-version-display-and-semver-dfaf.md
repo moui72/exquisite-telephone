@@ -54,7 +54,7 @@ covered by the Phase-1 pure-function tests).
 
 ## Phase 3: Beta build-arg wiring (ci.yml)
 
-- [ ] T009 [artifacts: infrastructure] Update `ci.yml`'s `deploy-beta` job to
+- [x] T009 [artifacts: infrastructure] Update `ci.yml`'s `deploy-beta` job to
   pass `--build-arg APP_VERSION=<root package.json version> --build-arg
   BUILD_CHANNEL=beta --build-arg BUILD_SHA=<short sha of the pushed commit>` to
   `flyctl deploy`. Validate the workflow YAML parses; confirm (by the Phase-1
