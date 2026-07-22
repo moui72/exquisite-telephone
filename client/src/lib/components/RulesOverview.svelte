@@ -57,16 +57,27 @@
     aria-label="How this salon works"
   >
     <GiltFrame caption="A Docent's Explanation">
-      <div role="tablist" aria-label="Salon information" class="mb-3 flex gap-1 border-b border-marigold/30">
+      <!--
+        Tabs as engraved brass placards (ui.md Rules Overview Panel). The
+        utility face (Space Mono, uppercase, letter-spaced) sets them apart
+        from the Fraunces/Rubik body copy and reads as a museum label. The
+        selected tab is a lit gilt plaque — solid marigold with dark velvet
+        text and a gilt chamfer edge; the unselected tab recedes (muted ink,
+        a faint marigold wash and text lift on hover). aria-selected, the
+        tablist/tab/tabpanel roles, and native button focus are preserved;
+        a marigold focus ring gives keyboard affordance.
+      -->
+      <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-1.5 border-b border-marigold/40">
         <button
           type="button"
           role="tab"
           id="rules-tab"
           aria-selected={activeTab === 'rules'}
           aria-controls="rules-panel"
-          class="chamfer-frame chamfer-slim min-h-9 px-4 text-sm font-medium {activeTab === 'rules'
-            ? 'bg-marigold/20 text-ink'
-            : 'text-ink/60 hover:text-ink'}"
+          class="chamfer-frame chamfer-slim min-h-9 px-4 font-mono text-xs font-medium uppercase tracking-[0.15em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-1 {activeTab ===
+          'rules'
+            ? 'bg-marigold text-velvet shadow-sm [--chamfer-color:theme(colors.marigold)]'
+            : 'text-ink/50 hover:bg-marigold/10 hover:text-ink'}"
           on:click={() => (activeTab = 'rules')}
         >
           Rules
@@ -77,9 +88,10 @@
           id="about-tab"
           aria-selected={activeTab === 'about'}
           aria-controls="about-panel"
-          class="chamfer-frame chamfer-slim min-h-9 px-4 text-sm font-medium {activeTab === 'about'
-            ? 'bg-marigold/20 text-ink'
-            : 'text-ink/60 hover:text-ink'}"
+          class="chamfer-frame chamfer-slim min-h-9 px-4 font-mono text-xs font-medium uppercase tracking-[0.15em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-1 {activeTab ===
+          'about'
+            ? 'bg-marigold text-velvet shadow-sm [--chamfer-color:theme(colors.marigold)]'
+            : 'text-ink/50 hover:bg-marigold/10 hover:text-ink'}"
           on:click={() => (activeTab = 'about')}
         >
           About

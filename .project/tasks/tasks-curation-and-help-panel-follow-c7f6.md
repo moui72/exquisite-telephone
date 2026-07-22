@@ -48,7 +48,7 @@ Principle III documentation/no-behavior-change exception.
 
 ## Phase 3: Help-panel tab-button restyle
 
-- [ ] T005 [artifacts: ui] Restyle the Rules | About tab buttons in
+- [x] T005 [artifacts: ui] Restyle the Rules | About tab buttons in
   `client/src/lib/components/RulesOverview.svelte`, applying
   `/frontend-design:frontend-design` guidance: theme-consistent
   (Marigold/gilt, the Fraunces/Rubik/Space Mono type system), a clear
