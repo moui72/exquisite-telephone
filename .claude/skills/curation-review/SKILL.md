@@ -56,9 +56,11 @@ read-only w.r.t. the deck. Do not add a write path to it.
   - `fly ssh console -C 'cat <curation-dir>/curation-snapshot.json'` and save the output.
   Both are read-only reads of an already-produced snapshot; neither writes
   remote state, so the no-mutating-`fly` boundary holds. Producing a *fresh*
-  snapshot (`pnpm --filter server curation:aggregate`) is a separate,
-  scheduled concern (the `curation-aggregate.yml` workflow — see
-  `infrastructure.md` Aggregation Pipe), **not** part of this review.
+  snapshot is a separate, scheduled concern (the `curation-aggregate.yml`
+  workflow — see `infrastructure.md` Aggregation Pipe), **not** part of this
+  review. On-machine/prod that aggregate runs the compiled `node
+  server/dist/curation/cli.js` (via `fly ssh console -C`, since the slim
+  image has no `src/`/`tsx`); dev is `pnpm --filter server curation:aggregate`.
 - **Dev** — read the local snapshot path directly (default
   `.curation-data/curation-snapshot.json`). No `fly` at all.
 
