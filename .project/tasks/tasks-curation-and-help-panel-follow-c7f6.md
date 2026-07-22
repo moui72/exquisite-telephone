@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-and-help-panel-follow-2026-07-22-4cab.md
 generated: 2026-07-22
-status: ready
+status: in-progress
 ---
 
 # Tasks
