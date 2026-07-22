@@ -42,7 +42,7 @@ exception and carry no test.
 
 ## Phase 3: Archive folded events
 
-- [ ] T005 [artifacts: infrastructure] Write a failing test: after the snapshot
+- [x] T005 [artifacts: infrastructure] Write a failing test: after the snapshot
   is written, the pipe moves the folded event files into
   `curation-events-archive/<snapshot-ts>/` (via `rename`), a corrupt/unparseable
   event is NOT moved (left in the live dir), and the live event count is drained

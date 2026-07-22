@@ -1,11 +1,20 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import type { LogEvent, Logger } from '../observability/logger.js';
 import type { RatingEvent } from '../domain/curationStore.js';
-import { readAndFoldEvents, sanitizeCurationData } from './pipe.js';
+import { readAndFoldEvents, runAggregatePipe, sanitizeCurationData } from './pipe.js';
 
 let eventsDir: string;
+const logger: Logger = { log: (_event: LogEvent) => undefined };
 
 function writeEvent(name: string, event: RatingEvent): void {
   writeFileSync(join(eventsDir, name), JSON.stringify(event), 'utf8');
@@ -59,5 +68,55 @@ describe('aggregation pipe fold + display sanitization (T003)', () => {
       up: 1,
       down: 0,
     });
+  });
+});
+
+describe('aggregation pipe archive of folded events (T005)', () => {
+  it.fails('archives folded events, leaves corrupt ones live, drains the dir', async () => {
+    const dataPath = join(eventsDir, 'curation.json');
+    const liveDir = join(eventsDir, 'curation-events');
+    mkdirSync(liveDir);
+    writeFileSync(
+      join(liveDir, '1000-a.json'),
+      JSON.stringify({ phrase: 'ok one', value: 'up', origin: 'bank', ratedAt: 1000 }),
+    );
+    writeFileSync(
+      join(liveDir, '1001-b.json'),
+      JSON.stringify({ phrase: 'ok two', value: 'up', origin: 'player-written', ratedAt: 1001 }),
+    );
+    // Corrupt: parses => throws, so it is NOT folded and NOT moved.
+    writeFileSync(join(liveDir, '1002-c.json'), 'not json at all');
+
+    const result = await runAggregatePipe(dataPath, { logger, now: () => 5000 });
+
+    // Folded files moved out of the live dir; only the corrupt one remains.
+    expect(readdirSync(liveDir).sort()).toEqual(['1002-c.json']);
+    // Moved into curation-events-archive/<snapshot-ts>/.
+    const archiveDir = join(eventsDir, 'curation-events-archive', '5000');
+    expect(readdirSync(archiveDir).sort()).toEqual(['1000-a.json', '1001-b.json']);
+    expect(result.foldedNames.sort()).toEqual(['1000-a.json', '1001-b.json']);
+    expect(result.skippedNames).toEqual(['1002-c.json']);
+  });
+
+  it('snapshot-before-move: a snapshot write failure leaves events untouched', async () => {
+    const dataPath = join(eventsDir, 'curation.json');
+    const liveDir = join(eventsDir, 'curation-events');
+    mkdirSync(liveDir);
+    writeFileSync(
+      join(liveDir, '1000-a.json'),
+      JSON.stringify({ phrase: 'ok one', value: 'up', origin: 'bank', ratedAt: 1000 }),
+    );
+
+    await expect(
+      runAggregatePipe(dataPath, {
+        logger,
+        now: () => 5000,
+        writeFile: () => Promise.reject(new Error('disk full')),
+      }),
+    ).rejects.toThrow('disk full');
+
+    // Nothing moved: the event is still live, no archive dir created.
+    expect(readdirSync(liveDir)).toEqual(['1000-a.json']);
+    expect(existsSync(join(eventsDir, 'curation-events-archive'))).toBe(false);
   });
 });

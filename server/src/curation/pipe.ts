@@ -123,9 +123,20 @@ export async function writeFileDurable(path: string, contents: string): Promise<
  */
 export async function runAggregatePipe(
   dataPath: string,
-  deps: { logger: Logger; now?: () => number },
-): Promise<{ jsonPath: string; summaryPath: string; foldedNames: string[]; skippedNames: string[] }> {
+  deps: {
+    logger: Logger;
+    now?: () => number;
+    /** Injectable durable writer — tests use it to force a snapshot-write failure. */
+    writeFile?: (path: string, contents: string) => Promise<void>;
+  },
+): Promise<{
+  jsonPath: string;
+  summaryPath: string;
+  foldedNames: string[];
+  skippedNames: string[];
+}> {
   const now = deps.now ?? Date.now;
+  const writeFile = deps.writeFile ?? writeFileDurable;
   const generatedAt = now();
   const eventsDir = curationEventsDirFor(dataPath);
 
@@ -133,8 +144,11 @@ export async function runAggregatePipe(
   const snapshot = sanitizeCurationData(data);
   const { jsonPath, summaryPath } = snapshotPaths(dataPath);
 
-  await writeFileDurable(jsonPath, `${JSON.stringify(snapshot, null, 2)}\n`);
-  await writeFileDurable(summaryPath, buildSummary(snapshot, generatedAt));
+  // Snapshot FIRST — a write failure here throws before any event is
+  // moved, leaving the live event dir untouched (infrastructure.md
+  // Aggregation Pipe — snapshot durably first, then archive).
+  await writeFile(jsonPath, `${JSON.stringify(snapshot, null, 2)}\n`);
+  await writeFile(summaryPath, buildSummary(snapshot, generatedAt));
 
   deps.logger.log({
     event: 'curation_pipe_snapshot',
