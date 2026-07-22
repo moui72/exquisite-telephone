@@ -18,9 +18,15 @@ const rootPkg = JSON.parse(
 // Assembled from the three build inputs the deploying workflow passes as
 // --build-arg (declared as Dockerfile ARGs, exported as env to the client
 // build). Absent -> dev fallback against the root package.json version.
+//
+// `||`, not `??`: the Dockerfile's `ENV APP_VERSION=$APP_VERSION` sets the
+// var to the EMPTY STRING (not undefined) when the arg is unpassed, so an
+// arg-less `docker build` must fall back on `''`, which `??` would not
+// catch (it would compose `v-dev`). `sha` is left as-is — an empty sha
+// degrades correctly in the composer (vX.Y.Z-beta with no `+<sha>`).
 const appVersion = composeVersionString({
-  version: process.env.APP_VERSION ?? rootPkg.version,
-  channel: process.env.BUILD_CHANNEL ?? 'dev',
+  version: process.env.APP_VERSION || rootPkg.version,
+  channel: process.env.BUILD_CHANNEL || 'dev',
   sha: process.env.BUILD_SHA,
 });
 
