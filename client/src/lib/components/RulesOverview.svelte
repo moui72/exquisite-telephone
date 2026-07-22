@@ -1,5 +1,6 @@
 <script lang="ts">
   import { X } from '@lucide/svelte';
+  import { APP_VERSION } from '../appVersion';
   import GiltFrame from './GiltFrame.svelte';
 
   /**
@@ -132,6 +133,12 @@
           not affiliated with, endorsed by, or sponsored by it — the nod is one of gratitude, not
           association.
         </p>
+        <!-- The build's version, stated plainly and prominently beside the
+             source link ([[ui]] Rules Overview Panel): the same APP_VERSION
+             build constant the footer stamps, but presented as readable
+             labeled copy so a player who opens About to report an issue
+             finds the release they're on. -->
+        <p class="font-mono text-base font-semibold text-ink">Version {APP_VERSION}</p>
         <p class="flex flex-wrap gap-x-4 gap-y-1">
           <a
             href="https://github.com/moui72/exquisite-telephone"

@@ -158,7 +158,7 @@ describe('RulesOverview (T007: About tab content)', () => {
     expect(copy).toMatch(/not affiliated|no affiliation|unaffiliated|not endorsed/i);
   });
 
-  it.fails('shows the app version prominently as labeled copy beside the source link', async () => {
+  it('shows the app version prominently as labeled copy beside the source link', async () => {
     const { container } = await openAbout();
     const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
 

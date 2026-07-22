@@ -48,7 +48,7 @@ covered by the Phase-1 pure-function tests).
   (`RulesOverview.svelte`) renders the app version **prominently** as labeled
   copy (e.g. "Version vX.Y.Z") beside the existing source link, using the same
   version constant. Confirm red.
-- [ ] T008 [artifacts: ui] Implement the About-tab version display per T007.
+- [x] T008 [artifacts: ui] Implement the About-tab version display per T007.
   Make it pass. (The About tab is already the shipped tabbed structure; add the
   version, don't rebuild the tabs.)
 
