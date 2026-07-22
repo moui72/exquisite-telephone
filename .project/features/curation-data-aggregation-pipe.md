@@ -1,6 +1,6 @@
 ---
 slug: curation-data-aggregation-pipe
-status: tasked
+status: implemented
 logged: 2026-07-20
 plan: plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md
 tasks: tasks-curation-data-aggregation-pipe-d7bf.md

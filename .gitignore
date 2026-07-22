@@ -8,4 +8,15 @@ coverage/
 .project/.lock
 .claude/skills/ardd-*/
 .curation-data/
+# Maintainer curation artifacts (datamodel.md CurationLedger /
+# OffensiveQuarantine): they hold player-submitted-but-unaccepted text and
+# must never enter this public repo's history. In dev they live under
+# .curation-data/ (already ignored above); these named patterns keep them
+# out even if CURATION_DATA_PATH points elsewhere — a deliberate belt-and-
+# braces redundancy, not an accident.
+curation-ledger.json
+curation-quarantine.json
+curation-snapshot.json
+curation-snapshot.summary.txt
+curation-events-archive/
 .claude/worktrees/
