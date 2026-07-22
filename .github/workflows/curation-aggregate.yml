@@ -30,7 +30,9 @@ jobs:
     steps:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Aggregate curation events (beta)
-        run: flyctl ssh console --app exquisite-telephone-beta -C 'pnpm --filter server curation:aggregate'
+        # The slim runtime image has no `src/` and no `tsx`; run the compiled
+        # entrypoint the server `tsc` build emits into `server/dist` (WORKDIR /app).
+        run: flyctl ssh console --app exquisite-telephone-beta -C 'node server/dist/curation/cli.js'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
       # Re-seed the server's cached event count from the now-smaller directory.
@@ -46,7 +48,9 @@ jobs:
     steps:
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Aggregate curation events (prod)
-        run: flyctl ssh console --app exquisite-telephone -C 'pnpm --filter server curation:aggregate'
+        # The slim runtime image has no `src/` and no `tsx`; run the compiled
+        # entrypoint the server `tsc` build emits into `server/dist` (WORKDIR /app).
+        run: flyctl ssh console --app exquisite-telephone -C 'node server/dist/curation/cli.js'
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
       - name: Restart to refresh cached count (prod)
