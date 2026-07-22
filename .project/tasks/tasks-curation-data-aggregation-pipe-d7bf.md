@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md
 generated: 2026-07-22
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -77,7 +77,7 @@ exception and carry no test.
 
 ## Phase 5: Ingestion-skill SKILL.md
 
-- [ ] T011 [artifacts: infrastructure, constitution] Create
+- [x] T011 [artifacts: infrastructure, constitution] Create
   `.claude/skills/<name>/SKILL.md` (choose a slug, e.g. `curation-review`) for
   the ingestion skill: fetch the pipe's snapshot **read-only** (`fly ssh`
   sftp/console, never a mutating `fly` command; local path in dev), run the
