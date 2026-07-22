@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-22
-plan: null
+plan: plan-curation-and-help-panel-follow-2026-07-22-4cab.md
 ---
 
 # Feedback
 
 ## UX
 
-- [ ] F001 The tab buttons in the About/help panel (Rules | About) look quite
+- [x] F001 The tab buttons in the About/help panel (Rules | About) look quite
   bad. Improve their visual design. Apply the `/frontend-design:frontend-design`
   skill's guidance when reworking them — aim for intentional, non-templated
   styling consistent with the salon/gallery theme (gilt/Marigold accents,
