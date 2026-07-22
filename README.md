@@ -149,7 +149,7 @@ erDiagram
     ROOM {
         string id "short room code"
         string hostPlayerId FK
-        enum status "lobby|writing|reveal|ended"
+        enum status "lobby|writing|decorating|reveal|ended"
         enum promptMode "free-form|curated"
         boolean monochromeOnly
         int turnTimerMinutes "nullable"
@@ -158,6 +158,8 @@ erDiagram
         timestamp roundStartedAt
         json bookReads "reveal: Book.id -> reader Player.id[]"
         json currentlyReading "reveal: Player.id -> open Book.id"
+        timestamp decorationWindowStartedAt "nullable, decorating window"
+        json coverSubmissions "playerIds finalized in decorating"
     }
     PLAYER {
         string id "ephemeral, no account"
@@ -172,6 +174,8 @@ erDiagram
         string roomId FK
         string originAuthorId FK
         Entry entries "ordered chain"
+        json cover "origin author draw-ops, nullable"
+        string coverTemplate "template id, nullable"
     }
     ENTRY {
         string id
@@ -227,11 +231,12 @@ graph TD
     VOL[(Fly volume - curation.json)]
     FLY[Fly.io - beta from main, prod from release]
 
-    UI -->|"socket events (join, submit entry)"| SIO
+    UI -->|"socket events (submit entry, submit cover)"| SIO
     STATIC -->|serves build| UI
     SIO --> STATE
     SIO --> SESS
     SWEEP -->|advances stalled rounds| STATE
+    SWEEP -->|closes expired decorating window| STATE
     SIO -->|"rating rides onSubmitEntry"| CUR
     CUR -->|one file per event| VOL
     UI --> PNG
@@ -246,6 +251,7 @@ graph TD
     App --> SalonFooter[SalonFooter - always present]
     App --> Lobby[Lobby View]
     App --> WD[Writing / Drawing View]
+    App --> Decorate[DecorationWindow - status decorating, 2-min gated]
     App --> Reveal[Reveal View - self-guided]
     App --> States[Terminal states - ended / kicked / error]
 
@@ -260,12 +266,18 @@ graph TD
     WD --> Canvas[DrawingCanvas - draw ops]
     WD --> TurnStatus[TurnStatus - whose turn]
     WD --> InfoTip
+    WD -->|waiting-state decoration + 30s grace| CoverCanvas
 
-    Reveal --> CardGrid[Card grid - cover card per book, read/being-read badges]
+    Decorate --> CoverCanvas[CoverDecorationCanvas - reuses DrawingCanvas]
+    CoverCanvas --> TemplatePicker[Template picker - 9 backgrounds]
+    CoverCanvas -->|book-id-keyed draft| CoverDraft[coverDraft store]
+
+    Reveal --> CardGrid[Card grid - drawn cover or generateCoverArt, read badges]
     CardGrid --> BookModal[Per-book modal - manual paging, save-to-PNG]
 
     Lobby --> Gilt[GiltFrame]
     WD --> Gilt
+    Decorate --> Gilt
     States --> Gilt
 ```
 
