@@ -58,26 +58,38 @@
   >
     <GiltFrame caption="A Docent's Explanation">
       <!--
-        Tabs as engraved brass placards (ui.md Rules Overview Panel). The
-        utility face (Space Mono, uppercase, letter-spaced) sets them apart
-        from the Fraunces/Rubik body copy and reads as a museum label. The
-        selected tab is a lit gilt plaque — solid marigold with dark velvet
-        text and a gilt chamfer edge; the unselected tab recedes (muted ink,
-        a faint marigold wash and text lift on hover). aria-selected, the
-        tablist/tab/tabpanel roles, and native button focus are preserved;
-        a marigold focus ring gives keyboard affordance.
+        Tabs as a brass label-rail (ui.md Rules Overview Panel). The tablist
+        is a thin gilt rail; each tab is an engraved-caps museum label in the
+        utility face (Space Mono, uppercase, letter-spaced) that sets it apart
+        from the Fraunces/Rubik body copy. The selected tab is marked by a lit
+        marigold underline segment sitting on the rail — a soft gilt glow that
+        connects the label to the panel below; unselected labels recede in
+        muted ink and grow a faint marigold underline on hover. Selected and
+        unselected share one visual language (position on the rail) rather than
+        solid-fill vs hollow-outline. aria-selected, the tablist/tab/tabpanel
+        roles, and native button focus are preserved; a marigold focus ring
+        gives keyboard affordance.
+
+        Shared base — the underline indicator is an ::after bar pinned to the
+        rail; active lights it marigold with a glow, inactive keeps it hidden
+        until hover.
       -->
-      <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-1.5 border-b border-marigold/40">
+      {@const tabBase =
+        'relative min-h-9 px-1 pb-2 pt-1 font-mono text-xs font-medium uppercase tracking-[0.2em] transition-colors duration-150 ' +
+        'after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:rounded-full after:transition-all after:duration-150 ' +
+        'focus-visible:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-2 focus-visible:ring-offset-butter'}
+      {@const tabActive =
+        'text-velvet after:bg-marigold after:shadow-[0_0_8px_rgba(245,166,35,0.55)]'}
+      {@const tabIdle =
+        'text-ink/45 hover:text-ink/75 after:bg-transparent hover:after:bg-marigold/35'}
+      <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-6 border-b border-marigold/30">
         <button
           type="button"
           role="tab"
           id="rules-tab"
           aria-selected={activeTab === 'rules'}
           aria-controls="rules-panel"
-          class="chamfer-frame chamfer-slim min-h-9 px-4 font-mono text-xs font-medium uppercase tracking-[0.15em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-1 {activeTab ===
-          'rules'
-            ? 'bg-marigold text-velvet shadow-sm [--chamfer-color:theme(colors.marigold)]'
-            : 'text-ink/50 hover:bg-marigold/10 hover:text-ink'}"
+          class="{tabBase} {activeTab === 'rules' ? tabActive : tabIdle}"
           on:click={() => (activeTab = 'rules')}
         >
           Rules
@@ -88,10 +100,7 @@
           id="about-tab"
           aria-selected={activeTab === 'about'}
           aria-controls="about-panel"
-          class="chamfer-frame chamfer-slim min-h-9 px-4 font-mono text-xs font-medium uppercase tracking-[0.15em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-1 {activeTab ===
-          'about'
-            ? 'bg-marigold text-velvet shadow-sm [--chamfer-color:theme(colors.marigold)]'
-            : 'text-ink/50 hover:bg-marigold/10 hover:text-ink'}"
+          class="{tabBase} {activeTab === 'about' ? tabActive : tabIdle}"
           on:click={() => (activeTab = 'about')}
         >
           About

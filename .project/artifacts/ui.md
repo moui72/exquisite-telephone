@@ -136,15 +136,19 @@ automatically; a player who already knows the game is never interrupted
 by it. Two tabs: **Rules** (selected by default on open) and **About**.
 Only the active tab's copy is rendered, not merely hidden.
 
-The tab controls are styled as engraved brass placards in the salon
-palette: the selected tab reads as a lit gilt plaque (a solid marigold
-fill with dark text and a gilt edge), while unselected tabs recede in
-muted ink and lift toward full ink with a faint marigold wash on hover —
-so the current tab is unmistakable at a glance. Their labels use the
-Space Mono utility face (uppercase, letter-spaced) to set them apart from
-the panel's serif/sans body copy, and a marigold focus ring keeps the
-selection legible to keyboard users. The visual state is carried
-alongside `aria-selected`, never in place of it.
+The tab controls are styled as a brass label-rail in the salon palette:
+the tablist is a thin gilt rail (a marigold bottom rule), and each tab is
+an engraved-caps museum label sitting on it. The selected tab is marked by
+a lit marigold underline segment on the rail — a soft gilt glow that
+connects the label to the panel below — with its text at full velvet
+weight, while unselected labels recede in muted ink and grow a faint
+marigold underline on hover, so the current tab is unmistakable at a
+glance. Selected and unselected share one visual language (position on the
+rail), rather than a solid fill versus a hollow outline. Their labels use
+the Space Mono utility face (uppercase, letter-spaced) to set them apart
+from the panel's serif/sans body copy, and a marigold focus ring keeps the
+selection legible to keyboard users. The visual state is carried alongside
+`aria-selected`, never in place of it.
 
 The **Rules** tab explains the core game loop in docent voice: a player
 writes a phrase, the next player draws it having never seen the original
