@@ -1,14 +1,14 @@
 ---
-status: open
+status: planned
 created: 2026-07-22
-plan: null
+plan: plan-curation-cli-prod-entrypoint-2026-07-22-bc34.md
 ---
 
 # Feedback
 
 ## Bugs
 
-- [ ] F001 The curation aggregation CLI cannot run on the deployed prod image,
+- [x] F001 The curation aggregation CLI cannot run on the deployed prod image,
   so the scheduled workflow (and the manual run it replaced) will fail. The
   `curation:aggregate` script is `tsx src/curation/cli.ts`, but the runtime
   Docker stage is slim — it copies only compiled `dist/` (`server/dist`,
