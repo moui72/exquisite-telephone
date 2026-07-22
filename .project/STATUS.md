@@ -1,19 +1,24 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**v0.2.0 shipped to prod; follow-up plan tasked.** The
-prod promotion cut the first real semver release — `package.json` bumped to
-`0.2.0`, tag `v0.2.0`, GitHub release, prod deployed. Local `main` rebased onto
-the bump (linear history preserved).
+_Updated: 2026-07-22 (**Curation + tab-styling follow-ups shipped to `main`.**
+`tasks-curation-and-help-panel-follow-c7f6.md` (6 tasks) is `completed` and
+merged, worktree reaped. Delivered: the `curation-review` SKILL.md `tsx -e`
+snippet fixed (dynamic-import async IIFE) + a read-only snapshot self-fetch
+offer; a new `.github/workflows/curation-aggregate.yml` (weekly Sun 07:00 UTC,
+per-channel beta+prod jobs, `fly apps restart` after aggregating); and the
+Rules|About tab buttons restyled as "gilt placards" via frontend-design (ARIA
+preserved, tests green). `infrastructure.md` + `ui.md` revised to match. No
+open feedback remains from that round.
 
-Both open feedback files were consumed into one approved plan,
-`plan-curation-and-help-panel-follow-2026-07-22-4cab.md` →
-`tasks-curation-and-help-panel-follow-c7f6.md` (`ready`, 6 tasks, 3 independent
-phases): (1) fix the `curation-review` SKILL.md `tsx -e` snippet + add a
-read-only snapshot self-fetch offer; (2) a weekly `curation-aggregate.yml`
-workflow replacing the manual aggregate run (revises the infrastructure
-Aggregation Pipe model — a reconsidered decision); (3) restyle the help-panel
-Rules|About tab buttons via `/frontend-design` (revises ui Rules Overview
-Panel). No open feedback remains.
+**⚠ New gap found on inspection (needs follow-up):** the scheduled workflow —
+and the manual run it replaced — invoke `pnpm --filter server
+curation:aggregate`, which is `tsx src/curation/cli.ts`. But the prod runtime
+Docker image is slim (compiled `dist/` + pruned prod deps only — no
+`server/src/`, no `tsx`), so **the aggregate CLI can't run on the deployed
+machine as-is**. The pipe was only ever smoke-tested in dev. Fix direction:
+compile the curation CLI into `server/dist` and call `node
+server/dist/curation/cli.js`. Capture with `/ardd-feedback` before relying on
+the schedule.
 
 Nothing is in flight.)_
 
@@ -26,9 +31,7 @@ Nothing is in flight.)_
 | infrastructure.md | stable ✅ | — |
 | ui.md | stable ✅ | — |
 
-No `[OPEN: ...]` items outstanding. (The plan carries 3 Open Questions —
-aggregation channel targeting, cached-count/restart handling, exact UTC cron
-time — to settle at implementation.)
+No `[OPEN: ...]` items outstanding.
 
 ## Cross-Artifact Issues
 
@@ -41,44 +44,41 @@ No violations.
 ## Diagrams
 
 - datamodel.md — stale ⚠️ (curation ledger/quarantine — run /ardd-diagram datamodel)
-- infrastructure.md — stale ⚠️ (curation pipe/skill + App Versioning — run /ardd-diagram infrastructure)
-- ui.md — stale ⚠️ (About tab + version display — run /ardd-diagram ui)
+- infrastructure.md — stale ⚠️ (curation pipe/skill + App Versioning + scheduled aggregate — run /ardd-diagram infrastructure)
+- ui.md — stale ⚠️ (About tab + version display + restyled tabs — run /ardd-diagram ui)
 
 ## Code-vs-Artifact Defects
 
-- 0 defects — DEFECTS.md verified 2026-07-22. Artifacts match the code.
+- 0 recorded in DEFECTS.md (verified 2026-07-22). NB: the slim-image gap above
+  is a fresh implementation bug (route via `/ardd-feedback`), not existing
+  recorded drift.
 
 ## Feedback
 
-- No open feedback — both files (`feedback-curation-pipe-followups-b8ae.md`,
-  `feedback-help-pane-tab-button-styling-8637.md`) are `planned`, consumed by
-  the plan above.
+- No open feedback. **Recommended:** file the curation-CLI-in-prod slim-image
+  gap (above) via `/ardd-feedback`.
 
 ## Feature Backlog
 
 - 0 backlogged · 0 planned · 0 tasked · 21 implemented · 1 subsumed — see
   `.project/features/`. Backlog empty.
 
-## Work Queue
-
-- `tasks-curation-and-help-panel-follow-c7f6.md` — plan
-  `plan-curation-and-help-panel-follow-2026-07-22-4cab.md`, no bound features
-  (feedback-driven): the only `ready` file; nothing else in flight.
-
 ## In Flight
 
-Nothing in flight — no worktrees, no in-progress tasks files.
+Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Deployment
 
-- **Prod:** `v0.2.0` (promoted this session) at `ex-tel.ty-pe.com`.
-- **Beta:** current `main` at `beta-ex-tel.ty-pe.com`.
-- Local `main` is ahead of `origin` by unpushed `.project/` docs commits (the
-  v0.2.0 rebase + this plan run) — docs-only, so pushing won't redeploy beta.
+- **Prod:** `v0.2.0` at `ex-tel.ty-pe.com`.
+- **Beta:** current `main` at `beta-ex-tel.ty-pe.com` once pushed.
+- Local `main` ahead of `origin` by unpushed commits (this follow-up merge +
+  the earlier docs). The follow-up merge touches real code
+  (`RulesOverview.svelte`, the workflow), so pushing WILL redeploy beta.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: `/ardd-implement`
-the `tasks-curation-and-help-panel-follow-c7f6.md` file (6 tasks; Phase 3
-invokes `/frontend-design` for the tab buttons). Then a `/ardd-diagram` pass
-for the three stale diagrams. Backlog and feedback are both empty.
+0 issues found by the routine checks. Recommended next steps: (1)
+**`/ardd-feedback`** the slim-image curation-CLI gap (the scheduled aggregate
+won't run in prod until fixed); (2) push to ship the tab restyle + workflow to
+beta and eyeball the tabs; (3) a `/ardd-diagram` pass for the three stale
+diagrams.
