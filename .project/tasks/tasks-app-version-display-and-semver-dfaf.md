@@ -42,7 +42,7 @@ covered by the Phase-1 pure-function tests).
 - [x] T005 [artifacts: ui] Write a failing test that `SalonFooter.svelte`
   renders the app-version constant as small, muted, readable text (not a link
   or control) present on the footer. Confirm red.
-- [ ] T006 [artifacts: ui] Implement the footer version display per T005
+- [x] T006 [artifacts: ui] Implement the footer version display per T005
   (unobtrusive placement, Space Mono). Make it pass.
 - [ ] T007 [artifacts: ui] Write a failing test that the help panel's About tab
   (`RulesOverview.svelte`) renders the app version **prominently** as labeled

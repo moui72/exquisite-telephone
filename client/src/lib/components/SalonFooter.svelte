@@ -1,5 +1,6 @@
 <script lang="ts">
   import { CircleHelp, Gavel } from '@lucide/svelte';
+  import { APP_VERSION } from '../appVersion';
 
   /**
    * The Salon Footer — a slim bar fixed along the bottom of every view
@@ -63,6 +64,14 @@
       >
         <CircleHelp size={18} aria-hidden="true" />
       </button>
+      <!-- The build's channel-aware version string ([[ui]] Salon Footer):
+           the stamped-ticket role wants the utility Space Mono (font-mono)
+           face, small and muted, trailing the rail after the controls. Not
+           a link or a control — just readable text a player can read off
+           when reporting an issue. -->
+      <span class="ml-1 font-mono text-xs tabular-nums tracking-tight text-butter/40">
+        {APP_VERSION}
+      </span>
     </div>
   </div>
 </footer>

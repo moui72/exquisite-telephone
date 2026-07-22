@@ -6,7 +6,7 @@ import SalonFooter from './SalonFooter.svelte';
 afterEach(() => cleanup());
 
 describe('SalonFooter — app version stamp', () => {
-  it.fails('renders the app-version constant as plain text, not a link or control', () => {
+  it('renders the app-version constant as plain text, not a link or control', () => {
     render(SalonFooter, {
       props: {
         onShowRules: vi.fn(),
@@ -27,7 +27,7 @@ describe('SalonFooter — app version stamp', () => {
     expect(stamp).not.toHaveAttribute('role');
   });
 
-  it.fails('stamps the version small and muted in the utility Space Mono face', () => {
+  it('stamps the version small and muted in the utility Space Mono face', () => {
     render(SalonFooter, {
       props: {
         onShowRules: vi.fn(),
