@@ -5,6 +5,7 @@
   import { Send } from '@lucide/svelte';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
+  import { coverDraft, draftFor } from '../stores/coverDraft.js';
   import CoverDecorationCanvas from '../components/CoverDecorationCanvas.svelte';
 
   /**
@@ -22,12 +23,15 @@
 
   const WINDOW_MS = 120_000;
 
-  let draftOps: DrawOps = [];
-  let coverTemplate: string | null = null;
   let presented = false;
 
+  // The shared client-local draft for this player's own book (ui.md Cover
+  // Decoration): the same draft edited during the writing-phase waiting
+  // state, carried across the view swap by book id.
+  $: draft = draftFor($coverDraft, myBook?.id ?? null);
+
   function handleTemplateChange(id: string | null) {
-    coverTemplate = id;
+    if (myBook) coverDraft.setTemplate(myBook.id, id);
   }
 
   // Ticks the shared countdown once a second (registered/torn down across
@@ -64,13 +68,13 @@
   }
 
   function handleOpsChange(ops: DrawOps) {
-    draftOps = ops;
+    if (myBook) coverDraft.setOps(myBook.id, ops);
   }
 
   async function handlePresent() {
     if (!myBook) return;
     presented = true;
-    await session.submitCover(myBook.id, draftOps, coverTemplate);
+    await session.submitCover(myBook.id, draft.ops, draft.template);
   }
 </script>
 
@@ -97,10 +101,10 @@
   {#if myBook && player}
     <CoverDecorationCanvas
       username={player.name}
-      ops={draftOps}
+      ops={draft.ops}
       onOpsChange={handleOpsChange}
       monochromeOnly={room?.monochromeOnly ?? false}
-      {coverTemplate}
+      coverTemplate={draft.template}
       onTemplateChange={handleTemplateChange}
     />
   {/if}

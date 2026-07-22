@@ -10,6 +10,7 @@
   import type { DrawOps, PromptRatingValue } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
+  import { coverDraft, draftFor } from '../stores/coverDraft.js';
   import { Send, ThumbsDown, ThumbsUp, Timer } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import CoverDecorationCanvas from '../components/CoverDecorationCanvas.svelte';
@@ -21,11 +22,6 @@
 
   let textValue = '';
   let drawnOps: DrawOps = [];
-
-  // Client-local draft cover ink (ui.md Cover Decoration). Decorated while
-  // round-gated waiting; finalized only via onSubmitCover in the decorating
-  // window, never per-stroke here.
-  let coverDraftOps: DrawOps = [];
 
   /** Client-side grace before a ready turn takes over from decoration. */
   const GRACE_MS = 30_000;
@@ -106,14 +102,15 @@
       ? Math.min(GRACE_MS / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
       : null;
 
-  // Client-local draft cover template (ui.md Cover Decoration), paired with
-  // the draft ink; both are finalized later, in the decorating window.
-  let coverDraftTemplate: string | null = null;
+  // The shared client-local draft for this player's own book (ui.md Cover
+  // Decoration): the SAME draft the decorating window edits, keyed by book
+  // id so ink drawn while waiting survives the writing → decorating swap.
+  $: coverDraft_ = draftFor($coverDraft, myOwnBook?.id ?? null);
   function handleCoverOpsChange(ops: DrawOps) {
-    coverDraftOps = ops;
+    if (myOwnBook) coverDraft.setOps(myOwnBook.id, ops);
   }
   function handleCoverTemplateChange(id: string | null) {
-    coverDraftTemplate = id;
+    if (myOwnBook) coverDraft.setTemplate(myOwnBook.id, id);
   }
 
   // Reset local draft state only when the *identity* of the assigned turn
@@ -289,10 +286,10 @@
     {#if myOwnBook && state.player}
       <CoverDecorationCanvas
         username={state.player.name}
-        ops={coverDraftOps}
+        ops={coverDraft_.ops}
         onOpsChange={handleCoverOpsChange}
         monochromeOnly={state.room?.monochromeOnly ?? false}
-          coverTemplate={coverDraftTemplate}
+          coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
       />
     {/if}
@@ -304,10 +301,10 @@
       {#if myOwnBook && state.player}
         <CoverDecorationCanvas
           username={state.player.name}
-          ops={coverDraftOps}
+          ops={coverDraft_.ops}
           onOpsChange={handleCoverOpsChange}
           monochromeOnly={state.room?.monochromeOnly ?? false}
-          coverTemplate={coverDraftTemplate}
+          coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
         />
       {/if}
