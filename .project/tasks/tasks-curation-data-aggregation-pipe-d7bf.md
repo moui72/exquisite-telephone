@@ -27,7 +27,7 @@ exception and carry no test.
 
 ## Phase 2: Aggregation pipe CLI
 
-- [ ] T003 [artifacts: infrastructure, datamodel] Write a failing test for the
+- [x] T003 [artifacts: infrastructure, datamodel] Write a failing test for the
   aggregation pipe: given a curation events directory, it folds via the
   existing `aggregateEvents`/`aggregate()`, applies `sanitizeForDisplay` to
   every `CandidatePhrase.phrase` on OUTPUT, and produces a consolidated
