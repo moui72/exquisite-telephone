@@ -227,9 +227,22 @@ file must never keep the game from starting.
 
 ### Aggregation Pipe
 
-A deterministic, agent-free CLI (a `server`-package script) is the aggregate
+A deterministic, agent-free CLI is the aggregate
 view's only reader (the store's `createCurationStore` reserves this — no
-boot-time fold). It reads `CURATION_DATA_PATH`'s event directory, folds it via
+boot-time fold). It has two invocation forms for one source module
+(`server/src/curation/cli.ts`):
+
+- **prod / on-machine:** `node server/dist/curation/cli.js` — the compiled
+  entrypoint emitted by the server `tsc` build (`tsconfig.build.json`, which
+  excludes only `*.test.ts`) and copied into the slim runtime image alongside
+  `server/dist/index.js` (WORKDIR `/app`). This is what the scheduled workflow
+  runs via `fly ssh console`. The deployed machine has **no `src/` and no
+  `tsx`**, so the dev form below cannot run there.
+- **dev / local:** `pnpm --filter server curation:aggregate`
+  (`tsx src/curation/cli.ts`) — the source-run convenience for a local event
+  directory; never used on the deployed machine.
+
+It reads `CURATION_DATA_PATH`'s event directory, folds it via
 the existing `aggregateEvents` (no new fold logic), and produces a
 **consolidated snapshot** of the curation view (`CurationData` — see
 [[datamodel]]). Three responsibilities:
