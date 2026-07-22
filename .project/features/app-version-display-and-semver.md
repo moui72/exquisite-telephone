@@ -1,6 +1,6 @@
 ---
 slug: app-version-display-and-semver
-status: tasked
+status: implemented
 logged: 2026-07-22
 plan: plan-app-version-display-and-semver-2026-07-22-0c08.md
 tasks: tasks-app-version-display-and-semver-dfaf.md
