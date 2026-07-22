@@ -62,8 +62,11 @@ recorded in the plan's Complexity Tracking.
 
 ## Feedback
 
-- 1 open feedback file (`feedback-curation-pipe-followups-b8ae.md`, 3 items) —
-  left for its own `/ardd-plan` run.
+- 2 open feedback files (unrelated — plan separately):
+  - `feedback-curation-pipe-followups-b8ae.md` (3 items: SKILL.md `tsx -e` bug;
+    skill self-fetch UX; weekly scheduled aggregate workflow).
+  - `feedback-help-pane-tab-button-styling-8637.md` (1 UX item: restyle the
+    About/help panel tab buttons via the frontend-design skill).
 
 ## Feature Backlog
 
