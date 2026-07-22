@@ -110,19 +110,21 @@ e.g. a short script:
 
 ```
 pnpm --filter server exec tsx -e '
+  import { CURATED_PHRASE_BANK } from "@exquisite-telephone/shared";
   import { readSnapshot, readLedger, reconcileLedger, analyzeCounts, ledgerPaths } from "./src/curation/ledger.js";
   const dataPath = process.env.CURATION_DATA_PATH ?? "../.curation-data/curation.json";
   const snapshot = await readSnapshot(dataPath);
   const { ledgerPath } = ledgerPaths(dataPath);
   const prior = await readLedger(ledgerPath);
-  const { ledger, promoted } = reconcileLedger(prior, snapshot, /* CURATED_PHRASE_BANK */ []);
+  const { ledger, promoted } = reconcileLedger(prior, snapshot, CURATED_PHRASE_BANK);
   const { removalCandidates, additionCandidates } = analyzeCounts(snapshot);
   console.log(JSON.stringify({ ledger, promoted, removalCandidates, additionCandidates }, null, 2));
 '
 ```
 
-Import `CURATED_PHRASE_BANK` from `@exquisite-telephone/shared` for the
-real reconcile; the deck is read-only input here.
+The deck (`CURATED_PHRASE_BANK`) is read-only input here — it drives
+promotion, so pass the real bank, never an empty array (an empty bank
+silently never promotes anything).
 
 ## Report shape
 
