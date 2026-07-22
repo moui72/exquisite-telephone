@@ -54,7 +54,7 @@ exception and carry no test.
 
 ## Phase 4: Ingestion-skill deterministic helper
 
-- [ ] T007 [artifacts: datamodel] Write a failing test for ledger
+- [x] T007 [artifacts: datamodel] Write a failing test for ledger
   reconciliation: given a prior ledger and a fresh snapshot, candidates now
   present in `CURATED_PHRASE_BANK` become `promoted` and drop out, existing
   entries keep their disposition (`pending`/`rejected`) with refreshed vote
