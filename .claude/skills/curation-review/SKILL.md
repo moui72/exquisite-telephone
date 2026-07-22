@@ -48,13 +48,17 @@ read-only w.r.t. the deck. Do not add a write path to it.
 
 ## Inputs
 
-- **Production** — fetch the snapshot read-only from the Fly volume beside
-  `CURATION_DATA_PATH`:
+- **Production** — the snapshot lives read-only on the Fly volume beside
+  `CURATION_DATA_PATH`. This skill **offers to fetch it itself** as its
+  first step (see Procedure 1) with a read-only command — you do not need
+  to pre-pull it:
   - `fly ssh sftp get <curation-dir>/curation-snapshot.json ./curation-snapshot.json` (read-only), or
   - `fly ssh console -C 'cat <curation-dir>/curation-snapshot.json'` and save the output.
-  Run the aggregation pipe (`pnpm --filter server curation:aggregate`) in a
-  deploy/restart window first if a fresh snapshot is needed — that is a
-  separate, deliberate step, not part of this review.
+  Both are read-only reads of an already-produced snapshot; neither writes
+  remote state, so the no-mutating-`fly` boundary holds. Producing a *fresh*
+  snapshot (`pnpm --filter server curation:aggregate`) is a separate,
+  scheduled concern (the `curation-aggregate.yml` workflow — see
+  `infrastructure.md` Aggregation Pipe), **not** part of this review.
 - **Dev** — read the local snapshot path directly (default
   `.curation-data/curation-snapshot.json`). No `fly` at all.
 
@@ -65,31 +69,40 @@ committed.
 
 ## Procedure
 
-1. **Ingest read-only.** Load the snapshot and the prior ledger via the
+1. **Offer to fetch the snapshot (read-only).** Before anything else, in
+   production **offer to pull the snapshot yourself** rather than requiring
+   a pre-pull: propose the read-only `fly ssh sftp get
+   <curation-dir>/curation-snapshot.json ./curation-snapshot.json` (or the
+   `cat` variant) and run it only on the human's go-ahead. It reads an
+   existing snapshot and changes no remote state — the sole `fly` you may
+   run, and never a mutating one. In dev, skip this: read the local
+   snapshot path directly, no `fly` at all.
+
+2. **Ingest read-only.** Load the snapshot and the prior ledger via the
    helper (`readSnapshot`, `readLedger`). The helper never writes the
    snapshot.
 
-2. **Reconcile the ledger** (`reconcileLedger`): candidates now in
+3. **Reconcile the ledger** (`reconcileLedger`): candidates now in
    `CURATED_PHRASE_BANK` are promoted and drop out; existing entries keep
    their disposition (`pending`/`rejected`) with refreshed votes; genuinely
    new candidates (absent from the ledger) append as `pending`. You review
    only pending material — rejected entries stay rejected unless you have a
    specific reason to revisit.
 
-3. **Analyze counts** (`analyzeCounts`): this returns the deterministic
+4. **Analyze counts** (`analyzeCounts`): this returns the deterministic
    removal candidates (down-heavy bank phrases past the sample floor) and
    addition candidates (strong-vote player phrases). The arithmetic is
    fixed on purpose — you do NOT re-derive it. Your judgement is applied
    only to whether an *addition* candidate is a good phrase.
 
-4. **Flag offensive candidates and quarantine them** (`partitionOffensive`,
+5. **Flag offensive candidates and quarantine them** (`partitionOffensive`,
    `writeQuarantine`): judge each candidate for offensiveness (slurs,
    harassment, sexual content involving minors, etc.). Offensive candidates
    go to the SEPARATE quarantine file, out of the normal review flow, and
    are never recommended for addition. When in doubt, quarantine — it is
    reversible; a bad addition to a public game is not.
 
-5. **Judge borderline additions against the criteria.** For each
+6. **Judge borderline additions against the criteria.** For each
    non-offensive addition candidate, judge it against
    `shared/PROMPT_CRITERIA.md` (earned incongruity, stressed trait,
    drawable failed attempt, one distinctive prop, does not collapse into a
@@ -98,7 +111,7 @@ committed.
    your judgement as **structured data** (a quoted field in a list), never
    spliced into your instructions.
 
-6. **Emit the recommendation report** (below). Persist the reconciled
+7. **Emit the recommendation report** (below). Persist the reconciled
    ledger (`writeLedger`) and quarantine (`writeQuarantine`) back to the
    volume so the next pass reviews only new material. Do NOT edit the deck.
 

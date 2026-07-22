@@ -21,7 +21,7 @@ Principle III documentation/no-behavior-change exception.
   end against a sample snapshot and confirming it prints reconcile/analyze
   output. (feedback F001, curation; file
   `.claude/skills/curation-review/SKILL.md` — Invoking the helper)
-- [ ] T002 [artifacts: infrastructure] Add a first step to the
+- [x] T002 [artifacts: infrastructure] Add a first step to the
   `curation-review` skill's Inputs/Procedure where it **offers** to fetch the
   pipe snapshot itself, read-only (`fly ssh sftp get
   …/curation-snapshot.json`), instead of requiring a pre-pull — dev still reads

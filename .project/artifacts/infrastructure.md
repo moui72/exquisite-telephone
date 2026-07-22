@@ -263,9 +263,11 @@ the existing `aggregateEvents` (no new fold logic), and produces a
 A repo-local Claude Code **maintainer tool** (a `.claude/skills/` skill, like
 `audit-help-text`) — **not app runtime**: it runs in Claude Code during
 curation, ships no dependency into the server, and touches no game state, so
-the "no LLM in the app" scope ([[constitution]]) is unchanged. It **read-only**
-fetches the pipe's snapshot from the Fly volume (`fly ssh sftp`/`console` —
-never a mutating `fly` command; dev reads the local path), analyzes the counts,
+the "no LLM in the app" scope ([[constitution]]) is unchanged. As its first
+step it **offers to fetch** the pipe's snapshot itself, **read-only**, from the
+Fly volume (`fly ssh sftp`/`console` — a read of an already-produced snapshot,
+never a mutating `fly` command; dev reads the local path) rather than requiring
+a pre-pull, then analyzes the counts,
 and **recommends** deck additions (strong-vote `CandidatePhrase` entries judged
 against `shared/PROMPT_CRITERIA.md`) and removals (down-heavy bank
 `PromptRating` entries) as a **report a human applies** — it never edits
