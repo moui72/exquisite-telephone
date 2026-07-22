@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-and-help-panel-follow-2026-07-22-4cab.md
 generated: 2026-07-22
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -58,7 +58,7 @@ Principle III documentation/no-behavior-change exception.
   new asserted behavior is added, not for pure styling). Invoke the
   frontend-design skill for the aesthetic direction before writing the markup.
   (feedback F001, help-pane)
-- [ ] T006 [artifacts: ui] Revise `ui.md` Rules Overview Panel's tab-button
+- [x] T006 [artifacts: ui] Revise `ui.md` Rules Overview Panel's tab-button
   description to match the restyled treatment from T005 (the selected/unselected
   states and theme framing), without re-specifying pixel details. (feedback
   F001, help-pane)
