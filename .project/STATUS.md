@@ -1,27 +1,29 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-21 (**Book cover decoration + templates shipped.**
-`tasks-book-cover-decoration-9d9b.md` (20 tasks, TDD) is `completed` and
-**merged into `main`**, worktree reaped. Live now: a new `decorating` room
-phase with a 2-minute gated window (closed by the existing sweep,
-independent of the turn timer), `onSubmitCover`, the cover-decoration canvas
-(reusing `DrawingCanvas`), a book-id-keyed shared draft across the waiting
-state and the decoration window, the Reveal card face using the drawn cover
-with `generateCoverArt` fallback, and nine CSS/SVG background templates.
-Full suite green (509 tests). Features `book-cover-decoration` and
-`pregenerated-book-cover-templa` → `implemented`.
+_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill planned and
+tasked — backlog now empty.** `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`
+(approved) → `tasks-curation-data-aggregation-pipe-d7bf.md` (`ready`, 11 tasks,
+5 phases, TDD). Designed against
+`research-curation-aggregation-pipe-2026-07-21-4bbe.md`.
 
-Nothing is in flight and no tasks file is ready — the queue is empty except
-one independent backlog item.
+Two deliverables: (1) a deterministic `server` CLI **pipe** — reuse
+`aggregate()`, a pure display-safety **sanitizer** (output-only, never the
+exact-text dedup key), and **archive** folded events (snapshot-then-move,
+draining `MAX_CURATION_EVENTS`); (2) a repo-local **ingestion skill** — a
+Claude Code maintainer tool that read-only fetches the pipe snapshot, keeps a
+gitignored **ledger** + **offensive-quarantine**, and recommends deck
+add/removes judged against `PROMPT_CRITERIA.md` for a human to apply. The
+injection defense is architectural (structured-data isolation, no deck writes,
+no mutating `fly`, human-in-the-loop), not a string filter.
 
-**One flagged deviation** to consider (not a bug): the 30s grace arms for any
-early finisher on the decoration screen, not only one who has drawn ink —
-tightening it would contradict the shipped T014 test, so it was left as-is.
-Capture with `/ardd-feedback` if the stricter reading is wanted.
+Artifact design applied: `infrastructure` (Aggregation Pipe + Ingestion Skill
+sections; rewrote the `MAX_CURATION_EVENTS` annotation), `datamodel`
+(dedup-key sanitization invariant + CurationLedger/OffensiveQuarantine
+maintainer artifacts), and **`constitution` bumped v1.1.0 → v1.1.1** (maintainer
+tooling — incl. the LLM ingestion skill — is not app runtime).
 
-Local `main` is 24 commits ahead of `origin` (this feature + the plan/STATUS
-docs) — unpushed. Prod and beta were both current as of the last promotion,
-but this feature has not been deployed to either yet.)_
+Nothing is in flight. Both channels were current at the last deploy; this
+feature is not built or deployed yet.)_
 
 ## Artifacts Found
 
@@ -32,50 +34,58 @@ but this feature has not been deployed to either yet.)_
 | infrastructure.md | stable ✅ | — |
 | ui.md | stable ✅ | — |
 
-No `[OPEN: ...]` items outstanding. The plan's two Open Questions were
-resolved in implementation: `Book.cover` is a parsed `DrawOp[]` (capped via
-`serializeDrawOps` against the drawing byte cap); templates are nine
-self-contained CSS/inline-SVG patterns in `client/src/lib/covers/templateArt.ts`.
+No `[OPEN: ...]` items outstanding. (Three plan-time details are parked in the
+plan's Open Questions — skill name/report shape, removal threshold, offensive-
+flag mechanism — not artifact gaps.)
 
 ## Cross-Artifact Issues
 
-None. The shipped `decorating` phase, `onSubmitCover`, and cover fields match
-`datamodel`/`infrastructure`/`ui`.
+None. The pipe/skill concepts, the sanitization dedup-key invariant, and the
+maintainer-tooling scope are defined and referenced consistently across
+`infrastructure`/`datamodel`/`constitution`; lint clean.
 
 ## Constitution Compliance
 
-No violations. The decoration window reuses the existing sweep (Principle I),
-the cover canvas reuses `DrawingCanvas` (Principle II), and the two justified
-deviations are in the plan's Complexity Tracking. No new production shortcut.
+No violations. `constitution` v1.1.1 explicitly scopes the LLM ingestion skill
+as maintainer tooling (not app runtime), so it does not breach the
+party-game/no-premature-scaling scope. The plan's Complexity Tracking justifies
+the LLM tool and the ledger/quarantine files. Production annotations
+(recommend-only boundary; drop-fallback between pipe runs) are recorded in
+`infrastructure`.
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (cover fields + `decorating` phase — run /ardd-diagram datamodel)
-- infrastructure.md — stale ⚠️ (`onSubmitCover` + sweep window-close — run /ardd-diagram infrastructure)
-- ui.md — stale ⚠️ (Cover Decoration view — run /ardd-diagram ui)
+- datamodel.md — stale ⚠️ (ledger/quarantine + sanitization note — run /ardd-diagram datamodel)
+- infrastructure.md — stale ⚠️ (Aggregation Pipe + Ingestion Skill — run /ardd-diagram infrastructure)
+- ui.md — current ✅
 
 ## Code-vs-Artifact Defects
 
 - 0 known defects — see DEFECTS.md, last checked 2026-07-21. Run
-  /ardd-defects to refresh. (The 30s-grace deviation above is a design
-  interpretation, not a code-vs-artifact defect.)
+  /ardd-defects to refresh.
 
 ## Feature Backlog
 
-- 1 backlogged · 0 planned · 0 tasked · 19 implemented · 1 subsumed — see
-  `.project/features/`. Target a backlogged slug with `/ardd-plan <slug>`.
-  - Backlogged: `curation-data-aggregation-pipe` (independent; the last
-    unplanned item).
+- 0 backlogged · 0 planned · 1 tasked · 19 implemented · 1 subsumed — see
+  `.project/features/`. **The backlog is empty** — everything logged is
+  planned or shipped.
+  - Tasked: `curation-data-aggregation-pipe` (this plan, ready to implement).
+
+## Work Queue
+
+- `tasks-curation-data-aggregation-pipe-d7bf.md` — plan
+  `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`, feature
+  `curation-data-aggregation-pipe`: the only `ready` file; nothing else in
+  flight to overlap.
 
 ## In Flight
 
-Nothing in flight — no worktrees, no ready or in-progress tasks files.
+Nothing in flight — no worktrees, no in-progress tasks files.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: **push `main`** (24
-commits ahead) to ship cover decoration to beta, then optionally promote to
-prod. `curation-data-aggregation-pipe` is the last backlog item to plan;
-a `/ardd-diagram` pass would refresh the three stale diagrams; and
-`/ardd-feedback` can capture the 30s-grace deviation if the stricter reading
-is intended.
+0 issues found. Safe to /plan: yes. Recommended next step: run
+`/ardd-implement` and pick `tasks-curation-data-aggregation-pipe-d7bf.md`
+(11 tasks, TDD, delegates to a background worktree). With the backlog empty,
+after this the open loops are: a `/ardd-diagram` pass for the two stale
+diagrams, and shipping the accumulated `main` work to beta/prod when ready.
