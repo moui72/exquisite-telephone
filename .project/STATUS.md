@@ -56,6 +56,12 @@ Production Annotation landed at the head of `server/src/curation/ledger.ts`.
 - 0 known defects — see DEFECTS.md, last checked 2026-07-21. Run
   /ardd-defects to refresh.
 
+## Feedback
+
+- 1 open feedback file (`feedback-curation-pipe-followups-b8ae.md`, 3 items:
+  SKILL.md `tsx -e` bug; skill self-fetch UX; weekly scheduled aggregate
+  workflow) — will be picked up by the next `/ardd-plan`.
+
 ## Feature Backlog
 
 - 1 backlogged · 0 planned · 0 tasked · 20 implemented · 1 subsumed — see
@@ -69,8 +75,9 @@ Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step:
-`/ardd-plan app-version-display-and-semver` (the one backlog item). Other open
-loops: a `/ardd-diagram` pass for the two stale diagrams, and shipping the
-accumulated `main` work (20 commits — curation feature + docs) to beta by
-pushing, then promoting to prod when ready.
+0 issues found. Safe to /plan: yes. Two plannable inputs now: the open
+feedback file (curation follow-ups) and the `app-version-display-and-semver`
+backlog item — a bare `/ardd-plan` offers both (they're unrelated, so plan
+separately). Other open loops: a `/ardd-diagram` pass for the two stale
+diagrams, and shipping the accumulated `main` work (curation feature + docs)
+to beta by pushing, then promoting to prod when ready.
