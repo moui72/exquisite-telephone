@@ -6,3 +6,4 @@ export * from './phraseBank.js';
 export * from './promptDeal.js';
 export * from './entryLimits.js';
 export * from './coverTemplates.js';
+export * from './appVersion.js';

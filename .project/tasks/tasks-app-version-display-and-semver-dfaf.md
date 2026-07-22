@@ -15,7 +15,7 @@ covered by the Phase-1 pure-function tests).
 
 ## Phase 1: Version string + build-time injection
 
-- [ ] T001 [artifacts: infrastructure] Write a failing test for a pure
+- [x] T001 [artifacts: infrastructure] Write a failing test for a pure
   version-string composer (in `shared/` or `client`) taking `{ version,
   channel, sha }` and returning: `vX.Y.Z` for `channel==='prod'`;
   `vX.Y.Z-beta+<sha>` for `channel==='beta'`; `vX.Y.Z-dev` for
