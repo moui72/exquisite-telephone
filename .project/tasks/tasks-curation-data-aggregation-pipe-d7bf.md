@@ -1,7 +1,7 @@
 ---
 plan: plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md
 generated: 2026-07-22
-status: ready
+status: in-progress
 ---
 
 # Tasks
