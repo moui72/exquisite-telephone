@@ -60,7 +60,7 @@ exception and carry no test.
   entries keep their disposition (`pending`/`rejected`) with refreshed vote
   counts, and candidates absent from the ledger are appended `pending` ("new").
   Match by exact text. Confirm red.
-- [ ] T008 [artifacts: datamodel, infrastructure] Implement the helper's
+- [x] T008 [artifacts: datamodel, infrastructure] Implement the helper's
   read-only snapshot ingest and ledger reconciliation per T007 (a `server` or
   standalone module the skill invokes). Make T007 pass. Read-only: it never
   writes `phraseBank.ts`.

@@ -7,7 +7,7 @@ function snapshot(candidates: CurationData['candidates']): CurationData {
 }
 
 describe('reconcileLedger (T007, datamodel.md CurationLedger)', () => {
-  it.fails('promotes decked candidates out, carries disposition, appends new', () => {
+  it('promotes decked candidates out, carries disposition, appends new', () => {
     const prior: LedgerEntry[] = [
       { phrase: 'now in the deck', votes: 2, firstSeenAt: 100, disposition: 'pending' },
       { phrase: 'a rejected one', votes: 5, firstSeenAt: 200, disposition: 'rejected' },
