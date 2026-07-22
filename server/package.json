@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "curation:aggregate": "tsx src/curation/cli.ts",
+    "curation:aggregate:dist": "node dist/curation/cli.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
