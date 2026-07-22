@@ -11,6 +11,20 @@ name: Promote main to release
 # same tree.
 on:
   workflow_dispatch:
+    inputs:
+      # The semantic-version bump this promotion applies before cutting the
+      # release (infrastructure.md — App Versioning, Auto-bump on promotion).
+      # `patch` is the default because most releases are patches; a human
+      # picks minor/major when the change warrants it.
+      bump:
+        description: 'Version bump for this release'
+        type: choice
+        required: true
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
 
 # Two dispatches must not race each other onto the same branch, nor into
 # the same Fly app. This group covers the fast-forward AND the deploy,
@@ -36,6 +50,34 @@ jobs:
           # full history of both branches to know whether release is an
           # ancestor of main.
           fetch-depth: 0
+
+      # Bump the version on main FIRST, so the bump is the new source of
+      # truth on main and reaches release by the existing fast-forward — no
+      # new divergence path (infrastructure.md — Auto-bump on promotion).
+      # The push is authenticated with the built-in GITHUB_TOKEN, whose push
+      # does not re-trigger workflows (the same recursion property promotion
+      # already relies on), so bumping here does not kick off a beta deploy
+      # race.
+      - name: Bump version on main
+        id: bump
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          # --no-git-tag-version updates package.json only (no commit, no
+          # tag); npm prints the new version as `vX.Y.Z`. We make the
+          # release commit ourselves so it carries the Conventional-Commit
+          # subject, then tag the release commit in a later step.
+          tag="$(npm version '${{ inputs.bump }}' --no-git-tag-version)"
+          version="${tag#v}"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+          git commit -am "chore(release): ${tag}"
+          # Fast-forward push of the bump onto main. GITHUB_TOKEN's push does
+          # not re-trigger workflows, so this does not start a second run.
+          git push origin HEAD:main
 
       - name: Push main to release (fast-forward only)
         run: |

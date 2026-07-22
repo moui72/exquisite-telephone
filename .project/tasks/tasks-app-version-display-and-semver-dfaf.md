@@ -63,7 +63,7 @@ covered by the Phase-1 pure-function tests).
 
 ## Phase 4: Prod auto-bump, tag, release (promote.yml)
 
-- [ ] T010 [artifacts: infrastructure] Add a `workflow_dispatch` input to
+- [x] T010 [artifacts: infrastructure] Add a `workflow_dispatch` input to
   `promote.yml` — `bump` (choice: `patch` | `minor` | `major`). Before the
   existing fast-forward, run `npm version <bump> --no-git-tag-version` on
   `main`, commit `chore(release): vX.Y.Z`, and push to `main` with the built-in
