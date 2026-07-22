@@ -14,7 +14,7 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v5
         with:
           version: 10
@@ -46,7 +46,7 @@ jobs:
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           # Need history for both ends of the pushed range to diff them.
           fetch-depth: 0
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency: deploy-beta
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: superfly/flyctl-actions/setup-flyctl@master
       # Bake the channel-aware version into the beta bundle (infrastructure.md
       # — App Versioning). The X.Y.Z is the last tagged release (the current

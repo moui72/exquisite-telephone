@@ -43,7 +43,7 @@ jobs:
     name: Fast-forward release to main, then deploy prod
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
         with:
           ref: main
           # A shallow clone cannot compute fast-forwardness — git needs the
