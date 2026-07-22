@@ -483,6 +483,42 @@ machine would neither see that volume nor share its files. This is
 independent of, and additional to, the in-memory-room-state reason for
 running one machine.
 
+### App Versioning
+
+The app carries its own **semantic version**, distinct from the ArDD tooling
+badge in the README. The single source of truth is the root `package.json`
+`version` field (`0.1.0` today; the Manifest/Script Hygiene quality standard
+already treats `package.json` as authoritative). It exists so a player's
+feedback can name the release they hit (see [[ui]] Salon Footer).
+
+**Injected at build time, never at runtime.** A Vite `define` bakes a version
+string into the client bundle (no runtime endpoint — Principle I). The value
+is channel-aware, assembled from three build inputs passed to `flyctl deploy`
+as `--build-arg`s (declared as `ARG`s in the Dockerfile and read by the client
+build):
+
+- **Prod** shows a clean `vX.Y.Z` — the promoted release.
+- **Beta** shows `vX.Y.Z-beta+<short-sha>`. Beta auto-deploys on *every* code
+  push to `main`, so it runs ahead of the last tagged release; the `X.Y.Z` is
+  that last release (the current `package.json` value) and the `+<short-sha>`
+  identifies exactly which beta build a report came from.
+
+The channel and sha are supplied by the deploying workflow: `ci.yml`'s
+`deploy-beta` passes `channel=beta` and the pushed commit's short sha;
+`promote.yml` passes `channel=prod` (no sha needed — the tag is the referent).
+
+**Auto-bump on promotion.** `promote.yml` gains a bump-level dispatch input
+(`patch` | `minor` | `major`). On promotion it: bumps `package.json` via
+`npm version <level> --no-git-tag-version`, commits the bump to `main`
+(`chore(release): vX.Y.Z`) and pushes it (authenticated with the built-in
+`GITHUB_TOKEN`, whose push does not re-trigger workflows — the same recursion
+property the promotion already relies on), **then** fast-forwards `release`
+from `main` (now carrying the bump), tags the release commit `vX.Y.Z`, creates
+the GitHub release, and deploys prod. So the bump lands on `main` as the new
+source of truth and reaches `release` by the existing fast-forward — no new
+divergence path. (A bump commit touches `package.json`, which is code, so the
+next ordinary push to `main` also rebuilds beta against the new base version.)
+
 ### One-time MANUAL CLI steps — per app, not per repo
 
 These are **manual**, run by a human with `flyctl`, and are *not*

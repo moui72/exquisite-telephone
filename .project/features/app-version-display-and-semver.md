@@ -1,7 +1,9 @@
 ---
 slug: app-version-display-and-semver
-status: backlogged
+status: tasked
 logged: 2026-07-22
+plan: plan-app-version-display-and-semver-2026-07-22-0c08.md
+tasks: tasks-app-version-display-and-semver-dfaf.md
 ---
 
 Apply semantic versioning to ex-tel releases and surface the current app version somewhere unobtrusive-but-discoverable in the UI (e.g. the Salon Footer or the help-panel About tab), so a player giving feedback can tell the maintainer which version they experienced an issue on.

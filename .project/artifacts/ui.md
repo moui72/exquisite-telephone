@@ -1,8 +1,8 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-21
-diagram_status: current
+last_updated: 2026-07-22
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -98,7 +98,7 @@ the gallery wall, trimmed with a double gilt rail (a bright hairline
 over a dimmer one) that echoes the Gilt Frame's outer + inset strokes
 without carrying a heavy border.
 
-It carries three things:
+It carries:
 
 - **Identity, left**: the house wordmark ("Exquisite Telephone") before
   a room exists, replaced by the current salon's number ("Salon No.
@@ -110,6 +110,14 @@ It carries three things:
 - **The host's gavel**: opens the Moderation Panel (see below).
   Rendered only for the host; absent entirely from every other
   player's footer rather than shown disabled.
+- **The app version**, small and muted (the utility Space Mono face fits
+  its stamped-ticket role): the build's channel-aware version string —
+  `vX.Y.Z` on prod, `vX.Y.Z-beta+<short-sha>` on beta (see
+  [[infrastructure]] App Versioning), baked in at build time. It sits
+  unobtrusively (e.g. far right / trailing the rail) so it never competes
+  with the room code, but is always on screen — the point is that a player
+  reporting an issue can read off exactly which release they were on. Not a
+  link or a control; just readable text.
 
 Both buttons open their panel as an app-level overlay. This is the
 single entry point for each — neither panel is reachable from inside a
@@ -121,16 +129,33 @@ footer.
 
 ## Rules Overview Panel
 
-A dismissible panel explaining the core game loop in docent voice: a
-player writes a phrase, the next player draws it having never seen the
-original text, the next player writes a new phrase from only the
-drawing, and so on around the circle — Reveal then shows the whole
-chain, phrase to drawing to phrase, so everyone sees how far it
-drifted. Opened as an overlay from the Salon Footer's "?" button (see
-above) — so it is reachable from every view, including mid-turn and
-during Reveal, not just before the game starts. Not shown
-automatically; a player who already knows the game is never
-interrupted by it.
+A dismissible **tabbed** panel opened as an overlay from the Salon
+Footer's "?" button (see above) — reachable from every view, including
+mid-turn and during Reveal, not just before the game starts. Not shown
+automatically; a player who already knows the game is never interrupted
+by it. Two tabs: **Rules** (selected by default on open) and **About**.
+Only the active tab's copy is rendered, not merely hidden.
+
+The **Rules** tab explains the core game loop in docent voice: a player
+writes a phrase, the next player draws it having never seen the original
+text, the next player writes a new phrase from only the drawing, and so on
+around the circle — Reveal then shows the whole chain, phrase to drawing
+to phrase, so everyone sees how far it drifted.
+
+The **About** tab credits the game's three antecedents in docent voice —
+the Surrealists' *Exquisite Corpse* (a work assembled blind), the parlour
+game *Telephone* (the drift of a passed message), and *Telestrations* (the
+alternating write-then-draw ritual). The Telestrations mention carries an
+explicit trademark / non-affiliation note (an independent, unendorsed
+homage). It also links the GitHub source
+(`https://github.com/moui72/exquisite-telephone`) and GitHub Sponsors
+(`https://github.com/sponsors/moui72`), each opening in a new tab with an
+accessible label. **And it shows the app version prominently** — the same
+channel-aware build string as the footer (see [[infrastructure]] App
+Versioning), but presented as readable labeled copy (e.g. "Version
+vX.Y.Z") rather than the footer's muted stamp, so a player who opens About
+to report an issue finds the release they're on stated plainly alongside
+the source link.
 
 The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
