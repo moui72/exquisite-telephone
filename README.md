@@ -145,6 +145,7 @@ erDiagram
     ENTRY }o--|| PLAYER : "authorId"
     RATINGEVENT |o--o| PROMPTRATING : "folds when origin=bank"
     RATINGEVENT |o--o| CANDIDATEPHRASE : "folds when origin=player-written"
+    CANDIDATEPHRASE |o..o| CURATIONLEDGER : "logged-but-not-decked"
 
     ROOM {
         string id "short room code"
@@ -208,6 +209,15 @@ erDiagram
         int votes
         timestamp firstLoggedAt
     }
+    CURATIONLEDGER {
+        string phrase "key (maintainer artifact, gitignored)"
+        int votes
+        timestamp firstSeenAt
+        enum disposition "pending|rejected|promoted"
+    }
+    OFFENSIVEQUARANTINE {
+        string phrase "flagged offensive, separate file"
+    }
 ```
 
 ## Infrastructure
@@ -215,7 +225,7 @@ erDiagram
 ```mermaid
 graph TD
     subgraph client[Browser - Svelte SPA]
-        UI[Client app]
+        UI[Client app - build-time app version baked in]
         PNG[PNG export - client-side rasterize, branded/divided strip]
     end
 
@@ -228,8 +238,14 @@ graph TD
         CUR[Curation store - append-only JSON events]
     end
 
-    VOL[(Fly volume - curation.json)]
-    FLY[Fly.io - beta from main, prod from release]
+    VOL[(Fly volume - events, snapshot, ledger, archive)]
+    FLY[Fly.io - beta from main, prod from release tag]
+
+    subgraph maint[Maintainer tooling - NOT app runtime]
+        PIPE[Aggregation pipe - node dist/curation/cli.js: fold, sanitize, archive]
+        SKILL[curation-review skill - read-only, recommends deck edits]
+    end
+    GHA[GitHub Actions - weekly cron aggregate + restart; versioned deploys]
 
     UI -->|"socket events (submit entry, submit cover)"| SIO
     STATIC -->|serves build| UI
@@ -241,6 +257,12 @@ graph TD
     CUR -->|one file per event| VOL
     UI --> PNG
     proc -->|deployed as one app| FLY
+
+    VOL -->|reads events| PIPE
+    PIPE -->|snapshot + archive folded events| VOL
+    PIPE -.->|read-only snapshot| SKILL
+    GHA -->|fly ssh: run pipe, then restart| PIPE
+    GHA -->|deploy w/ version build-args| FLY
 ```
 
 ## UI
@@ -248,7 +270,7 @@ graph TD
 ```mermaid
 graph TD
     App[App.svelte - routes by Room.status]
-    App --> SalonFooter[SalonFooter - always present]
+    App --> SalonFooter[SalonFooter - always present; muted app-version stamp]
     App --> Lobby[Lobby View]
     App --> WD[Writing / Drawing View]
     App --> Decorate[DecorationWindow - status decorating, 2-min gated]
@@ -256,9 +278,9 @@ graph TD
     App --> States[Terminal states - ended / kicked / error]
 
     SalonFooter -->|host gavel opens| ModPanel[ModerationPanel]
-    SalonFooter -->|? opens| Rules[RulesOverview panel - tabbed]
+    SalonFooter -->|? opens| Rules[RulesOverview panel - tabbed, gilt placards]
     Rules --> RulesTab[Rules tab - default]
-    Rules --> AboutTab[About tab - credits + repo/sponsor links]
+    Rules --> AboutTab[About tab - credits, repo/sponsor links, app version]
 
     Lobby --> InfoTip[InfoTooltip - per host setting]
     Lobby -->|derives from activePlayers| Rules

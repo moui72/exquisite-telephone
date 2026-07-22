@@ -2,7 +2,7 @@
 name: datamodel
 status: stable
 last_updated: 2026-07-22
-diagram_status: stale
+diagram_status: current
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |

@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-22
-diagram_status: stale
+diagram_status: current
 diagram_type: graph TD
 render_section: UI
 render_hint: |
