@@ -44,7 +44,7 @@ covered by the Phase-1 pure-function tests).
   or control) present on the footer. Confirm red.
 - [x] T006 [artifacts: ui] Implement the footer version display per T005
   (unobtrusive placement, Space Mono). Make it pass.
-- [ ] T007 [artifacts: ui] Write a failing test that the help panel's About tab
+- [x] T007 [artifacts: ui] Write a failing test that the help panel's About tab
   (`RulesOverview.svelte`) renders the app version **prominently** as labeled
   copy (e.g. "Version vX.Y.Z") beside the existing source link, using the same
   version constant. Confirm red.

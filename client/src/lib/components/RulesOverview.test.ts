@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { APP_VERSION } from '../appVersion';
 import RulesOverview from './RulesOverview.svelte';
 
 afterEach(() => cleanup());
@@ -155,6 +156,23 @@ describe('RulesOverview (T007: About tab content)', () => {
     // Explicit trademark acknowledgment / non-affiliation wording.
     expect(copy).toMatch(/trademark/i);
     expect(copy).toMatch(/not affiliated|no affiliation|unaffiliated|not endorsed/i);
+  });
+
+  it.fails('shows the app version prominently as labeled copy beside the source link', async () => {
+    const { container } = await openAbout();
+    const copy = (container.textContent ?? '').replace(/\s+/g, ' ');
+
+    // Prominent, labeled copy ("Version vX.Y.Z") — not the footer's muted
+    // stamp ([[ui]] Rules Overview Panel / [[infrastructure]] App Versioning).
+    expect(copy).toMatch(new RegExp(`Version ${APP_VERSION.replace(/[.+]/g, '\\$&')}`));
+
+    // The same build constant the footer uses, presented as readable text.
+    expect(screen.getByText(new RegExp(`Version ${APP_VERSION.replace(/[.+]/g, '\\$&')}`))).toBeInTheDocument();
+
+    // It sits alongside the source link, not in place of it.
+    expect(
+      screen.getByRole('link', { name: /source|repositor|source code/i }),
+    ).toBeInTheDocument();
   });
 
   it('links the repo and sponsor pages in a new tab with accessible labels', async () => {
