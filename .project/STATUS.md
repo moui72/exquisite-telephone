@@ -1,34 +1,26 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill IN FLIGHT;
-new backlog item logged.** A delegated worktree run is implementing
-`tasks-curation-data-aggregation-pipe-d7bf.md` (11 tasks) — not yet merged.
-And `app-version-display-and-semver` was just backlogged (semver-tagged
-ex-tel releases + a user-visible in-app version so feedback can name the
-release it came from). Plan it with `/ardd-plan app-version-display-and-semver`
-once convenient. — `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`
-(approved) → `tasks-curation-data-aggregation-pipe-d7bf.md` (`ready`, 11 tasks,
-5 phases, TDD). Designed against
-`research-curation-aggregation-pipe-2026-07-21-4bbe.md`.
+_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill shipped to
+`main`.** `tasks-curation-data-aggregation-pipe-d7bf.md` (11 tasks, TDD) is
+`completed` and merged, worktree reaped. Feature
+`curation-data-aggregation-pipe` → `implemented`. Full suite green (521 tests).
 
-Two deliverables: (1) a deterministic `server` CLI **pipe** — reuse
-`aggregate()`, a pure display-safety **sanitizer** (output-only, never the
-exact-text dedup key), and **archive** folded events (snapshot-then-move,
-draining `MAX_CURATION_EVENTS`); (2) a repo-local **ingestion skill** — a
-Claude Code maintainer tool that read-only fetches the pipe snapshot, keeps a
-gitignored **ledger** + **offensive-quarantine**, and recommends deck
-add/removes judged against `PROMPT_CRITERIA.md` for a human to apply. The
-injection defense is architectural (structured-data isolation, no deck writes,
-no mutating `fly`, human-in-the-loop), not a string filter.
+Delivered: `shared/sanitizeForDisplay` (control/escape + bidi/zero-width,
+output-only); the `server` **pipe** (`server/src/curation/` — folds via
+`aggregate()`, sanitizes on output, writes a durable snapshot + readable
+summary, archives folded events snapshot-then-move; `curation:aggregate`
+script); the ledger/count-analysis helper (`ledger.ts` — `REMOVAL_MIN_SAMPLE=20`,
+`REMOVAL_DOWN_RATIO=0.6`, `ADDITION_MIN_VOTES=3`); and the **`curation-review`**
+Claude Code skill (read-only snapshot fetch, ledger reconcile, offensive
+quarantine, `PROMPT_CRITERIA.md`-judged Markdown recommendation report,
+`[untrusted]`-labeled, never edits the deck / never mutates via `fly`).
+`.gitignore` protects the ledger/quarantine/snapshot/archive.
 
-Artifact design applied: `infrastructure` (Aggregation Pipe + Ingestion Skill
-sections; rewrote the `MAX_CURATION_EVENTS` annotation), `datamodel`
-(dedup-key sanitization invariant + CurationLedger/OffensiveQuarantine
-maintainer artifacts), and **`constitution` bumped v1.1.0 → v1.1.1** (maintainer
-tooling — incl. the LLM ingestion skill — is not app runtime).
+Also this session: `app-version-display-and-semver` was backlogged (semver
+ex-tel releases + a user-visible in-app version for feedback triage).
 
-Nothing is in flight. Both channels were current at the last deploy; this
-feature is not built or deployed yet.)_
+Nothing is in flight. Local `main` is 20 commits ahead of `origin` — this
+feature is not deployed yet.)_
 
 ## Artifacts Found
 
@@ -39,24 +31,19 @@ feature is not built or deployed yet.)_
 | infrastructure.md | stable ✅ | — |
 | ui.md | stable ✅ | — |
 
-No `[OPEN: ...]` items outstanding. (Three plan-time details are parked in the
-plan's Open Questions — skill name/report shape, removal threshold, offensive-
-flag mechanism — not artifact gaps.)
+No `[OPEN: ...]` items outstanding.
 
 ## Cross-Artifact Issues
 
-None. The pipe/skill concepts, the sanitization dedup-key invariant, and the
-maintainer-tooling scope are defined and referenced consistently across
-`infrastructure`/`datamodel`/`constitution`; lint clean.
+None. The shipped pipe/skill match `infrastructure` (Aggregation Pipe /
+Ingestion Skill), `datamodel` (sanitization dedup-key invariant;
+ledger/quarantine artifacts), and `constitution` (maintainer tooling scope).
 
 ## Constitution Compliance
 
-No violations. `constitution` v1.1.1 explicitly scopes the LLM ingestion skill
-as maintainer tooling (not app runtime), so it does not breach the
-party-game/no-premature-scaling scope. The plan's Complexity Tracking justifies
-the LLM tool and the ledger/quarantine files. Production annotations
-(recommend-only boundary; drop-fallback between pipe runs) are recorded in
-`infrastructure`.
+No violations. The `curation-review` skill is maintainer tooling per
+`constitution` v1.1.1 (not app runtime); the recommend-only / no-deck-write
+Production Annotation landed at the head of `server/src/curation/ledger.ts`.
 
 ## Diagrams
 
@@ -71,29 +58,19 @@ the LLM tool and the ledger/quarantine files. Production annotations
 
 ## Feature Backlog
 
-- 1 backlogged · 0 planned · 1 tasked · 19 implemented · 1 subsumed — see
+- 1 backlogged · 0 planned · 0 tasked · 20 implemented · 1 subsumed — see
   `.project/features/`.
-  - Backlogged: `app-version-display-and-semver` (semver releases + in-app
-    version display) — target with `/ardd-plan app-version-display-and-semver`.
-  - Tasked: `curation-data-aggregation-pipe` (in flight in a worktree).
-
-## Work Queue
-
-- `tasks-curation-data-aggregation-pipe-d7bf.md` — plan
-  `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`, feature
-  `curation-data-aggregation-pipe`: the only `ready` file; nothing else in
-  flight to overlap.
+  - Backlogged: `app-version-display-and-semver` — target with
+    `/ardd-plan app-version-display-and-semver`.
 
 ## In Flight
 
-- Worktree `.claude/worktrees/agent-a6606c5c61d4615de`
-  (branch `worktree-agent-a6606c5c61d4615de`) —
-  `tasks-curation-data-aggregation-pipe-d7bf.md` in-progress. On completion the
-  coordinator merges (`merge_policy: auto`), reaps, and re-runs `/ardd-status`.
+Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. In flight: the curation pipe + skill run
-(await its merge). Then the open loops are: `/ardd-plan
-app-version-display-and-semver` (newly backlogged), a `/ardd-diagram` pass for
-the two stale diagrams, and shipping accumulated `main` work to beta/prod.
+0 issues found. Safe to /plan: yes. Recommended next step:
+`/ardd-plan app-version-display-and-semver` (the one backlog item). Other open
+loops: a `/ardd-diagram` pass for the two stale diagrams, and shipping the
+accumulated `main` work (20 commits — curation feature + docs) to beta by
+pushing, then promoting to prod when ready.
