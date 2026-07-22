@@ -64,7 +64,7 @@ exception and carry no test.
   read-only snapshot ingest and ledger reconciliation per T007 (a `server` or
   standalone module the skill invokes). Make T007 pass. Read-only: it never
   writes `phraseBank.ts`.
-- [ ] T009 [artifacts: datamodel] Write a failing test for the count analysis
+- [x] T009 [artifacts: datamodel] Write a failing test for the count analysis
   and quarantine plumbing: bank `PromptRating` entries past a down-heavy
   threshold AND a minimum sample size are flagged as removal candidates;
   strong-vote `CandidatePhrase` entries are addition candidates; entries marked

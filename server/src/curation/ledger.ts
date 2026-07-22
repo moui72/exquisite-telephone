@@ -86,6 +86,53 @@ export function reconcileLedger(
   return { ledger, promoted };
 }
 
+/**
+ * Deterministic count thresholds (plan Open Question — Removal threshold).
+ * These are fixed so the LLM judges only borderline ADDITIONS, never the
+ * arithmetic. The values are a judgement call for a low-traffic app whose
+ * curation data one human reads every few weeks, not an empirical cutoff:
+ *
+ * - A bank phrase is a removal candidate only once it has been rated at
+ *   least `REMOVAL_MIN_SAMPLE` times AND at least `REMOVAL_DOWN_RATIO` of
+ *   those ratings are thumbs-down — a down-heavy majority on real sample,
+ *   so a couple of early dislikes never flag a phrase.
+ * - A player-written candidate is an addition candidate once it reaches
+ *   `ADDITION_MIN_VOTES` distinct thumbs-up — enough signal to be worth a
+ *   human's `PROMPT_CRITERIA.md` judgement, which is the actual gate.
+ */
+export const REMOVAL_MIN_SAMPLE = 20;
+export const REMOVAL_DOWN_RATIO = 0.6;
+export const ADDITION_MIN_VOTES = 3;
+
+/**
+ * Deterministic count analysis: down-heavy bank phrases over the sample
+ * floor are removal candidates; strong-vote player candidates are addition
+ * candidates. RECOMMENDATIONS ONLY — the human (and, for additions, the
+ * `PROMPT_CRITERIA.md` judgement) decides; nothing here edits the deck.
+ */
+export function analyzeCounts(snapshot: CurationData): {
+  removalCandidates: PromptRating[];
+  additionCandidates: CandidatePhrase[];
+} {
+  void snapshot;
+  throw new Error('analyzeCounts not implemented');
+}
+
+/**
+ * Offensive-quarantine plumbing (datamodel.md OffensiveQuarantine): given
+ * the phrases the skill flagged offensive, route those entries to the
+ * SEPARATE quarantine file and keep the rest in the main ledger. Kept
+ * deterministic; the offensiveness judgement itself is the skill's.
+ */
+export function partitionOffensive(
+  entries: readonly LedgerEntry[],
+  offensivePhrases: ReadonlySet<string>,
+): { ledger: LedgerEntry[]; quarantine: LedgerEntry[] } {
+  void entries;
+  void offensivePhrases;
+  throw new Error('partitionOffensive not implemented');
+}
+
 /** The ledger + quarantine files, beside `CURATION_DATA_PATH` on the volume. */
 export function ledgerPaths(dataPath: string): { ledgerPath: string; quarantinePath: string } {
   const dir = dirname(dataPath);
