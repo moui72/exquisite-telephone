@@ -1,7 +1,12 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill planned and
-tasked — backlog now empty.** `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`
+_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill IN FLIGHT;
+new backlog item logged.** A delegated worktree run is implementing
+`tasks-curation-data-aggregation-pipe-d7bf.md` (11 tasks) — not yet merged.
+And `app-version-display-and-semver` was just backlogged (semver-tagged
+ex-tel releases + a user-visible in-app version so feedback can name the
+release it came from). Plan it with `/ardd-plan app-version-display-and-semver`
+once convenient. — `plan-curation-data-aggregation-pipe-2026-07-22-4c9b.md`
 (approved) → `tasks-curation-data-aggregation-pipe-d7bf.md` (`ready`, 11 tasks,
 5 phases, TDD). Designed against
 `research-curation-aggregation-pipe-2026-07-21-4bbe.md`.
@@ -66,10 +71,11 @@ the LLM tool and the ledger/quarantine files. Production annotations
 
 ## Feature Backlog
 
-- 0 backlogged · 0 planned · 1 tasked · 19 implemented · 1 subsumed — see
-  `.project/features/`. **The backlog is empty** — everything logged is
-  planned or shipped.
-  - Tasked: `curation-data-aggregation-pipe` (this plan, ready to implement).
+- 1 backlogged · 0 planned · 1 tasked · 19 implemented · 1 subsumed — see
+  `.project/features/`.
+  - Backlogged: `app-version-display-and-semver` (semver releases + in-app
+    version display) — target with `/ardd-plan app-version-display-and-semver`.
+  - Tasked: `curation-data-aggregation-pipe` (in flight in a worktree).
 
 ## Work Queue
 
@@ -80,12 +86,14 @@ the LLM tool and the ledger/quarantine files. Production annotations
 
 ## In Flight
 
-Nothing in flight — no worktrees, no in-progress tasks files.
+- Worktree `.claude/worktrees/agent-a6606c5c61d4615de`
+  (branch `worktree-agent-a6606c5c61d4615de`) —
+  `tasks-curation-data-aggregation-pipe-d7bf.md` in-progress. On completion the
+  coordinator merges (`merge_policy: auto`), reaps, and re-runs `/ardd-status`.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Recommended next step: run
-`/ardd-implement` and pick `tasks-curation-data-aggregation-pipe-d7bf.md`
-(11 tasks, TDD, delegates to a background worktree). With the backlog empty,
-after this the open loops are: a `/ardd-diagram` pass for the two stale
-diagrams, and shipping the accumulated `main` work to beta/prod when ready.
+0 issues found. Safe to /plan: yes. In flight: the curation pipe + skill run
+(await its merge). Then the open loops are: `/ardd-plan
+app-version-display-and-semver` (newly backlogged), a `/ardd-diagram` pass for
+the two stale diagrams, and shipping accumulated `main` work to beta/prod.
