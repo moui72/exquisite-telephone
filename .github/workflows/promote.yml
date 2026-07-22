@@ -116,6 +116,21 @@ jobs:
           MSG
           exit 1
 
+# The release commit now sits on release (byte-identical to main). Tag it
+      # and publish a GitHub release so vX.Y.Z has a durable referent — the
+      # tag is what prod points at, so it needs no sha (infrastructure.md —
+      # App Versioning). Runs only if the fast-forward above succeeded.
+      - name: Tag the release and publish a GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag='${{ steps.bump.outputs.tag }}'
+          # Annotated tag on the release commit (== main HEAD, just pushed).
+          git tag -a "$tag" -m "Release ${tag}"
+          git push origin "$tag"
+          gh release create "$tag" --title "$tag" --generate-notes
+
       # This run deploys prod itself rather than letting the push above
       # trigger a separate job. A push authenticated with GITHUB_TOKEN does
       # not trigger further workflow runs (GitHub's recursion guard), so a
@@ -131,7 +146,12 @@ jobs:
       - name: Deploy prod
         # The checkout is `main`, whose tree is now byte-identical to
         # release — deploying from this working copy and deploying from a
-        # fresh release checkout are the same tree, by fast-forward.
-        run: flyctl deploy --config fly.toml --remote-only
+        # fresh release checkout are the same tree, by fast-forward. Bake the
+        # clean prod version string (channel=prod → vX.Y.Z, no sha; the tag
+        # is the referent) using the just-bumped version.
+        run: |
+          flyctl deploy --config fly.toml --remote-only \
+            --build-arg APP_VERSION="${{ steps.bump.outputs.version }}" \
+            --build-arg BUILD_CHANNEL=prod
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}

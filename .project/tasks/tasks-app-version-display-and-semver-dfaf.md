@@ -69,7 +69,7 @@ covered by the Phase-1 pure-function tests).
   `main`, commit `chore(release): vX.Y.Z`, and push to `main` with the built-in
   `GITHUB_TOKEN` (which does not re-trigger workflows). Validate the workflow
   YAML parses.
-- [ ] T011 [artifacts: infrastructure] After the fast-forward of `release`,
+- [x] T011 [artifacts: infrastructure] After the fast-forward of `release`,
   have `promote.yml` create an annotated tag `vX.Y.Z` on the release commit and
   a GitHub release, and pass `--build-arg APP_VERSION=<bumped version>
   --build-arg BUILD_CHANNEL=prod` to the prod `flyctl deploy`. Validate the
