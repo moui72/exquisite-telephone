@@ -20,7 +20,7 @@ afterEach(() => {
 });
 
 describe('aggregation pipe fold + display sanitization (T003)', () => {
-  it.fails('folds the event dir and sanitizes candidate text on output', async () => {
+  it('folds the event dir and sanitizes candidate text on output', async () => {
     // Two player-written candidates whose RAW text differs only by a
     // stripped control char (ESC): they must fold to SEPARATE entries
     // (exact-text dedup key, not sanitized), then both display as "abc".

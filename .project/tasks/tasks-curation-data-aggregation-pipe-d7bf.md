@@ -34,7 +34,7 @@ exception and carry no test.
   snapshot object (`CurationData`-shaped). Assert two candidates whose raw text
   differs only by a stripped control char remain SEPARATE entries (the
   exact-text dedup key was not sanitized). Confirm red.
-- [ ] T004 [artifacts: infrastructure] Implement the pipe as a `server`
+- [x] T004 [artifacts: infrastructure] Implement the pipe as a `server`
   CLI: read `CURATION_DATA_PATH` via the existing `config`, call `aggregate()`,
   sanitize candidate text on output, and write the snapshot durably (JSON) plus
   a readable summary (ratings by net score, candidates by votes). Add the
