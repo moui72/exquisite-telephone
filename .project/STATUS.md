@@ -55,8 +55,9 @@ No violations.
 
 ## Feedback
 
-- No open feedback. **Recommended:** file the curation-CLI-in-prod slim-image
-  gap (above) via `/ardd-feedback`.
+- 1 open feedback file (`feedback-curation-cli-slim-image-996e.md`, 1 bug: the
+  curation aggregate CLI can't run in the slim prod image — compile it to
+  `server/dist/curation/cli.js`) — will be picked up by the next `/ardd-plan`.
 
 ## Feature Backlog
 
@@ -77,8 +78,8 @@ Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Summary
 
-0 issues found by the routine checks. Recommended next steps: (1)
-**`/ardd-feedback`** the slim-image curation-CLI gap (the scheduled aggregate
-won't run in prod until fixed); (2) push to ship the tab restyle + workflow to
-beta and eyeball the tabs; (3) a `/ardd-diagram` pass for the three stale
+0 issues found by the routine checks (the slim-image curation-CLI gap is
+captured as open feedback). Recommended next steps: (1) push to ship the tab
+restyle + workflow to beta and eyeball the tabs; (2) `/ardd-plan` the
+slim-image curation-CLI fix; (3) a `/ardd-diagram` pass for the three stale
 diagrams.
