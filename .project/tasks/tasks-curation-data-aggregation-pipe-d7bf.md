@@ -21,7 +21,7 @@ exception and carry no test.
   (`U+202A–202E`, `U+2066–2069`) and zero-width chars (`U+200B–200D`, `U+FEFF`),
   leaves ordinary text (including normal punctuation/emoji) unchanged, and is
   idempotent. Confirm red.
-- [ ] T002 [artifacts: datamodel] Implement `sanitizeForDisplay` per T001 as a
+- [x] T002 [artifacts: datamodel] Implement `sanitizeForDisplay` per T001 as a
   pure exported function in `shared/`. Make T001 pass. It is an OUTPUT
   transform only — no caller applies it to a fold/dedup key.
 
