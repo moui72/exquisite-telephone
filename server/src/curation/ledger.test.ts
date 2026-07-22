@@ -64,7 +64,7 @@ describe('reconcileLedger (T007, datamodel.md CurationLedger)', () => {
 });
 
 describe('analyzeCounts (T009, count thresholds)', () => {
-  it.fails('flags down-heavy over-sample removals and strong-vote additions', () => {
+  it('flags down-heavy over-sample removals and strong-vote additions', () => {
     const data: CurationData = {
       ratings: {
         'down-heavy enough': { phrase: 'down-heavy enough', up: 2, down: 18 }, // 20, .9
@@ -90,7 +90,7 @@ describe('analyzeCounts (T009, count thresholds)', () => {
 });
 
 describe('partitionOffensive (T009, quarantine plumbing)', () => {
-  it.fails('routes flagged entries to quarantine, keeps the rest in the ledger', () => {
+  it('routes flagged entries to quarantine, keeps the rest in the ledger', () => {
     const entries: LedgerEntry[] = [
       { phrase: 'a fine phrase', votes: 3, firstSeenAt: 1, disposition: 'pending' },
       { phrase: 'an offensive phrase', votes: 4, firstSeenAt: 2, disposition: 'pending' },

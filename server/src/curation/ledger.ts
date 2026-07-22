@@ -114,8 +114,12 @@ export function analyzeCounts(snapshot: CurationData): {
   removalCandidates: PromptRating[];
   additionCandidates: CandidatePhrase[];
 } {
-  void snapshot;
-  throw new Error('analyzeCounts not implemented');
+  const removalCandidates = Object.values(snapshot.ratings).filter((r) => {
+    const sample = r.up + r.down;
+    return sample >= REMOVAL_MIN_SAMPLE && r.down / sample >= REMOVAL_DOWN_RATIO;
+  });
+  const additionCandidates = snapshot.candidates.filter((c) => c.votes >= ADDITION_MIN_VOTES);
+  return { removalCandidates, additionCandidates };
 }
 
 /**
@@ -128,9 +132,20 @@ export function partitionOffensive(
   entries: readonly LedgerEntry[],
   offensivePhrases: ReadonlySet<string>,
 ): { ledger: LedgerEntry[]; quarantine: LedgerEntry[] } {
-  void entries;
-  void offensivePhrases;
-  throw new Error('partitionOffensive not implemented');
+  const ledger: LedgerEntry[] = [];
+  const quarantine: LedgerEntry[] = [];
+  for (const entry of entries) {
+    (offensivePhrases.has(entry.phrase) ? quarantine : ledger).push(entry);
+  }
+  return { ledger, quarantine };
+}
+
+/** Persists quarantined entries to their SEPARATE file (gitignored). */
+export async function writeQuarantine(
+  path: string,
+  entries: readonly LedgerEntry[],
+): Promise<void> {
+  await writeFile(path, `${JSON.stringify(entries, null, 2)}\n`, 'utf8');
 }
 
 /** The ledger + quarantine files, beside `CURATION_DATA_PATH` on the volume. */

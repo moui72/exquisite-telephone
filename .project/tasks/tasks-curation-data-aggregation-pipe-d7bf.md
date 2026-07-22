@@ -70,7 +70,7 @@ exception and carry no test.
   strong-vote `CandidatePhrase` entries are addition candidates; entries marked
   offensive are written to the separate quarantine file, not the main ledger.
   Confirm red.
-- [ ] T010 [artifacts: datamodel] Implement the count analysis + offensive
+- [x] T010 [artifacts: datamodel] Implement the count analysis + offensive
   quarantine plumbing per T009, and add `.gitignore` entries that keep the
   ledger and quarantine files (beside `CURATION_DATA_PATH`) out of the repo.
   Make T009 pass.
