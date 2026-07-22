@@ -39,7 +39,7 @@ covered by the Phase-1 pure-function tests).
 
 ## Phase 2: Version display (footer + About tab)
 
-- [ ] T005 [artifacts: ui] Write a failing test that `SalonFooter.svelte`
+- [x] T005 [artifacts: ui] Write a failing test that `SalonFooter.svelte`
   renders the app-version constant as small, muted, readable text (not a link
   or control) present on the footer. Confirm red.
 - [ ] T006 [artifacts: ui] Implement the footer version display per T005
