@@ -31,7 +31,7 @@ Principle III documentation/no-behavior-change exception.
 
 ## Phase 2: Scheduled aggregation workflow
 
-- [ ] T003 [artifacts: infrastructure] Create
+- [x] T003 [artifacts: infrastructure] Create
   `.github/workflows/curation-aggregate.yml`: a weekly `schedule: cron` pinned
   to a fixed UTC time (≈Sunday 02:00 America/New_York — document the ±1h DST
   drift), plus `workflow_dispatch`. It runs `fly ssh console -C 'pnpm --filter

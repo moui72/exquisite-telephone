@@ -1,0 +1,55 @@
+# Weekly curation aggregation (infrastructure.md — Curation Store /
+# Aggregation Pipe). The deterministic `curation:aggregate` CLI folds the
+# volume's rating events into a fresh snapshot and archives the folded
+# events (the MAX_CURATION_EVENTS remedy). The running server caches its
+# event count once and never re-reads the directory, so after an archive
+# run its cache is stale until the process restarts — this workflow
+# therefore runs the aggregate and THEN restarts the app so the count
+# re-seeds from the now-smaller directory (replacing the old manual
+# "run in a deploy/restart window" posture).
+#
+# Both channels are aggregated: beta and prod each own a separate Fly
+# volume, so each needs its own aggregate + restart, with its own token.
+name: Curation aggregate
+
+on:
+  # Fixed UTC time. Target is ~Sunday 02:00 America/New_York; a cron cannot
+  # follow DST, so this fires 07:00 UTC = 02:00 EST in standard time and
+  # drifts to 03:00 EDT in summer (the accepted ±1h seasonal drift). Off-peak
+  # either way.
+  schedule:
+    - cron: '0 7 * * 0'
+  # Manual runs (e.g. an ad-hoc aggregate before a curation-review pass).
+  workflow_dispatch:
+
+jobs:
+  aggregate-beta:
+    name: Aggregate + restart beta
+    runs-on: ubuntu-latest
+    concurrency: curation-aggregate-beta
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Aggregate curation events (beta)
+        run: flyctl ssh console --app exquisite-telephone-beta -C 'pnpm --filter server curation:aggregate'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
+      # Re-seed the server's cached event count from the now-smaller directory.
+      - name: Restart to refresh cached count (beta)
+        run: flyctl apps restart exquisite-telephone-beta
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
+
+  aggregate-prod:
+    name: Aggregate + restart prod
+    runs-on: ubuntu-latest
+    concurrency: curation-aggregate-prod
+    steps:
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Aggregate curation events (prod)
+        run: flyctl ssh console --app exquisite-telephone -C 'pnpm --filter server curation:aggregate'
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
+      - name: Restart to refresh cached count (prod)
+        run: flyctl apps restart exquisite-telephone
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
