@@ -1,7 +1,7 @@
 ---
 plan: plan-app-version-display-and-semver-2026-07-22-0c08.md
 generated: 2026-07-22
-status: ready
+status: in-progress
 ---
 
 # Tasks
