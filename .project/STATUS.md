@@ -1,26 +1,25 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Curation aggregation pipe + ingestion skill shipped to
-`main`.** `tasks-curation-data-aggregation-pipe-d7bf.md` (11 tasks, TDD) is
-`completed` and merged, worktree reaped. Feature
-`curation-data-aggregation-pipe` → `implemented`. Full suite green (521 tests).
+_Updated: 2026-07-22 (**App-version-display + semver releases planned and
+tasked; backlog empty.** `plan-app-version-display-and-semver-2026-07-22-0c08.md`
+(approved) → `tasks-app-version-display-and-semver-dfaf.md` (`ready`, 11 tasks,
+4 phases, TDD). The app gets its own semver (root `package.json`), a
+channel-aware build string injected at build time (prod `vX.Y.Z`, beta
+`vX.Y.Z-beta+<sha>`), shown muted in the **Salon Footer** and prominently in
+the help-panel **About tab**; `promote.yml` auto-bumps + tags + releases on
+promotion; `ci.yml` passes the beta build-args.
 
-Delivered: `shared/sanitizeForDisplay` (control/escape + bidi/zero-width,
-output-only); the `server` **pipe** (`server/src/curation/` — folds via
-`aggregate()`, sanitizes on output, writes a durable snapshot + readable
-summary, archives folded events snapshot-then-move; `curation:aggregate`
-script); the ledger/count-analysis helper (`ledger.ts` — `REMOVAL_MIN_SAMPLE=20`,
-`REMOVAL_DOWN_RATIO=0.6`, `ADDITION_MIN_VOTES=3`); and the **`curation-review`**
-Claude Code skill (read-only snapshot fetch, ledger reconcile, offensive
-quarantine, `PROMPT_CRITERIA.md`-judged Markdown recommendation report,
-`[untrusted]`-labeled, never edits the deck / never mutates via `fly`).
-`.gitignore` protects the ledger/quarantine/snapshot/archive.
+**Drift fixed along the way:** `ui.md` had lost its About-tab description (a
+casualty of the Reveal-rework merge — a `git checkout --theirs` on `ui.md`
+discarded a non-conflicting section that was only on `main`), even though
+`about-tab-help-panel` is shipped in `RulesOverview.svelte`. This plan restored
+the About-tab description to match the code. **Worth a `/ardd-defects` sweep**
+to catch any *other* drift from that same merge.
 
-Also this session: `app-version-display-and-semver` was backlogged (semver
-ex-tel releases + a user-visible in-app version for feedback triage).
+The curation follow-up feedback (`feedback-curation-pipe-followups-b8ae.md`, 3
+items) was deliberately left for its own run and is still open.
 
-Nothing is in flight. Local `main` is 20 commits ahead of `origin` — this
-feature is not deployed yet.)_
+Nothing is in flight. Local `main` is 23 commits ahead of `origin`.)_
 
 ## Artifacts Found
 
@@ -35,49 +34,56 @@ No `[OPEN: ...]` items outstanding.
 
 ## Cross-Artifact Issues
 
-None. The shipped pipe/skill match `infrastructure` (Aggregation Pipe /
-Ingestion Skill), `datamodel` (sanitization dedup-key invariant;
-ledger/quarantine artifacts), and `constitution` (maintainer tooling scope).
+None (lint clean). Note the About-tab restoration brought `ui.md` back in line
+with the shipped `RulesOverview.svelte`.
 
 ## Constitution Compliance
 
-No violations. The `curation-review` skill is maintainer tooling per
-`constitution` v1.1.1 (not app runtime); the recommend-only / no-deck-write
-Production Annotation landed at the head of `server/src/curation/ledger.ts`.
+No violations. Build-time injection over a runtime endpoint (Principle I);
+`package.json` as the version source fits the Manifest/Script Hygiene standard;
+the one deviation (`promote.yml` writing a bump commit) is justified in the
+plan's Complexity Tracking.
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (ledger/quarantine + sanitization note — run /ardd-diagram datamodel)
-- infrastructure.md — stale ⚠️ (Aggregation Pipe + Ingestion Skill — run /ardd-diagram infrastructure)
-- ui.md — current ✅
+- datamodel.md — stale ⚠️ (curation ledger/quarantine — run /ardd-diagram datamodel)
+- infrastructure.md — stale ⚠️ (curation pipe/skill + App Versioning — run /ardd-diagram infrastructure)
+- ui.md — stale ⚠️ (About tab restored + version display — run /ardd-diagram ui)
 
 ## Code-vs-Artifact Defects
 
-- 0 known defects — see DEFECTS.md, last checked 2026-07-21. Run
-  /ardd-defects to refresh.
+- 0 recorded in DEFECTS.md (last checked 2026-07-21) — but the About-tab
+  drift found this session is evidence a `/ardd-defects` pass is due. Run it to
+  capture any other merge-loss drift.
 
 ## Feedback
 
 - 1 open feedback file (`feedback-curation-pipe-followups-b8ae.md`, 3 items:
   SKILL.md `tsx -e` bug; skill self-fetch UX; weekly scheduled aggregate
-  workflow) — will be picked up by the next `/ardd-plan`.
+  workflow) — left for its own `/ardd-plan` run.
 
 ## Feature Backlog
 
-- 1 backlogged · 0 planned · 0 tasked · 20 implemented · 1 subsumed — see
-  `.project/features/`.
-  - Backlogged: `app-version-display-and-semver` — target with
-    `/ardd-plan app-version-display-and-semver`.
+- 0 backlogged · 0 planned · 1 tasked · 20 implemented · 1 subsumed — see
+  `.project/features/`. Backlog is empty.
+  - Tasked: `app-version-display-and-semver` (this plan, ready to implement).
+
+## Work Queue
+
+- `tasks-app-version-display-and-semver-dfaf.md` — plan
+  `plan-app-version-display-and-semver-2026-07-22-0c08.md`, feature
+  `app-version-display-and-semver`: the only `ready` file; nothing else in
+  flight.
 
 ## In Flight
 
-Nothing in flight — no worktrees, no ready or in-progress tasks files.
+Nothing in flight — no worktrees, no in-progress tasks files.
 
 ## Summary
 
-0 issues found. Safe to /plan: yes. Two plannable inputs now: the open
-feedback file (curation follow-ups) and the `app-version-display-and-semver`
-backlog item — a bare `/ardd-plan` offers both (they're unrelated, so plan
-separately). Other open loops: a `/ardd-diagram` pass for the two stale
-diagrams, and shipping the accumulated `main` work (curation feature + docs)
-to beta by pushing, then promoting to prod when ready.
+0 issues found. Safe to /plan: yes. Recommended next step: `/ardd-implement`
+the `app-version-display-and-semver` tasks file (11 tasks, TDD). Other open
+loops: plan the curation follow-up feedback; run `/ardd-defects` (the About-tab
+drift suggests other merge-loss drift may exist); a `/ardd-diagram` pass for
+the three stale diagrams; and ship the accumulated `main` work (curation +
+docs) to beta by pushing, then promote to prod.
