@@ -37,14 +37,14 @@ export default {
           'ui-serif',
           'serif',
         ],
-        // Splash-title only (Lobby.svelte's "Exquisite Telephone" mark) —
-        // an uncial hand modeled on real illuminated-manuscript lettering.
-        // Falls back through `display` rather than a generic `cursive`
-        // (unreliably mapped across browsers/OSes), so an unloaded
-        // Uncial Antiqua still lands on a characterful serif, not a
-        // random system script face.
+        // Splash-title only (the "Exquisite Telephone" mark in Lobby/Reveal) —
+        // Manufacturing Consent, a display face self-hosted via
+        // @fontsource/manufacturing-consent (imported in main.ts). Falls back
+        // through `display` rather than a generic `cursive` (unreliably mapped
+        // across browsers/OSes), so an unloaded face still lands on a
+        // characterful serif, not a random system script face.
         title: [
-          '"Uncial Antiqua"',
+          '"Manufacturing Consent"',
           'Fraunces',
           'Iowan Old Style',
           'Georgia',
