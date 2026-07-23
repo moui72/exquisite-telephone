@@ -46,6 +46,20 @@ primary_region = "iad"
   # deploys. Everything else in this app is in-memory by design and is
   # deliberately NOT written here (infrastructure.md Curation Store).
   CURATION_DATA_PATH = "/data/curation.json"
+  # Per-channel gate for the test-only app seam (infrastructure.md —
+  # End-to-End Test Gate / Curation-write isolation). `true` on BETA, where
+  # the cross-browser e2e suite runs after each deploy; `false` on PROD, so
+  # the seam is structurally un-triggerable there even if the secret leaks.
+  # This is the one key besides `app` in the generator's per-channel values
+  # table — its differing value is the deliberate, allow-listed channel
+  # difference.
+  #
+  # The seam ALSO requires the E2E_TEST_SIGNAL_SECRET the CI job sends as the
+  # x-e2e-test-signal header. That is a Fly SECRET (`fly secrets set` on the
+  # beta app, out of band), never committed here — this repo is public, and
+  # a committed secret would defeat the seam. So only the boolean gate lives
+  # in this config; the secret does not.
+  E2E_SEAM_ENABLED = "__E2E_SEAM_ENABLED__"
 
 # The Curation Store's durable home — the only thing this app persists.
 #

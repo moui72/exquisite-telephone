@@ -53,7 +53,7 @@ status: in-progress
   when the test signal is present and is a no-op otherwise. [artifacts:
   infrastructure]
 
-- [ ] T006 Thread any per-channel config the T004/T005 seams require (e.g. a
+- [x] T006 Thread any per-channel config the T004/T005 seams require (e.g. a
   beta-only test-signal secret or scratch path) through the generated
   fly-config template and its per-channel allowlist — never by hand-editing a
   generated `fly.toml`/`fly.staging.toml`. Confirm the config-lockstep CI
