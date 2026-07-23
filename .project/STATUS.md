@@ -1,5 +1,26 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Cross-browser e2e test gate SHIPPED to beta (13/13,
+merged).** The delegated worktree completed all 13 tasks; branch merged to
+`main` (`adcc105`) and reaped, feature `cross-browser-e2e-game-flow-te` →
+**implemented**, tasks file → completed. Delivered: Playwright suite
+(chromium/firefox/webkit/msedge), a socket.io observer that asserts exact
+`DrawOps`, test-only seams (an `x-e2e-test-signal` header gated by
+`E2E_TEST_SIGNAL_SECRET`, curation-discard for tagged traffic, a timer seam),
+a settings matrix, a beta-deploy CI job recording a per-sha GitHub commit
+status (`e2e/cross-browser`), and a `promote.yml` gate that **blocks on
+red-or-missing**. `E2E_SEAM_ENABLED` added as a second per-channel fly key
+(beta true / prod false) via the generated template.
+**TWO CAVEATS carried forward (not yet resolved):** (1) only chromium ran to
+green locally — firefox/webkit/msedge specs are written but were exercised
+only in principle; CI is their first real run. (2) **A one-time manual step is
+REQUIRED before the gate protects curation**: set `E2E_TEST_SIGNAL_SECRET` as
+BOTH a Fly secret on `exquisite-telephone-beta` and a matching GitHub Actions
+repo secret — until then, test ratings would write to beta's real Curation
+Store while specs still pass green (false confidence). Register: 2 backlogged ·
+22 implemented · 1 subsumed; 1 open feedback. `infrastructure.md` diagram
+remains stale.)_
+
 _Updated: 2026-07-23 (**Logged host-control-confirmation feedback + backlogged
 two features; e2e suite implementation in flight.** Feedback F001
 (`feedback-host-control-confirmations`, **open**): the moderation panel's
