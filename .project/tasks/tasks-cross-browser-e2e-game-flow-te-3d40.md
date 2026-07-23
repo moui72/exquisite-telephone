@@ -75,7 +75,7 @@ status: in-progress
   assert the exact submitted `DrawOps` via the observer helper — not a pixel
   comparison. [artifacts: datamodel]
 
-- [ ] T009 [parallel] Write the flagship four-engine "summit" spec
+- [x] T009 [parallel] Write the flagship four-engine "summit" spec
   (`e2e/summit.spec.ts`): a single test launches one context per engine
   (chromium, firefox, webkit, msedge), each hosting one player, and runs the
   full flow through to reveal. Kept as one heavy flagship case, distinct from
