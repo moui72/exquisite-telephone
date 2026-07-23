@@ -46,7 +46,7 @@ status: in-progress
   the configured curation dir and an untagged one does. [artifacts:
   infrastructure, datamodel]
 
-- [ ] T005 Add a test-only turn-timer seam so long-timer lobby combos can be
+- [x] T005 Add a test-only turn-timer seam so long-timer lobby combos can be
   exercised below the 15-minute production floor. Gate it behind the same
   test-only signal as T004 (inert and un-triggerable in normal runtime).
   Write a server unit test that the seam shortens the effective deadline only

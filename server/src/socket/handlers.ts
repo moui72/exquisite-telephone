@@ -181,8 +181,18 @@ export function onStartGame(
 export interface SetTurnTimerInput {
   roomId: string;
   playerId: string;
-  turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
+  /**
+   * Real traffic must send one of the production options (or `null`); the
+   * value is now validated server-side rather than trusted. Test traffic
+   * (see the T005 seam below) may send any positive number — including a
+   * sub-minute fraction — so long-timer lobby combos can be exercised
+   * below the 15-minute production floor.
+   */
+  turnTimerMinutes: number | null;
 }
+
+/** The production-allowed turn-timer options (datamodel.md Room.turnTimerMinutes). */
+const PRODUCTION_TURN_TIMER_OPTIONS: readonly (number | null)[] = [null, 15, 30, 60, 240, 720];
 
 export interface SetTurnTimerAck {
   room?: Room;
@@ -214,7 +224,29 @@ export function onSetTurnTimer(
     return;
   }
 
-  room.turnTimerMinutes = input.turnTimerMinutes;
+  // T005 — test-only turn-timer seam (infrastructure.md — Minimal,
+  // test-only app seams). Real traffic is held to the production options,
+  // so a client can never set a sub-floor timer; a connection tagged by the
+  // e2e test signal (socket.data.isTestTraffic, gated by the same secret as
+  // T004) may set ANY positive number, including a sub-minute fraction, so
+  // long-timer combos are testable in a fast gate. The seam ONLY widens
+  // what a tagged lobby may set — it is a strict no-op for untagged
+  // (normal) traffic, which still gets the exact same production behavior.
+  const isTestTraffic = (socket.data as { isTestTraffic?: boolean }).isTestTraffic === true;
+  const value = input.turnTimerMinutes;
+  const isProductionValue = PRODUCTION_TURN_TIMER_OPTIONS.includes(value);
+  const isTestValue =
+    isTestTraffic && (value === null || (typeof value === 'number' && Number.isFinite(value) && value > 0));
+  if (!isProductionValue && !isTestValue) {
+    ack({ error: 'invalid-turn-timer' });
+    return;
+  }
+
+  // The datamodel types the field as the production literal union; a test
+  // seam value is deliberately outside it at runtime only. The deadline math
+  // (timerSweep.deadlineFor, and the client countdown) multiplies by 60000
+  // and works for any finite number, so this cast is sound.
+  room.turnTimerMinutes = value as Room['turnTimerMinutes'];
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }

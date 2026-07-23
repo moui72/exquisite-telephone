@@ -27,6 +27,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createCurationStore, type CurationStore } from '../domain/curationStore.js';
+import { sweepRoom } from '../domain/timerSweep.js';
 import { createLogger } from '../observability/logger.js';
 import { waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
@@ -2641,5 +2642,64 @@ describe('onSubmitCover (T005/T006 — cover-decoration finalize)', () => {
 
     expect(room.status).toBe('reveal');
     expect(room.decorationWindowStartedAt).toBeNull();
+  });
+});
+
+describe('onSetTurnTimer — test-only sub-floor seam (T005)', () => {
+  function twoPlayerLobby() {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    joinRoom(store, { roomId: room.id, playerName: 'Bo' });
+    return { store, room, adaId };
+  }
+
+  it('lets TAGGED (test) traffic set a sub-minute timer, and the shortened deadline is effective', () => {
+    const { store, room, adaId } = twoPlayerLobby();
+
+    const socket = makeFakeSocket();
+    socket.data.isTestTraffic = true;
+    const ack = vi.fn();
+    // 0.05 minutes = 3s — far below the 15-minute production floor.
+    onSetTurnTimer(socket, store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 0.05 }, ack);
+
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+    expect(room.turnTimerMinutes).toBe(0.05);
+
+    // Start the game and prove the shortened per-turn deadline actually
+    // drives the sweep: with a 3s timer and a round that began 10s ago,
+    // every player is past deadline, so the sweep opens a timeout vote.
+    onStartGame(makeFakeSocket(), store, { roomId: room.id, playerId: adaId, acknowledgeSmallGame: true }, vi.fn());
+    room.roundStartedAt = Date.now() - 10_000;
+    sweepRoom(room, Date.now());
+    expect(room.pendingTimeoutVote).not.toBeNull();
+  });
+
+  it('is a NO-OP for untagged (normal) traffic: a sub-floor value is rejected', () => {
+    const { store, room, adaId } = twoPlayerLobby();
+
+    const socket = makeFakeSocket(); // untagged
+    const ack = vi.fn();
+    onSetTurnTimer(socket, store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 0.05 }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-turn-timer' });
+    expect(room.turnTimerMinutes).toBeNull();
+  });
+
+  it('untagged traffic still sets a production option unchanged', () => {
+    const { store, room, adaId } = twoPlayerLobby();
+    const ack = vi.fn();
+    onSetTurnTimer(makeFakeSocket(), store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 60 }, ack);
+    expect(room.turnTimerMinutes).toBe(60);
+  });
+
+  it('even tagged traffic rejects a non-positive timer', () => {
+    const { store, room, adaId } = twoPlayerLobby();
+    const socket = makeFakeSocket();
+    socket.data.isTestTraffic = true;
+    const ack = vi.fn();
+    onSetTurnTimer(socket, store, { roomId: room.id, playerId: adaId, turnTimerMinutes: 0 }, ack);
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-turn-timer' });
+    expect(room.turnTimerMinutes).toBeNull();
   });
 });
