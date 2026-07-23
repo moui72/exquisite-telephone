@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Logged host-control-confirmation feedback + backlogged
+two features; e2e suite implementation in flight.** Feedback F001
+(`feedback-host-control-confirmations`, **open**): the moderation panel's
+destructive host controls (End game / Restart / Kick) fire with no
+confirmation, unlike the Reveal page's read-state-aware guard. Backlogged
+`reusable-confirmation-modal-co` (one reusable confirm dialog, customizable
+text, replacing today's hand-rolled inline modals) and
+`host-control-confirmation-guar` (extend confirmation to all destructive host
+controls; read/not-read state surfaced only in the reveal case). Register: 2
+backlogged · 1 tasked · 21 implemented · 1 subsumed; 1 open feedback. **In
+flight:** the `cross-browser-e2e-game-flow-te` tasks
+(`tasks-cross-browser-e2e-game-flow-te-3d40.md`) are being implemented in a
+delegated worktree — 3/13 at last check; on completion it auto-merges to main
+(merge_policy: auto), reaps, and re-runs status. `infrastructure.md` diagram
+remains stale (`/ardd-diagram infrastructure`).)_
+
 _Updated: 2026-07-23 (**Planned & tasked `cross-browser-e2e-game-flow-te`.**
 A Playwright cross-browser e2e suite (Chromium/Firefox/WebKit/msedge) for the
 main game flow, wired as a **beta-deploy job** (gated by the existing
