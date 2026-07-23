@@ -83,7 +83,7 @@ status: in-progress
 
 ## Phase 4: Parametrized settings matrix
 
-- [ ] T010 Define a typed, curated lobby-settings matrix
+- [x] T010 Define a typed, curated lobby-settings matrix
   (`e2e/settings-matrix.ts`) — a small set of named combos across turn timer
   (via the T005 seam), laps per book, monochrome, min-player override, and
   curated vs. free-form prompt mode — and run the core flow spec across each
