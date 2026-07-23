@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-23
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -228,11 +228,26 @@ a non-host even if opened. Its controls:
 - **"End game"** — the same host-only control already described on the
   Reveal page (see Reveal View below), now also reachable from
   `lobby`/`writing` via this panel, since a host moderating offensive
-  content can't wait for the game to reach Reveal.
+  content can't wait for the game to reach Reveal. It is **confirmed via
+  the shared Confirmation Dialog** (see below) before it fires — "End the
+  game for everyone?" — since ending is irreversible. No read-state is
+  shown here (unlike the Reveal-page version): pre-reveal there is nothing
+  read to lose, so it is a plain are-you-sure.
 - **"Restart game"** — visible only once `Room.nonContinuable` is
   `true`. Restarts the *same* room from a fresh turn 0 (new `books`,
   `entries` cleared, back to `writing`), excluding any kicked players;
-  distinct from Reveal's "Play again", which creates a brand-new room.
+  distinct from Reveal's "Play again", which creates a brand-new room. It
+  is **likewise confirmed via the shared Confirmation Dialog** — "Restart
+  from turn 0? All current progress is lost." — before firing, since it
+  discards every entry authored so far.
+
+**Kick is likewise confirmed** via the shared Confirmation Dialog — "Kick
+<player>?" — before the player is removed, so a mis-tap on a name in the
+roster doesn't drop someone irreversibly. As with End game and Restart, no
+read-state is shown (pre-reveal there is nothing read to lose): it is a
+plain are-you-sure in the destructive variant. So **every destructive host
+control on this panel is confirmation-gated** — Kick, End game, and Restart
+alike.
 
 ## Writing / Drawing View
 
@@ -456,6 +471,45 @@ force-anyway pattern). It is a client concern only — no server change;
 per-book rather than per-player-complete deliberately: a
 per-player-complete check would fire near-constantly in larger rooms and
 train the host to click through it.
+
+This warning is rendered via the shared **Confirmation Dialog** component
+(see below) — its read-state-derived message and force-through path are
+unchanged; only the markup is now shared rather than bespoke. The
+read/not-read framing is **specific to Reveal**: this is the only place a
+confirmation surfaces book-completion state, because reading is the thing
+at risk here. The host-moderation guards (Moderation Panel above) use the
+same component with a plain are-you-sure and no read-state, since pre-reveal
+there is nothing read to lose.
+
+## Confirmation Dialog (shared component)
+
+A single reusable confirmation dialog, used wherever a control needs an
+"are you sure?" gate before it fires. It is the one place this pattern
+lives — before it, every confirm/warning was bespoke inline markup (the
+Reveal unread-books warning and the host-moderation guards each rebuilt the
+same overlay). Consolidating removes that duplication and makes guarding a
+new control a matter of passing text, not copying a dialog.
+
+**Configurable text.** The component takes a heading, a body/message, a
+confirm-label, and a cancel-label — every string is caller-supplied, so one
+component serves "End the game for everyone?", the Reveal unread-books
+warning, and any future guard without special-casing. A **destructive
+variant** styles the confirm action for an irreversible act (including the
+force-through affordance) distinctly from a benign one.
+
+**Accessible and in the salon language.** Rendered as `role="alertdialog"`
+with `aria-modal`, initial focus on the safe (cancel) action, a focus trap
+while open, and Escape mapped to cancel (Baseline Accessibility,
+[[constitution]]). It is dressed in the same gilt-frame/plaque visual
+language as the rest of the salon (see Visual Identity) rather than a bare
+browser dialog.
+
+**What it does and does not replace.** It replaces the confirmation-style
+dialogs only — the Reveal unread-books warning migrates onto it, and the
+Moderation Panel's End game / Restart guards adopt it. Informational
+overlays that are not confirmations — the Rules Overview panel and the
+Reveal per-book reader modal — keep their own markup; they ask nothing and
+have no confirm/cancel decision to model.
 
 ## States
 

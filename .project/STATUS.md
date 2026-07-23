@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Planned & tasked the confirmation-dialog work.**
+`ui.md` gained a **Confirmation Dialog (shared component)** section; all three
+destructive Moderation Panel controls — End game, Restart, **and Kick** — now
+specify a confirmation (a plain are-you-sure, no read-state); the Reveal
+unread-books warning migrates
+onto the shared component with behavior unchanged, and read/not-read framing
+is documented as Reveal-only. Feedback F001 marked incorporated → planned,
+bound to the plan. Plan
+`plan-reusable-confirmation-modal-co-2026-07-23-029e.md` **approved**; tasks
+`tasks-reusable-confirmation-modal-co-9935.md` **ready, 0/5** across 3 phases
+(build the component → migrate Reveal → guard the panel; Phases 2 & 3 parallel
+after Phase 1). Both `reusable-confirmation-modal-co` and
+`host-control-confirmation-guar` → tasked. Register: 2 tasked · 22 implemented
+· 1 subsumed; 0 open feedback. `ui.md` and `infrastructure.md` diagrams both
+stale. Next: `/ardd-implement`.)_
+
 _Updated: 2026-07-23 (**Cross-browser e2e test gate SHIPPED to beta (13/13,
 merged).** The delegated worktree completed all 13 tasks; branch merged to
 `main` (`adcc105`) and reaped, feature `cross-browser-e2e-game-flow-te` →

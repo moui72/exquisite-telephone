@@ -1,5 +1,5 @@
 ---
-status: open
+status: planned
 created: 2026-07-23
 ---
 
@@ -7,7 +7,7 @@ created: 2026-07-23
 
 ## UX
 
-- [ ] F001 Destructive host controls in the moderation panel fire
+- [x] F001 Destructive host controls in the moderation panel fire
   immediately with no confirmation, so a mis-tap irreversibly ends or
   resets a game in progress. In `ModerationPanel.svelte` (shown during
   lobby/writing), **End game** (`handleEndGame` → `session.endGame()`,
