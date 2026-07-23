@@ -38,13 +38,13 @@ export default {
           'serif',
         ],
         // Splash-title only (the "Exquisite Telephone" mark in Lobby/Reveal) —
-        // Manufacturing Consent, a display face self-hosted via
-        // @fontsource/manufacturing-consent (imported in main.ts). Falls back
-        // through `display` rather than a generic `cursive` (unreliably mapped
-        // across browsers/OSes), so an unloaded face still lands on a
-        // characterful serif, not a random system script face.
+        // Pirata One, a gothic blackletter self-hosted via
+        // @fontsource/pirata-one (imported in main.ts). Falls back through
+        // `display` rather than a generic `cursive` (unreliably mapped across
+        // browsers/OSes), so an unloaded face still lands on a characterful
+        // serif, not a random system script face.
         title: [
-          '"Manufacturing Consent"',
+          '"Pirata One"',
           'Fraunces',
           'Iowan Old Style',
           'Georgia',

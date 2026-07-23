@@ -121,7 +121,7 @@
     <div class="flex flex-col items-center gap-1 text-center">
       <h1
         class="bg-gradient-to-b from-marigold via-[#ECD79A] to-marigold bg-clip-text text-4xl
-          font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(20,6,12,0.45)]
+          font-title tracking-wide text-transparent drop-shadow-[0_2px_3px_rgba(20,6,12,0.5)]
           sm:text-6xl"
       >
         Exquisite Telephone

@@ -53,7 +53,7 @@ importers:
       '@exquisite-telephone/shared':
         specifier: workspace:*
         version: link:../shared
-      '@fontsource/manufacturing-consent':
+      '@fontsource/pirata-one':
         specifier: ^5.3.0
         version: 5.3.0
       '@lucide/svelte':
@@ -407,8 +407,8 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fontsource/manufacturing-consent@5.3.0':
-    resolution: {integrity: sha512-p/omJ13hFgV6+THlT370nyHjlMkrZWkKPiMSZHROcyFoylVvazo19Rp9KJhwudWqcbkClgzjEryvC330y4Pr6Q==}
+  '@fontsource/pirata-one@5.3.0':
+    resolution: {integrity: sha512-qeaDy+F+TcCVdODaIvD4U0ZoaWPejpkXwHAAHIBtauwP/9mf+Sj8ORX5UYcnBpnyhd7ihYPpW+WWPbz9FryrJQ==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2348,7 +2348,7 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@fontsource/manufacturing-consent@5.3.0': {}
+  '@fontsource/pirata-one@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
