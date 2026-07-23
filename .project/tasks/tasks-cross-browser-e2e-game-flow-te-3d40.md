@@ -92,7 +92,7 @@ status: in-progress
 
 ## Phase 5: Beta-deploy run & promote-gate wiring
 
-- [ ] T011 Add a GitHub Actions job that runs after a successful beta deploy,
+- [x] T011 Add a GitHub Actions job that runs after a successful beta deploy,
   gated by the existing code-change `changes` signal in `ci.yml` (so a
   docs/chore push that skips the beta deploy runs no e2e), installs Playwright
   browsers, and runs the suite sharded (`--shard=i/n`) against

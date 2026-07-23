@@ -88,6 +88,10 @@ jobs:
     needs: [checks, changes]
     runs-on: ubuntu-latest
     concurrency: deploy-beta
+    # The short sha this deploy baked into the beta bundle, consumed by the
+    # e2e job's version cross-check (T012).
+    outputs:
+      sha: ${{ steps.deploy.outputs.sha }}
     steps:
       - uses: actions/checkout@v7
       - uses: superfly/flyctl-actions/setup-flyctl@master
@@ -97,15 +101,62 @@ jobs:
       # beta build a report came from, so the composed string is
       # vX.Y.Z-beta+<sha>.
       - name: Deploy beta
+        id: deploy
         run: |
           version="$(node -p "require('./package.json').version")"
           sha="$(git rev-parse --short=7 HEAD)"
+          echo "sha=${sha}" >> "$GITHUB_OUTPUT"
           flyctl deploy --config fly.staging.toml --remote-only \
             --build-arg APP_VERSION="$version" \
             --build-arg BUILD_CHANNEL=beta \
             --build-arg BUILD_SHA="$sha"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
+
+  # T011 — Cross-browser end-to-end suite, run AFTER a successful beta
+  # deploy and gated by the SAME code-change signal that gates the deploy
+  # (infrastructure.md — End-to-End Test Gate). A docs/chore push skips
+  # deploy-beta, so `needs: [deploy-beta]` skips this too, and the explicit
+  # `changes.outputs.code == 'true'` guard is belt-and-braces. The suite is
+  # slow and deploy-dependent, so it is deliberately NOT part of the fast
+  # per-push `checks` job.
+  e2e:
+    name: Cross-browser e2e (beta)
+    needs: [changes, deploy-beta]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      # Each test mints its own room and the room store scopes broadcasts
+      # per room (infrastructure.md — Parallelism and isolation), so the
+      # suite is --shard=i/n-safe for any N. Fan out across four shards.
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run e2e:install
+      - name: Run e2e shard against live beta
+        run: pnpm exec playwright test --shard=${{ matrix.shard }}/4
+        env:
+          # The suite hits the already-deployed beta bundle; no local server
+          # is started when E2E_BASE_URL is set.
+          E2E_BASE_URL: https://beta-ex-tel.ty-pe.com
+          # The test-signal secret the T004/T005 seams require, so test
+          # traffic is tagged (ratings discarded, sub-floor timers allowed).
+          # Held by CI, sent as the x-e2e-test-signal header.
+          E2E_TEST_SIGNAL_SECRET: ${{ secrets.E2E_TEST_SIGNAL_SECRET }}
+          # The short sha this run deployed and is testing — the version
+          # cross-check (version.spec.ts) fails if the live bundle reports a
+          # different sha (T012).
+          E2E_EXPECTED_SHA: ${{ needs.deploy-beta.outputs.sha }}
 
 # There is deliberately NO deploy-prod job here. Production is deployed
 # only by promote.yml, which fast-forwards `release` and deploys in the
