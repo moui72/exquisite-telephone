@@ -10,10 +10,19 @@ import type { DrawOps } from '@exquisite-telephone/shared';
 export class WritingDrawingPage {
   constructor(private readonly page: Page) {}
 
-  /** True when it is this player's turn to act (the easel is shown). */
+  /**
+   * The distinctive hint on the drawing TURN easel — used to distinguish it
+   * from the cover-decoration canvas (which shares the "Drawing canvas"
+   * aria-label but appears during the round-gated wait / 30s grace, and
+   * whose strokes go to a cover draft, not the turn). Only when this hint is
+   * present is the visible canvas the one whose submission is the turn.
+   */
+  private readonly drawTurnHint = 'Draw exactly what the phrase says';
+
+  /** True when it is this player's turn to act (a turn easel is shown). */
   async isMyTurn(): Promise<boolean> {
     const drawing = await this.page
-      .getByRole('img', { name: 'Drawing canvas' })
+      .getByText(this.drawTurnHint)
       .isVisible()
       .catch(() => false);
     if (drawing) return true;
@@ -54,19 +63,34 @@ export class WritingDrawingPage {
   async drawStrokes(ops: DrawOps): Promise<void> {
     const canvas = this.page.getByRole('img', { name: 'Drawing canvas' });
     await expect(canvas).toBeVisible();
-    const box = await canvas.boundingBox();
-    if (!box) throw new Error('drawing canvas has no bounding box');
-    for (const op of ops) {
-      if (op.type !== 'stroke' || op.points.length === 0) continue;
-      // Canvas intrinsic size is 320x240; map op coords into the on-screen box.
-      const sx = box.width / 320;
-      const sy = box.height / 240;
-      const [first, ...rest] = op.points;
-      await this.page.mouse.move(box.x + first.x * sx, box.y + first.y * sy);
-      await this.page.mouse.down();
-      for (const p of rest) await this.page.mouse.move(box.x + p.x * sx, box.y + p.y * sy);
-      await this.page.mouse.up();
-    }
+    const strokes = ops.filter((op): op is Extract<DrawOps[number], { type: 'stroke' }> => op.type === 'stroke');
+    // Dispatch real PointerEvents directly on the canvas element, with
+    // clientX/clientY computed to invert the component's own coordinate
+    // mapping (toPoint), so the recorded stroke points equal the requested
+    // canvas coordinates exactly. This is more deterministic than driving
+    // the OS mouse (no sub-pixel rounding, no reliance on virtual-pointer
+    // capture) and makes the submitted DrawOps exactly assertable. The
+    // canvas' setPointerCapture — which throws for a synthetic pointer — is
+    // stubbed to a no-op for the duration.
+    await canvas.evaluate((el, strokeList) => {
+      const canvasEl = el as HTMLCanvasElement;
+      const rect = canvasEl.getBoundingClientRect();
+      const original = canvasEl.setPointerCapture;
+      canvasEl.setPointerCapture = () => {};
+      const toClient = (p: { x: number; y: number }) => ({
+        clientX: rect.left + (p.x * rect.width) / canvasEl.width,
+        clientY: rect.top + (p.y * rect.height) / canvasEl.height,
+      });
+      const fire = (type: string, p: { x: number; y: number }) =>
+        canvasEl.dispatchEvent(new PointerEvent(type, { ...toClient(p), pointerId: 1, bubbles: true }));
+      for (const stroke of strokeList as { points: { x: number; y: number }[] }[]) {
+        if (stroke.points.length === 0) continue;
+        fire('pointerdown', stroke.points[0]);
+        for (const p of stroke.points.slice(1)) fire('pointermove', p);
+        fire('pointerup', stroke.points[stroke.points.length - 1]);
+      }
+      canvasEl.setPointerCapture = original;
+    }, strokes);
   }
 
   async rateOpeningPhrase(value: 'up' | 'down'): Promise<void> {
@@ -76,6 +100,45 @@ export class WritingDrawingPage {
 
   async submitDrawing(): Promise<void> {
     await this.submit();
+  }
+
+  /** A default single deterministic stroke used to drive drawing turns. */
+  static readonly DEFAULT_STROKE: DrawOps = [
+    { type: 'stroke', points: [{ x: 40, y: 40 }, { x: 280, y: 200 }], color: '#000000', width: 3 },
+  ];
+
+  /**
+   * If this player currently has a turn to act, complete it and return
+   * true; otherwise return false. Handles all three turn shapes — a curated
+   * opening (pick the first dealt phrase), a free-form/blind text turn, and
+   * a drawing turn (a default deterministic stroke) — so a flow driver can
+   * simply poll every player until the game reaches reveal.
+   */
+  async playIfMyTurn(phrase = 'a phrase worth drawing'): Promise<boolean> {
+    const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
+    if (await curatedRadio.isVisible().catch(() => false)) {
+      await curatedRadio.check();
+      await this.submit();
+      return true;
+    }
+    const phraseInput = this.page.getByLabel('Your phrase');
+    if (await phraseInput.isVisible().catch(() => false)) {
+      await phraseInput.fill(phrase);
+      await this.submit();
+      return true;
+    }
+    // Only a genuine drawing TURN (identified by the easel hint) — never the
+    // cover-decoration canvas shown during the round-gated wait / 30s grace.
+    if (await this.page.getByText(this.drawTurnHint).isVisible().catch(() => false)) {
+      await this.drawStrokes(WritingDrawingPage.DEFAULT_STROKE);
+      // Rate the opening-phrase draw turn when the control is present
+      // (position 1 only); optional and never gates the submit.
+      const thumbsUp = this.page.getByRole('button', { name: 'Thumbs up — fun to draw' });
+      if (await thumbsUp.isVisible().catch(() => false)) await thumbsUp.click();
+      await this.submitDrawing();
+      return true;
+    }
+    return false;
   }
 
   private async submit(): Promise<void> {

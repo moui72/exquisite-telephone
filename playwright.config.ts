@@ -14,7 +14,10 @@ import { defineConfig, devices } from '@playwright/test';
  * starts the app locally; when it is set (CI against beta), no local
  * server is started — the suite hits the already-deployed target.
  */
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
+// A dedicated local port (not 3000) so an e2e run never collides with — or
+// silently reuses — a dev/prod server a developer already has on 3000.
+const LOCAL_PORT = process.env.E2E_PORT ?? '4599';
+const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${LOCAL_PORT}`;
 const usesLocalServer = !process.env.E2E_BASE_URL;
 
 export default defineConfig({
@@ -49,10 +52,13 @@ export default defineConfig({
         // Overview) — one process, one port, exactly as in production.
         command: 'pnpm run build && node server/dist/index.js',
         url: baseURL,
-        reuseExistingServer: !process.env.CI,
+        // Never silently reuse whatever is already on the port — a stale
+        // build would be tested instead of the current tree. The dedicated
+        // LOCAL_PORT makes a fresh start safe.
+        reuseExistingServer: false,
         timeout: 180_000,
         env: {
-          PORT: '3000',
+          PORT: LOCAL_PORT,
           // The test-only seam is enabled and given a known secret for the
           // local run so the e2e specs can tag their traffic (T004/T005).
           E2E_SEAM_ENABLED: 'true',

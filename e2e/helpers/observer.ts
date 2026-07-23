@@ -36,6 +36,14 @@ export interface ObserverOptions {
   testSignal?: string;
   /** Auto-submit the observer's own due turns so a full flow can complete. */
   autoPlay?: boolean;
+  /**
+   * When auto-playing, submit only TEXT turns, never drawing turns. Used by
+   * the single-drawing spec: the observer advances the opening (text) round
+   * so a browser reaches its drawing turn, but then goes quiet — its own
+   * drawing submissions would otherwise broadcast and reset the browser's
+   * in-progress drawing mid-turn.
+   */
+  autoPlayTextTurnsOnly?: boolean;
 }
 
 const TEST_SIGNAL_HEADER = 'x-e2e-test-signal';
@@ -98,9 +106,30 @@ export async function joinAsObserver(roomId: string, options: ObserverOptions = 
   if (options.autoPlay) {
     // Submit trivial valid content whenever it is the observer's turn, so
     // its seat never stalls the round. Drawing turns get an empty op array
-    // (valid, bounded); text turns get a short string.
-    socket.on('roomUpdated', () => void tryAutoPlay());
+    // (valid, bounded); text turns get a short string. Also present the
+    // observer's own (blank) cover once the decoration window opens — the
+    // window is gated on every active seat presenting, so a silent observer
+    // seat would hold reveal until the 2-minute expiry.
+    socket.on('roomUpdated', () => {
+      void tryAutoPlay();
+      void tryPresentCover();
+    });
     void tryAutoPlay();
+  }
+
+  let coverPresented = false;
+  async function tryPresentCover(): Promise<void> {
+    if (!room || room.status !== 'decorating' || coverPresented) return;
+    const myBook = room.books.find((b) => b.originAuthorId === playerId);
+    if (!myBook) return;
+    coverPresented = true;
+    try {
+      await socket
+        .timeout(10_000)
+        .emitWithAck('submitCover', { roomId, playerId, bookId: myBook.id, cover: [], coverTemplate: null });
+    } catch {
+      coverPresented = false;
+    }
   }
 
   async function tryAutoPlay(): Promise<void> {
@@ -113,6 +142,7 @@ export async function joinAsObserver(roomId: string, options: ObserverOptions = 
       const authorId = room.players[(originIndex + position) % room.players.length]?.id;
       if (authorId !== playerId) continue;
       const type = position % 2 === 0 ? 'text' : 'drawing';
+      if (type === 'drawing' && options.autoPlayTextTurnsOnly) continue;
       const content = type === 'drawing' ? '[]' : `observer ${position}`;
       try {
         await socket.timeout(10_000).emitWithAck('submitEntry', { roomId, playerId, bookId: book.id, content });

@@ -62,7 +62,7 @@ status: in-progress
 
 ## Phase 3: Core flow & drawing specs
 
-- [ ] T007 Write the core multiplayer flow spec (`e2e/flow.spec.ts`): N
+- [x] T007 Write the core multiplayer flow spec (`e2e/flow.spec.ts`): N
   players (one browser context each) complete lobby → write/draw turns →
   reveal end to end, asserting the server's `Room.status` transitions and
   that every book completed its laps. Each test mints its own unique room so
