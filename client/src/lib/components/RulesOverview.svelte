@@ -46,7 +46,7 @@
 </script>
 
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-velvet/50 p-4"
+  class="fixed inset-0 z-50 flex items-center justify-center bg-wine/50 p-4"
   role="presentation"
   on:click|self={onClose}
 >
@@ -62,27 +62,27 @@
         is a thin gilt rail; each tab is an engraved-caps museum label in the
         utility face (Space Mono, uppercase, letter-spaced) that sets it apart
         from the Fraunces/Rubik body copy. The selected tab is marked by a lit
-        marigold underline segment sitting on the rail — a soft gilt glow that
+        gold underline segment sitting on the rail — a soft gilt glow that
         connects the label to the panel below; unselected labels recede in
-        muted ink and grow a faint marigold underline on hover. Selected and
+        muted ink and grow a faint gold underline on hover. Selected and
         unselected share one visual language (position on the rail) rather than
         solid-fill vs hollow-outline. aria-selected, the tablist/tab/tabpanel
-        roles, and native button focus are preserved; a marigold focus ring
+        roles, and native button focus are preserved; a gold focus ring
         gives keyboard affordance.
 
         Shared base — the underline indicator is an ::after bar pinned to the
-        rail; active lights it marigold with a glow, inactive keeps it hidden
+        rail; active lights it gold with a glow, inactive keeps it hidden
         until hover.
       -->
       {@const tabBase =
         'relative min-h-9 px-1 pb-2 pt-1 font-mono text-xs font-medium uppercase tracking-[0.2em] transition-colors duration-150 ' +
         'after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:rounded-full after:transition-all after:duration-150 ' +
-        'focus-visible:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-2 focus-visible:ring-offset-butter'}
+        'focus-visible:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-champagne'}
       {@const tabActive =
-        'text-velvet after:bg-marigold after:shadow-[0_0_8px_rgba(208,168,78,0.6)]'}
+        'text-wine after:bg-gold after:shadow-[0_0_8px_rgba(208,168,78,0.6)]'}
       {@const tabIdle =
-        'text-ink/45 hover:text-ink/75 after:bg-transparent hover:after:bg-marigold/35'}
-      <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-6 border-b border-marigold/30">
+        'text-ink/45 hover:text-ink/75 after:bg-transparent hover:after:bg-gold/35'}
+      <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-6 border-b border-gold/30">
         <button
           type="button"
           role="tab"
@@ -166,7 +166,7 @@
             target="_blank"
             rel="noopener noreferrer"
             aria-label="View the Exquisite Telephone source code on GitHub (opens in a new tab)"
-            class="text-bubblegum underline hover:text-bubblegum/80"
+            class="text-sapphire underline hover:text-sapphire/80"
           >
             Source code
           </a>
@@ -175,7 +175,7 @@
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Support Exquisite Telephone on GitHub Sponsors (opens in a new tab)"
-            class="text-bubblegum underline hover:text-bubblegum/80"
+            class="text-sapphire underline hover:text-sapphire/80"
           >
             Sponsor this project
           </a>
@@ -186,7 +186,7 @@
       <button
         slot="plaque-action"
         type="button"
-        class="chamfer-frame chamfer-slim inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 bg-bubblegum px-4 text-sm font-medium text-white hover:bg-bubblegum/90 [--chamfer-color:theme(colors.marigold)]"
+        class="chamfer-frame chamfer-slim inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 bg-sapphire px-4 text-sm font-medium text-white hover:bg-sapphire/90 [--chamfer-color:theme(colors.gold)]"
         on:click={onClose}
       >
         <X size={16} aria-hidden="true" />

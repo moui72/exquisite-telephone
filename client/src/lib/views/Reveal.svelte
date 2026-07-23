@@ -205,21 +205,21 @@
 <div class="mx-auto flex min-h-screen max-w-4xl flex-col gap-10 p-6">
   <div class="flex flex-col items-center gap-1 text-center">
     <h1
-      class="bg-gradient-to-b from-marigold via-[#ECD79A] to-marigold bg-clip-text text-4xl
+      class="bg-gradient-to-b from-gold via-[#ECD79A] to-gold bg-clip-text text-4xl
         font-title tracking-wide text-transparent drop-shadow-[0_2px_3px_rgba(20,6,12,0.5)]
         sm:text-5xl"
     >
       The Gallery Opens
     </h1>
-    <p class="text-sm text-butter/75">Every book, unveiled. Choose a work to view at your leisure.</p>
+    <p class="text-sm text-champagne/75">Every book, unveiled. Choose a work to view at your leisure.</p>
   </div>
 
   {#if room}
-    <div class="flex flex-wrap items-center gap-3 border-b border-marigold/30 pb-6">
+    <div class="flex flex-wrap items-center gap-3 border-b border-gold/30 pb-6">
       {#if isHost}
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-4 py-2 text-sm font-medium text-ink"
           on:click={() => requestHostAction('end')}
         >
           <span class="inline-flex items-center gap-1.5">
@@ -229,7 +229,7 @@
         </button>
         <button
           type="button"
-          class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
+          class="rounded-md bg-emerald px-4 py-2 text-sm font-medium text-white"
           on:click={() => requestHostAction('playAgain')}
         >
           <span class="inline-flex items-center gap-1.5">
@@ -237,13 +237,13 @@
             Stage an Encore
           </span>
         </button>
-        <span class="text-sm text-butter/75">
+        <span class="text-sm text-champagne/75">
           {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
         </span>
       {:else}
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-4 py-2 text-sm font-medium text-ink"
           on:click={handleLeaveGame}
         >
           <span class="inline-flex items-center gap-1.5">
@@ -253,7 +253,7 @@
         </button>
         <button
           type="button"
-          class="rounded-md bg-grass px-4 py-2 text-sm font-medium text-white"
+          class="rounded-md bg-emerald px-4 py-2 text-sm font-medium text-white"
           on:click={handleVoteToPlayAgain}
         >
           <span class="inline-flex items-center gap-1.5">
@@ -273,7 +273,7 @@
         <div class="flex flex-col gap-2">
           <button
             type="button"
-            class="group flex flex-col gap-3 rounded-lg border-4 border-marigold bg-butter p-3 text-left shadow-lg transition-opacity"
+            class="group flex flex-col gap-3 rounded-lg border-4 border-gold bg-champagne p-3 text-left shadow-lg transition-opacity"
             class:opacity-60={viewedBooks.has(book.id)}
             aria-label={`Open ${playerName(book.originAuthorId)}'s book`}
             on:click={() => openBookModal(book.id)}
@@ -300,7 +300,7 @@
                 viewBox="0 0 100 100"
                 role="img"
                 aria-label="cover art"
-                class="h-40 w-full rounded bg-butter"
+                class="h-40 w-full rounded bg-champagne"
               >
                 {#each art.shapes as shape, i (i)}
                   <circle
@@ -318,7 +318,7 @@
 
           <div class="flex flex-col gap-1">
             {#if beingRead.length > 0}
-              <p class="text-xs text-grass">
+              <p class="text-xs text-emerald">
                 Being read by {beingRead.join(', ')}
               </p>
             {/if}
@@ -335,12 +335,12 @@
 
   {#if pendingAction && unreadWarning}
     <div
-      class="fixed inset-0 z-30 flex items-center justify-center bg-velvet/70 p-4"
+      class="fixed inset-0 z-30 flex items-center justify-center bg-wine/70 p-4"
       role="alertdialog"
       aria-modal="true"
       aria-label="Unread books warning"
     >
-      <div class="flex w-full max-w-md flex-col gap-4 rounded-lg border-4 border-marigold bg-butter p-5">
+      <div class="flex w-full max-w-md flex-col gap-4 rounded-lg border-4 border-gold bg-champagne p-5">
         <h2 class="font-title text-lg text-ink">Before the doors close…</h2>
         <p class="text-sm text-ink/80">{unreadWarning}</p>
         <p class="text-sm text-ink/60">
@@ -351,14 +351,14 @@
         <div class="flex flex-wrap justify-end gap-3">
           <button
             type="button"
-            class="rounded-md border border-marigold/60 bg-butter px-4 py-2 text-sm font-medium text-ink"
+            class="rounded-md border border-gold/60 bg-champagne px-4 py-2 text-sm font-medium text-ink"
             on:click={cancelHostAction}
           >
             Keep viewing
           </button>
           <button
             type="button"
-            class="rounded-md bg-bubblegum px-4 py-2 text-sm font-medium text-white"
+            class="rounded-md bg-sapphire px-4 py-2 text-sm font-medium text-white"
             on:click={forceHostAction}
           >
             {pendingAction === 'end' ? 'Close anyway' : 'Encore anyway'}
@@ -371,7 +371,7 @@
   {#if room && openBook}
     <!-- Per-book modal: self-guided paging. -->
     <div
-      class="fixed inset-0 z-20 flex items-center justify-center bg-velvet/70 p-4"
+      class="fixed inset-0 z-20 flex items-center justify-center bg-wine/70 p-4"
       role="dialog"
       aria-modal="true"
       aria-label={`${playerName(openBook.originAuthorId)}'s book`}
@@ -384,7 +384,7 @@
             </h2>
             <button
               type="button"
-              class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
+              class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink"
               aria-label="Close book"
               on:click={closeModal}
             >
@@ -422,7 +422,7 @@
                         <DrawingCanvas ops={parseDrawOps(prev.content)} readOnly />
                       {/if}
                     </div>
-                    <p class="text-center text-xs text-marigold">↓ became ↓</p>
+                    <p class="text-center text-xs text-gold">↓ became ↓</p>
                   {/if}
                 {/if}
                 {#if openEntries[currentPage]}
@@ -445,7 +445,7 @@
           {#if !revealAll}
             <button
               type="button"
-              class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
               disabled={currentPage === 0}
               on:click={previousPage}
             >
@@ -456,7 +456,7 @@
             </button>
             <button
               type="button"
-              class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
+              class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink disabled:cursor-not-allowed disabled:opacity-50"
               disabled={onLastPage}
               on:click={nextPage}
             >
@@ -465,13 +465,13 @@
                 <ChevronRight size={16} aria-hidden="true" />
               </span>
             </button>
-            <span class="font-mono text-xs text-butter/75">
+            <span class="font-mono text-xs text-champagne/75">
               Page {currentPage + 1} of {openEntries.length}
             </span>
           {/if}
           <button
             type="button"
-            class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
+            class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink"
             on:click={backToStart}
           >
             <span class="inline-flex items-center gap-1.5">
@@ -481,7 +481,7 @@
           </button>
           <button
             type="button"
-            class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm font-medium text-ink"
+            class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink"
             on:click={handleRevealAll}
           >
             <span class="inline-flex items-center gap-1.5">
@@ -492,7 +492,7 @@
           {#if revealAll || onLastPage}
             <button
               type="button"
-              class="rounded-md bg-marigold px-3 py-1 text-sm font-medium text-ink"
+              class="rounded-md bg-gold px-3 py-1 text-sm font-medium text-ink"
               on:click={() => openBook && handleSave(openBook.id)}
             >
               <span class="inline-flex items-center gap-1.5">

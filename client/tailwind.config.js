@@ -3,26 +3,24 @@ export default {
   content: ['./index.html', './src/**/*.{svelte,ts,js}'],
   theme: {
     extend: {
-      // Boudoir Damask palette (redesign 2026-07-22). NOTE: the token NAMES
-      // are legacy and no longer literal — `bubblegum` renders sapphire blue,
-      // `grass` renders emerald, `butter` renders champagne. This is a
-      // deliberate value-remap so the ~15-file usage set didn't need a rename
-      // mid-iteration; a name-sweep is owed once the palette locks. Each name
-      // kept its semantic ROLE, which is what makes the remap safe:
-      //   ink       — the darkest text / dark footer end
-      //   velvet    — deep-wine dark elements (chips, headings-on-light)
-      //   marigold  — gold (frames, rings, decorative accents)
-      //   bubblegum — sapphire, the interactive accent (buttons, links, focus)
-      //   butter    — champagne, every light surface and light-text-on-dark
-      //   grass     — emerald success
-      //   bordeaux  — NEW: the page ground ("the wall"), set once in app.css
+      // Boudoir Damask palette (redesign 2026-07-23). Each token's name is its
+      // colour; the role each one plays across the app:
+      //   bordeaux  — the page ground ("the wall"), a gold fleur damask on it
+      //               (set once in app.css, not as a utility)
+      //   champagne — every light surface (gilt frames, plaques) and
+      //               light-text-on-the-dark-ground
+      //   ink       — the darkest text, on champagne surfaces
+      //   gold      — frames, rings, and decorative accents
+      //   sapphire  — the interactive accent (buttons, links, focus)
+      //   wine      — deep-wine dark elements (chips, modal scrims, the footer)
+      //   emerald   — success ("piece presented", encore)
       colors: {
         ink: '#3A1017',
-        velvet: '#4E1420',
-        marigold: '#D0A84E',
-        bubblegum: '#2B4A8C',
-        butter: '#F3E6C4',
-        grass: '#2F6B46',
+        wine: '#4E1420',
+        gold: '#D0A84E',
+        sapphire: '#2B4A8C',
+        champagne: '#F3E6C4',
+        emerald: '#2F6B46',
         bordeaux: '#6E1F2E',
       },
       fontFamily: {

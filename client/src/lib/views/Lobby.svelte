@@ -120,13 +120,13 @@
   {#if !state.room}
     <div class="flex flex-col items-center gap-1 text-center">
       <h1
-        class="bg-gradient-to-b from-marigold via-[#ECD79A] to-marigold bg-clip-text text-4xl
+        class="bg-gradient-to-b from-gold via-[#ECD79A] to-gold bg-clip-text text-4xl
           font-title tracking-wide text-transparent drop-shadow-[0_2px_3px_rgba(20,6,12,0.5)]
           sm:text-6xl"
       >
         Exquisite Telephone
       </h1>
-      <p class="max-w-sm text-sm text-butter/75">
+      <p class="max-w-sm text-sm text-champagne/75">
         A salon game of drawings whispered down the line. Gather your guests, then write, draw, and
         reveal.
       </p>
@@ -136,7 +136,7 @@
       <div role="tablist" aria-label="Join or create a room" class="flex gap-2">
         <!--
           Both tabs share the same slim chamfered silhouette; only the
-          active one gets the marigold ring and bubblegum fill. Inactive
+          active one gets the gold ring and sapphire fill. Inactive
           tabs are a quiet tinted cut-corner shape with no outline at
           all — a stroke on an unselected tab competed with the frame.
         -->
@@ -145,8 +145,8 @@
           role="tab"
           aria-selected={mode === 'create'}
           class="flex-1 px-4 py-3 text-sm font-medium sm:py-2 {mode === 'create'
-            ? 'chamfer-frame chamfer-slim bg-bubblegum text-white [--chamfer-color:theme(colors.marigold)]'
-            : 'chamfer-frame chamfer-slim bg-marigold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-marigold/25'}"
+            ? 'chamfer-frame chamfer-slim bg-sapphire text-white [--chamfer-color:theme(colors.gold)]'
+            : 'chamfer-frame chamfer-slim bg-gold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-gold/25'}"
           on:click={() => (mode = 'create')}
         >
           Create room
@@ -156,8 +156,8 @@
           role="tab"
           aria-selected={mode === 'join'}
           class="flex-1 px-4 py-3 text-sm font-medium sm:py-2 {mode === 'join'
-            ? 'chamfer-frame chamfer-slim bg-bubblegum text-white [--chamfer-color:theme(colors.marigold)]'
-            : 'chamfer-frame chamfer-slim bg-marigold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-marigold/25'}"
+            ? 'chamfer-frame chamfer-slim bg-sapphire text-white [--chamfer-color:theme(colors.gold)]'
+            : 'chamfer-frame chamfer-slim bg-gold/15 text-ink/60 [--chamfer-color:transparent] hover:bg-gold/25'}"
           on:click={() => (mode = 'join')}
         >
           Join room
@@ -168,7 +168,7 @@
         <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
           Display name
           <input
-            class="rounded-md border border-marigold/30 px-3 py-3 text-base sm:py-2"
+            class="rounded-md border border-gold/30 px-3 py-3 text-base sm:py-2"
             type="text"
             required
             bind:value={displayName}
@@ -180,7 +180,7 @@
           <label class="flex flex-col gap-1 text-sm font-medium text-ink/90">
             Room code
             <input
-              class="rounded-md border border-marigold/30 px-3 py-3 text-base uppercase tracking-widest sm:py-2"
+              class="rounded-md border border-gold/30 px-3 py-3 text-base uppercase tracking-widest sm:py-2"
               type="text"
               required
               bind:value={roomCodeInput}
@@ -195,7 +195,7 @@
 
         <button
           type="submit"
-          class="chamfer-frame bg-bubblegum px-4 py-3 text-base font-medium text-white [--chamfer-color:theme(colors.butter)] sm:py-2"
+          class="chamfer-frame bg-sapphire px-4 py-3 text-base font-medium text-white [--chamfer-color:theme(colors.champagne)] sm:py-2"
         >
           {mode === 'create' ? 'Create room' : 'Join room'}
         </button>
@@ -209,11 +209,11 @@
 
         <ul class="flex flex-col gap-2">
           {#each activePlayers(state.room) as player (player.id)}
-            <li class="rounded-md border border-marigold/30 px-3 py-2 text-base">
+            <li class="rounded-md border border-gold/30 px-3 py-2 text-base">
               {player.name}
               {#if player.id === state.room.hostPlayerId}
                 <span class="inline-flex items-center gap-1 text-xs text-ink/60">
-                  <Crown size={12} class="text-marigold" aria-hidden="true" />
+                  <Crown size={12} class="text-gold" aria-hidden="true" />
                   (host)
                 </span>
               {/if}
@@ -280,7 +280,7 @@
           </InfoTooltip>
           <select
             id="turn-timer-select"
-            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+            class="rounded-md border border-gold/30 px-3 py-2 text-base"
             value={state.room.turnTimerMinutes ?? ''}
             on:change={handleTurnTimerChange}
           >
@@ -301,7 +301,7 @@
           </InfoTooltip>
           <select
             id="laps-per-book-select"
-            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+            class="rounded-md border border-gold/30 px-3 py-2 text-base"
             value={lapsPerBookValue}
             on:change={handleLapsPerBookChange}
           >
@@ -322,7 +322,7 @@
           </InfoTooltip>
           <select
             id="prompt-mode-select"
-            class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+            class="rounded-md border border-gold/30 px-3 py-2 text-base"
             value={state.room.promptMode}
             on:change={handlePromptModeChange}
           >
@@ -343,7 +343,7 @@
             </InfoTooltip>
             <select
               id="curated-prompt-count-select"
-              class="rounded-md border border-marigold/30 px-3 py-2 text-base"
+              class="rounded-md border border-gold/30 px-3 py-2 text-base"
               value={state.room.curatedPromptCount ?? DEFAULT_CURATED_PROMPT_COUNT}
               on:change={handleCuratedPromptCountChange}
             >
@@ -389,7 +389,7 @@
 
         <button
           type="button"
-          class="chamfer-frame bg-bubblegum px-4 py-2 text-base font-medium text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
+          class="chamfer-frame bg-sapphire px-4 py-2 text-base font-medium text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
           disabled={belowMinimumPlayers && !acknowledgeSmallGame}
           on:click={handleStartGame}
         >

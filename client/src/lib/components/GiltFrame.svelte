@@ -11,8 +11,8 @@
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 </script>
 
-<div class="gilt-frame rounded-lg border-4 border-marigold bg-butter p-3 shadow-lg" class:gilt-frame-motion={!reduceMotion}>
-  <div class="gilt-frame-inner rounded border-2 border-marigold/60 p-2">
+<div class="gilt-frame rounded-lg border-4 border-gold bg-champagne p-3 shadow-lg" class:gilt-frame-motion={!reduceMotion}>
+  <div class="gilt-frame-inner rounded border-2 border-gold/60 p-2">
     <slot />
   </div>
   {#if $$slots['plaque-action']}

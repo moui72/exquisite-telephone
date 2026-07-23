@@ -246,28 +246,28 @@
       <div class="flex flex-wrap gap-2">
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('full')}
         >
           Grant a Full Turn
         </button>
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('half')}
         >
           Grant a Half Turn
         </button>
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('15m')}
         >
           Grant Fifteen Minutes
         </button>
         <button
           type="button"
-          class="rounded-md border border-marigold/60 bg-butter px-3 py-1 text-sm text-ink"
+          class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm text-ink"
           on:click={() => handleCastTimeoutVote('force-empty')}
         >
           Declare the Turn Forfeit
@@ -370,7 +370,7 @@
 
           <button
             type="submit"
-            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
+            class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!curatedContent}
           >
             <span class="inline-flex items-center gap-1.5">
@@ -408,7 +408,7 @@
           </label>
           <button
             type="submit"
-            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)]"
+            class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)]"
           >
             <span class="inline-flex items-center gap-1.5">
               <Send size={16} aria-hidden="true" />
@@ -458,8 +458,8 @@
                     type="button"
                     aria-label="Thumbs up — fun to draw"
                     aria-pressed={promptRating === 'up'}
-                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
-                    class:bg-butter={promptRating === 'up'}
+                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.champagne)]"
+                    class:bg-champagne={promptRating === 'up'}
                     on:click={() => (promptRating = promptRating === 'up' ? null : 'up')}
                   >
                     <ThumbsUp size={16} aria-hidden="true" />
@@ -468,8 +468,8 @@
                     type="button"
                     aria-label="Thumbs down — not fun to draw"
                     aria-pressed={promptRating === 'down'}
-                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.butter)]"
-                    class:bg-butter={promptRating === 'down'}
+                    class="chamfer-frame px-3 py-1.5 text-ink [--chamfer-color:theme(colors.champagne)]"
+                    class:bg-champagne={promptRating === 'down'}
                     on:click={() => (promptRating = promptRating === 'down' ? null : 'down')}
                   >
                     <ThumbsDown size={16} aria-hidden="true" />
@@ -480,7 +480,7 @@
           {/if}
           <button
             type="button"
-            class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)] disabled:cursor-not-allowed disabled:opacity-50"
+            class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={drawnOps.length === 0}
             on:click={handleSubmitDrawing}
           >

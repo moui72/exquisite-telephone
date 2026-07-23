@@ -34,14 +34,14 @@
 <div class="pb-12">
 {#if state.reconnecting}
   <main class="flex min-h-screen items-center justify-center p-6">
-    <p class="text-lg text-butter/85">Retrieving your ticket…</p>
+    <p class="text-lg text-champagne/85">Retrieving your ticket…</p>
   </main>
 {:else if state.error === 'game-ended'}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-butter/85">The Exhibition has Closed.</p>
+    <p class="text-lg text-champagne/85">The Exhibition has Closed.</p>
     <button
       type="button"
-      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
+      class="rounded bg-sapphire px-4 py-2 text-white hover:bg-sapphire/90"
       on:click={() => session.leaveGame()}
     >
       Return to the Foyer
@@ -49,10 +49,10 @@
   </main>
 {:else if isKicked}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-butter/85">You have been asked to leave the salon by the host.</p>
+    <p class="text-lg text-champagne/85">You have been asked to leave the salon by the host.</p>
     <button
       type="button"
-      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
+      class="rounded bg-sapphire px-4 py-2 text-white hover:bg-sapphire/90"
       on:click={() => session.leaveGame()}
     >
       Return to the Foyer
@@ -68,10 +68,10 @@
   <Reveal {session} />
 {:else if state.room.status === 'ended'}
   <main class="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
-    <p class="text-lg text-butter/85">The Exhibition has Closed.</p>
+    <p class="text-lg text-champagne/85">The Exhibition has Closed.</p>
     <button
       type="button"
-      class="rounded bg-bubblegum px-4 py-2 text-white hover:bg-bubblegum/90"
+      class="rounded bg-sapphire px-4 py-2 text-white hover:bg-sapphire/90"
       on:click={() => session.leaveGame()}
     >
       Return to the Foyer

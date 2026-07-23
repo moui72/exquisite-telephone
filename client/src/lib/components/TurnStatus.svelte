@@ -19,9 +19,9 @@
     <li class="flex items-center justify-between text-sm text-ink">
       <span>{player.name}</span>
       {#if pendingAuthorIds.has(player.id)}
-        <span class="text-marigold">at their easel…</span>
+        <span class="text-gold">at their easel…</span>
       {:else}
-        <span class="text-grass">piece presented</span>
+        <span class="text-emerald">piece presented</span>
       {/if}
     </li>
   {/each}

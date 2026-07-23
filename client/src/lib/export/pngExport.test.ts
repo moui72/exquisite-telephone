@@ -347,7 +347,7 @@ describe('renderBookOntoContext (T003: branded frame + footer)', () => {
     // (a) A branded (Marigold) frame border around the whole strip: at
     // minimum a top and bottom edge band spanning the full width.
     // Full-width Marigold bands: (x=0, w=CANVAS_WIDTH). Parse their y.
-    const marigoldBandYs = ctx.calls
+    const goldBandYs = ctx.calls
       .filter((c) => c.endsWith(`@${MARIGOLD}`))
       .map((c) => /^fillRect\(0,(\d+),(\d+),/.exec(c))
       .filter((m): m is RegExpExecArray => m !== null && Number(m[2]) === CANVAS_WIDTH)
@@ -356,8 +356,8 @@ describe('renderBookOntoContext (T003: branded frame + footer)', () => {
     // Top frame edge at y=0; bottom frame edge in the lower band (below the
     // composited panels — distinct from the internal panel dividers, which
     // sit within the content rows).
-    const topEdge = marigoldBandYs.includes(0);
-    const bottomEdge = marigoldBandYs.some((y) => y >= contentHeight);
+    const topEdge = goldBandYs.includes(0);
+    const bottomEdge = goldBandYs.some((y) => y >= contentHeight);
     expect(topEdge, 'expected a Marigold top frame edge').toBe(true);
     expect(bottomEdge, 'expected a Marigold bottom frame edge').toBe(true);
 

@@ -38,7 +38,7 @@
 
 {#if isHost && room}
   <div
-    class="fixed inset-0 z-50 flex items-center justify-center bg-velvet/50 p-4"
+    class="fixed inset-0 z-50 flex items-center justify-center bg-wine/50 p-4"
     role="presentation"
     on:click|self={onClose}
   >
@@ -54,12 +54,12 @@
             <h2 class="font-mono text-[0.65rem] font-bold uppercase tracking-[0.18em] text-ink/50">
               Guest List
             </h2>
-            <ul class="mt-1 flex flex-col divide-y divide-marigold/25">
+            <ul class="mt-1 flex flex-col divide-y divide-gold/25">
               {#each visiblePlayers as player (player.id)}
                 <li class="flex min-h-11 items-center justify-between gap-3 py-1.5 text-sm">
                   <span class="inline-flex min-w-0 items-center gap-1.5 truncate text-ink/90">
                     {#if player.id === room.hostPlayerId}
-                      <Crown size={14} aria-hidden="true" class="shrink-0 text-marigold" />
+                      <Crown size={14} aria-hidden="true" class="shrink-0 text-gold" />
                     {/if}
                     {player.name}
                   </span>
@@ -100,7 +100,7 @@
               {#if room.nonContinuable}
                 <button
                   type="button"
-                  class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-bubblegum px-5 text-sm font-medium text-white hover:bg-bubblegum/90 [--chamfer-color:theme(colors.marigold)]"
+                  class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-sapphire px-5 text-sm font-medium text-white hover:bg-sapphire/90 [--chamfer-color:theme(colors.gold)]"
                   on:click={handleRestartGame}
                 >
                   Restage the Salon
@@ -108,7 +108,7 @@
               {/if}
               <button
                 type="button"
-                class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-marigold/15 px-5 text-sm font-medium text-ink/80 hover:bg-marigold/25 [--chamfer-color:transparent]"
+                class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-gold/15 px-5 text-sm font-medium text-ink/80 hover:bg-gold/25 [--chamfer-color:transparent]"
                 on:click={handleEndGame}
               >
                 Close the Exhibition
@@ -120,7 +120,7 @@
         <button
           slot="plaque-action"
           type="button"
-          class="chamfer-frame chamfer-slim inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 bg-bubblegum px-4 text-sm font-medium text-white hover:bg-bubblegum/90 [--chamfer-color:theme(colors.marigold)]"
+          class="chamfer-frame chamfer-slim inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 bg-sapphire px-4 text-sm font-medium text-white hover:bg-sapphire/90 [--chamfer-color:theme(colors.gold)]"
           on:click={onClose}
         >
           <X size={16} aria-hidden="true" />

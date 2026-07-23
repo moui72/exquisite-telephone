@@ -1,7 +1,7 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-22
+last_updated: 2026-07-23
 diagram_status: current
 diagram_type: graph TD
 render_section: UI
@@ -93,7 +93,7 @@ two players are ever offered the same phrase.
 A slim bar fixed along the bottom of the viewport on **every** view —
 the Foyer, Lobby, Writing/Drawing, Reveal, and the terminal states —
 rendered once at the app root rather than per-view, so it never
-disappears or shifts between screens. Framed as the velvet skirting of
+disappears or shifts between screens. Framed as the wine skirting of
 the gallery wall, trimmed with a double gilt rail (a bright hairline
 over a dimmer one) that echoes the Gilt Frame's outer + inset strokes
 without carrying a heavy border.
@@ -137,15 +137,15 @@ by it. Two tabs: **Rules** (selected by default on open) and **About**.
 Only the active tab's copy is rendered, not merely hidden.
 
 The tab controls are a brass label-rail in the salon palette: the tablist
-is a thin gilt rail (a marigold bottom rule), each tab an engraved-caps
-label sitting on it. The selected tab is marked by a lit marigold underline
+is a thin gilt rail (a gold bottom rule), each tab an engraved-caps
+label sitting on it. The selected tab is marked by a lit gold underline
 segment on the rail — a soft gilt glow tying the label to the panel below —
-with its text at full-strength velvet; unselected labels recede in muted
-ink and grow a faint marigold underline on hover. Selection thus reads from
+with its text at full-strength wine; unselected labels recede in muted
+ink and grow a faint gold underline on hover. Selection thus reads from
 position on the rail, not a fill-versus-outline contrast, so the current
 tab is unmistakable at a glance. Labels use the Space Mono utility face
 (uppercase, letter-spaced) to set them apart from the panel's serif/sans
-body copy, and a marigold focus ring keeps the selection legible to
+body copy, and a gold focus ring keeps the selection legible to
 keyboard users. The visual state is carried alongside `aria-selected`,
 never in place of it.
 
@@ -492,24 +492,29 @@ train the host to click through it.
 
 ## Visual Identity
 
-A "tongue-in-cheek exquisite" salon/gallery theme: the real-world
+A "tongue-in-cheek exquisite" salon/gallery theme — the real-world
 "Exquisite Corpse" game's Surrealist-salon origins, played straight-faced
-but rendered in candy-bright color instead of museum beige. Tailwind CSS
-remains the styling mechanism (utility-first, fast to build with for a
-small app, no need for a full component library's opinionated styling
-overhead), extended with this theme's tokens rather than left at
-Tailwind's defaults.
+and knowingly overdressed. **Boudoir Damask** (redesign 2026-07-23): the
+page is a deep bordeaux "wall" hung with a gold fleur-de-lis damask, and
+every artifact and control is a champagne placard or gilt frame floating
+on it. Because the ground is dark and patterned, **text is never set
+directly on it** — it lives on a champagne surface (a GiltFrame or a
+`.plaque`); on-ground copy that must stay light (the splash subtitle, a
+status line) uses champagne, never ink. Tailwind CSS remains the styling
+mechanism, extended with this theme's tokens rather than left at Tailwind's
+defaults.
 
-**Color tokens:**
+**Color tokens** (each token's name is its colour):
 
 | Name | Hex | Role |
 |---|---|---|
-| Ink | `#241B2F` | body text |
-| Velvet | `#2E1A47` | dark surfaces (header bands, modal backdrop) |
-| Marigold | `#F5A623` | gold/foil accent — frame borders, plaque rules |
-| Bubblegum | `#FF6F91` | primary call-to-action |
-| Butter | `#FFF3D6` | warm light card surface (not gray) |
-| Grass | `#2FA88A` | affirmative/success states |
+| Bordeaux | `#6E1F2E` | the page ground ("the wall"); carries the gold fleur damask (set once in `app.css`, not a utility) |
+| Champagne | `#F3E6C4` | every light surface (gilt frames, plaques) and light-text-on-the-dark-ground |
+| Ink | `#3A1017` | the darkest text, on champagne surfaces |
+| Gold | `#D0A84E` | frame borders, rings, decorative accents |
+| Sapphire | `#2B4A8C` | the interactive accent — buttons, links, focus |
+| Wine | `#4E1420` | deep-wine dark elements — chips, modal scrims, the footer |
+| Emerald | `#2F6B46` | affirmative/success states |
 
 **Type pairing:** Fraunces (display serif, set at its soft/wonky optical
 axis, used sparingly for titles and plaque captions) paired with Rubik
@@ -519,13 +524,13 @@ ticket).
 
 **Gilded title treatment:** the app's two title-page moments — the
 Foyer's splash heading ("Exquisite Telephone") and the Reveal View's
-opening header ("The Gallery Opens") — use a fourth face, Uncial
-Antiqua (an uncial script modeled on real illuminated-manuscript
-lettering), set in a gold gradient clipped to the text with a soft ink
-drop-shadow for an embossed, gilt-leaf feel. Reserved for exactly these
-two moments — never applied to body copy, plaque captions, or any
-other heading — so the effect stays a deliberate, occasional flourish
-rather than diluting into the everyday type system.
+opening header ("The Gallery Opens") — use a fourth face, **Pirata One**
+(a gothic blackletter, self-hosted via `@fontsource/pirata-one`), set in a
+gold gradient clipped to the text with a slight soft drop-shadow for depth
+against the damask — and no outline. Reserved for exactly these two
+moments — never applied to body copy, plaque captions, or any other
+heading — so the effect stays a deliberate, occasional flourish rather
+than diluting into the everyday type system.
 
 **Signature element — the Gilt Frame:** a reusable component, an ornate
 CSS-drawn gold frame with a small engraved plaque underneath bearing a
@@ -535,6 +540,15 @@ canvas/text-entry surface (Writing / Drawing View, "the easel"), and
 each book (Reveal View, "the gallery wall") — plus the Foyer's
 create/join form itself, so the game's very first screen already
 carries the same signature before any artifact exists yet.
+
+**Signature elements — the damask wall and the Plaque:** two devices
+carry the dark-ground redesign. The bordeaux **damask wall** — a
+half-drop gold fleur-de-lis tile under a top-edge vignette — is the page
+ground on every view (set once in `app.css`). The **`.plaque`** is a
+lightweight champagne surface, a GiltFrame's sibling without the caption
+rule, that frames any content which would otherwise sit on that wall
+(section headers, status lines, the waiting-room host settings) so text
+always reads on parchment rather than on the wallpaper.
 
 **Applies globally, not just to GiltFrame:** the color tokens and type
 pairing above are the theme for every view's chrome — page backgrounds,
@@ -553,13 +567,13 @@ default-Tailwind styling with theme tokens):
 | `text-slate-600` | `text-ink/75` |
 | `text-slate-500` | `text-ink/60` |
 | `text-slate-400` | `text-ink/45` |
-| `border-slate-200` (decorative dividers/card borders) | `border-marigold/30` |
-| `bg-slate-800` (primary buttons) | `bg-bubblegum` |
-| `bg-slate-100` (placeholder/cover boxes) | `bg-butter` |
-| plain unstyled/gray secondary buttons (`border` with no color) | `border-marigold/60 bg-butter text-ink` |
+| `border-slate-200` (decorative dividers/card borders) | `border-gold/30` |
+| `bg-slate-800` (primary buttons) | `bg-sapphire` |
+| `bg-slate-100` (placeholder/cover boxes) | `bg-champagne` |
+| plain unstyled/gray secondary buttons (`border` with no color) | `border-gold/60 bg-champagne text-ink` |
 
 Functional status colors (error/red, timeout-warning/amber,
-success/grass) are excluded from this mapping — they encode meaning,
+success/emerald) are excluded from this mapping — they encode meaning,
 not leftover default styling.
 
 **Docent Voice — copy register:** all UI copy (labels, button text,

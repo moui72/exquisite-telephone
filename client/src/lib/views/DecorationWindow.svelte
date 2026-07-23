@@ -114,7 +114,7 @@
   {:else}
     <button
       type="button"
-      class="chamfer-frame bg-bubblegum px-4 py-2 text-base text-white [--chamfer-color:theme(colors.butter)]"
+      class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)]"
       on:click={handlePresent}
     >
       <span class="inline-flex items-center gap-1.5">

@@ -33,9 +33,9 @@
       {#each COVER_TEMPLATE_OPTIONS as option (option.label)}
         <button
           type="button"
-          class="rounded-md border border-marigold/60 px-2 py-1 text-xs font-medium"
-          class:bg-velvet={coverTemplate === option.id}
-          class:text-butter={coverTemplate === option.id}
+          class="rounded-md border border-gold/60 px-2 py-1 text-xs font-medium"
+          class:bg-wine={coverTemplate === option.id}
+          class:text-champagne={coverTemplate === option.id}
           class:text-ink={coverTemplate !== option.id}
           aria-pressed={coverTemplate === option.id}
           on:click={() => onTemplateChange(option.id)}

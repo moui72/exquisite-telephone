@@ -248,10 +248,10 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
 
     const whiteSwatch = getByLabelText('Color #ffffff');
     expect(whiteSwatch).toBeInTheDocument();
-    // Visible by default (not selected yet) against the butter/60 toolbar
+    // Visible by default (not selected yet) against the champagne/60 toolbar
     // background -- distinct from border-transparent, which the other
     // swatches use when inactive.
-    expect(whiteSwatch.className).toMatch(/border-marigold\/30/);
+    expect(whiteSwatch.className).toMatch(/border-gold\/30/);
 
     const canvas = container.querySelector('canvas')!;
     await fireEvent.click(whiteSwatch);
