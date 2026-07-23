@@ -69,7 +69,7 @@ status: in-progress
   the spec is parallel-safe. Uses the Phase 1 fixtures and observer helper.
   [artifacts: datamodel]
 
-- [ ] T008 [parallel] Write the deterministic drawing spec
+- [x] T008 [parallel] Write the deterministic drawing spec
   (`e2e/drawing.spec.ts`): drive intentional strokes on the drawing canvas
   via pointer actions (fixed endpoints/color/width), submit the turn, then
   assert the exact submitted `DrawOps` via the observer helper — not a pixel
