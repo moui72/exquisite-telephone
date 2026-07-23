@@ -1,5 +1,13 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Backlogged `cross-browser-e2e-game-flow-te`** — an
+end-to-end suite covering the main game flow (lobby → write/draw → reveal)
+across Firefox, Safari, Chrome, and Edge, meant to run against beta as a
+promote gate before prod. Register now: 1 backlogged · 21 implemented · 1
+subsumed. Everything else unchanged and clean — four stable artifacts,
+diagrams current, 0 defects, 0 open feedback, nothing in flight. Plan it with
+`/ardd-plan cross-browser-e2e-game-flow-te` when ready.)_
+
 _Updated: 2026-07-23 (**ArDD install updated: v1.0.5-beta.1 → v1.1.1-beta.3**
 (source `c0386d3` → `9bc9b38`, beta channel). All skills reinstalled, no
 migrations pending, README badge already present. Project state is otherwise
