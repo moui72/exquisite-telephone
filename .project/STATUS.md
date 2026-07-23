@@ -1,5 +1,13 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**ArDD install updated: v1.0.5-beta.1 → v1.1.1-beta.3**
+(source `c0386d3` → `9bc9b38`, beta channel). All skills reinstalled, no
+migrations pending, README badge already present. Project state is otherwise
+unchanged from the block below and fully clean: four stable artifacts, all
+diagrams current, no open placeholders, 0 recorded defects, 0 open feedback,
+nothing in flight, no orphaned completion flips, and every feature
+implemented/subsumed. `up-to-date` — no further ArDD update available.)_
+
 _Updated: 2026-07-23 (**Boudoir Damask redesign shipped to beta.** The app was
 re-skinned from the light butter/marigold theme to Boudoir Damask: a deep
 bordeaux ground hung with a gold fleur-de-lis damask, champagne placards and

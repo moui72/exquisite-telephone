@@ -1,10 +1,10 @@
 # ArDD Version
 
-_Source: artifact-driven-dev @ c0386d3 · Installed/updated 2026-07-21_
+_Source: artifact-driven-dev @ 9bc9b38 · Installed/updated 2026-07-23_
 
 Source-Path: ~/.ardd/source
-Source-Commit: c0386d3c040af6cae43c5c5eba28dd3ff0b8ca3f
-Source-Ref: v1.0.5-beta.1
+Source-Commit: 9bc9b38fa85cb21afa2f4108b8b6a6b9f2dea0d2
+Source-Ref: v1.1.1-beta.3
 Channel: beta
 Harness: claude
 Harnesses: claude
