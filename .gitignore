@@ -26,3 +26,8 @@ curation-events-archive/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Local env / secrets (never committed — canonical copies live in 1Password)
+.env
+.env.*
+!.env.example
