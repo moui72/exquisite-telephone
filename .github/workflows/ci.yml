@@ -158,6 +158,31 @@ jobs:
           # different sha (T012).
           E2E_EXPECTED_SHA: ${{ needs.deploy-beta.outputs.sha }}
 
+  # T012 — Record the aggregate e2e result keyed to the deployed commit sha.
+  # DECISION (infrastructure.md [OPEN]): a GitHub COMMIT STATUS on the sha,
+  # not a stored artifact — it is native, needs no external store, and is
+  # exactly what promote.yml (T013) looks up for the commit it promotes. The
+  # context name `e2e/cross-browser` is the contract between the two.
+  e2e-result:
+    name: Record e2e result on the commit
+    needs: [changes, e2e]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      statuses: write
+    steps:
+      - name: Post commit status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          state="failure"
+          if [ "${{ needs.e2e.result }}" = "success" ]; then state="success"; fi
+          echo "e2e result: ${{ needs.e2e.result }} -> status $state on ${{ github.sha }}"
+          gh api -X POST "repos/${{ github.repository }}/statuses/${{ github.sha }}" \
+            -f state="$state" \
+            -f context="e2e/cross-browser" \
+            -f description="Cross-browser e2e: $state"
+
 # There is deliberately NO deploy-prod job here. Production is deployed
 # only by promote.yml, which fast-forwards `release` and deploys in the
 # same manual run — see infrastructure.md, Release Promotion. A push to

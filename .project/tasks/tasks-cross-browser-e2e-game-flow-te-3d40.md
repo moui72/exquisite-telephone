@@ -99,7 +99,7 @@ status: in-progress
   `E2E_BASE_URL=https://beta-ex-tel.ty-pe.com`, supplying the test-signal
   secret the T004/T005 seams require. [artifacts: infrastructure]
 
-- [ ] T012 Record the run's aggregate pass/fail keyed to the deployed commit
+- [x] T012 Record the run's aggregate pass/fail keyed to the deployed commit
   sha — decide storage (a GitHub commit status/check on the sha vs. a stored
   artifact; this resolves the per-sha-result `[OPEN]` in infrastructure.md).
   As a cross-check, assert the `vX.Y.Z-beta+<short-sha>` the live beta bundle
