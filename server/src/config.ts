@@ -20,6 +20,18 @@ export interface Config {
   clientDistPath: string;
   /** Absolute path to the Curation Store's JSON file — the only file this app writes. */
   curationDataPath: string;
+  /**
+   * The test-only app seam (infrastructure.md — End-to-End Test Gate /
+   * Curation-write isolation). Both must be present for the seam to
+   * activate: `e2eSeamEnabled` is a per-channel gate wired through the
+   * generated Fly config (beta `true`, prod `false`), and
+   * `e2eTestSignalSecret` is the shared secret CI holds and sends as the
+   * `x-e2e-test-signal` header. The seam is inert — and structurally
+   * un-triggerable on prod — unless BOTH hold, so a leaked secret alone
+   * can never enable it where the channel gate is off.
+   */
+  e2eSeamEnabled: boolean;
+  e2eTestSignalSecret: string | undefined;
 }
 
 /**
@@ -32,5 +44,7 @@ export function loadConfig(env: Record<string, string | undefined>): Config {
   const port = Number.isInteger(parsedPort) ? parsedPort : DEFAULT_PORT;
   const clientDistPath = env.CLIENT_DIST_PATH || DEFAULT_CLIENT_DIST_PATH;
   const curationDataPath = env.CURATION_DATA_PATH || DEFAULT_CURATION_DATA_PATH;
-  return { port, clientDistPath, curationDataPath };
+  const e2eSeamEnabled = env.E2E_SEAM_ENABLED === 'true';
+  const e2eTestSignalSecret = env.E2E_TEST_SIGNAL_SECRET || undefined;
+  return { port, clientDistPath, curationDataPath, e2eSeamEnabled, e2eTestSignalSecret };
 }

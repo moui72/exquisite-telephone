@@ -841,7 +841,18 @@ export function onSubmitEntry(
   //
   // Deliberately last, after the entry is committed and never before any
   // guard: a rating must never gate or fail a submission.
-  if (curationStore && input.rating && entry.position === 1) {
+  //
+  // Test-only curation-write isolation (infrastructure.md — Curation-write
+  // isolation on live beta): a connection tagged by the e2e test signal
+  // (`socket.data.isTestTraffic`, set at connect from the
+  // `x-e2e-test-signal` header) has its ratings DISCARDED — never written —
+  // so e2e traffic against live beta never pollutes the real Curation
+  // Store. "Discard" over "scratch path" is deliberate: the simplest sound
+  // option (datamodel.md — a lost rating is telemetry nobody misses), with
+  // no second curation directory to configure or clean up. Inert for
+  // untagged (real) traffic.
+  const isTestTraffic = (socket.data as { isTestTraffic?: boolean }).isTestTraffic === true;
+  if (curationStore && input.rating && entry.position === 1 && !isTestTraffic) {
     const openingPhrase = book.entries.find((e) => e.position === 0)?.content;
     if (openingPhrase !== undefined) {
       curationStore.recordRating(openingPhrase, input.rating, isBankPhrase(openingPhrase));

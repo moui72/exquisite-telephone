@@ -55,4 +55,21 @@ describe('server config', () => {
 
     expect(config.curationDataPath).toBe('/data/curation.json');
   });
+
+  it('leaves the test-only seam OFF by default (inert in normal runtime)', () => {
+    const config = loadConfig({});
+
+    expect(config.e2eSeamEnabled).toBe(false);
+    expect(config.e2eTestSignalSecret).toBeUndefined();
+  });
+
+  it('enables the seam only when E2E_SEAM_ENABLED is exactly "true"', () => {
+    expect(loadConfig({ E2E_SEAM_ENABLED: 'true' }).e2eSeamEnabled).toBe(true);
+    expect(loadConfig({ E2E_SEAM_ENABLED: 'false' }).e2eSeamEnabled).toBe(false);
+    expect(loadConfig({ E2E_SEAM_ENABLED: '1' }).e2eSeamEnabled).toBe(false);
+  });
+
+  it('reads the test-signal secret from E2E_TEST_SIGNAL_SECRET', () => {
+    expect(loadConfig({ E2E_TEST_SIGNAL_SECRET: 's3cret' }).e2eTestSignalSecret).toBe('s3cret');
+  });
 });

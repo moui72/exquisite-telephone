@@ -19,7 +19,10 @@ const logger = createLogger();
 // defines (constitution Principle X); all file I/O lives in the store.
 const curationStore = createCurationStore(config.curationDataPath, logger);
 
-const io = createSocketServer(httpServer, store, sessionStore, logger, curationStore);
+const io = createSocketServer(httpServer, store, sessionStore, logger, curationStore, {
+  enabled: config.e2eSeamEnabled,
+  secret: config.e2eTestSignalSecret,
+});
 startTimerSweep(store, io, undefined, logger);
 
 httpServer.listen(config.port, () => {

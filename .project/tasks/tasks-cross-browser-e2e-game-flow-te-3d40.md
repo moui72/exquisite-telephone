@@ -35,7 +35,7 @@ status: in-progress
 
 ## Phase 2: Test-only app seams
 
-- [ ] T004 Add a test-traffic tag and server-side routing so prompt-ratings
+- [x] T004 Add a test-traffic tag and server-side routing so prompt-ratings
   from test traffic never reach beta's real Curation Store. Decide and
   document the tagging mechanism (test-only request header vs. a room-level
   flag — this resolves the curation `[OPEN]` in infrastructure.md), and route
