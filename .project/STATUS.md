@@ -1,17 +1,15 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Slim-image curation-CLI fix shipped to `main`; all
-queues empty.** `tasks-curation-cli-prod-entrypoint-2206.md` (4 tasks) is
-`completed` and merged, worktree reaped. The scheduled/on-machine aggregate now
-invokes the compiled `node server/dist/curation/cli.js` (workflow + SKILL +
-`infrastructure.md` updated); a new guard test (`server/src/curation/
-cli-dist.test.ts`, verified fail-if-absent) plus a `curation:aggregate:dist`
-script keep the compiled entrypoint from silently vanishing. Suite green (234
-server). This closes the curation feature's last thread — the scheduled
-aggregation is now genuinely runnable in prod.
+_Updated: 2026-07-22 (**Rules/About tab redesign shipped to prod.** The help
+panel's tab controls were reworked from the chamfered gilt-plaque treatment
+(T005, which kept the clunky clipped-octagon silhouette) to a brass label-rail:
+a thin gilt rail with engraved-caps labels and a lit marigold underline marking
+the selected tab. `RulesOverview.svelte` + `ui.md` updated; suite green,
+typecheck/lint clean. Committed (`560f99c`), pushed to `main` (beta verified
+live), then promoted to prod.
 
 Nothing is in flight. Backlog, feedback, and work queue are all empty. Prod on
-`v0.2.0`; beta on latest `main`.)_
+`v0.2.2`; beta on latest `main`.)_
 
 ## Artifacts Found
 
@@ -34,9 +32,10 @@ No violations.
 
 ## Diagrams
 
-- datamodel.md — stale ⚠️ (curation ledger/quarantine — run /ardd-diagram datamodel)
-- infrastructure.md — stale ⚠️ (curation pipe/skill, App Versioning, scheduled aggregate — run /ardd-diagram infrastructure)
-- ui.md — stale ⚠️ (About tab, version display, restyled tabs — run /ardd-diagram ui)
+- datamodel.md — current ✅
+- infrastructure.md — current ✅
+- ui.md — current ✅ (tab-styling refinement was prose-only; the structure-only
+  component diagram is unaffected)
 
 ## Code-vs-Artifact Defects
 
@@ -57,16 +56,16 @@ Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Deployment
 
-- **Prod:** `v0.2.0` at `ex-tel.ty-pe.com`.
+- **Prod:** `v0.2.2` at `ex-tel.ty-pe.com` — includes the tab redesign.
 - **Beta:** current `main` at `beta-ex-tel.ty-pe.com` (redeploys on the next
   code push).
-- Local `main` is ahead of `origin` by this session's unpushed commits
-  (curation-CLI fix + docs) — the fix touches real code, so a push redeploys
-  beta.
+
+## Tooling
+
+- ArDD update available: installed `c0386d3`, source at `v1.1.1-beta.2` (beta
+  channel) — run /ardd-update.
 
 ## Summary
 
-0 issues found. Nothing planned or in flight. The only open loop is a
-`/ardd-diagram` pass to refresh the three stale diagrams (datamodel,
-infrastructure, ui) after this session's feature work; otherwise the project is
-at a clean rest. Push `main` to ship the fix to beta when ready.
+0 issues found. Nothing planned or in flight; the project is at a clean rest.
+The only optional loop is `/ardd-update` to pull the available ArDD release.
