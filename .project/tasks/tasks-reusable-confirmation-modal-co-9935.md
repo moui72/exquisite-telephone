@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Reusable ConfirmDialog component
 
-- [ ] T001 [artifacts: ui] Write a failing component test for a new
+- [x] T001 [artifacts: ui] Write a failing component test for a new
   `client/src/lib/components/ConfirmDialog.svelte`: it renders a
   caller-supplied heading, body, confirm-label, and cancel-label; clicking
   confirm emits a `confirm` event and clicking cancel emits `cancel`;
