@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Toolchain & harness foundation
 
-- [ ] T001 Add Playwright as a dev-only toolchain: add `@playwright/test` as
+- [x] T001 Add Playwright as a dev-only toolchain: add `@playwright/test` as
   a devDependency, add a `playwright.config.ts` at repo root with
   `fullyParallel: true` and a four-project matrix (chromium, firefox, webkit,
   and a chromium project with `channel: 'msedge'`), and add root package
