@@ -11,6 +11,9 @@ importers:
       '@eslint/js':
         specifier: ^9.15.0
         version: 9.39.5
+      '@exquisite-telephone/shared':
+        specifier: workspace:*
+        version: link:shared
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -35,6 +38,12 @@ importers:
       smol-toml:
         specifier: ^1.7.0
         version: 1.7.0
+      socket.io:
+        specifier: ^4.8.3
+        version: 4.8.3
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
       svelte-eslint-parser:
         specifier: ^1.8.0
         version: 1.8.0(svelte@5.56.7(@typescript-eslint/types@8.64.0))

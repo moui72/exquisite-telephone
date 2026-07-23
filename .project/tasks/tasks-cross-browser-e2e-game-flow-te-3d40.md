@@ -16,7 +16,7 @@ status: in-progress
   (`E2E_BASE_URL`) defaulting to a local dev server so the same config runs
   locally and against beta. No app/src changes in this task.
 
-- [ ] T002 [parallel] Build the Node `socket.io-client` observer helper
+- [x] T002 [parallel] Build the Node `socket.io-client` observer helper
   (`e2e/helpers/observer.ts`): given a room code, it joins the room as an
   extra player over Socket.IO, subscribes to `roomUpdated`/broadcast events,
   and exposes typed accessors for the latest room state and each entry's
