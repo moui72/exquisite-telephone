@@ -1,7 +1,7 @@
 ---
 plan: plan-cross-browser-e2e-game-flow-te-2026-07-23-cbcb.md
 generated: 2026-07-23
-status: ready
+status: in-progress
 ---
 
 # Tasks
