@@ -25,7 +25,7 @@ status: in-progress
   a locally-started server and asserts it observes a known submitted entry.
   [artifacts: datamodel, infrastructure]
 
-- [ ] T003 [parallel] Build the base fixture and page objects for the three
+- [x] T003 [parallel] Build the base fixture and page objects for the three
   flow surfaces (`e2e/pages/lobby.ts`, `writingDrawing.ts`, `reveal.ts`) and
   a `game` fixture that creates a room and joins N players (one browser
   context each). Drive existing selectors where present; where a stable

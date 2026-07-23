@@ -205,7 +205,9 @@
     <div class="flex flex-col gap-4">
       <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
         <p class="text-sm text-ink/75">Room code</p>
-        <p class="text-3xl font-bold tracking-widest text-ink">{state.room.id}</p>
+        <p data-testid="room-code" class="text-3xl font-bold tracking-widest text-ink">
+          {state.room.id}
+        </p>
 
         <ul class="flex flex-col gap-2">
           {#each activePlayers(state.room) as player (player.id)}
