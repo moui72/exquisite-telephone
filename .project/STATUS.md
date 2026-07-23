@@ -1,5 +1,20 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Planned & tasked `cross-browser-e2e-game-flow-te`.**
+A Playwright cross-browser e2e suite (Chromium/Firefox/WebKit/msedge) for the
+main game flow, wired as a **beta-deploy job** (gated by the existing
+code-change `changes` signal — fix/feat runs the full suite, docs/chore runs
+nothing) that records a per-commit result, which `promote.yml` reads to gate
+prod (red-or-missing blocks). Design landed in `infrastructure.md` (new
+End-to-End Test Gate section; two bounded `[OPEN:]` items — the curation
+test-tag mechanism and per-sha result storage/missing-result policy — both
+scoped to implementation, artifact kept `stable`). Plan
+`plan-cross-browser-e2e-game-flow-te-2026-07-23-cbcb.md` **approved**; tasks
+`tasks-cross-browser-e2e-game-flow-te-3d40.md` **ready, 0/13** across 5
+phases. Register now: 1 tasked · 21 implemented · 1 subsumed. `infrastructure.md`
+diagram is now **stale** (run `/ardd-diagram infrastructure`). Next: run the
+tasks with `/ardd-implement`.)_
+
 _Updated: 2026-07-23 (**Backlogged `cross-browser-e2e-game-flow-te`** — an
 end-to-end suite covering the main game flow (lobby → write/draw → reveal)
 across Firefox, Safari, Chrome, and Edge, meant to run against beta as a

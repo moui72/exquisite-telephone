@@ -1,8 +1,8 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-22
-diagram_status: current
+last_updated: 2026-07-23
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -480,6 +480,107 @@ since lapsed: each app runs exactly **one machine, one process**, which
 is what Principle I (no premature scaling) actually asks for. Two
 channels of one machine each is not horizontal scaling — it is a staging
 environment.
+
+### End-to-End Test Gate (Cross-Browser)
+
+Cutting production was historically held on manual sign-off with no
+automated cross-browser confidence. A **Playwright** end-to-end suite
+closes that gap: it exercises the main game flow (lobby → write/draw turns →
+reveal) across **Chromium, Firefox, WebKit, and the `msedge` Chromium
+channel**. Playwright is a **devDependency plus browser binaries —
+maintainer/dev tooling, not app runtime** ([[constitution]] Project Scope:
+it ships no dependency into the server and touches no game state), so the
+"no premature scaling" app-scope constraints don't bind it.
+
+**Four binaries, three engines — stated honestly.** Playwright's "Safari"
+is its bundled WebKit build (not the real Safari), and Edge/Chrome are both
+Chromium channels. The four-target matrix still catches real
+engine-specific rendering/interaction regressions (WebKit vs. Chromium vs.
+Gecko); it does not certify Apple's Safari or a specific Edge build.
+
+**When it runs — after each beta deploy, gated by the same code-change
+signal that gates the deploy itself.** The suite runs as a job triggered by
+a successful beta deploy, against the live `beta-ex-tel.ty-pe.com`. Beta
+only deploys on a push to `main` that **changes code** — the existing
+`changes` job in `ci.yml` (see Channel semantics above) treats `.project/`,
+`README.md`, `CLAUDE.md`, `.github/`, and `LICENSE.md` as docs and skips the
+deploy for a docs-only push. The e2e job hangs off that **same gate**: a
+`fix`/`feat` (code) push deploys beta and runs the full suite; a
+`docs`/`chore` push that skips the beta deploy runs no e2e at all — the
+docs-vs-code diff already decides this, so nothing parses commit subjects.
+This is deliberately **NOT** the per-push `checks` gate (lint/type-check/
+test — see CI Enforcement, [[constitution]]), which stays fast and runs on
+every push and PR including docs-only ones; the e2e suite is slow and
+deploy-dependent, so it runs only when there is a fresh beta build to
+exercise.
+
+**It is a post-deploy signal AND the prod-promote precondition.** Beta is
+already live when the suite runs, so a red run does not roll beta back — it
+raises the alarm continuously as code lands. The gate on *production* is
+that **`promote.yml` reads the recorded e2e result for the exact commit it
+is promoting and refuses to promote on a red-or-missing result.** The
+promote gate therefore still exists; it is computed earlier (at beta-deploy
+time) rather than re-run at dispatch.
+
+**Commit pinning — dissolved by the trigger, preserved in the record.**
+Because the run is triggered *by* the beta deploy of a specific commit, it
+inherently tests that commit's tree — the earlier "which beta build am I
+testing?" race is gone. What remains is a bookkeeping requirement: each run
+**records its pass/fail keyed to the deployed commit sha** (a GitHub commit
+status / check on that sha is the natural home), so `promote.yml` can look
+up the result for the commit it is fast-forwarding. The
+`vX.Y.Z-beta+<short-sha>` the bundle bakes in (App Versioning) remains the
+cross-check that the deployed artifact is the sha the run believes it is.
+`[OPEN: where the per-sha result lives — a GitHub commit status vs. a
+stored artifact — and how promote.yml handles a sha with no recorded run
+yet (block vs. allow-with-warning) — decide at implementation time.]`
+
+**Parallelism and isolation — arbitrary sharding.** Each test creates its
+own unique room and drives only players in that room; the authoritative
+in-memory room store (Realtime Sync above; [[datamodel]]) scopes every
+broadcast per room, so per-test rooms against the one shared beta server
+never collide. The suite is therefore `fullyParallel` and Playwright
+`--shard=i/n`-safe for arbitrary N, letting CI fan out as many shards as it
+likes. Each player is a separate **browser context** (a shared context's
+`localStorage` session token would collide across players). The
+four-browsers-in-one-test "summit" spec (one context per engine, one player
+each) is itself heavy, so it is one flagship case; the bulk of the suite
+runs the conventional per-browser project matrix, which shards freely.
+
+**Parametrized lobby settings.** The single flow test is run across a
+curated, typed matrix of lobby-setting combinations (turn timer, laps per
+book, monochrome, min-player override, curated vs. free-form prompt mode) —
+a small set of named combos, not the full combinatorial cross product —
+driven through a fixture that operates the Lobby controls.
+
+**Drawing assertions — the vector model, not pixels.** Drawings are pure
+vector `DrawOps` data end-to-end ([[datamodel]]; Export Pipeline above),
+and the server broadcasts every entry's serialized ops. A test drives
+deterministic strokes via pointer actions, then asserts the **exact
+submitted `DrawOps`** — read by a Node `socket.io-client` joined as an
+extra observer player and parsed with the production parser — rather than
+comparing pixels (which are raster-sensitive across engines). Screenshot
+snapshots are at most one loose smoke check, never the primary assertion.
+
+**Curation-write isolation on live beta (a test-only app seam).** Because
+the gate hits *live* beta, test prompt-ratings would otherwise pollute
+beta's real Curation Store volume (Curation Store above). Rather than
+globally repoint beta's `CURATION_DATA_PATH` — which would break real beta
+curation collection — test traffic is **tagged** (a test-only request
+signal on test-created rooms) and the server routes those ratings to a
+scratch/discarded path, leaving real beta curation untouched. This is a
+deliberate **test-only app seam**; any per-channel config it needs goes
+through the generated fly-config template and its allowlist, never a
+hand-edit (Config Lockstep above). `[OPEN: confirm the tagging mechanism —
+a test-only request header vs. a room-level flag — and the exact
+scratch-vs-discard behavior at implementation time.]`
+
+**Minimal, test-only app seams — the boundary.** The suite is otherwise
+new test files driving existing UI; where a stable selector is missing it
+may add `data-testid`s, and it may add a **test-only turn-timer seam** so
+long-timer combinations aren't stuck at the 15-minute production floor. Any
+such seam is inert in normal runtime and exists solely to make the flow
+testable in a fast gate.
 
 The Docker build is multi-stage: install and build
 `shared`/`server`/`client` via pnpm workspaces, then a slim runtime
