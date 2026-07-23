@@ -51,6 +51,56 @@ jobs:
           # ancestor of main.
           fetch-depth: 0
 
+      # T013 — PROD-PROMOTE PRECONDITION: the commit being promoted must
+      # carry a GREEN cross-browser e2e result (infrastructure.md — the e2e
+      # gate is the prod-promote precondition, computed at beta-deploy time
+      # and recorded as the `e2e/cross-browser` commit status on the sha by
+      # ci.yml's e2e-result job, T012).
+      #
+      # This looks up main's CURRENT HEAD — the pre-bump sha that beta
+      # actually deployed and e2e-tested — and runs BEFORE the bump step
+      # below. That ordering is essential: the bump creates a brand-new
+      # commit that CI never sees (GITHUB_TOKEN pushes don't retrigger
+      # workflows), so it can never have an e2e result; gating on it would
+      # block every promotion unconditionally.
+      #
+      # DECISION on the infrastructure [OPEN] (missing-result policy): BLOCK.
+      # A red OR a missing result both refuse promotion — the gate's whole
+      # purpose is to require positive cross-browser confidence, and "no run
+      # recorded" is the absence of that confidence, not a pass. Documented
+      # consequence: a docs-only HEAD on main has no e2e result (its push
+      # skipped the beta deploy), so it cannot be promoted until an ordinary
+      # code commit re-establishes a green result. That is intended.
+      - name: Require a green cross-browser e2e result for the commit being promoted
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          sha="$(git rev-parse HEAD)"
+          echo "Promoting main@${sha}; requiring a green e2e/cross-browser status."
+          # Statuses come newest-first; take the latest for our context, or
+          # "missing" when none was ever recorded for this sha.
+          state="$(gh api "repos/${{ github.repository }}/commits/${sha}/statuses" \
+            --jq '[.[] | select(.context == "e2e/cross-browser")][0].state // "missing"')"
+          echo "e2e/cross-browser = ${state}"
+          if [ "$state" != "success" ]; then
+            echo "::error::Refusing to promote main@${sha}: cross-browser e2e is '${state}' (need 'success')."
+            cat >&2 <<'MSG'
+
+          Production promotion requires a GREEN cross-browser e2e result for the
+          exact commit being promoted (recorded as the e2e/cross-browser commit
+          status at beta-deploy time). A red result means the suite failed on
+          this tree; a missing result means no suite ran for it — most often a
+          docs-only HEAD whose push skipped the beta deploy, or a run still in
+          flight.
+
+          Resolve it by landing an ordinary code commit on main (which deploys
+          beta and runs the suite), waiting for a green e2e/cross-browser status
+          on that HEAD, then re-dispatching this workflow.
+          MSG
+            exit 1
+          fi
+
       # Bump the version on main FIRST, so the bump is the new source of
       # truth on main and reaches release by the existing fast-forward — no
       # new divergence path (infrastructure.md — Auto-bump on promotion).

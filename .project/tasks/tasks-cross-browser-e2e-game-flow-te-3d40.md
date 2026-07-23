@@ -106,7 +106,7 @@ status: in-progress
   reports matches the sha the job is testing, failing the job on mismatch.
   [artifacts: infrastructure]
 
-- [ ] T013 Change `promote.yml` to look up the recorded e2e result for the
+- [x] T013 Change `promote.yml` to look up the recorded e2e result for the
   commit being promoted and refuse to promote on a red-or-missing result
   (decide block vs. allow-with-warning for the missing case, per the
   infrastructure `[OPEN]`). Leave the per-push `checks` gate untouched.
