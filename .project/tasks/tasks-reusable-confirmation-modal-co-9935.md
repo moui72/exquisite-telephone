@@ -18,7 +18,7 @@ status: in-progress
   the full-suite pre-commit hook, mark the spec `test.fails`/skip on this red
   commit and remove that marker in T002.
 
-- [ ] T002 [artifacts: ui] Implement `ConfirmDialog.svelte` to pass T001:
+- [x] T002 [artifacts: ui] Implement `ConfirmDialog.svelte` to pass T001:
   props `heading`, `body`, `confirmLabel`, `cancelLabel`, `destructive`
   (default false); `confirm` / `cancel` events; `role="alertdialog"` with
   `aria-modal="true"`, a dependency-free focus trap while open, initial focus
