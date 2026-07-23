@@ -20,3 +20,9 @@ curation-snapshot.json
 curation-snapshot.summary.txt
 curation-events-archive/
 .claude/worktrees/
+
+# Playwright e2e artifacts
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -47,14 +47,24 @@ describe('fly config generator', () => {
     });
   }
 
-  it('keeps the per-channel values table to exactly one key (app)', async () => {
+  it('keeps the per-channel values table to the allow-listed keys (app, e2eSeamEnabled)', async () => {
     const { channelValues } = await import('./generate.ts');
 
     // The allowlist guard: a new channel-specific key cannot be introduced
-    // without a deliberate change to this test.
+    // without a deliberate change to this test. `e2eSeamEnabled` (T006) is
+    // the second legitimate channel difference — the test-only seam gate,
+    // true on beta and false on prod (infrastructure.md — End-to-End Test
+    // Gate). Its differing value is exactly what makes the seam
+    // un-triggerable on prod.
     for (const values of Object.values(channelValues)) {
-      expect(Object.keys(values)).toEqual(['app']);
+      expect(Object.keys(values).sort()).toEqual(['app', 'e2eSeamEnabled']);
     }
+  });
+
+  it('gates the test-only seam on per channel: beta true, prod false', async () => {
+    const { channelValues } = await import('./generate.ts');
+    expect(channelValues.beta.e2eSeamEnabled).toBe('true');
+    expect(channelValues.prod.e2eSeamEnabled).toBe('false');
   });
 
   it('covers both deploy channels', async () => {

@@ -1,6 +1,6 @@
 ---
 slug: cross-browser-e2e-game-flow-te
-status: tasked
+status: implemented
 logged: 2026-07-23
 plan: plan-cross-browser-e2e-game-flow-te-2026-07-23-cbcb.md
 tasks: tasks-cross-browser-e2e-game-flow-te-3d40.md

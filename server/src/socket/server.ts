@@ -72,16 +72,45 @@ import {
  * rather than hand-rolled — each Room maps to a Socket.IO room
  * (infrastructure.md).
  */
+/**
+ * The test-only app seam config (infrastructure.md — Curation-write
+ * isolation / test-only turn-timer seam). When `enabled` and the
+ * connecting socket presents the matching `x-e2e-test-signal` header, the
+ * connection is flagged `socket.data.isTestTraffic` and its prompt-ratings
+ * are discarded (never reaching the Curation Store) and its lobby may set a
+ * sub-floor turn timer. Inert — and un-triggerable — when `enabled` is
+ * false or the secret is absent/mismatched.
+ */
+export interface TestSeamConfig {
+  enabled: boolean;
+  secret: string | undefined;
+}
+
+const TEST_SIGNAL_HEADER = 'x-e2e-test-signal';
+
 export function createSocketServer(
   httpServer: HttpServer,
   store: RoomStore,
   sessionStore: SessionTokenStore = createSessionTokenStore(),
   logger: Logger = createLogger(),
   curationStore?: CurationStore,
+  testSeam: TestSeamConfig = { enabled: false, secret: undefined },
 ): SocketIOServer {
   const io = new SocketIOServer(httpServer);
 
   io.on('connection', (socket) => {
+    // Tag this connection's traffic if — and only if — the seam is enabled
+    // AND the presented header matches the configured secret. Read once at
+    // connect; every later handler consults `socket.data.isTestTraffic`.
+    // Header values can be a string or string[]; only a scalar exact match
+    // counts.
+    if (testSeam.enabled && testSeam.secret) {
+      const presented = socket.handshake.headers[TEST_SIGNAL_HEADER];
+      if (typeof presented === 'string' && presented === testSeam.secret) {
+        socket.data.isTestTraffic = true;
+      }
+    }
+
     socket.on('createRoom', (input: CreateRoomInput, ack: (response: CreateRoomAck) => void) => {
       onCreateRoom(socket, store, sessionStore, logger, input, ack);
     });

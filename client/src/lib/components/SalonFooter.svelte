@@ -69,7 +69,10 @@
            face, small and muted, trailing the rail after the controls. Not
            a link or a control — just readable text a player can read off
            when reporting an issue. -->
-      <span class="ml-1 font-mono text-xs tabular-nums tracking-tight text-champagne/40">
+      <span
+        data-testid="app-version"
+        class="ml-1 font-mono text-xs tabular-nums tracking-tight text-champagne/40"
+      >
         {APP_VERSION}
       </span>
     </div>

@@ -31,6 +31,8 @@ primary_region = "iad"
   # deploys. Everything else in this app is in-memory by design and is
   # deliberately NOT written here (infrastructure.md Curation Store).
   CURATION_DATA_PATH = "/data/curation.json"
+  # Test-only seam gate (T006): true on beta, where the e2e suite runs.
+  E2E_SEAM_ENABLED = "true"
 
 # The Curation Store's durable home on beta — mirrors fly.toml's block.
 # Beta's volume `vol_vp2l1gyjj3lw9me4` (1GB, iad, matching this app's
