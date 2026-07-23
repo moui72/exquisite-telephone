@@ -1,15 +1,19 @@
 # Exquisite Telephone — Project Status
 
-_Updated: 2026-07-22 (**Rules/About tab redesign shipped to prod.** The help
-panel's tab controls were reworked from the chamfered gilt-plaque treatment
-(T005, which kept the clunky clipped-octagon silhouette) to a brass label-rail:
-a thin gilt rail with engraved-caps labels and a lit marigold underline marking
-the selected tab. `RulesOverview.svelte` + `ui.md` updated; suite green,
-typecheck/lint clean. Committed (`560f99c`), pushed to `main` (beta verified
-live), then promoted to prod.
+_Updated: 2026-07-23 (**Boudoir Damask redesign shipped to beta.** The app was
+re-skinned from the light butter/marigold theme to Boudoir Damask: a deep
+bordeaux ground hung with a gold fleur-de-lis damask, champagne placards and
+gilt frames floating on it, sapphire as the interactive accent. Every on-ground
+text spot was framed on a new `.plaque` surface (verified end-to-end in a live
+2-player walkthrough). The splash title moved to Pirata One (self-hosted,
+gold-gradient, no outline). Finally the palette tokens were renamed to their
+colours (`butter`→`champagne`, `marigold`→`gold`, `bubblegum`→`sapphire`,
+`velvet`→`wine`, `grass`→`emerald`; `ink`/`bordeaux` kept), and `ui.md`'s Visual
+Identity rewritten to match. Suite green (227 client), typecheck + lint clean.
 
-Nothing is in flight. Backlog, feedback, and work queue are all empty. Prod on
-`v0.2.2`; beta on latest `main`.)_
+All of this is on `main` → **beta only**. **Prod is still on `v0.2.2`, the old
+light theme** — a prod promote is deliberately held pending sign-off. Backlog,
+feedback, and work queue are all empty.)_
 
 ## Artifacts Found
 
@@ -24,18 +28,20 @@ No `[OPEN: ...]` items outstanding.
 
 ## Cross-Artifact Issues
 
-None (lint clean).
+None. The redesign is a UI-only restyle: `ui.md` Visual Identity was rewritten
+for it; `datamodel.md` and `infrastructure.md` are unaffected and consistent.
 
 ## Constitution Compliance
 
-No violations.
+No violations. (Prod running an older theme than beta is normal dual-channel
+deploy lag, not a production shortcut — no annotation owed.)
 
 ## Diagrams
 
 - datamodel.md — current ✅
 - infrastructure.md — current ✅
-- ui.md — current ✅ (tab-styling refinement was prose-only; the structure-only
-  component diagram is unaffected)
+- ui.md — current ✅ (the redesign restyled existing components and added a CSS
+  `.plaque` utility; the structure-only component diagram is unchanged)
 
 ## Code-vs-Artifact Defects
 
@@ -56,16 +62,19 @@ Nothing in flight — no worktrees, no ready or in-progress tasks files.
 
 ## Deployment
 
-- **Prod:** `v0.2.2` at `ex-tel.ty-pe.com` — includes the tab redesign.
-- **Beta:** current `main` at `beta-ex-tel.ty-pe.com` (redeploys on the next
-  code push).
+- **Prod:** `v0.2.2` at `ex-tel.ty-pe.com` — still the **old light theme**
+  (the Boudoir redesign has not been promoted).
+- **Beta:** current `main` at `beta-ex-tel.ty-pe.com` — the full Boudoir Damask
+  redesign + Pirata One title + token name-sweep.
 
 ## Tooling
 
-- ArDD update available: installed `c0386d3`, source at `v1.1.1-beta.2` (beta
+- ArDD update available: installed `c0386d3`, source at `v1.1.1-beta.3` (beta
   channel) — run /ardd-update.
 
 ## Summary
 
-0 issues found. Nothing planned or in flight; the project is at a clean rest.
-The only optional loop is `/ardd-update` to pull the available ArDD release.
+0 issues found. The project is at a clean rest; the redesign is complete and
+verified on beta. Recommended next step: **promote to prod when you're ready to
+ship the redesign** (currently held per your instruction). Optional tooling:
+`/ardd-update` to pull the available ArDD release.
