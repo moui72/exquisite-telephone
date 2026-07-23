@@ -79,7 +79,7 @@
         'after:pointer-events-none after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:rounded-full after:transition-all after:duration-150 ' +
         'focus-visible:outline-none focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-marigold focus-visible:ring-offset-2 focus-visible:ring-offset-butter'}
       {@const tabActive =
-        'text-velvet after:bg-marigold after:shadow-[0_0_8px_rgba(245,166,35,0.55)]'}
+        'text-velvet after:bg-marigold after:shadow-[0_0_8px_rgba(208,168,78,0.6)]'}
       {@const tabIdle =
         'text-ink/45 hover:text-ink/75 after:bg-transparent hover:after:bg-marigold/35'}
       <div role="tablist" aria-label="Salon information" class="mb-3 flex items-end gap-6 border-b border-marigold/30">

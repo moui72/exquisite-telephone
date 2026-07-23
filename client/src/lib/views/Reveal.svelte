@@ -205,14 +205,14 @@
 <div class="mx-auto flex min-h-screen max-w-4xl flex-col gap-10 p-6">
   <div class="flex flex-col items-center gap-1 text-center">
     <h1
-      class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
-        font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+      class="bg-gradient-to-b from-marigold via-[#ECD79A] to-marigold bg-clip-text text-4xl
+        font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(20,6,12,0.45)]
         [-webkit-text-stroke:1.5px_theme(colors.ink)] [paint-order:stroke_fill]
         sm:text-5xl"
     >
       The Gallery Opens
     </h1>
-    <p class="text-sm text-ink/60">Every book, unveiled. Choose a work to view at your leisure.</p>
+    <p class="text-sm text-butter/75">Every book, unveiled. Choose a work to view at your leisure.</p>
   </div>
 
   {#if room}
@@ -238,7 +238,7 @@
             Stage an Encore
           </span>
         </button>
-        <span class="text-sm text-ink/60">
+        <span class="text-sm text-butter/75">
           {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
         </span>
       {:else}
@@ -466,7 +466,7 @@
                 <ChevronRight size={16} aria-hidden="true" />
               </span>
             </button>
-            <span class="font-mono text-xs text-ink/60">
+            <span class="font-mono text-xs text-butter/75">
               Page {currentPage + 1} of {openEntries.length}
             </span>
           {/if}

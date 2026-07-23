@@ -120,14 +120,14 @@
   {#if !state.room}
     <div class="flex flex-col items-center gap-1 text-center">
       <h1
-        class="bg-gradient-to-b from-marigold via-[#FFDD94] to-marigold bg-clip-text text-4xl
-          font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(46,26,71,0.35)]
+        class="bg-gradient-to-b from-marigold via-[#ECD79A] to-marigold bg-clip-text text-4xl
+          font-title tracking-wide text-transparent drop-shadow-[0_1px_0_rgba(20,6,12,0.45)]
           [-webkit-text-stroke:1.5px_theme(colors.ink)] [paint-order:stroke_fill]
           sm:text-6xl"
       >
         Exquisite Telephone
       </h1>
-      <p class="max-w-sm text-sm text-ink/60">
+      <p class="max-w-sm text-sm text-butter/75">
         A salon game of drawings whispered down the line. Gather your guests, then write, draw, and
         reveal.
       </p>

@@ -5,15 +5,34 @@
 @layer base {
   body {
     @apply text-ink font-body;
-    /* A soft velvet vignette at the edges — the sense of a lit room
-       around every framed piece, echoing the Gilt Frame's spotlight
-       rather than a flat fill. */
-    background-color: theme('colors.butter');
-    background-image: radial-gradient(
-      ellipse at 50% -10%,
-      rgba(46, 26, 71, 0.08),
-      transparent 60%
-    );
+    /*
+     * Boudoir Damask ground (redesign 2026-07-22): the "wall" is a deep
+     * bordeaux hung with a gold fleur-de-lis damask, laid as a half-drop
+     * tile (a second motif layer offset half a tile forms the diamond
+     * diaper a real damask has). A soft dark vignette at the top edge keeps
+     * the lit-room depth around every framed piece. Fixed attachment so the
+     * wallpaper stays put as content scrolls.
+     *
+     * The fleur motif is one flat silhouette: opaque sub-paths under a
+     * single group opacity, so overlaps don't stack alpha.
+     */
+    background-color: theme('colors.bordeaux');
+    background-image:
+      radial-gradient(
+        ellipse at 50% -10%,
+        rgba(20, 6, 12, 0.35),
+        transparent 60%
+      ),
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='%23D0A84E' opacity='0.16'><path d='M50 26.5 C45.4 34.5 44.3 42.5 46.8 51.5 L46.8 58 L53.2 58 L53.2 51.5 C55.7 42.5 54.6 34.5 50 26.5 Z'/><path d='M47 58 C40.5 58 34 54.2 34 46.2 C34 41 37 37.6 40.8 37.6 C43.9 37.6 46 39.9 46 42.6 C46 44.8 44.6 46.4 42.7 46.8 C43.8 49.6 45.6 51 48.5 51 L48.5 58 Z'/><path d='M53 58 C59.5 58 66 54.2 66 46.2 C66 41 63 37.6 59.2 37.6 C56.1 37.6 54 39.9 54 42.6 C54 44.8 55.4 46.4 57.3 46.8 C56.2 49.6 54.4 51 51.5 51 L51.5 58 Z'/><path d='M40.5 59 L59.5 59 C60.3 59 60.8 59.5 60.8 60.3 L60.8 62.2 C60.8 63 60.3 63.5 59.5 63.5 L40.5 63.5 C39.7 63.5 39.2 63 39.2 62.2 L39.2 60.3 C39.2 59.5 39.7 59 40.5 59 Z'/><path d='M47.6 64.5 L47.6 70.6 C47.6 72.4 48.6 73.5 50 73.5 C51.4 73.5 52.4 72.4 52.4 70.6 L52.4 64.5 Z'/><path d='M46 64.5 C42 64.5 39.6 66.8 39.6 69.4 C39.6 71.4 41 72.6 42.8 72.6 C41.9 71.5 41.7 70.2 42.5 69 C43.4 67.7 44.7 67.3 46 68 Z'/><path d='M54 64.5 C58 64.5 60.4 66.8 60.4 69.4 C60.4 71.4 59 72.6 57.2 72.6 C58.1 71.5 58.3 70.2 57.5 69 C56.6 67.7 55.3 67.3 54 68 Z'/></g></svg>"),
+      url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='%23D0A84E' opacity='0.16'><path d='M50 26.5 C45.4 34.5 44.3 42.5 46.8 51.5 L46.8 58 L53.2 58 L53.2 51.5 C55.7 42.5 54.6 34.5 50 26.5 Z'/><path d='M47 58 C40.5 58 34 54.2 34 46.2 C34 41 37 37.6 40.8 37.6 C43.9 37.6 46 39.9 46 42.6 C46 44.8 44.6 46.4 42.7 46.8 C43.8 49.6 45.6 51 48.5 51 L48.5 58 Z'/><path d='M53 58 C59.5 58 66 54.2 66 46.2 C66 41 63 37.6 59.2 37.6 C56.1 37.6 54 39.9 54 42.6 C54 44.8 55.4 46.4 57.3 46.8 C56.2 49.6 54.4 51 51.5 51 L51.5 58 Z'/><path d='M40.5 59 L59.5 59 C60.3 59 60.8 59.5 60.8 60.3 L60.8 62.2 C60.8 63 60.3 63.5 59.5 63.5 L40.5 63.5 C39.7 63.5 39.2 63 39.2 62.2 L39.2 60.3 C39.2 59.5 39.7 59 40.5 59 Z'/><path d='M47.6 64.5 L47.6 70.6 C47.6 72.4 48.6 73.5 50 73.5 C51.4 73.5 52.4 72.4 52.4 70.6 L52.4 64.5 Z'/><path d='M46 64.5 C42 64.5 39.6 66.8 39.6 69.4 C39.6 71.4 41 72.6 42.8 72.6 C41.9 71.5 41.7 70.2 42.5 69 C43.4 67.7 44.7 67.3 46 68 Z'/><path d='M54 64.5 C58 64.5 60.4 66.8 60.4 69.4 C60.4 71.4 59 72.6 57.2 72.6 C58.1 71.5 58.3 70.2 57.5 69 C56.6 67.7 55.3 67.3 54 68 Z'/></g></svg>");
+    background-position:
+      0 0,
+      0 0,
+      40px 40px;
+    background-size:
+      auto,
+      80px 80px,
+      80px 80px;
     background-attachment: fixed;
   }
 
@@ -24,6 +43,22 @@
 }
 
 @layer components {
+  /*
+   * Plaque — a champagne surface for content that would otherwise sit on
+   * the bordeaux damask wallpaper (redesign 2026-07-22). The Boudoir ground
+   * is dark and patterned, so text is never placed directly on it; it lives
+   * on a framed piece instead. `.plaque` is the light-weight sibling of the
+   * GiltFrame (a hairline gilt border, no caption plaque) for headers,
+   * status lines, and small groupings. Text inside inherits the dark `ink`
+   * body color and reads correctly on the champagne fill.
+   */
+  .plaque {
+    background-color: theme('colors.butter');
+    border: 1px solid rgba(208, 168, 78, 0.55);
+    border-radius: 0.5rem;
+    box-shadow: 0 8px 22px -12px rgba(20, 6, 12, 0.6);
+  }
+
   /*
    * Chamfered double border — cut corners plus an inset second stroke,
    * echoing the Gilt Frame's engraved-plaque geometry with a crisper,

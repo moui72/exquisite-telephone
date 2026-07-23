@@ -78,25 +78,23 @@
   }
 </script>
 
-<div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
-  <div class="flex flex-col items-center gap-1 text-center">
+<div class="mx-auto flex min-h-screen max-w-md flex-col items-center gap-6 p-6">
+  <div class="plaque flex w-full flex-col items-center gap-1 px-5 py-4 text-center">
     <h1 class="font-title text-2xl text-ink">The Final Flourish</h1>
-    <p class="text-sm text-ink/60">
+    <p class="text-sm text-ink/70">
       Adorn your book's cover before the gallery opens — you have a moment more.
     </p>
+    <p
+      data-testid="decoration-countdown"
+      class="mt-2 font-mono text-lg text-ink/80"
+      aria-label="Time remaining to decorate"
+    >
+      {countdownLabel}
+    </p>
+    <p class="text-sm text-ink/60">
+      {submittedCount} of {activeCount} covers presented
+    </p>
   </div>
-
-  <p
-    data-testid="decoration-countdown"
-    class="text-center font-mono text-lg text-ink/80"
-    aria-label="Time remaining to decorate"
-  >
-    {countdownLabel}
-  </p>
-
-  <p class="text-center text-sm text-ink/60">
-    {submittedCount} of {activeCount} covers presented
-  </p>
 
   {#if myBook && player}
     <CoverDecorationCanvas
@@ -110,7 +108,7 @@
   {/if}
 
   {#if presented}
-    <p class="text-center text-lg text-ink/75">
+    <p class="plaque w-full px-5 py-4 text-center text-lg text-ink/75">
       Presented. Waiting for the other guests to finish their covers…
     </p>
   {:else}

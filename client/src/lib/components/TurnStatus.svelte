@@ -12,9 +12,11 @@
   $: pendingAuthorIds = new Set(computeNextEntries(room).map((e) => e.authorId));
 </script>
 
-<ul class="flex flex-col gap-1">
+<!-- Framed as a champagne placard so the status list reads on parchment,
+     not on the bordeaux damask wall (redesign 2026-07-22). -->
+<ul class="plaque flex flex-col gap-1 px-4 py-3">
   {#each activePlayers(room) as player (player.id)}
-    <li class="flex items-center justify-between text-sm">
+    <li class="flex items-center justify-between text-sm text-ink">
       <span>{player.name}</span>
       {#if pendingAuthorIds.has(player.id)}
         <span class="text-marigold">at their easel…</span>

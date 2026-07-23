@@ -231,7 +231,7 @@
   {#if countdownLabel !== null}
     <p
       data-testid="turn-timer-countdown"
-      class="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700"
+      class="plaque inline-flex items-center gap-1.5 self-start px-3 py-1.5 text-sm font-medium text-amber-700"
     >
       <Timer size={16} aria-hidden="true" />
       Time remaining: {countdownLabel}
@@ -280,7 +280,7 @@
     <!-- A turn is ready, but the player was mid-decoration: a 30-second
          client-side grace precedes the turn view taking over (ui.md Cover
          Decoration). The turn-timer deadline above is untouched. -->
-    <p data-testid="grace-countdown" class="text-center text-lg text-ink/80">
+    <p data-testid="grace-countdown" class="plaque px-5 py-4 text-center text-lg text-ink/80">
       Your next commission is ready — presenting your easel in {graceSecondsLeft}s…
     </p>
     {#if myOwnBook && state.player}
@@ -295,7 +295,7 @@
     {/if}
   {:else if !myTurn}
     {#if waitingForRoundToFinish}
-      <p class="text-lg text-ink/75">
+      <p class="plaque px-5 py-4 text-center text-lg text-ink/75">
         Awaiting the round's conclusion — adorn your book's cover while you wait.
       </p>
       {#if myOwnBook && state.player}
@@ -309,7 +309,7 @@
         />
       {/if}
     {:else}
-      <p class="text-lg text-ink/75">Awaiting your next commission…</p>
+      <p class="plaque px-5 py-4 text-center text-lg text-ink/75">Awaiting your next commission…</p>
     {/if}
   {:else}
     <GiltFrame caption="The Easel — Work in Progress">

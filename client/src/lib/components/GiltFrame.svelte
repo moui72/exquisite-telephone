@@ -39,10 +39,10 @@
   @keyframes gilt-frame-shimmer {
     0%,
     100% {
-      box-shadow: 0 0 0 rgba(245, 166, 35, 0);
+      box-shadow: 0 0 0 rgba(208, 168, 78, 0);
     }
     50% {
-      box-shadow: 0 0 12px rgba(245, 166, 35, 0.4);
+      box-shadow: 0 0 12px rgba(208, 168, 78, 0.45);
     }
   }
 </style>

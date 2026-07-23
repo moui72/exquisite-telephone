@@ -78,9 +78,12 @@
 
 <style>
   /* Double gilt rail: a bright hairline atop a dimmer one, echoing the
-     Gilt Frame's outer + inset strokes without a heavy border. */
+     Gilt Frame's outer + inset strokes without a heavy border. On the
+     Boudoir bordeaux ground the footer is dark-on-dark, so this gold rail
+     is what separates the skirting from the wall — kept a touch stronger
+     than a hairline for that reason. */
   .salon-footer {
     border-top: 1px solid theme('colors.marigold');
-    box-shadow: inset 0 2px 0 rgba(245, 166, 35, 0.35);
+    box-shadow: inset 0 2px 0 rgba(208, 168, 78, 0.5);
   }
 </style>
