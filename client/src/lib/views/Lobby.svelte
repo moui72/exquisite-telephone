@@ -249,6 +249,9 @@
           than a configuration -- but it is still a host-only checkbox that
           changes what the host is permitted to do, so it is covered too.
         -->
+        <!-- Host settings framed as a champagne placard so the labels read
+             on parchment rather than the bordeaux damask wall (redesign). -->
+        <div class="plaque flex flex-col gap-4 p-5">
         <InfoTooltip
           label="About force monochrome"
           explanation="Hides the color palette from everyone's drawing tool, for the whole game."
@@ -396,6 +399,7 @@
             Commence the Exhibition
           </span>
         </button>
+        </div>
       {/if}
     </div>
   {/if}
