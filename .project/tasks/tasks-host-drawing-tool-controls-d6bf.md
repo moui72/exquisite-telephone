@@ -1,7 +1,7 @@
 ---
 plan: plan-host-drawing-tool-controls-2026-07-24-590b.md
 generated: 2026-07-24
-status: in-progress
+status: completed
 ---
 
 # Tasks
