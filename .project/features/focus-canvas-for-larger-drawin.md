@@ -1,7 +1,9 @@
 ---
 slug: focus-canvas-for-larger-drawin
-status: backlogged
+status: tasked
 logged: 2026-07-24
+plan: plan-focus-canvas-for-larger-drawin-2026-07-24-a6f4.md
+tasks: tasks-focus-canvas-for-larger-drawin-6727.md
 ---
 
 On larger viewports, the drawing canvas can be focused/expanded to a bigger drawing surface than the default layout allows, giving more room to draw.

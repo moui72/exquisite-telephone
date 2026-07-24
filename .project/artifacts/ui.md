@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-24
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -321,6 +321,17 @@ point (see [[datamodel]] Entry — a `fill` draw op, replayed in sequence
 alongside `stroke` ops). The active color/width selection applies to
 new strokes only; it does not retroactively change strokes already
 drawn.
+
+**Focus mode (larger viewports).** On viewports at or above a
+tablet/desktop breakpoint, the drawing canvas offers a **focus**
+affordance that expands it into a larger drawing surface than the
+default column-width layout allows, reclaiming the surrounding space;
+toggling focus off returns to the standard layout. This is purely
+client-local view state — not persisted, carried on no `Room`/[[datamodel]]
+field, and involving no server round-trip — and the pointer-coordinate
+scaling described above keeps strokes accurate at any rendered size. On
+small/mobile viewports the affordance is absent, since the canvas
+already fills the available width there.
 
 When the phrase being drawn is a book's **opening** phrase
 (`Entry.position === 1` — see [[datamodel]] Normalization Rules — Prompt

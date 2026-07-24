@@ -1,5 +1,22 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned + tasked canvas focus mode.** Slate defrag over
+the 2-feature backlog put both in a parallel set (disjoint footprints); planned
+`focus-canvas-for-larger-drawin` first. Approved plan
+`plan-focus-canvas-for-larger-drawin-2026-07-24-a6f4.md` with ready tasks
+`tasks-focus-canvas-for-larger-drawin-6727.md` (**ready**, 0/2): a client-local
+focus/expand toggle on the turn drawing canvas that breaks out of the
+`max-w-md` layout at a tablet/desktop breakpoint (absent on mobile), reusing
+`DrawingCanvas` unchanged — existing pointer-scaling keeps strokes accurate.
+UI-only: ui.md Writing/Drawing View gained a Focus-mode paragraph; no
+datamodel/infra/server change. Feature `backlogged → tasked`; ui diagram
+**stale**. Open questions left for implementation: cover-canvas inclusion
+(default no) and the exact breakpoint/expanded size. The reconsider-feedback
+`feedback-monochrome-as-palette-option-e4ce.md` was deliberately left **open**
+(unrelated to this plan). Still plannable: `room-code-copy-and-join-link`
+(backlogged) + that monochrome feedback. Next: `/ardd-implement` the focus-canvas
+tasks, or plan room-code / monochrome.)_
+
 _Updated: 2026-07-24 (**Backlogged canvas-focus feature.** New register entry
 `focus-canvas-for-larger-drawin` (**backlogged**): on larger viewports the
 drawing canvas can be focused/expanded to a bigger surface than the default
