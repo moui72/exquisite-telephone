@@ -1,7 +1,7 @@
 ---
 plan: plan-round-gating-and-reveal-polish-2026-07-24-400e.md
 generated: 2026-07-24
-status: ready
+status: in-progress
 ---
 
 # Tasks
