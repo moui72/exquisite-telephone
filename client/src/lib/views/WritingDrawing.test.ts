@@ -1053,6 +1053,88 @@ describe('prompt rating control', () => {
   });
 });
 
+/**
+ * Focus mode for the turn drawing canvas (ui.md Writing/Drawing View —
+ * "Focus mode (larger viewports)"). A client-local toggle expands the
+ * drawing surface beyond the default `max-w-md` column at/above a
+ * desktop breakpoint (`lg:`), reclaiming the surrounding space, and
+ * restores it. The affordance is absent below the breakpoint (mobile),
+ * where the canvas already fills the width — asserted here via the
+ * responsive `hidden lg:` visibility classes, the repo's convention for
+ * testing breakpoint-gated UI (jsdom has no layout engine).
+ *
+ * Purely view state: no Room/datamodel field, no server round-trip.
+ */
+describe('turn drawing canvas focus mode (T001)', () => {
+  function drawTurnSession() {
+    const adaBook: Book = {
+      id: 'book-ada',
+      roomId,
+      originAuthorId: ada.id,
+      entries: [
+        {
+          id: 'e0',
+          bookId: 'book-ada',
+          authorId: ada.id,
+          position: 0,
+          type: 'text',
+          content: 'a spoonful of sugar',
+        },
+      ],
+    };
+    const room = makeRoom([adaBook]);
+    return makeFakeSession({ room, player: grace, error: null });
+  }
+
+  it('offers a focus toggle on a drawing turn that is hidden below the desktop breakpoint', () => {
+    const session = drawTurnSession();
+    render(WritingDrawing, { props: { session } });
+
+    const toggle = screen.getByTestId('canvas-focus-toggle');
+    // Absent below the breakpoint, present at/above it: Tailwind's
+    // `hidden` + a `lg:` display utility (the affordance never shows on
+    // mobile, where the canvas already fills the width).
+    expect(toggle.className).toMatch(/(^|\s)hidden(\s|$)/);
+    expect(toggle.className).toMatch(/lg:(flex|inline-flex|block|inline-block)/);
+  });
+
+  it('expands the turn layout beyond max-w-md when focused, and restores it when toggled back', async () => {
+    const session = drawTurnSession();
+    const { container } = render(WritingDrawing, { props: { session } });
+
+    const layout = screen.getByTestId('turn-layout');
+    const surface = container.querySelector('.drawing-surface')!;
+    const toggle = screen.getByTestId('canvas-focus-toggle');
+
+    // Default: standard column width, canvas not expanded.
+    expect(layout.className).not.toMatch(/lg:max-w-(?!md)/);
+    expect(surface.className).not.toMatch(/(^|\s)focused(\s|$)/);
+
+    await fireEvent.click(toggle);
+
+    // Focused: the layout widens beyond max-w-md at the desktop
+    // breakpoint and the surface carries the focused marker that drives
+    // the canvas to stretch (scoped :global(canvas) rule).
+    expect(layout.className).toMatch(/lg:max-w-(4xl|5xl|6xl|3xl)/);
+    expect(surface.className).toMatch(/(^|\s)focused(\s|$)/);
+
+    await fireEvent.click(toggle);
+
+    // Restored to the standard layout.
+    expect(layout.className).not.toMatch(/lg:max-w-(?!md)/);
+    expect(surface.className).not.toMatch(/(^|\s)focused(\s|$)/);
+  });
+
+  it('shows no focus toggle on a text turn (turn canvas only)', () => {
+    const adaBook: Book = { id: 'book-ada', roomId, originAuthorId: ada.id, entries: [] };
+    const room = makeRoom([adaBook]);
+    const session = makeFakeSession({ room, player: ada, error: null });
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.queryByTestId('canvas-focus-toggle')).not.toBeInTheDocument();
+  });
+});
+
 describe('cover decoration during writing (T013/T014)', () => {
   function makeEntry(bookId: string, authorId: string, position: number): Entry {
     return { id: `${bookId}-${position}`, bookId, authorId, position, type: 'text', content: `p${position}` };

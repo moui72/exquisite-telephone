@@ -205,6 +205,19 @@
     drawnOps = ops;
   }
 
+  // Focus mode for the turn drawing canvas (ui.md Writing/Drawing View —
+  // "Focus mode (larger viewports)"). Purely client-local view state: no
+  // Room/datamodel field and no server round-trip. When focused, the turn
+  // layout widens past its default `max-w-md` column at the desktop
+  // breakpoint and the drawing surface stretches its canvas to fill the
+  // reclaimed space (the scoped `:global(canvas)` rule below; the canvas's
+  // own pointer-coordinate scaling keeps strokes accurate at any rendered
+  // size). The affordance is absent below the breakpoint (`hidden lg:…`),
+  // where the canvas already fills the width. Factored as a single boolean
+  // so extending focus to the cover-decoration canvas later is cheap; for
+  // now it is deliberately scoped to the turn canvas only.
+  let focused = false;
+
   // Timeout-vote prompt (ui.md Writing/Drawing View): shown to every
   // eligible voter while a vote is open. Names the stalled player(s) by
   // name (never their in-progress content).
@@ -225,7 +238,10 @@
   }
 </script>
 
-<div class="mx-auto flex min-h-screen max-w-md flex-col gap-6 p-6">
+<div
+  data-testid="turn-layout"
+  class="mx-auto flex min-h-screen flex-col gap-6 p-6 {focused ? 'max-w-md lg:max-w-4xl' : 'max-w-md'}"
+>
   {#if state.room}
     {#if state.room.nonContinuable && state.player?.id !== state.room.hostPlayerId}
       <p role="alert" class="rounded-md border border-red-300 bg-red-50 p-4 text-sm text-red-800">
@@ -447,13 +463,27 @@
           words didn't ask for.
         </p>
         <div class="flex flex-col gap-4">
-          <DrawingCanvas
-            ops={drawnOps}
-            onOpsChange={handleOpsChange}
-            monochromeOnly={state.room?.monochromeOnly ?? false}
-            palettePreset={state.room?.palettePreset ?? 'standard'}
-            allowFillTool={state.room?.allowFillTool ?? true}
-          />
+          <!-- Focus toggle (ui.md — Focus mode). Hidden below the desktop
+               breakpoint (`hidden lg:inline-flex`): on mobile the canvas
+               already fills the width, so there is nothing to reclaim. -->
+          <button
+            type="button"
+            data-testid="canvas-focus-toggle"
+            class="chamfer-frame chamfer-slim hidden self-end px-3 py-1 text-sm text-ink lg:inline-flex [--chamfer-color:theme(colors.gold)]"
+            aria-pressed={focused}
+            on:click={() => (focused = !focused)}
+          >
+            {focused ? 'Restore canvas' : 'Expand canvas'}
+          </button>
+          <div class="drawing-surface" class:focused>
+            <DrawingCanvas
+              ops={drawnOps}
+              onOpsChange={handleOpsChange}
+              monochromeOnly={state.room?.monochromeOnly ?? false}
+              palettePreset={state.room?.palettePreset ?? 'standard'}
+              allowFillTool={state.room?.allowFillTool ?? true}
+            />
+          </div>
           {#if isOpeningPhraseDrawTurn}
             <!--
               Optional and unobtrusive: submitting without touching it is
@@ -522,3 +552,21 @@
     </GiltFrame>
   {/if}
 </div>
+
+<style>
+  /*
+   * Focus mode (ui.md — "Focus mode (larger viewports)"). Only at/above
+   * the desktop breakpoint, and only while focused, does the reused
+   * DrawingCanvas stretch to fill the widened turn layout. The canvas
+   * keeps its 320×240 bitmap; its pointer-coordinate scaling (CSS size →
+   * bitmap resolution) keeps strokes accurate at the larger rendered
+   * size. Below the breakpoint this rule never applies and the toggle is
+   * hidden, so the mobile layout is untouched.
+   */
+  @media (min-width: 1024px) {
+    .drawing-surface.focused :global(canvas) {
+      width: 100%;
+      height: auto;
+    }
+  }
+</style>
