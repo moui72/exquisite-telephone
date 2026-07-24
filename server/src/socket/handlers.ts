@@ -337,6 +337,96 @@ export function onSetMonochrome(
   ack({ room });
 }
 
+export interface SetPalettePresetInput {
+  roomId: string;
+  playerId: string;
+  palettePreset: 'primary' | 'standard' | 'extended';
+}
+
+export interface SetPalettePresetAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only setter for Room.palettePreset (datamodel.md),
+ * mirroring onSetMonochrome's guard shape. Only `'primary' | 'standard' |
+ * 'extended'` are accepted; anything else is rejected with
+ * `invalid-palette-preset`.
+ */
+export function onSetPalettePreset(
+  socket: Socket,
+  store: RoomStore,
+  input: SetPalettePresetInput,
+  ack: (response: SetPalettePresetAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+  if (
+    input.palettePreset !== 'primary' &&
+    input.palettePreset !== 'standard' &&
+    input.palettePreset !== 'extended'
+  ) {
+    ack({ error: 'invalid-palette-preset' });
+    return;
+  }
+
+  room.palettePreset = input.palettePreset;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
+export interface SetFillToolInput {
+  roomId: string;
+  playerId: string;
+  allowFillTool: boolean;
+}
+
+export interface SetFillToolAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Host-only, lobby-only setter for Room.allowFillTool (datamodel.md),
+ * mirroring onSetMonochrome's boolean-toggle guard shape.
+ */
+export function onSetFillTool(
+  socket: Socket,
+  store: RoomStore,
+  input: SetFillToolInput,
+  ack: (response: SetFillToolAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.hostPlayerId !== input.playerId) {
+    ack({ error: 'not-host' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+
+  room.allowFillTool = input.allowFillTool;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface EndGameInput {
   roomId: string;
   playerId: string;

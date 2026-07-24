@@ -16,8 +16,10 @@ import {
   onRestartGame,
   onSetAllowPromptWriteIn,
   onSetCuratedPromptCount,
+  onSetFillTool,
   onSetLapsPerBook,
   onSetMonochrome,
+  onSetPalettePreset,
   onSetPromptMode,
   onSetReadingBook,
   onSetTurnTimer,
@@ -47,8 +49,12 @@ import {
   type SetCuratedPromptCountInput,
   type SetLapsPerBookAck,
   type SetLapsPerBookInput,
+  type SetFillToolAck,
+  type SetFillToolInput,
   type SetMonochromeAck,
   type SetMonochromeInput,
+  type SetPalettePresetAck,
+  type SetPalettePresetInput,
   type SetPromptModeAck,
   type SetPromptModeInput,
   type SetReadingBookAck,
@@ -150,6 +156,20 @@ export function createSocketServer(
       'set_monochrome',
       (input: SetMonochromeInput, ack: (response: SetMonochromeAck) => void) => {
         onSetMonochrome(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_palette_preset',
+      (input: SetPalettePresetInput, ack: (response: SetPalettePresetAck) => void) => {
+        onSetPalettePreset(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_fill_tool',
+      (input: SetFillToolInput, ack: (response: SetFillToolAck) => void) => {
+        onSetFillTool(socket, store, input, ack);
       },
     );
 
