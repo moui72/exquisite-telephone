@@ -1,5 +1,33 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Round-gating/reveal plan merged; F003 closed as
+verified-no-bug. Both batches now landed on `main`.** The second delegated
+worktree finished and its branch `worktree-agent-aa3f3e3ffa5b33e7a` merged into
+`main` (clean 3-way — `ui.md` End-of-game edit and the palette Production-
+Annotation resolution sat in different sections; `handlers.ts`/`server.ts`
+auto-merged the palette setters with the new `onWithdrawVoteToPlayAgain`) and
+was reaped. Full suite green: **shared 70 · server 258 · client 265 · root 6 =
+599 passing**. Shipped: **F004** — reveal "read by"/"being read by" notes as
+self-backgrounded champagne badge chips (legible over the background); **F005**
+— encore vote becomes a "Withdraw encore vote" toggle (`withdrawVoteToPlayAgain`
+emitter + `onWithdrawVoteToPlayAgain` handler), retractable throughout Reveal
+(the vote is only a host-facing readiness signal, nothing to lock), with the
+voter-side affordance added to `ui.md` End-of-game controls. **F003 (round
+gating) — closed as verified-no-bug** per coordinator adjudication (user
+accepted): the round-gate is already enforced and tested at all four
+turn-assignment layers (`computeNextEntry`, `onSubmitEntry` round-not-open
+guard, `resolveTimeoutVote`, client `myTurn`), landed 2026-07-14 — ten days
+before the report; a maximally-staggered integration test confirmed the
+invariant. T001/T002 marked complete as verified-correct (not fix-implemented);
+`tasks-round-gating-and-reveal-polish-0912.md` → **completed** (4/4). Any
+residual play symptom becomes fresh client-scoped feedback, never a reopen
+(`completed` is terminal). **Pipeline now fully drained:** empty backlog, no
+open feedback, no ready/in-flight tasks, no unsurfaced defects. Remaining is
+housekeeping only — datamodel/infrastructure/ui **diagrams stale** (run
+`/ardd-diagram`), ArDD update available (→ v1.2.1-beta.1), and `main` is unpushed
+(~8 commits ahead; push deploys beta). Next: push + verify in beta, or
+regenerate diagrams.)_
+
 _Updated: 2026-07-24 (**Palette plan merged & implemented; round-gating still in
 flight.** The delegated palette worktree completed all 10 tasks and its branch
 `worktree-agent-aed8a20e7ae01fe10` was merged into `main` (merge commit, clean
