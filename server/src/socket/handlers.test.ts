@@ -47,6 +47,7 @@ import {
   onSubmitCover,
   onSubmitEntry,
   onVoteToPlayAgain,
+  onWithdrawVoteToPlayAgain,
   type CreateRoomAck,
   type JoinRoomAck,
   type SetMonochromeAck,
@@ -1032,6 +1033,61 @@ describe('onVoteToPlayAgain', () => {
 
     expect(writingAck).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
     expect(room.playAgainVotes).toEqual([]);
+  });
+});
+
+/**
+ * onWithdrawVoteToPlayAgain (F005): the retract half of the encore-vote
+ * toggle — removes the caller's playerId from Room.playAgainVotes so the
+ * voter can take back a vote. Mirrors onVoteToPlayAgain's host-agnostic,
+ * reveal-only shape.
+ */
+describe('onWithdrawVoteToPlayAgain', () => {
+  it('removes playerId from Room.playAgainVotes and broadcasts roomUpdated', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'reveal';
+    room.playAgainVotes = [grace.id];
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+
+    onWithdrawVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(room.playAgainVotes).toEqual([]);
+    expect(socket.to).toHaveBeenCalledWith(room.id);
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('is a no-op (no error) when the player has not voted', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.status = 'reveal';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+
+    onWithdrawVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(room.playAgainVotes).toEqual([]);
+    expect(ack).toHaveBeenCalledWith({ room });
+  });
+
+  it('rejects with room-not-in-reveal outside reveal, leaving playAgainVotes unmodified', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const grace = joinRoom(store, { roomId: room.id, playerName: 'Grace' }).player!;
+    room.playAgainVotes = [grace.id];
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+
+    onWithdrawVoteToPlayAgain(socket, store, { roomId: room.id, playerId: grace.id }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-reveal' });
+    expect(room.playAgainVotes).toEqual([grace.id]);
   });
 });
 

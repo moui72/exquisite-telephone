@@ -541,6 +541,34 @@ export function onVoteToPlayAgain(
   ack({ room });
 }
 
+/**
+ * The retract half of the encore-vote toggle (F005 — ui.md End-of-game
+ * controls): removes the caller's playerId from Room.playAgainVotes so a
+ * voter can take back a vote. Mirrors `onVoteToPlayAgain` — host-agnostic,
+ * reveal-only, and a no-op (never an error) when the player had not voted.
+ */
+export function onWithdrawVoteToPlayAgain(
+  socket: Socket,
+  store: RoomStore,
+  input: VoteToPlayAgainInput,
+  ack: (response: VoteToPlayAgainAck) => void,
+): void {
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status !== 'reveal') {
+    ack({ error: 'room-not-in-reveal' });
+    return;
+  }
+
+  room.playAgainVotes = room.playAgainVotes.filter((id) => id !== input.playerId);
+
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
+}
+
 export interface PlayAgainInput {
   roomId: string;
   playerId: string;

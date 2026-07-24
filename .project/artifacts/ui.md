@@ -470,10 +470,17 @@ completed read like any other close.
 Also on the Reveal page, host and non-host players see different
 end-of-game controls (see [[datamodel]] Normalization Rules — End-of-
 game controls):
-- **Non-host**: "Leave game" (returns to the host/join page) and "Vote
-  to play again" (sets this player in `Room.playAgainVotes`; shown to
-  the host as a live readiness count, e.g. "3 of 4 ready" — purely
-  informational, doesn't unlock or gate the host's controls).
+- **Non-host**: "Leave game" (returns to the host/join page) and a
+  vote/withdraw toggle for the encore. Before voting the button reads
+  "Vote for an Encore" and sets this player in `Room.playAgainVotes`;
+  once the player is in `playAgainVotes` it becomes "Withdraw encore
+  vote", giving the voter a visible post-vote confirmation and a retract
+  path (removing them from `Room.playAgainVotes`). Withdrawing is allowed
+  throughout Reveal — the vote is only a readiness signal to the host,
+  who stages the encore manually, so there is no threshold that locks it.
+  The tally is shown to the host as a live readiness count, e.g. "3 of 4
+  ready" — purely informational, doesn't unlock or gate the host's
+  controls.
 - **Host**: "End game" (transitions `Room.status` to `ended` — see the
   **Ended** state below; the same control also exposed via the
   Moderation Panel during `lobby`/`writing`) and "Play again" (starts a

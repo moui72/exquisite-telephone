@@ -36,6 +36,7 @@ function makeFakeSession(
     endGame: vi.fn(async () => {}),
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
+    withdrawVoteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
     setReadingBook: vi.fn(async () => {}),
     kickPlayer: vi.fn(async () => {}),
@@ -145,6 +146,30 @@ describe('Reveal view — end-of-game controls', () => {
     const nonHostSession = makeFakeSession({ room, player: grace, error: null });
     render(Reveal, { props: { session: nonHostSession } });
     expect(screen.queryByText(/1 of 2 guests ready for an encore/i)).not.toBeInTheDocument();
+  });
+
+  it('shows a not-yet-voted non-host the "Vote for an Encore" button (F005)', () => {
+    const room = makeRoom({ playAgainVotes: [] });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(Reveal, { props: { session } });
+
+    expect(screen.getByRole('button', { name: /vote for an encore/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /withdraw encore vote/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a non-host who has voted the "Withdraw encore vote" button, which retracts the vote (F005)', async () => {
+    const room = makeRoom({ playAgainVotes: [grace.id] });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(Reveal, { props: { session } });
+
+    expect(screen.queryByRole('button', { name: /vote for an encore/i })).not.toBeInTheDocument();
+    const withdrawButton = screen.getByRole('button', { name: /withdraw encore vote/i });
+
+    await fireEvent.click(withdrawButton);
+    expect(session.withdrawVoteToPlayAgain).toHaveBeenCalled();
+    expect(session.voteToPlayAgain).not.toHaveBeenCalled();
   });
 
   it('excludes kicked players from the readiness-count denominator', () => {
