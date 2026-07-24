@@ -22,6 +22,10 @@ const usesLocalServer = !process.env.E2E_BASE_URL;
 
 export default defineConfig({
   testDir: './e2e',
+  // Only Playwright specs are named *.spec.ts; *.test.ts under e2e/ (e.g.
+  // helpers/observer.test.ts) are Vitest unit tests and must not be
+  // collected by Playwright's runner.
+  testMatch: /\.spec\.ts$/,
   // Each test mints its own unique room and the authoritative room store
   // scopes every broadcast per room (infrastructure.md — Parallelism and
   // isolation), so per-test rooms never collide even against one shared

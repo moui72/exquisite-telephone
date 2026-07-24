@@ -142,6 +142,10 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The observer helper and specs import the built shared package
+      # (@exquisite-telephone/shared -> shared/dist); build it before
+      # Playwright collects tests, or module resolution fails at load.
+      - run: pnpm run build:shared
       - run: pnpm run e2e:install
       - name: Run e2e shard against live beta
         run: pnpm exec playwright test --shard=${{ matrix.shard }}/4

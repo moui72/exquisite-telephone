@@ -16,16 +16,14 @@ import type { GamePlayer } from './fixtures.js';
  * the summit spec).
  *
  * Because it drives its own engines, it must NOT also be multiplied across
- * the project matrix; it runs once, under the chromium project only.
+ * the project matrix; it runs once, under the chromium project only (the
+ * in-body skip below, using a plain boolean condition, keeps that intent
+ * without the file-level callback form Playwright rejects).
  */
-test.skip(
-  (_args, testInfo) => testInfo.project.name !== 'chromium',
-  'summit runs once, not per project',
-);
-
 const TEST_SIGNAL = process.env.E2E_TEST_SIGNAL_SECRET ?? 'local-e2e-secret';
 
-test('four engines in one room complete the flow to reveal', async ({ baseURL }) => {
+test('four engines in one room complete the flow to reveal', async ({ baseURL }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium', 'summit runs once, not per project');
   test.setTimeout(300_000);
   const base = baseURL ?? 'http://localhost:4599';
 
