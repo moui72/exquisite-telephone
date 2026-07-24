@@ -1,5 +1,14 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Backlogged canvas-focus feature.** New register entry
+`focus-canvas-for-larger-drawin` (**backlogged**): on larger viewports the
+drawing canvas can be focused/expanded to a bigger surface than the default
+layout allows; small/mobile viewports unaffected. Plannable inputs now: 2
+backlogged features (`room-code-copy-and-join-link`,
+`focus-canvas-for-larger-drawin`) + 1 open feedback
+(`feedback-monochrome-as-palette-option-e4ce.md`). A `/ardd-plan --slate` would
+group the two features.)_
+
 _Updated: 2026-07-24 (**Backlogged room-code copy + join-link feature.** New
 register entry `room-code-copy-and-join-link` (**backlogged**): clicking the
 displayed room code copies the bare code; a context menu (right-click /
