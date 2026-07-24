@@ -22,7 +22,7 @@ status: in-progress
   and lint + typecheck pass; if browsers are available locally, a chromium
   run of `flow.spec.ts` still passes.
 
-- [ ] T002 [parallel] Add a global `actionTimeout` (~15–20s) to
+- [x] T002 [parallel] Add a global `actionTimeout` (~15–20s) to
   `playwright.config.ts` so a wedged action fails fast with a legible error
   instead of burning the 240s test timeout (~4 min). Pick a value
   comfortably above real live-beta interaction latency but far below the

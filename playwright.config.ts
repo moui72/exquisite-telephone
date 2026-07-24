@@ -38,6 +38,17 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    // Bound every individual action (click/fill/check/…). Without this a
+    // wedged action — e.g. a locator that can never resolve because a
+    // server-broadcast re-render swapped the turn out — retries only
+    // against the 240s TEST timeout, burning the whole budget and
+    // surfacing as an opaque "Target page … has been closed" after
+    // fixture teardown (research-webkit-e2e-flakes-2026-07-24.md). 15s is
+    // comfortably above real live-beta interaction latency (green actions
+    // resolve in well under a second) yet far below the test timeout, so a
+    // genuinely stuck action fails fast with a legible TimeoutError that
+    // driveToReveal can catch and re-poll (T003).
+    actionTimeout: 15_000,
   },
   // Four binaries, three engines, stated honestly (infrastructure.md):
   // Playwright's "Safari" is its bundled WebKit build, and Edge/Chrome are
