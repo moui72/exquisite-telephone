@@ -2,7 +2,7 @@
 name: infrastructure
 status: stable
 last_updated: 2026-07-24
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: Infrastructure
 render_hint: |
@@ -42,7 +42,8 @@ which directly serves the reconnect-tolerance requirement below.
 Each `Room` (see [[datamodel]]) maps to a Socket.IO room. Server-side
 event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
-`onEndGame`, `onSetMonochrome`, `onSetTurnTimer`, `onSetLapsPerBook`,
+`onEndGame`, `onSetMonochrome`, `onSetPalettePreset`, `onSetFillTool`,
+`onSetTurnTimer`, `onSetLapsPerBook`,
 `onSetPromptMode`, `onSetCuratedPromptCount`,
 `onSetAllowPromptWriteIn`, `onSetReadingBook`, `onSubmitEntry`, `onSubmitCover`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,
 `onKickPlayer`, `onRestartGame`, `onRejoin`, `onDisconnect`), not a single large

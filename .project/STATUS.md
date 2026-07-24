@@ -1,5 +1,28 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned host drawing-tool controls + skin-tone palette
++ drawing-canvas fixes.** Slate defrag over the 2-item backlog bundled both
+palette features (shared `PALETTE_COLORS` seam in `DrawingCanvas.svelte`) into
+one plan, `plan-host-drawing-tool-controls-2026-07-24-590b.md` (**approved**),
+with tasks `tasks-host-drawing-tool-controls-d6bf.md` (**ready**, 0/10). Scope:
+`host-drawing-tool-controls` (new `Room.palettePreset` + `Room.allowFillTool`,
+their `onSetPalettePreset`/`onSetFillTool` handlers, session emitters, lobby
+controls, `DrawingCanvas` preset/fill rendering) and `skin-tone-palette-colors`
+(brown + pink swatches in the `standard`/`extended` presets) — both flipped
+`backlogged → tasked`. Folded in drawing-canvas feedback F001 (mid-stroke
+color), F002 (tolerance flood fill — resolves the ui.md exact-match Production
+Annotation), F006 (pen/bucket radio) from
+`feedback-drawing-tools-reveal-and-round-0639.md`, plus that file's sibling
+`feedback-cover-decoration-background-ca-4113.md` F001 (clip cover background to
+canvas — file now **planned**). Artifact edits applied: datamodel `Room` gains
+`palettePreset`/`allowFillTool`; infrastructure handler list gains
+`onSetPalettePreset`/`onSetFillTool`; ui Lobby + drawing/cover toolbars reflect
+both. **Deferred, still open** in the drawing-tools feedback file: **F003 round
+gating not holding — a correctness divergence, flagged for its own priority
+plan next**; F004 reveal attribution legibility; F005 encore-vote confirmation.
+Diagrams for datamodel/infrastructure/ui now **stale**. Next: `/ardd-implement`
+the ready tasks file, or plan F003.)_
+
 _Updated: 2026-07-24 (**Inbox drained: 9 out-of-band items → 2 feedback files
 (1 + 6 items) + 2 register entries.** Play-session capture
 via the `inbox` function, routed here in one pass. New feedback file

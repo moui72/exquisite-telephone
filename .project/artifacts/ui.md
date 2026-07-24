@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-24
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -44,7 +44,13 @@ state. The host also
 sees a "force monochrome" toggle (default off) that sets
 `Room.monochromeOnly`, hiding the color palette for everyone's drawing
 tool for the whole game (see Writing / Drawing View below) — not
-visible or editable once the game has started. An info affordance next
+visible or editable once the game has started. Alongside it, two more
+drawing-tool controls (also lobby-only, host-only): a **palette-preset**
+picker setting `Room.palettePreset` (`primary` / `standard` / `extended`
+— see Writing / Drawing View), shown but inert while force-monochrome is
+on (a hidden palette has no preset to pick); and an **allow-fill** toggle
+(default on) setting `Room.allowFillTool`, which when off removes the fill
+tool from every drawing toolbar for the whole game. An info affordance next
 to the toggle explains what it does before the host picks a value (see
 Rules Overview Panel below for the info-affordance convention shared by
 all four host settings here).
@@ -173,7 +179,8 @@ the source link.
 The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
 separate modal) is reused for every host-configurable setting in the
-Lobby View above — the force-monochrome toggle, the turn timer
+Lobby View above — the force-monochrome toggle, the palette-preset
+picker, the allow-fill toggle, the turn timer
 selector, the laps-per-book control, the prompt-mode control, the
 phrases-per-player selector, the write-in toggle, and the small-game
 acknowledgement — so a host understands a setting's consequence before
@@ -297,7 +304,14 @@ container).
 The drawing canvas has a small toolbar: a preset color palette (hidden
 entirely when `Room.monochromeOnly` is `true`, in which case all
 strokes use the default ink color), 3 line-width presets (thin / medium
-/ thick), and a fill tool. The palette includes white alongside its
+/ thick), and a fill tool (present only when `Room.allowFillTool` is
+`true` — the host's allow-fill setting removes it entirely otherwise).
+Which colors the palette offers is `Room.palettePreset`: `primary`
+(primary colors plus black and white), `standard` (the default 8-swatch
+palette), or `extended` (a larger set); all presets include white (for
+erase-by-overpaint, below), and the `standard` and `extended` presets
+include a brown and a pink swatch so players can pick skin tones when
+drawing people. The palette includes white alongside its
 other presets, since the canvas background is white — selecting white
 and stroking or filling over a mistake (including undoing an unwanted
 fill) paints it back to blank rather than requiring a separate
@@ -366,7 +380,8 @@ started — `Book.originAuthorId`) on a drawing canvas **pre-stamped
 "<username>'s book"** in the plaque lettering, framed as the easel's
 GiltFrame like the writing/drawing surface. The canvas reuses the same
 `DrawingCanvas` component and toolbar as a turn drawing — color palette
-(honoring `Room.monochromeOnly`), line widths, and fill — since a cover
+(honoring `Room.monochromeOnly` and `Room.palettePreset`), line widths,
+and fill (present only when `Room.allowFillTool`) — since a cover
 is just draw ops (`Book.cover`, see [[datamodel]]). Ink is client-local
 draft until the player finalizes; finalizing sends `onSubmitCover`
 ([[infrastructure]]).

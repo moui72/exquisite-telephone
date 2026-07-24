@@ -2,7 +2,7 @@
 name: datamodel
 status: stable
 last_updated: 2026-07-24
-diagram_status: current
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -43,6 +43,8 @@ They are deliberately the only shapes here that outlive a process.
 | books | Book[] | One per player's original prompt |
 | createdAt | timestamp | |
 | monochromeOnly | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `false`. When `true`, the drawing tool's color palette is hidden and all strokes render in the default ink color — see [[ui]] Writing/Drawing View. |
+| palettePreset | enum | Host-configurable, set before `status` leaves `lobby`; `primary` \| `standard` \| `extended`, defaults `standard`. Selects which preset the drawing tool's color palette draws from: `primary` (primary colors plus black and white), `standard` (the default 8-swatch palette, which includes brown and pink skin-tone swatches — see [[ui]] Writing/Drawing View), or `extended` (a larger palette). Only meaningful when `monochromeOnly === false` (a hidden palette has no preset to pick). |
+| allowFillTool | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `false`, the fill (flood-fill) tool is forbidden — hidden from both the turn drawing toolbar and the cover-decoration toolbar (see [[ui]] Writing/Drawing View and Reveal/cover decoration), leaving only stroke drawing. Independent of `monochromeOnly`: a room may forbid fill while still allowing color, or vice versa. |
 | turnTimerMinutes | number \| null | Host-configurable, set before `status` leaves `lobby`; defaults `null` (no timer — the room waits indefinitely for the current round, per Normalization Rules). One of `15 \| 30 \| 60 \| 240 \| 720` when set. |
 | roundStartedAt | timestamp \| null | Epoch ms marking when the current round began; `null` while `status === 'lobby'`. Reset whenever the room-wide current round advances (see Normalization Rules). Only meaningful when `turnTimerMinutes` is set. |
 | timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); **added to** the base turn duration rather than replacing it, so a granted extension lengthens the turn. Cleared whenever the round advances. |

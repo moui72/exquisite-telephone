@@ -14,7 +14,7 @@ same drain, and so is not repeated here.
 
 ## Bugs
 
-- [ ] F001 Changing the drawing color mid-session doesn't take effect until
+- [x] F001 Changing the drawing color mid-session doesn't take effect until
   the stroke is finished: after selecting a new color and drawing, the
   in-progress line renders in the *previous* color and only switches to the
   selected one on stroke end. `ui.md` Writing / Drawing View states "The
@@ -22,7 +22,7 @@ same drain, and so is not repeated here.
   should be the new color from the first point.
   [artifacts: ui] — `client/src/lib/components/DrawingCanvas.svelte`
 
-- [ ] F002 The fill tool produces speckled, incomplete fills. Filling the
+- [x] F002 The fill tool produces speckled, incomplete fills. Filling the
   whole canvas black leaves white spots; filling those white spots then
   leaves black spots, and the residue never fully resolves. This undercuts
   the fill-white-to-erase path `ui.md` relies on in place of a separate
@@ -64,7 +64,7 @@ same drain, and so is not repeated here.
   vote retractable.
   [artifacts: ui] — `client/src/lib/views/Reveal.svelte`
 
-- [ ] F006 Drawing-toolbar tool selection should be an explicit pen/bucket
+- [x] F006 Drawing-toolbar tool selection should be an explicit pen/bucket
   radio rather than a single fill toggle, so the active tool is always
   visible instead of inferred from a toggle's on/off state. `ui.md` describes
   the toolbar as having "a fill tool" alongside the palette and line widths,
