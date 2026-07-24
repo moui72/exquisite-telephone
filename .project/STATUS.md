@@ -1,5 +1,15 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Backlogged room-code copy + join-link feature.** New
+register entry `room-code-copy-and-join-link` (**backlogged**): clicking the
+displayed room code copies the bare code; a context menu (right-click /
+long-press) adds "copy join link" copying a shareable URL that pre-fills the
+room on open. Open design question flagged for planning — the join-link path
+may need a URL-param join route that doesn't exist yet. Plannable inputs now: 1
+backlogged feature + 1 open feedback item
+(`feedback-monochrome-as-palette-option-e4ce.md`). Next: `/ardd-plan
+room-code-copy-and-join-link` or plan the monochrome-fold feedback.)_
+
 _Updated: 2026-07-24 (**v0.4.0 shipped to prod; new reconsider-feedback opened.**
 Cut the prod release: promote workflow ran green (e2e gate → minor bump →
 fast-forward `release` → fly deploy `exquisite-telephone`), version **0.3.0 →
