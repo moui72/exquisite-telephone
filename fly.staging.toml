@@ -5,10 +5,10 @@
 # template and regenerate; `pnpm run check:fly` fails CI if either file
 # has drifted from what the template produces.
 #
-# The two configs are INTENDED to be identical except for `app`, and the
-# generator is what enforces it: `app` is the only key in the per-channel
-# values table, so a channel-specific setting cannot be introduced by
-# accident. Before this was mechanical it was a hand-maintained
+# The two configs are INTENDED to be identical except for `app` and
+# `E2E_SEAM_ENABLED`, and the generator is what enforces it: those are the
+# only keys in the per-channel values table, so a channel-specific setting
+# cannot be introduced by accident. Before this was mechanical it was a hand-maintained
 # convention, and it had already drifted once — the beta app ran without
 # the [mounts] block and CURATION_DATA_PATH below, so the Curation Store
 # silently fell back to a path inside the ephemeral container and every

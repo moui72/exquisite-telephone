@@ -395,8 +395,8 @@ design.
 
 ### Config Lockstep — generated, not hand-maintained
 
-The two Fly configs are meant to differ in exactly one key (`app`), and
-for a period they silently didn't: `fly.staging.toml` lost its
+The two Fly configs are meant to differ in exactly two keys (`app` and
+`E2E_SEAM_ENABLED`), and for a period they silently differed in more: `fly.staging.toml` lost its
 `[mounts]` block and `CURATION_DATA_PATH`, discarding beta's curation
 data on every deploy. The header comment asserting the files mirror each
 other was documentation, not enforcement, and documentation cannot fail
@@ -418,8 +418,9 @@ the discipline of editing the template rather than the output, which the
 CI check enforces on any lapse.
 
 **The per-channel values table is the allowlist.** A key belongs there
-only when the two channels genuinely must differ. Today that is `app`
-alone; the volume IDs differ in reality but are not named in either
+only when the two channels genuinely must differ. Today those are `app`
+and `E2E_SEAM_ENABLED` (`false` for prod, `true` for beta — see the
+E2E-seam section); the volume IDs differ in reality but are not named in either
 config, so they don't appear. Adding a key to that table is the explicit
 act of declaring a channel difference — the point is that it can't
 happen by accident.
