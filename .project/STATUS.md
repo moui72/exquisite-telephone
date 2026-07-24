@@ -1,5 +1,20 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Cross-browser e2e gate is GREEN, but a real
+retry-masked flake was captured as feedback.** The CI e2e job was fixed
+(build shared, scope Playwright to `*.spec.ts`, repair summit's skip) and now
+runs the suite end-to-end against live beta — commit status recorded success,
+so promote is unblocked. However, webkit (3×) and msedge (6×) flake on the
+same signature ("Target closed" clicking "Present your contribution") and are
+the slow shards; `retries: 1` masks it. Root cause (see
+`.project/plans/research-webkit-e2e-flakes-2026-07-24.md`): a real
+`Test timeout` rewritten as "Target closed", from a check-then-act race on an
+ambiguous accessible name — `WritingDrawing.svelte` has three
+"Present your contribution" buttons, so Playwright re-resolves to a disabled
+one after the round advances and spins to the 240s timeout (no `actionTimeout`
+set). Logged as **F001 in `feedback-e2e-webkit-msedge-flake` (open)** with all
+5 ranked remediations for the next `/ardd-plan`. 1 open feedback.)_
+
 _Updated: 2026-07-23 (**Confirmation-dialog work SHIPPED (5/5, merged).** A
 shared `ConfirmDialog` component landed (`client/src/lib/components/`), the
 Reveal unread-books warning migrated onto it behavior-preserving, and all
