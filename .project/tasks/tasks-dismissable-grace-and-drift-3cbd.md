@@ -1,0 +1,19 @@
+---
+plan: plan-dismissable-grace-and-drift-2026-07-24-0ec7.md   # exact filename of the source plan — authoritative binding
+generated: 2026-07-24
+status: ready   # generating -> ready -> in-progress -> completed (schema-of-record: scripts/lint-project.sh)
+---
+
+# Tasks
+
+## Phase 1: Documentation drift fixes
+
+- [ ] T001 [artifacts: datamodel] [parallel] [defect: 8b429ce5] In `.project/artifacts/datamodel.md`, fix the Laps-per-book author-rotation clause. It currently states the author-rotation formula as `(originIndex + position) % players.length`, described as unchanged/correct across laps. The code (`shared/src/turnAdvancement.ts` → `computeNextEntry`) rotates over the **active** (non-kicked) roster: `active = activePlayers(room)`, `originIndex = active.findIndex(...)`, `authorIndex = (originIndex + position) % activeCount`, `author = active[authorIndex]`. Reword the clause to reference the active roster/`activeCount`, matching the completion-formula clause in the same section (already corrected). This is docs-only — do not change code. Stamp `ardd-state.sh stamp .project/artifacts/datamodel.md last_updated 2026-07-24` (leave `diagram_status` as-is if the edit isn't reflected in the ER diagram).
+
+- [ ] T002 [artifacts: infrastructure] [defect: 809c08f2] In `.project/artifacts/infrastructure.md`, fix the Config Lockstep allowlist wording. It currently says the per-channel values table is "`app` alone"; the generator (`scripts/fly-config/generate.ts`) now has two per-channel keys — `app` and `e2eSeamEnabled` (`E2E_SEAM_ENABLED`: `false` for prod / `true` for beta). Update the artifact to name both keys, resolving the internal inconsistency with the artifact's own E2E-seam section. Then fix the matching stale "`app` is the only key in the per-channel values table" header comment in `scripts/fly-config/fly.template.toml`, and regenerate the committed configs with `pnpm gen:fly` so `fly.toml` / `fly.staging.toml` headers match; confirm `pnpm check:fly` passes. Stamp `last_updated 2026-07-24` on the artifact.
+
+## Phase 2: Dismissable grace countdown
+
+- [ ] T003 [artifacts: ui] [addresses feedback F001] In the client, add a skip/dismiss control to the 30-second mid-game cover-decoration grace countdown (the countdown that appears when a player's next turn is ready while they are mid-decoration, before the turn view takes over — client-side only, per `ui.md` Turn view / Cover Decoration). The control ends the countdown immediately for that player and advances them straight to their turn view; it must NOT affect the turn-timer deadline or emit any server round-trip (identical semantics to letting the countdown expire, just on demand). Locate the countdown component/logic in `client/src/` (the turn-transition path around the WritingDrawing/decoration flow) and add the control. The constitution declares Test-First Development (Principle III): first write/extend a test asserting that invoking the skip resolves the grace state and shows the turn view without altering the timer, confirm it fails (red — use Vitest `it.fails`/xfail if the full-suite pre-commit hook forces green commits), then implement and remove the marker. Follow the existing test setup for the relevant component.
+
+- [ ] T004 [artifacts: ui] [addresses feedback F001] In `.project/artifacts/ui.md`, revise the Turn view description of the 30-second grace countdown (around the "30-second grace countdown" text) to document the new skip/dismiss control — the player may end the countdown early to go straight to their turn; still client-side only and no effect on the turn-timer deadline. Keep it consistent with the Cover Decoration section's grace-countdown mention. Stamp `last_updated 2026-07-24`; set `diagram_status stale` only if the change is reflected in the ui component diagram (a text/interaction-only note generally is not). Do this after T003 so the wording matches what was built.
