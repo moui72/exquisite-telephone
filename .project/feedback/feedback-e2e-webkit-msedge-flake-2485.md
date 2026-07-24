@@ -1,5 +1,5 @@
 ---
-status: open
+status: planned
 created: 2026-07-24
 ---
 
@@ -7,7 +7,7 @@ created: 2026-07-24
 
 ## Bugs
 
-- [ ] F001 The cross-browser e2e suite flakes on the heavier engines
+- [x] F001 The cross-browser e2e suite flakes on the heavier engines
   (webkit and msedge) and is retry-masked green: in CI run `30066639657`
   msedge flaked 6× and webkit 3× (chromium/firefox clean), all with the
   same signature — `locator.click: Target page, context or browser has

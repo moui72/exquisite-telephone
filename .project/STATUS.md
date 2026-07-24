@@ -1,5 +1,16 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned & tasked the e2e flake fix (F001).** Plan
+`plan-e2e-flake-fix-2026-07-24-0428.md` **approved**; tasks
+`tasks-e2e-flake-fix-8854.md` **ready, 0/6** across 4 phases: (1) scope the
+`playIfMyTurn` submit to the current turn's enabled button + add a global
+`actionTimeout` (the critical fix for the ambiguous-locator race), (2)
+progress-verify turn play via the observer snapshot, (3) tighten CI `retries`
++ per-engine matrix, (4) optional test-only client grace seam to shrink the
+30s `GRACE_MS`. F001 marked incorporated → feedback flipped to planned. Phases
+1–2 resolve the flake; 3–4 are hardening/speed. Register unchanged (24
+implemented · 1 subsumed); 0 open feedback. Next: `/ardd-implement`.)_
+
 _Updated: 2026-07-24 (**Cross-browser e2e gate is GREEN, but a real
 retry-masked flake was captured as feedback.** The CI e2e job was fixed
 (build shared, scope Playwright to `*.spec.ts`, repair summit's skip) and now
