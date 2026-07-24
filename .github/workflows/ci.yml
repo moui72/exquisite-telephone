@@ -127,11 +127,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      # Each test mints its own room and the room store scopes broadcasts
-      # per room (infrastructure.md — Parallelism and isolation), so the
-      # suite is --shard=i/n-safe for any N. Fan out across four shards.
+      # One matrix leg per browser ENGINE (infrastructure.md — Parallelism
+      # and isolation). A mixed shard fan-out serialized the slow engines
+      # (webkit, msedge) behind whatever shard they landed in; giving each
+      # engine its own runner lets them run fully in parallel, so the wall
+      # time is the slowest single engine, not the slowest shard. Each test
+      # still mints its own room and the store scopes broadcasts per room,
+      # so the legs never collide against the one shared beta server.
       matrix:
-        shard: [1, 2, 3, 4]
+        project: [chromium, firefox, webkit, msedge]
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -147,8 +151,8 @@ jobs:
       # Playwright collects tests, or module resolution fails at load.
       - run: pnpm run build:shared
       - run: pnpm run e2e:install
-      - name: Run e2e shard against live beta
-        run: pnpm exec playwright test --shard=${{ matrix.shard }}/4
+      - name: Run e2e engine against live beta
+        run: pnpm exec playwright test --project=${{ matrix.project }}
         env:
           # The suite hits the already-deployed beta bundle; no local server
           # is started when E2E_BASE_URL is set.

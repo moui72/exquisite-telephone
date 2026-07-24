@@ -535,17 +535,23 @@ cross-check that the deployed artifact is the sha the run believes it is.
 stored artifact — and how promote.yml handles a sha with no recorded run
 yet (block vs. allow-with-warning) — decide at implementation time.]`
 
-**Parallelism and isolation — arbitrary sharding.** Each test creates its
-own unique room and drives only players in that room; the authoritative
+**Parallelism and isolation — a per-engine CI matrix.** Each test creates
+its own unique room and drives only players in that room; the authoritative
 in-memory room store (Realtime Sync above; [[datamodel]]) scopes every
 broadcast per room, so per-test rooms against the one shared beta server
 never collide. The suite is therefore `fullyParallel` and Playwright
-`--shard=i/n`-safe for arbitrary N, letting CI fan out as many shards as it
-likes. Each player is a separate **browser context** (a shared context's
-`localStorage` session token would collide across players). The
-four-browsers-in-one-test "summit" spec (one context per engine, one player
-each) is itself heavy, so it is one flagship case; the bulk of the suite
-runs the conventional per-browser project matrix, which shards freely.
+`--shard=i/n`-safe for arbitrary N. CI runs **one matrix leg per browser
+engine** (`chromium` / `firefox` / `webkit` / `msedge`, via
+`--project=<engine>`) rather than a mixed shard fan-out: the slow engines
+(WebKit and the branded Edge binary) each get their own runner and run in
+parallel, so the job's wall time is the slowest *single* engine instead of
+whichever shard the slow engines serialized behind. `fail-fast: false`
+keeps one engine's failure from cancelling the others. Each player is a
+separate **browser context** (a shared context's `localStorage` session
+token would collide across players). The four-browsers-in-one-test "summit"
+spec (one context per engine, one player each) is itself heavy, so it is
+one flagship case; the bulk of the suite runs the conventional per-browser
+project matrix, which the per-engine legs split cleanly along.
 
 **Parametrized lobby settings.** The single flow test is run across a
 curated, typed matrix of lobby-setting combinations (turn timer, laps per

@@ -47,7 +47,7 @@ status: in-progress
   failure — and apply the decision in `playwright.config.ts` (and/or the CI
   invocation). Document the rationale in a comment.
 
-- [ ] T005 Restructure the `Cross-browser e2e (beta)` job in
+- [x] T005 Restructure the `Cross-browser e2e (beta)` job in
   `.github/workflows/ci.yml` from the current mixed 4-shard fan-out to a
   **per-engine matrix** (chromium/firefox/webkit/msedge), so the slow
   engines run in parallel rather than serializing behind a shared shard.
