@@ -308,6 +308,8 @@
         ops={coverDraft_.ops}
         onOpsChange={handleCoverOpsChange}
         monochromeOnly={state.room?.monochromeOnly ?? false}
+          palettePreset={state.room?.palettePreset ?? 'standard'}
+          allowFillTool={state.room?.allowFillTool ?? true}
           coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
       />
@@ -323,6 +325,8 @@
           ops={coverDraft_.ops}
           onOpsChange={handleCoverOpsChange}
           monochromeOnly={state.room?.monochromeOnly ?? false}
+          palettePreset={state.room?.palettePreset ?? 'standard'}
+          allowFillTool={state.room?.allowFillTool ?? true}
           coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
         />
@@ -447,6 +451,8 @@
             ops={drawnOps}
             onOpsChange={handleOpsChange}
             monochromeOnly={state.room?.monochromeOnly ?? false}
+            palettePreset={state.room?.palettePreset ?? 'standard'}
+            allowFillTool={state.room?.allowFillTool ?? true}
           />
           {#if isOpeningPhraseDrawTurn}
             <!--

@@ -163,7 +163,7 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
       toJSON() {},
     });
 
-    await fireEvent.click(getByText('Fill tool'));
+    await fireEvent.click(getByText('Bucket'));
 
     firePointer(canvas, 'pointerdown', 5, 5);
 
@@ -264,6 +264,135 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     const calls = onOpsChange.mock.calls;
     const ops = calls[calls.length - 1][0];
     expect(ops[ops.length - 1].color).toBe('#ffffff');
+  });
+
+  it('renders the standard preset by default (includes orange #f97316)', () => {
+    const { getByLabelText } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByLabelText('Color #f97316')).toBeInTheDocument();
+  });
+
+  it('renders only the primary preset swatches when palettePreset is primary', () => {
+    const { getByLabelText, queryByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'primary' },
+    });
+    // Primary = primary colors plus black and white.
+    expect(getByLabelText('Color #3b82f6')).toBeInTheDocument();
+    expect(getByLabelText('Color #000000')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffffff')).toBeInTheDocument();
+    // Non-primary standard swatches are absent.
+    expect(queryByLabelText('Color #f97316')).not.toBeInTheDocument();
+    expect(queryByLabelText('Color #8b5cf6')).not.toBeInTheDocument();
+  });
+
+  it('renders the extended preset swatch set when palettePreset is extended', () => {
+    const { getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'extended' },
+    });
+    // Extended is a superset of standard, plus extended-only swatches.
+    expect(getByLabelText('Color #f97316')).toBeInTheDocument();
+    expect(getByLabelText('Color #0ea5e9')).toBeInTheDocument();
+  });
+
+  it('hides the fill (bucket) control entirely when allowFillTool is false', () => {
+    const { queryByRole, getByRole } = render(DrawingCanvas, {
+      props: { ops: [], allowFillTool: false },
+    });
+    // The pen tool remains; only the bucket option is removed.
+    expect(getByRole('radio', { name: /pen/i })).toBeInTheDocument();
+    expect(queryByRole('radio', { name: /bucket/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the fill (bucket) control when allowFillTool is true (default)', () => {
+    const { getByRole } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByRole('radio', { name: /bucket/i })).toBeInTheDocument();
+  });
+
+  it('still hides the whole palette when monochromeOnly even with a non-default preset', () => {
+    const { queryByLabelText, queryByRole } = render(DrawingCanvas, {
+      props: { ops: [], monochromeOnly: true, palettePreset: 'extended' },
+    });
+    expect(queryByLabelText('Color #0ea5e9')).not.toBeInTheDocument();
+    expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
+  });
+
+  it('includes brown and pink skin-tone swatches in the standard preset', () => {
+    const { getByLabelText } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByLabelText('Color #8d5524')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffc1a6')).toBeInTheDocument();
+  });
+
+  it('includes brown and pink skin-tone swatches in the extended preset', () => {
+    const { getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'extended' },
+    });
+    expect(getByLabelText('Color #8d5524')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffc1a6')).toBeInTheDocument();
+  });
+
+  it('omits the skin-tone swatches from the primary preset', () => {
+    const { queryByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'primary' },
+    });
+    expect(queryByLabelText('Color #8d5524')).not.toBeInTheDocument();
+    expect(queryByLabelText('Color #ffc1a6')).not.toBeInTheDocument();
+  });
+
+  it('renders and commits an in-progress stroke in the color active at its first point (F001)', async () => {
+    const fakeCtx = makeFakeCtx();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
+
+    const onOpsChange = vi.fn();
+    const { container, getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange },
+    });
+    const canvas = container.querySelector('canvas')!;
+
+    // Pick red, then begin the stroke: the live context must paint red.
+    await fireEvent.click(getByLabelText('Color #ef4444'));
+    firePointer(canvas, 'pointerdown', 0, 0);
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+
+    // Change the palette selection mid-stroke. The in-progress stroke was
+    // started as red and must stay red for every remaining segment...
+    await fireEvent.click(getByLabelText('Color #3b82f6'));
+    firePointer(canvas, 'pointermove', 10, 10);
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+
+    // ...and it must be committed as red, not the color chosen mid-stroke.
+    firePointer(canvas, 'pointerup', 10, 10);
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].type).toBe('stroke');
+    expect(ops[0].color).toBe('#ef4444');
+
+    vi.restoreAllMocks();
+  });
+
+  it('exposes an explicit pen/bucket radio reflecting and switching the active tool (F006)', async () => {
+    const { getByRole } = render(DrawingCanvas, { props: { ops: [] } });
+
+    const pen = getByRole('radio', { name: /pen/i });
+    const bucket = getByRole('radio', { name: /bucket/i });
+
+    // Pen is the default active tool; the radio shows it as checked.
+    expect(pen).toHaveAttribute('aria-checked', 'true');
+    expect(bucket).toHaveAttribute('aria-checked', 'false');
+
+    await fireEvent.click(bucket);
+    expect(bucket).toHaveAttribute('aria-checked', 'true');
+    expect(pen).toHaveAttribute('aria-checked', 'false');
+
+    await fireEvent.click(pen);
+    expect(pen).toHaveAttribute('aria-checked', 'true');
+    expect(bucket).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('shows a pen-only radio (no bucket option) when fill is forbidden (F006 + T004)', () => {
+    const { getByRole, queryByRole } = render(DrawingCanvas, {
+      props: { ops: [], allowFillTool: false },
+    });
+    expect(getByRole('radio', { name: /pen/i })).toHaveAttribute('aria-checked', 'true');
+    expect(queryByRole('radio', { name: /bucket/i })).not.toBeInTheDocument();
   });
 
   it('removes its pointer listeners on unmount without throwing', () => {

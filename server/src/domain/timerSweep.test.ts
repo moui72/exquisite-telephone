@@ -20,6 +20,8 @@ function makeRoom(overrides: Partial<Room> & { books: Book[] }): Room {
     status: 'writing',
     createdAt: Date.now(),
     monochromeOnly: false,
+    palettePreset: 'standard',
+    allowFillTool: true,
     turnTimerMinutes: 30,
     lapsPerBook: null,
     roundStartedAt: Date.now() - 40 * 60_000,

@@ -1,6 +1,6 @@
 ---
 slug: skin-tone-palette-colors
-status: tasked
+status: implemented
 logged: 2026-07-24
 plan: plan-host-drawing-tool-controls-2026-07-24-590b.md
 tasks: tasks-host-drawing-tool-controls-d6bf.md

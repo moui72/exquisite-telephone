@@ -1,11 +1,24 @@
 import type { Point } from '@exquisite-telephone/shared';
 
 /**
+ * Squared color-distance tolerance. A pixel is treated as part of the
+ * seed region when its RGBA is within this Euclidean distance (squared)
+ * of the seed color. This absorbs anti-aliased boundary pixels — blends
+ * of the region and a stroke edge that match neither exactly — so a fill
+ * leaves no thin unfilled slivers, while a genuinely different color (a
+ * solid stroke) stays far outside the threshold and remains a boundary.
+ * `48` per channel is generous enough for typical 1–2px anti-aliasing yet
+ * well below the distance to a contrasting ink color.
+ */
+const TOLERANCE_PER_CHANNEL = 48;
+const TOLERANCE_SQ = TOLERANCE_PER_CHANNEL * TOLERANCE_PER_CHANNEL * 3;
+
+/**
  * Pure scanline flood-fill: mutates `imageData` in place, filling every
- * pixel in the contiguous region matching the seed pixel's exact color
- * with `fillColor`. Pixels of any other color act as a boundary and are
- * left unchanged (ui.md Production Annotations — exact-match only, no
- * anti-aliasing tolerance).
+ * pixel in the contiguous region whose color is within a distance
+ * tolerance of the seed pixel's color with `fillColor`. Anti-aliased
+ * near-seed edge pixels are absorbed into the region; pixels far from the
+ * seed color act as a boundary and are left unchanged.
  *
  * No DOM/canvas dependency beyond the ImageData-shaped input, so this is
  * usable both live on a real canvas and in unit tests (jsdom doesn't
@@ -27,13 +40,27 @@ export function floodFill(imageData: ImageData, seed: Point, fillColor: string):
   // Already the fill color: nothing to do.
   if (tr === fr && tg === fg && tb === fb && ta === fa) return;
 
+  // With a distance tolerance, a filled pixel can still fall within the
+  // threshold of the seed (e.g. filling a near-white region with an
+  // off-white), so setFill no longer guarantees a pixel stops matching.
+  // A visited bitmap keeps the scan finite regardless of the fill color.
+  const visited = new Uint8Array(width * height);
+
   function matchesTarget(x: number, y: number): boolean {
-    const i = (y * width + x) * 4;
-    return data[i] === tr && data[i + 1] === tg && data[i + 2] === tb && data[i + 3] === ta;
+    const p = y * width + x;
+    if (visited[p]) return false;
+    const i = p * 4;
+    const dr = data[i]! - tr;
+    const dg = data[i + 1]! - tg;
+    const db = data[i + 2]! - tb;
+    const da = data[i + 3]! - ta;
+    return dr * dr + dg * dg + db * db + da * da <= TOLERANCE_SQ;
   }
 
   function setFill(x: number, y: number): void {
-    const i = (y * width + x) * 4;
+    const p = y * width + x;
+    visited[p] = 1;
+    const i = p * 4;
     data[i] = fr;
     data[i + 1] = fg;
     data[i + 2] = fb;

@@ -102,6 +102,8 @@
       ops={draft.ops}
       onOpsChange={handleOpsChange}
       monochromeOnly={room?.monochromeOnly ?? false}
+      palettePreset={room?.palettePreset ?? 'standard'}
+      allowFillTool={room?.allowFillTool ?? true}
       coverTemplate={draft.template}
       onTemplateChange={handleTemplateChange}
     />

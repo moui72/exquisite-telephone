@@ -50,6 +50,8 @@ import {
   type CreateRoomAck,
   type JoinRoomAck,
   type SetMonochromeAck,
+  type SetPalettePresetAck,
+  type SetFillToolAck,
   type StartGameAck,
 } from './handlers.js';
 
@@ -161,6 +163,250 @@ describe('onSetMonochrome', () => {
         playerId: hostId,
         monochromeOnly: true,
       })) as SetMonochromeAck;
+
+    expect(ack.error).toBe('room-not-in-lobby');
+  });
+});
+
+/**
+ * onSetPalettePreset: host-only, lobby-only setter for Room.palettePreset
+ * (datamodel.md), mirroring onSetMonochrome's guard shape.
+ */
+describe('onSetPalettePreset', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let clientB: ClientSocket;
+  let port: number;
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    httpServer = createServer();
+    createSocketServer(httpServer, store);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    clientB?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  it('lets the host set Room.palettePreset and broadcasts the updated room', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
+
+    const roomUpdatePromise = waitForEvent<{ room: SetPalettePresetAck['room'] }>(
+      clientB,
+      'roomUpdated',
+    );
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_palette_preset', {
+        roomId,
+        playerId: hostId,
+        palettePreset: 'extended',
+      })) as SetPalettePresetAck;
+
+    expect(ack.error).toBeUndefined();
+    expect(ack.room?.palettePreset).toBe('extended');
+
+    const broadcast = await roomUpdatePromise;
+    expect(broadcast.room?.palettePreset).toBe('extended');
+  });
+
+  it('rejects an invalid preset value', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_palette_preset', {
+        roomId,
+        playerId: hostId,
+        palettePreset: 'rainbow',
+      })) as SetPalettePresetAck;
+
+    expect(ack.error).toBe('invalid-palette-preset');
+  });
+
+  it('rejects a non-host caller', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
+
+    const ack = (await clientB
+      .timeout(5000)
+      .emitWithAck('set_palette_preset', {
+        roomId,
+        playerId: joinAck.player!.id,
+        palettePreset: 'extended',
+      })) as SetPalettePresetAck;
+
+    expect(ack.error).toBe('not-host');
+  });
+
+  it('rejects once the room has left the lobby', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    (await clientA
+      .timeout(5000)
+      .emitWithAck('startGame', {
+        roomId,
+        playerId: hostId,
+        acknowledgeSmallGame: true,
+      })) as StartGameAck;
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_palette_preset', {
+        roomId,
+        playerId: hostId,
+        palettePreset: 'extended',
+      })) as SetPalettePresetAck;
+
+    expect(ack.error).toBe('room-not-in-lobby');
+  });
+});
+
+/**
+ * onSetFillTool: host-only, lobby-only setter for Room.allowFillTool
+ * (datamodel.md), mirroring onSetMonochrome's guard shape.
+ */
+describe('onSetFillTool', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let clientB: ClientSocket;
+  let port: number;
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    httpServer = createServer();
+    createSocketServer(httpServer, store);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    clientB?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  it('lets the host set Room.allowFillTool and broadcasts the updated room', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
+
+    const roomUpdatePromise = waitForEvent<{ room: SetFillToolAck['room'] }>(
+      clientB,
+      'roomUpdated',
+    );
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_fill_tool', {
+        roomId,
+        playerId: hostId,
+        allowFillTool: false,
+      })) as SetFillToolAck;
+
+    expect(ack.error).toBeUndefined();
+    expect(ack.room?.allowFillTool).toBe(false);
+
+    const broadcast = await roomUpdatePromise;
+    expect(broadcast.room?.allowFillTool).toBe(false);
+  });
+
+  it('rejects a non-host caller', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const joinAck = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
+
+    const ack = (await clientB
+      .timeout(5000)
+      .emitWithAck('set_fill_tool', {
+        roomId,
+        playerId: joinAck.player!.id,
+        allowFillTool: false,
+      })) as SetFillToolAck;
+
+    expect(ack.error).toBe('not-host');
+  });
+
+  it('rejects once the room has left the lobby', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    (await clientA
+      .timeout(5000)
+      .emitWithAck('startGame', {
+        roomId,
+        playerId: hostId,
+        acknowledgeSmallGame: true,
+      })) as StartGameAck;
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_fill_tool', {
+        roomId,
+        playerId: hostId,
+        allowFillTool: false,
+      })) as SetFillToolAck;
 
     expect(ack.error).toBe('room-not-in-lobby');
   });

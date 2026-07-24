@@ -125,6 +125,20 @@ export interface Room {
    */
   monochromeOnly: boolean;
   /**
+   * Host-configurable, set before `status` leaves `lobby`; defaults
+   * `'standard'`. Selects which swatch set the drawing tool's color
+   * palette renders. `'primary'` is a minimal primary-colors set,
+   * `'standard'` the default palette (including skin-tone swatches),
+   * `'extended'` a larger palette.
+   */
+  palettePreset: 'primary' | 'standard' | 'extended';
+  /**
+   * Host-configurable, set before `status` leaves `lobby`; defaults
+   * `true`. When `false`, the drawing tool's fill (bucket) control is
+   * hidden and only freehand pen strokes are available.
+   */
+  allowFillTool: boolean;
+  /**
    * Host-configurable, set before `status` leaves `lobby`. Defaults
    * `null` (no timer — the room waits indefinitely for the current
    * round). One of 15|30|60|240|720 minutes when set.

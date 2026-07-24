@@ -669,9 +669,11 @@ neutral system tone).
 
 ## Production Annotations
 
-- **Exact-match flood fill**: the fill tool's scanline algorithm fills
-  contiguous pixels of the exact seed color only — anti-aliased stroke
-  edges (a semi-transparent blend, not the exact stroke color) can be
-  left as a thin unfilled sliver at region boundaries. In production, a
-  tolerance-threshold flood fill (fill pixels within a color-distance
-  epsilon, not just exact matches) would close this gap.
+_(none)_
+
+The former **exact-match flood fill** annotation is resolved: the fill
+tool's scanline algorithm now fills contiguous pixels within a
+color-distance tolerance of the seed color (a squared-Euclidean epsilon),
+so anti-aliased stroke edges are absorbed rather than left as thin
+unfilled slivers at region boundaries, while a contrasting ink color
+stays far outside the threshold and remains a boundary.

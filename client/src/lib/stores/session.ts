@@ -78,6 +78,8 @@ export interface SessionStore extends Readable<SessionState> {
    */
   submitCover(bookId: string, cover: DrawOps, coverTemplate: string | null): Promise<void>;
   setMonochrome(monochromeOnly: boolean): Promise<void>;
+  setPalettePreset(palettePreset: 'primary' | 'standard' | 'extended'): Promise<void>;
+  setFillTool(allowFillTool: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
   /** Host-only, lobby-only curated-prompt settings (ui.md Lobby View). */
@@ -215,6 +217,22 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         monochromeOnly,
+      });
+    },
+    setPalettePreset(palettePreset: 'primary' | 'standard' | 'extended') {
+      const state = get(store);
+      return emitWithAck('set_palette_preset', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        palettePreset,
+      });
+    },
+    setFillTool(allowFillTool: boolean) {
+      const state = get(store);
+      return emitWithAck('set_fill_tool', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        allowFillTool,
       });
     },
     setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null) {

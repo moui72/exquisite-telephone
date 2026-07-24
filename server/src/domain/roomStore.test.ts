@@ -29,6 +29,8 @@ function makeRoomWithPlayers(players: Player[]): Room {
     books: [],
     createdAt: Date.now(),
     monochromeOnly: false,
+    palettePreset: 'standard',
+    allowFillTool: true,
     turnTimerMinutes: null,
     lapsPerBook: null,
     roundStartedAt: null,
@@ -68,6 +70,13 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 
     expect(room.monochromeOnly).toBe(false);
+  });
+
+  it('create room defaults palettePreset to standard and allowFillTool to true', () => {
+    const room = createRoom(store, { hostName: 'Ada' });
+
+    expect(room.palettePreset).toBe('standard');
+    expect(room.allowFillTool).toBe(true);
   });
 
   it('create room defaults lapsPerBook to null', () => {

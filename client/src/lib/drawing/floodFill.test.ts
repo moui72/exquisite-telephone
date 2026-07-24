@@ -67,4 +67,39 @@ describe('floodFill (scanline, exact-match seed color)', () => {
       }
     }
   });
+
+  it('fills anti-aliased near-seed boundary pixels, leaving no residual slivers (F002)', () => {
+    const imageData = makeImageData(6, 3, [255, 255, 255, 255]);
+    // A black wall down column x=4, with an anti-aliased edge one column to
+    // its left (x=3): a light-gray blend of white and black. Exact-match
+    // fill from the white side skips this near-white pixel, leaving the
+    // classic unfilled sliver; a tolerance fill must absorb it.
+    for (let y = 0; y < 3; y += 1) {
+      const wall = (y * 6 + 4) * 4;
+      imageData.data[wall] = 0;
+      imageData.data[wall + 1] = 0;
+      imageData.data[wall + 2] = 0;
+      imageData.data[wall + 3] = 255;
+
+      const aa = (y * 6 + 3) * 4;
+      imageData.data[aa] = 225;
+      imageData.data[aa + 1] = 225;
+      imageData.data[aa + 2] = 225;
+      imageData.data[aa + 3] = 255;
+    }
+
+    floodFill(imageData, { x: 0, y: 1 }, '#ff0000');
+
+    // Every white and near-white pixel left of the wall is filled — no
+    // near-color sliver survives at the boundary.
+    for (let y = 0; y < 3; y += 1) {
+      for (let x = 0; x < 4; x += 1) {
+        expect(pixelAt(imageData, x, y)).toEqual([255, 0, 0, 255]);
+      }
+    }
+    // The black wall is far from the seed color and stays a boundary.
+    for (let y = 0; y < 3; y += 1) {
+      expect(pixelAt(imageData, 4, y)).toEqual([0, 0, 0, 255]);
+    }
+  });
 });

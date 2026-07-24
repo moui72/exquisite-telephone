@@ -19,6 +19,8 @@
   export let ops: DrawOps = [];
   export let onOpsChange: (next: DrawOps) => void = () => {};
   export let monochromeOnly = false;
+  export let palettePreset: 'primary' | 'standard' | 'extended' = 'standard';
+  export let allowFillTool = true;
   export let coverTemplate: string | null = null;
   export let onTemplateChange: (id: string | null) => void = () => {};
 
@@ -46,8 +48,10 @@
     </div>
 
     <!-- The template background sits BENEATH the transparent canvas so the
-         ink stays on top and legible (low opacity). -->
-    <div class="relative w-fit">
+         ink stays on top and legible (low opacity). `overflow-hidden`
+         clips the template to the canvas bounds so a chosen background can
+         never overflow the drawing area (cover-F001). -->
+    <div class="relative w-fit overflow-hidden rounded-md">
       {#if templateBackground}
         <div
           data-cover-template={coverTemplate}
@@ -56,7 +60,14 @@
           style="background: {templateBackground};"
         ></div>
       {/if}
-      <DrawingCanvas {ops} {onOpsChange} {monochromeOnly} transparent={templateBackground !== ''} />
+      <DrawingCanvas
+        {ops}
+        {onOpsChange}
+        {monochromeOnly}
+        {palettePreset}
+        {allowFillTool}
+        transparent={templateBackground !== ''}
+      />
     </div>
   </div>
 </GiltFrame>
