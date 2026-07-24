@@ -1,7 +1,7 @@
 ---
 plan: plan-e2e-flake-fix-2026-07-24-0428.md
 generated: 2026-07-24
-status: ready
+status: in-progress
 ---
 
 # Tasks
