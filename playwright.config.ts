@@ -49,7 +49,12 @@ export default defineConfig({
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL,
-    trace: 'on-first-retry',
+    // Paired with `retries: 0` below: 'on-first-retry' would never capture
+    // anything (there is no retry), leaving a genuine flake loud but
+    // undiagnosable. 'retain-on-failure' records every test and keeps the
+    // trace only when it fails — the diagnostics T004's fail-loud policy
+    // needs. The overhead is acceptable for this CI-only slow suite.
+    trace: 'retain-on-failure',
     // Bound every individual action (click/fill/check/…). Without this a
     // wedged action — e.g. a locator that can never resolve because a
     // server-broadcast re-render swapped the turn out — retries only
