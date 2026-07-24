@@ -43,7 +43,7 @@ status: in-progress
 
 ## Phase 3: Guard the moderation panel
 
-- [ ] T004 [artifacts: ui] Write failing tests in `ModerationPanel`'s test
+- [x] T004 [artifacts: ui] Write failing tests in `ModerationPanel`'s test
   file: clicking **End game** shows a `ConfirmDialog` ("End the game for
   everyone?") and only calls `session.endGame()` on confirm (not on cancel);
   clicking **Restart** shows a `ConfirmDialog` ("Restart from turn 0? All
