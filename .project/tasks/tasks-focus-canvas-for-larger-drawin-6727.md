@@ -1,7 +1,7 @@
 ---
 plan: plan-focus-canvas-for-larger-drawin-2026-07-24-a6f4.md
 generated: 2026-07-24
-status: ready
+status: in-progress
 ---
 
 # Tasks
