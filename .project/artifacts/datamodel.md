@@ -1,7 +1,7 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-22
+last_updated: 2026-07-24
 diagram_status: current
 diagram_type: erDiagram
 render_section: Datamodel
@@ -277,12 +277,13 @@ human-approved additions ever reach the committed `CURATED_PHRASE_BANK`.
   which — combined with round-gating above — lets the round advance
   normally. `Room.timerExtensions` and `Room.pendingTimeoutVote` reset
   to empty/`null` whenever the current round advances.
-- **Laps per book.** A book completes after `Room.players.length *
+- **Laps per book.** A book completes after `activePlayers(room).length *
   <resolved lapsPerBook>` entries rather than a single rotation through
-  the room — i.e. `computeNextEntry`'s completion check
-  (`position >= room.players.length`) and `computeNextEntries`'
-  room-wide completion check both multiply the player count by the
-  resolved laps value. Author rotation
+  the room — i.e. `isBookComplete`'s check
+  (`book.entries.length >= activePlayers(room).length * laps`), which
+  `computeNextEntry` and `computeNextEntries` both defer to, measures
+  completion against the **active** (non-kicked) roster times the
+  resolved laps value, so a kicked player's slot never strands the book. Author rotation
   (`(originIndex + position) % players.length`) and entry-type
   alternation (`position % 2` → text/drawing) are unchanged and
   continue correctly across multiple laps with no special-casing —
