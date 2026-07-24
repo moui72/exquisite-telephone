@@ -41,7 +41,7 @@ status: in-progress
 
 ## Phase 3: Re-evaluate retries; parallelize the engines
 
-- [ ] T004 Now that the root cause is fixed (Phases 1–2), tighten the CI
+- [x] T004 Now that the root cause is fixed (Phases 1–2), tighten the CI
   `retries` policy so a genuine flake fails loudly instead of being silently
   retried — decide `retries: 0` in CI vs. keeping `1` but treating flaky as
   failure — and apply the decision in `playwright.config.ts` (and/or the CI

@@ -33,7 +33,19 @@ export default defineConfig({
   // safe.
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // No retries, in CI or locally. CI previously retried once, which turned
+  // a genuinely flaky test green (Playwright exits 0 when a test passes on
+  // retry) and hid the webkit/msedge race for as long as it did
+  // (research-webkit-e2e-flakes-2026-07-24.md). Now that the root cause is
+  // fixed (T001–T003), a residual flake must fail LOUDLY rather than be
+  // silently absorbed — so any first-attempt failure is a hard failure.
+  // "keep retries: 1 but treat flaky as failure" was rejected: Playwright
+  // has no built-in flag for it (it would need report post-processing),
+  // which is more surface for no additional signal. The tradeoff is that a
+  // real live-beta transient (network blip against the shared beta server)
+  // now reds the run — which is the intended contract: investigate it,
+  // don't paper over it.
+  retries: 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL,
