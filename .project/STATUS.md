@@ -1,5 +1,23 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**E2E flake fix SHIPPED (6/6, merged).** Branch merged to
+`main` (`a4b2a98`) and reaped; feedback F001's root cause is fixed and its
+tasks file completed. Decisions: (T001) turn-scoped `data-testid`s
+(`submit-text`/`submit-drawing`/`submit-curated`) so the submit locator can't
+rebind to a disabled button; (T002) global `actionTimeout: 15_000`; (T003)
+`playIfMyTurn` swallows action TimeoutError and `driveToReveal` confirms
+advance via the observer snapshot; (T004) **`retries: 0`** in CI + local (a
+residual flake must now fail loudly), paired with `trace: 'retain-on-failure'`
+so a failure is still diagnosable; (T005) CI e2e restructured from mixed shards
+to a **per-engine matrix** (chromium/firefox/webkit/msedge run in parallel),
+commit-status contract `e2e/cross-browser` preserved for promote.yml; (T006) a
+test-only **client grace seam** (`graceMsFor()`) shrinks the 30s `GRACE_MS`
+under the same `x-e2e-test-signal` gate, inert in normal runtime.
+`infrastructure.md` gate section updated for the matrix + new seam. **Proof
+pending:** next beta-deploy CI run is the real test — with `retries: 0`, any
+residual webkit/msedge flake will now red the gate instead of hiding. Register
+unchanged (24 implemented · 1 subsumed); 0 open feedback.)_
+
 _Updated: 2026-07-24 (**Planned & tasked the e2e flake fix (F001).** Plan
 `plan-e2e-flake-fix-2026-07-24-0428.md` **approved**; tasks
 `tasks-e2e-flake-fix-8854.md` **ready, 0/6** across 4 phases: (1) scope the
