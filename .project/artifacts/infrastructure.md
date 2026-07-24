@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 diagram_status: current
 diagram_type: graph TD
 render_section: Infrastructure
@@ -531,9 +531,15 @@ status / check on that sha is the natural home), so `promote.yml` can look
 up the result for the commit it is fast-forwarding. The
 `vX.Y.Z-beta+<short-sha>` the bundle bakes in (App Versioning) remains the
 cross-check that the deployed artifact is the sha the run believes it is.
-`[OPEN: where the per-sha result lives — a GitHub commit status vs. a
-stored artifact — and how promote.yml handles a sha with no recorded run
-yet (block vs. allow-with-warning) — decide at implementation time.]`
+
+The per-sha result lives as a **GitHub commit status**: `ci.yml`'s
+`e2e-result` job posts the run's pass/fail as the `e2e/cross-browser`
+commit status on the deployed sha, and `promote.yml` reads it back by
+querying that sha's statuses for the `e2e/cross-browser` context. A sha
+with no recorded run yet reads as `missing`, and `promote.yml` **blocks**:
+a missing result and a red result both refuse promotion, so a green
+`e2e/cross-browser` status is a hard precondition for fast-forwarding to
+`release`.
 
 **Parallelism and isolation — a per-engine CI matrix.** Each test creates
 its own unique room and drives only players in that room; the authoritative
@@ -573,13 +579,16 @@ the gate hits *live* beta, test prompt-ratings would otherwise pollute
 beta's real Curation Store volume (Curation Store above). Rather than
 globally repoint beta's `CURATION_DATA_PATH` — which would break real beta
 curation collection — test traffic is **tagged** (a test-only request
-signal on test-created rooms) and the server routes those ratings to a
-scratch/discarded path, leaving real beta curation untouched. This is a
-deliberate **test-only app seam**; any per-channel config it needs goes
-through the generated fly-config template and its allowlist, never a
-hand-edit (Config Lockstep above). `[OPEN: confirm the tagging mechanism —
-a test-only request header vs. a room-level flag — and the exact
-scratch-vs-discard behavior at implementation time.]`
+signal on test-created rooms) and the server discards those ratings,
+leaving real beta curation untouched. The tagging mechanism is an
+**`x-e2e-test-signal` request header**: a socket that presents the header
+matching the configured secret is flagged test traffic, and the connect /
+`onSubmitEntry` handlers in `server/src/socket/` route its ratings to a
+**discard** — they are never written to the Curation Store at all, rather
+than being written to a separate scratch path. This is a deliberate
+**test-only app seam**; any per-channel config it needs goes through the
+generated fly-config template and its allowlist, never a hand-edit
+(Config Lockstep above).
 
 **Minimal, test-only app seams — the boundary.** The suite is otherwise
 new test files driving existing UI; where a stable selector is missing it
@@ -630,8 +639,9 @@ running one machine.
 
 The app carries its own **semantic version**, distinct from the ArDD tooling
 badge in the README. The single source of truth is the root `package.json`
-`version` field (`0.1.0` today; the Manifest/Script Hygiene quality standard
-already treats `package.json` as authoritative). It exists so a player's
+`version` field (e.g. a `MAJOR.MINOR.PATCH` string like `0.1.0`; the
+Manifest/Script Hygiene quality standard already treats `package.json` as
+authoritative). It exists so a player's
 feedback can name the release they hit (see [[ui]] Salon Footer).
 
 **Injected at build time, never at runtime.** A Vite `define` bakes a version
