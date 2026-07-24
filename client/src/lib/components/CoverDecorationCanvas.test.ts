@@ -111,6 +111,21 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     expect(container.querySelector('canvas')).not.toBeNull();
   });
 
+  it('clips the template background to the canvas bounds (cover-F001)', () => {
+    const { container } = render(CoverDecorationCanvas, {
+      props: { username: 'Ada', ops: [], coverTemplate: 'star-chart' },
+    });
+
+    const bg = container.querySelector('[data-cover-template="star-chart"]')!;
+    expect(bg).not.toBeNull();
+
+    // The background must sit inside an overflow-clipped container that also
+    // holds the canvas, so a template can never overflow the drawing area.
+    const clip = bg.closest('.overflow-hidden');
+    expect(clip).not.toBeNull();
+    expect(clip!.querySelector('canvas')).not.toBeNull();
+  });
+
   it('switching templates does not clear the ink (onOpsChange is not called)', async () => {
     const onOpsChange = vi.fn();
     const { getByRole } = render(CoverDecorationCanvas, {
