@@ -16,7 +16,7 @@ status: in-progress   # generating -> ready -> in-progress -> completed (schema-
 
 - [x] T004 [artifacts: ui] [parallel] [defect: bc932879] In `.project/artifacts/ui.md`, update the Reveal View exhibit-plaque description. It currently states the attribution shows *Anonymous*; the code (`client/src/lib/views/Reveal.svelte` → `exhibitCaption()`) substitutes the origin author's real display name (`… Mixed Media, ${playerName(book.originAuthorId)}`) on both card and modal. Decision: code wins — document real-name attribution (the reveal is the unmasking). Stamp `last_updated 2026-07-24`.
 
-- [ ] T005 [artifacts: ui] [defect: d07cfd8c] In `.project/artifacts/ui.md`, update the Moderation Panel availability list. It currently lists the host gavel/panel as available during `lobby`, `writing`, and `reveal`; the code (`client/src/App.svelte` → `isHost` derivation) gates on `status !== 'ended'`, so it also renders during the brief `decorating` window. Decision: code wins — add `decorating` to the documented list. Stamp `last_updated 2026-07-24`. (Shares `ui.md` with T004 — coordinate; not marked `[parallel]` against T004.)
+- [x] T005 [artifacts: ui] [defect: d07cfd8c] In `.project/artifacts/ui.md`, update the Moderation Panel availability list. It currently lists the host gavel/panel as available during `lobby`, `writing`, and `reveal`; the code (`client/src/App.svelte` → `isHost` derivation) gates on `status !== 'ended'`, so it also renders during the brief `decorating` window. Decision: code wins — add `decorating` to the documented list. Stamp `last_updated 2026-07-24`. (Shares `ui.md` with T004 — coordinate; not marked `[parallel]` against T004.)
 
 ## Phase 2: Reveal readiness-count fix
 

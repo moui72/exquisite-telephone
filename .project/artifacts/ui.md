@@ -190,8 +190,10 @@ the setting it describes.
 ## Moderation Panel
 
 A host-only modal overlay, opened from the Salon Footer's gavel button
-(see above) and available during `lobby`, `writing`, and `reveal` (see
-[[datamodel]] Normalization Rules — Moderation). It is never shown to
+(see above) and available during `lobby`, `writing`, `decorating`, and
+`reveal` (see [[datamodel]] Normalization Rules — Moderation) — the
+host derivation (`App.svelte` → `isHost`) gates on `status !== 'ended'`,
+so the gavel also renders through the brief `decorating` cover window. It is never shown to
 non-host players, and guards this twice over: the footer omits the
 gavel entirely for non-hosts, and the panel itself renders nothing for
 a non-host even if opened. Its controls:
