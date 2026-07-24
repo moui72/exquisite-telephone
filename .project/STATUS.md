@@ -1,5 +1,123 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Inbox drained: 9 out-of-band items → 2 feedback files
+(1 + 6 items) + 2 register entries.** Play-session capture
+via the `inbox` function, routed here in one pass. New feedback file
+`feedback-drawing-tools-reveal-and-round-0639.md` (**open**, 6 items):
+*Bugs* — F001 new color selection doesn't apply until the stroke ends
+(contradicts ui.md "applies to new strokes only"); F002 fill tool leaves
+speckled residue that never resolves, undercutting ui.md's fill-white-to-erase
+path (Claude's unverified hypothesis, attributed in-file: antialias/tolerance
+in the flood fill); F003 **round gating isn't holding** — books pass early and
+rounds start staggered, contradicting ui.md's "waiting for the round to
+finish" state and datamodel's round-gated progression (reported as a
+preference; it is a divergence from recorded design, and it interacts with the
+just-shipped 30s grace countdown). *UX* — F004 reveal "read by" notes
+illegible against the background (card or badge them); F005 non-host "Vote for
+an Encore" gives no post-vote affordance, and ui.md's End-of-game controls
+section is silent on what the voter sees, so the artifact needs the addition
+too; F006 toolbar tool selection should be an explicit pen/bucket radio rather
+than a single fill toggle. The drain's first item was filed separately, before
+the remaining six were batched, as
+`feedback-cover-decoration-background-ca-4113.md` (**open**, 1 item) — the
+cover-decoration UI doesn't clip the background templates to the canvas
+[artifacts: ui]. Both files are from this drain; neither predates it.
+**Register +2 backlogged** — `host-drawing-tool-controls` (palette presets +
+fill-tool permission, grouped with the monochrome decree) and
+`skin-tone-palette-colors` (brown/pink in the default palette; tracked
+separately by the user's call so it survives if the preset work never lands).
+Register now **2 backlogged · 24 implemented · 1 subsumed**; **2 open feedback
+files**; all four artifacts stable, no drafts; nothing in flight; ArDD
+up-to-date. `DEFECTS.md` unchanged — still lists 8b429ce5 + 809c08f2, both
+fixed last run but not re-verified. Recommended: `/ardd-defects` to clear those
+two, then `/ardd-plan` to sweep the 2 defects + both open feedback files into
+one pass. *(`next_step_prompt: auto` would have run `/ardd-plan` here; held off
+— the ask was to drain the inbox, and planning is a separate call.)*)_
+
+_Updated: 2026-07-24 (**`dismissable-grace-and-drift` SHIPPED (4/4, merged &
+reaped); +1 open feedback bug.** `tasks-dismissable-grace-and-drift-3cbd.md`
+executed in a delegated worktree, fast-forward merged to `main` (`04ccebb`),
+worktree reaped. Delivered: **T001** datamodel author-rotation clause →
+active roster (defect 8b429ce5); **T002** infrastructure Config Lockstep
+allowlist now names `app` + `E2E_SEAM_ENABLED`, template header comment fixed
+and `fly.toml`/`fly.staging.toml` regenerated (`check:fly` passes) (defect
+809c08f2); **T003** dismissable 30s grace countdown — `skipGrace()` +
+"Go to my easel now" button (`grace-skip`) in `WritingDrawing.svelte`,
+client-side only (no timer/server effect), TDD test in `WritingDrawing.test.ts`
+(red→green, 49/49) (feedback F001); **T004** ui.md documents the skip control.
+`last_updated 2026-07-24` on datamodel/infrastructure/ui; `diagram_status` left
+`current` (interaction/prose edits). Register unchanged (24 implemented · 1
+subsumed); nothing in flight.
+**Two loose ends:** (1) `DEFECTS.md` still lists 8b429ce5 + 809c08f2 — both now
+fixed this run but not yet re-verified; run `/ardd-defects` to clear them. (2)
+**+1 open feedback (Bug):** `feedback-cover-decoration-background-ca-4113.md`
+— cover-decoration UI doesn't constrain the background templates to the canvas
+(they overflow/aren't clipped) [artifacts: ui]; the next `/ardd-plan` picks it
+up. Recommended: `/ardd-defects` to clear the two now-fixed entries, then
+`/ardd-plan` for the canvas-clipping bug (or `/ardd-plan` alone to sweep both
+at once).)_
+
+_Updated: 2026-07-24 (**`/ardd-defects` re-verify after cleanup — 6 fixed, 2
+new; +1 open feedback.** Fresh four-parallel-survey artifact-vs-code pass
+confirming the `artifact-drift-cleanup` fixes landed: **all six** prior
+defects RESOLVED and dropped (datamodel laps completion, infra version
+example + both `[OPEN:]` folds, ui plaque + gavel + readiness denominator).
+`constitution.md` and `ui.md` clean. **2 new defects** recorded (`DEFECTS.md`,
+last verified 2026-07-24) — both incomplete-reconciliation siblings of the
+just-made fixes: **datamodel** (1) — author-rotation clause still reads
+`% players.length` while `computeNextEntry` uses `activePlayers`/`activeCount`
+(the T001 fix corrected the completion half of the sentence, not the rotation
+half); **infrastructure** (1) — Config Lockstep allowlist still says "`app`
+alone" but `generate.ts` now has two per-channel keys (`app`,
+`E2E_SEAM_ENABLED`), internally inconsistent with the artifact's own E2E-seam
+section. Both cosmetic/drift, code correct. Not recorded (code-vs-code, out of
+scope): `config.ts` comments describe the old single-file curation store.
+**+1 open feedback**: `feedback-dismissable-cover-grace-period-96ff.md` (UX) —
+the 30s cover-decoration grace period should be dismissable so a player can
+skip straight to their turn [artifacts: ui]. Register unchanged (24
+implemented · 1 subsumed); nothing in flight. **Next: `/ardd-plan` to sweep
+the 2 defects + the feedback item into one small pass.**)_
+
+_Updated: 2026-07-24 (**`artifact-drift-cleanup` SHIPPED (6/6, merged & reaped).**
+`tasks-artifact-drift-cleanup-1467.md` executed in a delegated worktree,
+fast-forward merged to `main` (`38e1bae`), worktree reaped. All six 2026-07-24
+`/ardd-defects` findings resolved: **T001** datamodel laps clause → `activePlayers(room).length * laps` (8c27d9ca); **T002** infrastructure version example genericized to illustrative `MAJOR.MINOR.PATCH` (e2d1fcde); **T003** two `[OPEN:]` markers folded into settled prose — E2E `e2e/cross-browser` commit-status + `promote.yml` blocking, `x-e2e-test-signal` ratings discarded (964c79ab); **T004** ui reveal plaque documents real-name attribution (bc932879); **T005** ui gavel availability adds `decorating` (d07cfd8c); **T006** `Reveal.svelte` readiness denominator → `activePlayers(room)` with import, plus a TDD test in `Reveal.test.ts` (room of 3 with 1 kicked asserts "1 of 2") — red-first via `it.fails`, then implemented; Reveal suite 23/23 (c7f08745). `last_updated 2026-07-24` stamped on datamodel/infrastructure/ui; `diagram_status` left `current` on all three (prose-only edits not reflected in the diagrams). Register unchanged (24 implemented · 1 subsumed); 0 open feedback; nothing in flight. **DEFECTS.md still lists all six until `/ardd-defects` re-runs — next: `/ardd-defects` to re-verify the fixes cleared.**)_
+
+_Updated: 2026-07-24 (**Plan approved + tasked: `plan-artifact-drift-cleanup`
+(6 defects).** `/ardd-plan` drafted, approved, and tasked
+`plan-artifact-drift-cleanup-2026-07-24-d042.md` →
+`tasks-artifact-drift-cleanup-1467.md` (**ready, 0/6**), reconciling all six
+2026-07-24 `/ardd-defects` findings. Phase 1 (5 docs-only artifact fixes):
+datamodel laps clause → active roster (8c27d9ca); infrastructure version
+example genericized so it can't re-stale (e2d1fcde); two resolved `[OPEN:]`
+markers folded back (964c79ab); ui reveal plaque documents real-name
+attribution (bc932879); ui gavel availability adds `decorating` (d07cfd8c).
+Phase 2 (1 code fix): `Reveal.svelte` readiness denominator →
+`activePlayers(room)`, with a test (c7f08745). Which-side-wins decisions: code
+won all three UI-vs-artifact defects except the readiness denominator, the one
+genuine code fix. All six ids recorded in the plan's `surfaced-defects:`. Note:
+DEFECTS.md still lists all six until `/ardd-implement` lands the fixes and a
+fresh `/ardd-defects` runs. Artifacts stable, diagrams current; register
+unchanged (24 implemented · 1 subsumed); 0 open feedback; nothing in flight.
+**Next: `/ardd-implement` the ready tasks file.**)_
+
+_Updated: 2026-07-24 (**`/ardd-defects` full survey — 6 cosmetic/drift
+defects, none broken.** Fresh artifact-vs-code pass (four parallel surveys).
+Code and artifacts agree closely; `constitution.md` clean. Recorded in
+`DEFECTS.md` (last verified 2026-07-24): **datamodel** (1) — Laps completion
+clause reads `Room.players.length`, code uses `activePlayers()` in
+`isBookComplete` (inert, stale wording); **infrastructure** (2) — App
+Versioning example value `0.1.0` stale vs `package.json` `0.3.0`; two
+`[OPEN:]` markers (E2E per-sha result policy; curation-write isolation
+tagging) resolved in code but never folded back; **ui** (3) — Reveal plaque
+shows real author name vs illustrative "Anonymous"; moderation gavel also
+renders during `decorating` (artifact lists only lobby/writing/reveal);
+play-again readiness denominator uses `room.players.length` (includes kicked)
+vs the codebase's usual `activePlayers`. All cosmetic/drift — doc-side or
+minor UI polish, no broken contracts, nothing never-built. The next
+`/ardd-plan` will offer each as a fix task. Register unchanged (24 implemented
+· 1 subsumed); 0 open feedback; nothing in flight.)_
+
 _Updated: 2026-07-24 (**E2E flake fix SHIPPED (6/6, merged).** Branch merged to
 `main` (`a4b2a98`) and reaped; feedback F001's root cause is fixed and its
 tasks file completed. Decisions: (T001) turn-scoped `data-testid`s
