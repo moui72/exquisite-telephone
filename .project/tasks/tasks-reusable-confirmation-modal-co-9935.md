@@ -29,7 +29,7 @@ status: in-progress
 
 ## Phase 2: Migrate the Reveal warning
 
-- [ ] T003 [artifacts: ui] Replace the Reveal unread-books warning's bespoke
+- [x] T003 [artifacts: ui] Replace the Reveal unread-books warning's bespoke
   inline modal markup in `client/src/lib/views/Reveal.svelte` (currently the
   `role="alertdialog"` block) with the shared `ConfirmDialog`, keeping the
   existing `requestHostAction` / `forceHostAction` / `cancelHostAction` logic
