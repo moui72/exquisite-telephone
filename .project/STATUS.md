@@ -1,5 +1,33 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Palette plan merged & implemented; round-gating still in
+flight.** The delegated palette worktree completed all 10 tasks and its branch
+`worktree-agent-aed8a20e7ae01fe10` was merged into `main` (merge commit, clean
+3-way — no `ui.md` conflict with the concurrent round-gating branch) and the
+worktree reaped. Full suite green post-merge: **shared 70 · server 255 · client
+262 · root 6 = 593 passing**. Features `host-drawing-tool-controls` and
+`skin-tone-palette-colors` → **implemented** (register now 26 implemented, 0
+tasked). Shipped: `Room.palettePreset` (primary/standard/extended) +
+`Room.allowFillTool`, `onSetPalettePreset`/`onSetFillTool` handlers (in
+`server/src/socket/handlers.ts` — the real per-setting home, not `index.ts`),
+session emitters, Lobby controls, `DrawingCanvas` preset map with skin-tone
+swatches (brown `#8d5524`, pink `#ffc1a6` in standard+extended), fill-tool
+hiding threaded to every drawing surface (turn + cover), plus feedback F001
+(mid-stroke color), F002 (tolerance flood fill — the `ui.md` exact-match
+Production Annotation was resolved to `_(none)_`), F006 (pen/bucket radio), and
+cover-decoration clip. Design decisions recorded: no server-side fill guard
+(client-only hiding, consistent with `monochromeOnly`; `allowFillTool` is
+lobby-immutable). **Still in flight:** the round-gating/reveal worktree
+`worktree-agent-aa3f3e3ffa5b33e7a` (`tasks-round-gating-and-reveal-polish-0912.md`,
+**in-progress 1/4**) — F003 round gating, F004 attribution, F005 encore
+withdraw; will auto-merge on report-back. Note the palette suite once flagged a
+pre-existing load-induced flake in the server round-gating socket test
+(`rejects a submission from a player whose turn it is not`, 5s timeout) — not
+caused by palette work, and the round-gating batch touches that area. Diagrams
+for datamodel/infrastructure/ui remain **stale** (run `/ardd-diagram <name>`).
+ArDD update still available (→ v1.2.1-beta.1). `main` is unpushed (4+ commits
+ahead). Next: await the round-gating worktree merge.)_
+
 _Updated: 2026-07-24 (**Planned round-gating fix + reveal polish; palette
 implementation in flight.** Two things this pass. (1) The palette plan
 `tasks-host-drawing-tool-controls-d6bf.md` is being implemented in a delegated
