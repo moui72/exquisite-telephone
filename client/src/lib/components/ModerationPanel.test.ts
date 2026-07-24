@@ -102,7 +102,32 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     expect(screen.getByRole('button', { name: 'Escort from the Salon' })).toBeInTheDocument();
   });
 
-  it('calls session.kickPlayer with the target player id when Escort from the Salon is clicked', async () => {
+  // T004 red-first: Kick is confirmation-gated (ui.md — Moderation Panel;
+  // closes feedback F001). Marked it.fails against today's fire-immediately
+  // behavior; T005 implements the guard and flips these to it.
+  it(
+    'guards Kick behind a ConfirmDialog naming the player, calling kickPlayer only on confirm',
+    async () => {
+      const session = makeFakeSession({
+        room: makeRoom(),
+        player: ada,
+        error: null,
+        reconnecting: false,
+      });
+
+      render(ModerationPanel, { props: { session, onClose: vi.fn() } });
+      await fireEvent.click(screen.getByRole('button', { name: 'Escort from the Salon' }));
+
+      // The dialog names the target and nothing has fired yet.
+      expect(screen.getByText('Kick Grace?')).toBeInTheDocument();
+      expect(session.kickPlayer).not.toHaveBeenCalled();
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Kick' }));
+      expect(session.kickPlayer).toHaveBeenCalledWith(grace.id);
+    },
+  );
+
+  it('does not call kickPlayer when the Kick confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -112,8 +137,9 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Escort from the Salon' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(session.kickPlayer).toHaveBeenCalledWith(grace.id);
+    expect(session.kickPlayer).not.toHaveBeenCalled();
   });
 
   it('filters a kicked player out of the roster entirely, rather than showing them struck-through', async () => {
@@ -144,7 +170,31 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     expect(screen.queryByRole('button', { name: 'Restage the Salon' })).not.toBeInTheDocument();
   });
 
-  it('calls session.restartGame when Restage the Salon is clicked', async () => {
+  // T004 red-first: Restart is confirmation-gated. Marked it.fails; T005 flips it.
+  it(
+    'guards Restart behind a ConfirmDialog, calling restartGame only on confirm',
+    async () => {
+      const session = makeFakeSession({
+        room: makeRoom({ nonContinuable: true }),
+        player: ada,
+        error: null,
+        reconnecting: false,
+      });
+
+      render(ModerationPanel, { props: { session, onClose: vi.fn() } });
+      await fireEvent.click(screen.getByRole('button', { name: 'Restage the Salon' }));
+
+      expect(
+        screen.getByText('Restart from turn 0? All current progress is lost.'),
+      ).toBeInTheDocument();
+      expect(session.restartGame).not.toHaveBeenCalled();
+
+      await fireEvent.click(screen.getByRole('button', { name: 'Restart' }));
+      expect(session.restartGame).toHaveBeenCalled();
+    },
+  );
+
+  it('does not call restartGame when the Restart confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom({ nonContinuable: true }),
       player: ada,
@@ -154,11 +204,34 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Restage the Salon' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(session.restartGame).toHaveBeenCalled();
+    expect(session.restartGame).not.toHaveBeenCalled();
   });
 
-  it('calls session.endGame when Close the Exhibition is clicked', async () => {
+  // T004 red-first: End game is confirmation-gated. Marked it.fails; T005 flips it.
+  it(
+    'guards End game behind a ConfirmDialog, calling endGame only on confirm',
+    async () => {
+      const session = makeFakeSession({
+        room: makeRoom(),
+        player: ada,
+        error: null,
+        reconnecting: false,
+      });
+
+      render(ModerationPanel, { props: { session, onClose: vi.fn() } });
+      await fireEvent.click(screen.getByRole('button', { name: 'Close the Exhibition' }));
+
+      expect(screen.getByText('End the game for everyone?')).toBeInTheDocument();
+      expect(session.endGame).not.toHaveBeenCalled();
+
+      await fireEvent.click(screen.getByRole('button', { name: 'End game' }));
+      expect(session.endGame).toHaveBeenCalled();
+    },
+  );
+
+  it('does not call endGame when the End game confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -168,8 +241,9 @@ describe('ModerationPanel (host-only moderation controls)', () => {
 
     render(ModerationPanel, { props: { session, onClose: vi.fn() } });
     await fireEvent.click(screen.getByRole('button', { name: 'Close the Exhibition' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
-    expect(session.endGame).toHaveBeenCalled();
+    expect(session.endGame).not.toHaveBeenCalled();
   });
 
   it('shows a "this salon cannot continue" notice alongside Restage the Salon when Room.nonContinuable is true', async () => {

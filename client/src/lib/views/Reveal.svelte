@@ -6,6 +6,7 @@
   import { ChevronLeft, ChevronRight, DoorOpen, Download, Eye, Repeat, RotateCcw, X } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
+  import ConfirmDialog from '../components/ConfirmDialog.svelte';
   import { exportBookToPng } from '../export/pngExport.js';
   import { generateCoverArt } from '../reveal/coverArt.js';
   import { coverTemplateBackground } from '../covers/templateArt.js';
@@ -334,38 +335,23 @@
   {/if}
 
   {#if pendingAction && unreadWarning}
-    <div
-      class="fixed inset-0 z-30 flex items-center justify-center bg-wine/70 p-4"
-      role="alertdialog"
-      aria-modal="true"
-      aria-label="Unread books warning"
-    >
-      <div class="flex w-full max-w-md flex-col gap-4 rounded-lg border-4 border-gold bg-champagne p-5">
-        <h2 class="font-title text-lg text-ink">Before the doors close…</h2>
-        <p class="text-sm text-ink/80">{unreadWarning}</p>
-        <p class="text-sm text-ink/60">
-          {pendingAction === 'end'
-            ? 'Close the exhibition anyway?'
-            : 'Stage an encore anyway?'}
-        </p>
-        <div class="flex flex-wrap justify-end gap-3">
-          <button
-            type="button"
-            class="rounded-md border border-gold/60 bg-champagne px-4 py-2 text-sm font-medium text-ink"
-            on:click={cancelHostAction}
-          >
-            Keep viewing
-          </button>
-          <button
-            type="button"
-            class="rounded-md bg-sapphire px-4 py-2 text-sm font-medium text-white"
-            on:click={forceHostAction}
-          >
-            {pendingAction === 'end' ? 'Close anyway' : 'Encore anyway'}
-          </button>
-        </div>
-      </div>
-    </div>
+    <!-- The unread-books warning now rides the shared ConfirmDialog
+         (ui.md — Confirmation Dialog); its read-state-derived message and
+         force-through path are unchanged, only the markup is shared. The
+         accessible name stays "Unread books warning" independent of the
+         visible heading. -->
+    <ConfirmDialog
+      ariaLabel="Unread books warning"
+      heading="Before the doors close…"
+      body={`${unreadWarning} ${
+        pendingAction === 'end' ? 'Close the exhibition anyway?' : 'Stage an encore anyway?'
+      }`}
+      confirmLabel={pendingAction === 'end' ? 'Close anyway' : 'Encore anyway'}
+      cancelLabel="Keep viewing"
+      destructive
+      onConfirm={forceHostAction}
+      onCancel={cancelHostAction}
+    />
   {/if}
 
   {#if room && openBook}
