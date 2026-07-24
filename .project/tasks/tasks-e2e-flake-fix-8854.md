@@ -31,7 +31,7 @@ status: in-progress
 
 ## Phase 2: Progress-verified turn play
 
-- [ ] T003 In `e2e/pages/writingDrawing.ts` `playIfMyTurn`, make turn-play
+- [x] T003 In `e2e/pages/writingDrawing.ts` `playIfMyTurn`, make turn-play
   **tolerant of an action timeout**: after attempting the submit, confirm
   the round actually advanced by consulting the observer's authoritative
   room snapshot (`e2e/helpers/observer.ts`) rather than trusting the single

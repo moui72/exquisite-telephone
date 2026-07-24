@@ -39,7 +39,7 @@ export async function runCoreFlow(
   await result.host.lobby.startGame(options.acknowledgeSmallGame ?? false);
 
   await observer.waitForStatus('writing');
-  await driveToReveal(result.players);
+  await driveToReveal(result.players, observer);
 
   const room = await observer.waitForStatus('reveal');
   const laps = room.lapsPerBook ?? 0;
@@ -60,13 +60,32 @@ export async function runCoreFlow(
  * Turn progression is round-gated on the server, so a pass that acts on
  * nobody simply means the round is mid-advance — the loop waits briefly and
  * retries until the deadline.
+ *
+ * A DOM click is never trusted as proof that a turn landed. After a pass
+ * that played at least one turn, this confirms the round actually advanced
+ * by consulting the observer's AUTHORITATIVE room snapshot (total entry
+ * count grew) before moving on — closing the check-then-act window that,
+ * combined with the ambiguous submit name (T001) and the unbounded action
+ * retry (T002), produced the webkit/msedge flake
+ * (research-webkit-e2e-flakes-2026-07-24.md). If a submit silently timed
+ * out (`playIfMyTurn` swallows the `actionTimeout` and returns false), the
+ * server state simply won't have advanced and the next pass re-acts.
  */
-export async function driveToReveal(players: GamePlayer[], timeoutMs = 180_000): Promise<void> {
+export async function driveToReveal(
+  players: GamePlayer[],
+  observer: Observer,
+  timeoutMs = 180_000,
+): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    const entriesBefore = observer.allEntries().length;
+    let playedTurn = false;
     let acted = false;
     for (const p of players) {
-      if (await p.writing.playIfMyTurn()) acted = true;
+      if (await p.writing.playIfMyTurn()) {
+        playedTurn = true;
+        acted = true;
+      }
       const present = p.page.getByRole('button', { name: 'Present your cover' });
       if (await present.isVisible().catch(() => false)) {
         await present.click();
@@ -74,9 +93,37 @@ export async function driveToReveal(players: GamePlayer[], timeoutMs = 180_000):
       }
     }
     if (await allAtReveal(players)) return;
-    if (!acted) await players[0].page.waitForTimeout(250);
+    if (playedTurn) {
+      // Verify the click(s) actually advanced authoritative state before
+      // the next pass, rather than trusting the DOM. Covers don't add
+      // entries, so only require this when a turn was played; the room
+      // reaching decorating/reveal is also forward progress.
+      await waitForProgress(observer, entriesBefore + 1, players[0]).catch(() => {});
+    } else if (!acted) {
+      await players[0].page.waitForTimeout(250);
+    }
   }
   throw new Error('flow did not reach reveal within the timeout');
+}
+
+/**
+ * Resolves once the observer's authoritative snapshot shows real forward
+ * progress — total entry count reached `minEntries`, or the room left the
+ * `writing` phase (decorating/reveal) — or the short window elapses (in
+ * which case the caller simply re-polls and re-acts).
+ */
+async function waitForProgress(
+  observer: Observer,
+  minEntries: number,
+  pacer: GamePlayer,
+  timeoutMs = 8_000,
+): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    if (observer.allEntries().length >= minEntries) return;
+    if (observer.latestRoom().status !== 'writing') return;
+    await pacer.page.waitForTimeout(200);
+  }
 }
 
 /** True when every player's page is showing the reveal gallery. */

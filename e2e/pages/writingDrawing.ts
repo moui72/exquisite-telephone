@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { errors, expect, type Page } from '@playwright/test';
 import type { DrawOps } from '@exquisite-telephone/shared';
 
 /**
@@ -122,32 +122,50 @@ export class WritingDrawingPage {
    * opening (pick the first dealt phrase), a free-form/blind text turn, and
    * a drawing turn (a default deterministic stroke) — so a flow driver can
    * simply poll every player until the game reaches reveal.
+   *
+   * Tolerant of a mid-action re-render: a `roomUpdated` broadcast can detach
+   * the very control this method is acting on (the round advanced under it),
+   * wedging the action until the bounded `actionTimeout` (T002) fires. That
+   * is not a test failure — it is the check-then-act window inherent to a
+   * poll driver. A `TimeoutError` is therefore swallowed and reported as
+   * "did not complete this pass" (false), so `driveToReveal` re-inspects
+   * authoritative state and re-acts. The DOM click is never trusted as proof
+   * of progress — `driveToReveal` confirms that against the observer
+   * snapshot (research-webkit-e2e-flakes-2026-07-24.md).
    */
   async playIfMyTurn(phrase = 'a phrase worth drawing'): Promise<boolean> {
-    const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
-    if (await curatedRadio.isVisible().catch(() => false)) {
-      await curatedRadio.check();
-      await this.submit('submit-curated');
-      return true;
+    try {
+      const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
+      if (await curatedRadio.isVisible().catch(() => false)) {
+        await curatedRadio.check();
+        await this.submit('submit-curated');
+        return true;
+      }
+      const phraseInput = this.page.getByLabel('Your phrase');
+      if (await phraseInput.isVisible().catch(() => false)) {
+        await phraseInput.fill(phrase);
+        await this.submit('submit-text');
+        return true;
+      }
+      // Only a genuine drawing TURN (identified by the easel hint) — never the
+      // cover-decoration canvas shown during the round-gated wait / 30s grace.
+      if (await this.page.getByText(this.drawTurnHint).isVisible().catch(() => false)) {
+        await this.drawStrokes(WritingDrawingPage.DEFAULT_STROKE);
+        // Rate the opening-phrase draw turn when the control is present
+        // (position 1 only); optional and never gates the submit.
+        const thumbsUp = this.page.getByRole('button', { name: 'Thumbs up — fun to draw' });
+        if (await thumbsUp.isVisible().catch(() => false)) await thumbsUp.click();
+        await this.submitDrawing();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      // A re-render wedged the action past actionTimeout — return to the
+      // poll loop and let it re-inspect state. Any other error is a real
+      // failure and must surface.
+      if (error instanceof errors.TimeoutError) return false;
+      throw error;
     }
-    const phraseInput = this.page.getByLabel('Your phrase');
-    if (await phraseInput.isVisible().catch(() => false)) {
-      await phraseInput.fill(phrase);
-      await this.submit('submit-text');
-      return true;
-    }
-    // Only a genuine drawing TURN (identified by the easel hint) — never the
-    // cover-decoration canvas shown during the round-gated wait / 30s grace.
-    if (await this.page.getByText(this.drawTurnHint).isVisible().catch(() => false)) {
-      await this.drawStrokes(WritingDrawingPage.DEFAULT_STROKE);
-      // Rate the opening-phrase draw turn when the control is present
-      // (position 1 only); optional and never gates the submit.
-      const thumbsUp = this.page.getByRole('button', { name: 'Thumbs up — fun to draw' });
-      if (await thumbsUp.isVisible().catch(() => false)) await thumbsUp.click();
-      await this.submitDrawing();
-      return true;
-    }
-    return false;
   }
 
   /**

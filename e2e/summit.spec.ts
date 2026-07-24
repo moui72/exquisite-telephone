@@ -79,7 +79,7 @@ test('four engines in one room complete the flow to reveal', async ({ baseURL },
       await host.lobby.startGame();
 
       await observer.waitForStatus('writing');
-      await driveToReveal(players);
+      await driveToReveal(players, observer);
 
       const room = await observer.waitForStatus('reveal');
       for (const book of room.books) {
