@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { parseDrawOps } from '@exquisite-telephone/shared';
+  import { activePlayers, parseDrawOps } from '@exquisite-telephone/shared';
   import type { Book, Entry } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
@@ -239,7 +239,7 @@
           </span>
         </button>
         <span class="text-sm text-champagne/75">
-          {room.playAgainVotes.length} of {room.players.length} guests ready for an encore
+          {room.playAgainVotes.length} of {activePlayers(room).length} guests ready for an encore
         </span>
       {:else}
         <button

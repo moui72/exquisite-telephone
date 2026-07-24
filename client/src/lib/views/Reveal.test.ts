@@ -147,8 +147,7 @@ describe('Reveal view — end-of-game controls', () => {
     expect(screen.queryByText(/1 of 2 guests ready for an encore/i)).not.toBeInTheDocument();
   });
 
-  // Red commit: xfail marker; removed in the implementation commit (T006).
-  it.fails('excludes kicked players from the readiness-count denominator', () => {
+  it('excludes kicked players from the readiness-count denominator', () => {
     const mallory = { id: 'mallory', roomId, name: 'Mallory', connected: false, sessionToken: 't3', kicked: true };
     // 3 player records but only 2 active (Mallory was kicked); the count
     // must read "of 2", using activePlayers, not "of 3" (players.length).
