@@ -1,7 +1,7 @@
 ---
-status: open
+status: planned
 created: 2026-07-24
-plan: null
+plan: plan-round-gating-and-reveal-polish-2026-07-24-400e.md
 ---
 
 # Feedback
@@ -33,7 +33,7 @@ same drain, and so is not repeated here.
   neither seed color.
   [artifacts: ui] — flood-fill implementation behind the `fill` draw op
 
-- [ ] F003 Round gating isn't holding: sometimes a book gets passed and lets
+- [x] F003 Round gating isn't holding: sometimes a book gets passed and lets
   one player start their next turn while another player is still waiting on
   their own book, so rounds start staggered rather than together. `ui.md`
   Writing / Drawing View specifies the opposite — "a player who finishes
@@ -49,13 +49,13 @@ same drain, and so is not repeated here.
 
 ## UX
 
-- [ ] F004 During reveal, the "read by" attribution notes are hard to read
+- [x] F004 During reveal, the "read by" attribution notes are hard to read
   against the background behind them. Either pull them inside the book's card
   so they sit on the card surface, or badge them so they carry their own
   background.
   [artifacts: ui] — `client/src/lib/views/Reveal.svelte`
 
-- [ ] F005 A non-host player who clicks "Vote for an Encore" gets no
+- [x] F005 A non-host player who clicks "Vote for an Encore" gets no
   indication the vote registered — the button doesn't change state and
   nothing else confirms it. `ui.md` End-of-game controls specifies the
   readiness count is shown *to the host*, but says nothing about what the

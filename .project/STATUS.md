@@ -1,5 +1,30 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned round-gating fix + reveal polish; palette
+implementation in flight.** Two things this pass. (1) The palette plan
+`tasks-host-drawing-tool-controls-d6bf.md` is being implemented in a delegated
+worktree (`agent-aed8a20e7ae01fe10`, branch
+`worktree-agent-aed8a20e7ae01fe10`) — **in-progress 1/10**; both palette
+features remain `tasked` in the register until that branch merges (state rides
+the worktree). (2) Drained the last three open items from
+`feedback-drawing-tools-reveal-and-round-0639.md` into a new approved plan
+`plan-round-gating-and-reveal-polish-2026-07-24-400e.md` with
+`tasks-round-gating-and-reveal-polish-0912.md` (**ready**, 0/4): F003
+round-gating divergence (Phase 1 — reproduce with a failing round-gate test,
+then route the bypassed advancement path through `turnAdvancement`'s
+`currentRoundFor` guard; kept consistent with the shipped grace countdown),
+F004 reveal attribution legibility, F005 encore-vote withdraw affordance + a
+ui.md End-of-game-controls addition. That feedback file is now fully
+**planned** — no open feedback remains. **Work Queue:** the two ready files
+share only *declared* artifacts (datamodel, ui) — no feature overlap and no
+code-path contact (palette = DrawingCanvas/floodFill/lobby/handlers;
+round-gating = turnAdvancement/Reveal), safe to run independently; `merge_policy`
+still governs at merge. No new artifact edits this pass (feedback-only plan).
+datamodel/infrastructure/ui diagrams remain **stale** from the palette plan.
+**ArDD update available:** installed 9bc9b38, source at v1.2.1-beta.1 — run
+`/ardd-update`. Next: await the palette worktree merge, then `/ardd-implement`
+the round-gating/reveal tasks.)_
+
 _Updated: 2026-07-24 (**Planned host drawing-tool controls + skin-tone palette
 + drawing-canvas fixes.** Slate defrag over the 2-item backlog bundled both
 palette features (shared `PALETTE_COLORS` seam in `DrawingCanvas.svelte`) into
