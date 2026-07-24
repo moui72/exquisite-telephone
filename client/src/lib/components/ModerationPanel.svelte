@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Crown, DoorOpen, X } from '@lucide/svelte';
   import GiltFrame from './GiltFrame.svelte';
+  import ConfirmDialog from './ConfirmDialog.svelte';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
 
@@ -23,16 +24,62 @@
   // record is untouched server-side, this is a display-only filter.
   $: visiblePlayers = room?.players.filter((p) => !p.kicked) ?? [];
 
-  async function handleKick(targetPlayerId: string) {
-    await session.kickPlayer(targetPlayerId);
+  // Every destructive host control is confirmation-gated (ui.md —
+  // Moderation Panel; closes feedback F001): a mis-tap on a name or button
+  // must not irreversibly kick, end, or restart. All three route through
+  // the shared ConfirmDialog in the destructive variant — a plain
+  // are-you-sure, no read-state (pre-reveal there is nothing read to lose).
+  type PendingConfirm =
+    | { kind: 'end' }
+    | { kind: 'restart' }
+    | { kind: 'kick'; playerId: string; playerName: string };
+
+  let pending: PendingConfirm | null = null;
+
+  $: confirmDialog =
+    pending === null
+      ? null
+      : pending.kind === 'kick'
+        ? {
+            heading: `Kick ${pending.playerName}?`,
+            body: 'They will be removed from the salon for the rest of the game.',
+            confirmLabel: 'Kick',
+          }
+        : pending.kind === 'end'
+          ? {
+              heading: 'End the game for everyone?',
+              body: 'This closes the exhibition for every guest.',
+              confirmLabel: 'End game',
+            }
+          : {
+              heading: 'Restart from turn 0? All current progress is lost.',
+              body: 'Every entry authored so far is discarded.',
+              confirmLabel: 'Restart',
+            };
+
+  function requestKick(playerId: string, playerName: string) {
+    pending = { kind: 'kick', playerId, playerName };
   }
 
-  async function handleEndGame() {
-    await session.endGame();
+  function requestEndGame() {
+    pending = { kind: 'end' };
   }
 
-  async function handleRestartGame() {
-    await session.restartGame();
+  function requestRestartGame() {
+    pending = { kind: 'restart' };
+  }
+
+  function confirmPending() {
+    const p = pending;
+    pending = null;
+    if (p === null) return;
+    if (p.kind === 'end') void session.endGame();
+    else if (p.kind === 'restart') void session.restartGame();
+    else void session.kickPlayer(p.playerId);
+  }
+
+  function cancelPending() {
+    pending = null;
   }
 </script>
 
@@ -71,7 +118,7 @@
                     <button
                       type="button"
                       class="inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border border-ink/20 px-3 text-xs font-medium text-ink/70 transition-colors hover:border-red-700/50 hover:bg-red-50 hover:text-red-700"
-                      on:click={() => handleKick(player.id)}
+                      on:click={() => requestKick(player.id, player.name)}
                     >
                       <DoorOpen size={14} aria-hidden="true" />
                       Escort from the Salon
@@ -101,7 +148,7 @@
                 <button
                   type="button"
                   class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-sapphire px-5 text-sm font-medium text-white hover:bg-sapphire/90 [--chamfer-color:theme(colors.gold)]"
-                  on:click={handleRestartGame}
+                  on:click={requestRestartGame}
                 >
                   Restage the Salon
                 </button>
@@ -109,7 +156,7 @@
               <button
                 type="button"
                 class="chamfer-frame chamfer-slim inline-flex min-h-11 items-center justify-center bg-gold/15 px-5 text-sm font-medium text-ink/80 hover:bg-gold/25 [--chamfer-color:transparent]"
-                on:click={handleEndGame}
+                on:click={requestEndGame}
               >
                 Close the Exhibition
               </button>
@@ -129,4 +176,16 @@
       </GiltFrame>
     </div>
   </div>
+
+  {#if confirmDialog}
+    <ConfirmDialog
+      heading={confirmDialog.heading}
+      body={confirmDialog.body}
+      confirmLabel={confirmDialog.confirmLabel}
+      cancelLabel="Cancel"
+      destructive
+      onConfirm={confirmPending}
+      onCancel={cancelPending}
+    />
+  {/if}
 {/if}

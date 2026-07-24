@@ -53,7 +53,7 @@ status: in-progress
   Confirm these fail first against the current fire-immediately behavior
   (mark red appropriately for the pre-commit hook).
 
-- [ ] T005 [artifacts: ui] Implement the guards in
+- [x] T005 [artifacts: ui] Implement the guards in
   `client/src/lib/components/ModerationPanel.svelte` to pass T004: route
   **End game**, **Restart**, and **Kick** through the shared `ConfirmDialog`
   (destructive variant, no read-state — a plain are-you-sure) before calling

@@ -105,7 +105,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
   // T004 red-first: Kick is confirmation-gated (ui.md — Moderation Panel;
   // closes feedback F001). Marked it.fails against today's fire-immediately
   // behavior; T005 implements the guard and flips these to it.
-  it.fails(
+  it(
     'guards Kick behind a ConfirmDialog naming the player, calling kickPlayer only on confirm',
     async () => {
       const session = makeFakeSession({
@@ -127,7 +127,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     },
   );
 
-  it.fails('does not call kickPlayer when the Kick confirmation is cancelled', async () => {
+  it('does not call kickPlayer when the Kick confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
@@ -171,7 +171,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
   });
 
   // T004 red-first: Restart is confirmation-gated. Marked it.fails; T005 flips it.
-  it.fails(
+  it(
     'guards Restart behind a ConfirmDialog, calling restartGame only on confirm',
     async () => {
       const session = makeFakeSession({
@@ -194,7 +194,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     },
   );
 
-  it.fails('does not call restartGame when the Restart confirmation is cancelled', async () => {
+  it('does not call restartGame when the Restart confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom({ nonContinuable: true }),
       player: ada,
@@ -210,7 +210,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
   });
 
   // T004 red-first: End game is confirmation-gated. Marked it.fails; T005 flips it.
-  it.fails(
+  it(
     'guards End game behind a ConfirmDialog, calling endGame only on confirm',
     async () => {
       const session = makeFakeSession({
@@ -231,7 +231,7 @@ describe('ModerationPanel (host-only moderation controls)', () => {
     },
   );
 
-  it.fails('does not call endGame when the End game confirmation is cancelled', async () => {
+  it('does not call endGame when the End game confirmation is cancelled', async () => {
     const session = makeFakeSession({
       room: makeRoom(),
       player: ada,
