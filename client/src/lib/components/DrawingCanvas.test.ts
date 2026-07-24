@@ -163,7 +163,7 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
       toJSON() {},
     });
 
-    await fireEvent.click(getByText('Fill tool'));
+    await fireEvent.click(getByText('Bucket'));
 
     firePointer(canvas, 'pointerdown', 5, 5);
 
@@ -293,16 +293,18 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(getByLabelText('Color #0ea5e9')).toBeInTheDocument();
   });
 
-  it('hides the fill control entirely when allowFillTool is false', () => {
-    const { queryByText } = render(DrawingCanvas, {
+  it('hides the fill (bucket) control entirely when allowFillTool is false', () => {
+    const { queryByRole, getByRole } = render(DrawingCanvas, {
       props: { ops: [], allowFillTool: false },
     });
-    expect(queryByText('Fill tool')).not.toBeInTheDocument();
+    // The pen tool remains; only the bucket option is removed.
+    expect(getByRole('radio', { name: /pen/i })).toBeInTheDocument();
+    expect(queryByRole('radio', { name: /bucket/i })).not.toBeInTheDocument();
   });
 
-  it('shows the fill control when allowFillTool is true (default)', () => {
-    const { getByText } = render(DrawingCanvas, { props: { ops: [] } });
-    expect(getByText('Fill tool')).toBeInTheDocument();
+  it('shows the fill (bucket) control when allowFillTool is true (default)', () => {
+    const { getByRole } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByRole('radio', { name: /bucket/i })).toBeInTheDocument();
   });
 
   it('still hides the whole palette when monochromeOnly even with a non-default preset', () => {
@@ -364,6 +366,33 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(ops[0].color).toBe('#ef4444');
 
     vi.restoreAllMocks();
+  });
+
+  it('exposes an explicit pen/bucket radio reflecting and switching the active tool (F006)', async () => {
+    const { getByRole } = render(DrawingCanvas, { props: { ops: [] } });
+
+    const pen = getByRole('radio', { name: /pen/i });
+    const bucket = getByRole('radio', { name: /bucket/i });
+
+    // Pen is the default active tool; the radio shows it as checked.
+    expect(pen).toHaveAttribute('aria-checked', 'true');
+    expect(bucket).toHaveAttribute('aria-checked', 'false');
+
+    await fireEvent.click(bucket);
+    expect(bucket).toHaveAttribute('aria-checked', 'true');
+    expect(pen).toHaveAttribute('aria-checked', 'false');
+
+    await fireEvent.click(pen);
+    expect(pen).toHaveAttribute('aria-checked', 'true');
+    expect(bucket).toHaveAttribute('aria-checked', 'false');
+  });
+
+  it('shows a pen-only radio (no bucket option) when fill is forbidden (F006 + T004)', () => {
+    const { getByRole, queryByRole } = render(DrawingCanvas, {
+      props: { ops: [], allowFillTool: false },
+    });
+    expect(getByRole('radio', { name: /pen/i })).toHaveAttribute('aria-checked', 'true');
+    expect(queryByRole('radio', { name: /bucket/i })).not.toBeInTheDocument();
   });
 
   it('removes its pointer listeners on unmount without throwing', () => {

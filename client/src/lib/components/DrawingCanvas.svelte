@@ -210,9 +210,13 @@
     activeWidth = width;
   }
 
-  function toggleFillTool() {
-    tool = tool === 'fill' ? 'stroke' : 'fill';
+  function selectTool(next: 'stroke' | 'fill') {
+    tool = next;
   }
+
+  // The fill tool can be forbidden for the whole game (Room.allowFillTool);
+  // never leave the bucket selected once it's gone.
+  $: if (!allowFillTool && tool === 'fill') tool = 'stroke';
 
   onMount(() => {
     // jsdom (unit tests) doesn't implement canvas 2D contexts; guard so
@@ -287,19 +291,36 @@
       {/each}
     </div>
 
-    {#if allowFillTool}
+    <div class="flex gap-1" role="radiogroup" aria-label="Drawing tool">
       <button
         type="button"
+        role="radio"
         class="rounded-md border border-gold/60 px-2 py-1 text-xs font-medium"
-        class:bg-wine={tool === 'fill'}
-        class:text-champagne={tool === 'fill'}
-        class:text-ink={tool !== 'fill'}
-        aria-pressed={tool === 'fill'}
-        on:click={toggleFillTool}
+        class:bg-wine={tool === 'stroke'}
+        class:text-champagne={tool === 'stroke'}
+        class:text-ink={tool !== 'stroke'}
+        aria-checked={tool === 'stroke'}
+        aria-label="Pen"
+        on:click={() => selectTool('stroke')}
       >
-        Fill tool
+        Pen
       </button>
-    {/if}
+      {#if allowFillTool}
+        <button
+          type="button"
+          role="radio"
+          class="rounded-md border border-gold/60 px-2 py-1 text-xs font-medium"
+          class:bg-wine={tool === 'fill'}
+          class:text-champagne={tool === 'fill'}
+          class:text-ink={tool !== 'fill'}
+          aria-checked={tool === 'fill'}
+          aria-label="Bucket"
+          on:click={() => selectTool('fill')}
+        >
+          Bucket
+        </button>
+      {/if}
+    </div>
   </div>
 {/if}
 
