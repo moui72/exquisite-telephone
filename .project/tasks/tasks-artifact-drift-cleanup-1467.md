@@ -1,7 +1,7 @@
 ---
 plan: plan-artifact-drift-cleanup-2026-07-24-d042.md   # exact filename of the source plan — authoritative binding
 generated: 2026-07-24
-status: ready   # generating -> ready -> in-progress -> completed (schema-of-record: scripts/lint-project.sh)
+status: in-progress   # generating -> ready -> in-progress -> completed (schema-of-record: scripts/lint-project.sh)
 ---
 
 # Tasks
