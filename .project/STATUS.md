@@ -1,5 +1,22 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-23 (**Confirmation-dialog work SHIPPED (5/5, merged).** A
+shared `ConfirmDialog` component landed (`client/src/lib/components/`), the
+Reveal unread-books warning migrated onto it behavior-preserving, and all
+three destructive Moderation Panel controls — End game, Restart, **and Kick**
+(dialog names the player) — are now confirmation-gated. Branch merged to `main`
+(`3098784`) and reaped; `reusable-confirmation-modal-co` and
+`host-control-confirmation-guar` → **implemented**, feedback F001 closed, suite
+green. **Two deliberate implementation deviations from the plan/artifact
+wording** (both sound, no re-plan needed): the component uses **callback props
+(`onConfirm`/`onCancel`) not events** — matching the codebase's universal
+callback-prop convention and Svelte 5 realities — and adds an **`ariaLabel`
+prop** (defaults to heading) so the migrated Reveal warning keeps its existing
+accessible name. Focus-trap open question resolved: a dependency-free
+`svelte:window` Tab-cycle between the two controls, initial focus on cancel,
+Escape=cancel. Register: 24 implemented · 1 subsumed; 0 backlogged/tasked, 0
+open feedback. `ui.md` and `infrastructure.md` diagrams remain stale.)_
+
 _Updated: 2026-07-23 (**Planned & tasked the confirmation-dialog work.**
 `ui.md` gained a **Confirmation Dialog (shared component)** section; all three
 destructive Moderation Panel controls — End game, Restart, **and Kick** — now
