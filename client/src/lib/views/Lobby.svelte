@@ -72,6 +72,19 @@
     await session.setMonochrome(checked);
   }
 
+  async function handlePalettePresetChange(event: Event) {
+    const preset = (event.target as HTMLSelectElement).value as
+      | 'primary'
+      | 'standard'
+      | 'extended';
+    await session.setPalettePreset(preset);
+  }
+
+  async function handleToggleFillTool(event: Event) {
+    const checked = (event.currentTarget as HTMLInputElement).checked;
+    await session.setFillTool(checked);
+  }
+
   const LAPS_PER_BOOK_OPTIONS: { value: 1 | 2 | 3; label: string }[] = [
     { value: 1, label: '1 lap' },
     { value: 2, label: '2 laps' },
@@ -268,6 +281,46 @@
               on:change={handleToggleMonochrome}
             />
             Enforce a Monochrome Decree
+          </label>
+        </InfoTooltip>
+
+        <div class="flex flex-col gap-1">
+          <InfoTooltip
+            label="About the color palette"
+            explanation="Chooses which set of colors everyone's drawing tool offers: a small primary set, the standard palette, or an extended one. Ignored while a Monochrome Decree is in force."
+          >
+            <label for="palette-preset-select" class="text-sm font-medium text-ink/90">
+              Color Palette
+            </label>
+          </InfoTooltip>
+          <select
+            id="palette-preset-select"
+            class="rounded-md border border-gold/30 px-3 py-2 text-base disabled:opacity-50"
+            value={state.room.palettePreset}
+            disabled={state.room.monochromeOnly}
+            on:change={handlePalettePresetChange}
+          >
+            <option value="primary">Primary — primary colors, black and white</option>
+            <option value="standard">Standard — the default palette</option>
+            <option value="extended">Extended — a larger palette</option>
+          </select>
+        </div>
+
+        <InfoTooltip
+          label="About the fill tool"
+          explanation="Leaves the bucket fill tool available in everyone's drawing toolbar. Turn it off to allow freehand strokes only, for the whole game."
+        >
+          <label
+            for="allow-fill-toggle"
+            class="flex items-center gap-2 text-sm font-medium text-ink/90"
+          >
+            <input
+              id="allow-fill-toggle"
+              type="checkbox"
+              checked={state.room.allowFillTool}
+              on:change={handleToggleFillTool}
+            />
+            Permit the Fill Tool
           </label>
         </InfoTooltip>
 

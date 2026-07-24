@@ -20,7 +20,7 @@ status: in-progress
 
 - [x] T005 [artifacts: ui] Add a brown and a pink skin-tone swatch to the `standard` and `extended` presets defined in T004 (choose hues that read as skin tones per the plan's open question; leave `primary` unchanged). Extend the `DrawingCanvas.test.ts` preset assertions to require both swatches present in `standard` and `extended` and absent from `primary`. Feature: skin-tone-palette-colors.
 
-- [ ] T006 [artifacts: ui] Add the Lobby View palette-preset picker (sets `palettePreset` via `setPalettePreset`) and allow-fill toggle (sets `allowFillTool` via `setFillTool`) beside the force-monochrome toggle, each carrying the enforced info affordance; the preset picker is shown but inert while force-monochrome is on. Write failing tests first: `Lobby.test.ts` for the two new controls' presence and wiring, and confirm the existing affordance-enforcement test now covers both new settings. Then implement. Feature: host-drawing-tool-controls.
+- [x] T006 [artifacts: ui] Add the Lobby View palette-preset picker (sets `palettePreset` via `setPalettePreset`) and allow-fill toggle (sets `allowFillTool` via `setFillTool`) beside the force-monochrome toggle, each carrying the enforced info affordance; the preset picker is shown but inert while force-monochrome is on. Write failing tests first: `Lobby.test.ts` for the two new controls' presence and wiring, and confirm the existing affordance-enforcement test now covers both new settings. Then implement. Feature: host-drawing-tool-controls.
 
 ## Phase 3: Drawing-canvas fixes
 
