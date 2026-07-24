@@ -108,6 +108,11 @@
   let activeColor = DEFAULT_COLOR;
   let activeWidth = DEFAULT_WIDTH;
   let tool: 'stroke' | 'fill' = 'stroke';
+  // The color/width captured at the start of the in-progress stroke. A
+  // stroke renders and commits in whatever was active at its first point,
+  // regardless of a palette change made before it is released (F001).
+  let strokeColor = DEFAULT_COLOR;
+  let strokeWidth = DEFAULT_WIDTH;
 
   $: effectiveColor = monochromeOnly ? DEFAULT_COLOR : activeColor;
   $: paletteColors = PALETTE_PRESETS[palettePreset] ?? PALETTE_PRESETS.standard;
@@ -161,9 +166,11 @@
       onOpsChange([...ops, { type: 'fill', point, color: effectiveColor }]);
       return;
     }
+    strokeColor = effectiveColor;
+    strokeWidth = activeWidth;
     if (ctx) {
-      ctx.strokeStyle = effectiveColor;
-      ctx.lineWidth = activeWidth;
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
     }
     canvasEl.setPointerCapture?.(event.pointerId);
     currentStroke = [toPoint(event)];
@@ -174,6 +181,13 @@
     const point = toPoint(event);
     const previous = currentStroke[currentStroke.length - 1]!;
     currentStroke = [...currentStroke, point];
+    // Re-assert the stroke's captured style each segment so a reactive
+    // redraw (or a mid-stroke palette change) can't leave a segment in a
+    // stale color (F001).
+    if (ctx) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+    }
     drawSegment(previous, point);
   }
 
@@ -182,7 +196,7 @@
     if (currentStroke.length >= 2) {
       onOpsChange([
         ...ops,
-        { type: 'stroke', points: currentStroke, color: effectiveColor, width: activeWidth },
+        { type: 'stroke', points: currentStroke, color: strokeColor, width: strokeWidth },
       ]);
     }
     currentStroke = null;

@@ -24,7 +24,7 @@ status: in-progress
 
 ## Phase 3: Drawing-canvas fixes
 
-- [ ] T007 [artifacts: ui] Fix F001 (feedback-drawing-tools-reveal-and-round-0639): a new stroke must render in the active color from its first point, not switch only on stroke end. In `DrawingCanvas.svelte`, capture the effective color at stroke start and use it for the whole in-progress stroke. Write a failing test first reproducing the mid-stroke stale color, then implement.
+- [x] T007 [artifacts: ui] Fix F001 (feedback-drawing-tools-reveal-and-round-0639): a new stroke must render in the active color from its first point, not switch only on stroke end. In `DrawingCanvas.svelte`, capture the effective color at stroke start and use it for the whole in-progress stroke. Write a failing test first reproducing the mid-stroke stale color, then implement.
 
 - [ ] T008 [artifacts: ui] Fix F006 (feedback-drawing-tools-reveal-and-round-0639): replace the single fill toggle in `DrawingCanvas.svelte`'s toolbar with an explicit pen/bucket radio so the active tool is always visible (respecting T004's fill-hidden-when-forbidden behavior — the radio shows pen-only when `allowFillTool` is `false`). Write failing `DrawingCanvas.test.ts` cases first (radio reflects and switches the active tool; bucket option absent when fill forbidden), then implement. Depends on T004 (toolbar).
 

@@ -335,6 +335,37 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(queryByLabelText('Color #ffc1a6')).not.toBeInTheDocument();
   });
 
+  it('renders and commits an in-progress stroke in the color active at its first point (F001)', async () => {
+    const fakeCtx = makeFakeCtx();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
+
+    const onOpsChange = vi.fn();
+    const { container, getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], onOpsChange },
+    });
+    const canvas = container.querySelector('canvas')!;
+
+    // Pick red, then begin the stroke: the live context must paint red.
+    await fireEvent.click(getByLabelText('Color #ef4444'));
+    firePointer(canvas, 'pointerdown', 0, 0);
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+
+    // Change the palette selection mid-stroke. The in-progress stroke was
+    // started as red and must stay red for every remaining segment...
+    await fireEvent.click(getByLabelText('Color #3b82f6'));
+    firePointer(canvas, 'pointermove', 10, 10);
+    expect(fakeCtx.strokeStyle).toBe('#ef4444');
+
+    // ...and it must be committed as red, not the color chosen mid-stroke.
+    firePointer(canvas, 'pointerup', 10, 10);
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].type).toBe('stroke');
+    expect(ops[0].color).toBe('#ef4444');
+
+    vi.restoreAllMocks();
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;
