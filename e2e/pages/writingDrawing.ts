@@ -3,9 +3,18 @@ import type { DrawOps } from '@exquisite-telephone/shared';
 
 /**
  * Page object for the Writing/Drawing surface
- * (client/src/lib/views/WritingDrawing.svelte). Text and drawing turns
- * share one "Present your contribution" submit; the drawing canvas is
- * targeted by its existing `role="img"` / `aria-label="Drawing canvas"`.
+ * (client/src/lib/views/WritingDrawing.svelte). All three turn shapes
+ * label their submit "Present your contribution", so they are targeted by
+ * a turn-scoped `data-testid` (`submit-curated` / `submit-text` /
+ * `submit-drawing`) rather than that shared accessible name: only one turn
+ * renders at a time, so the unscoped name looks unambiguous in strict mode,
+ * but across a server-broadcast re-render Playwright's auto-retry would
+ * silently rebind the name from the just-clicked (enabled) submit to the
+ * NEXT turn's permanently-disabled one and spin until the test timeout
+ * (research-webkit-e2e-flakes-2026-07-24.md). A turn-specific testid can
+ * never rebind: once the turn advances, that testid's element is gone. The
+ * drawing canvas is targeted by its existing `role="img"` /
+ * `aria-label="Drawing canvas"`.
  */
 export class WritingDrawingPage {
   constructor(private readonly page: Page) {}
@@ -35,19 +44,19 @@ export class WritingDrawingPage {
   /** Submit a free-form / blind-guess text turn. */
   async submitText(phrase: string): Promise<void> {
     await this.page.getByLabel('Your phrase').fill(phrase);
-    await this.submit();
+    await this.submit('submit-text');
   }
 
   /** Pick a dealt curated phrase (or write one in) on the opening turn. */
   async chooseCuratedPrompt(phrase: string): Promise<void> {
     await this.page.getByRole('radio', { name: phrase }).check();
-    await this.submit();
+    await this.submit('submit-curated');
   }
 
   async writeInCuratedPrompt(phrase: string): Promise<void> {
     await this.page.getByRole('radio', { name: 'Write my own instead' }).check();
     await this.page.getByLabel('Your own phrase').fill(phrase);
-    await this.submit();
+    await this.submit('submit-curated');
   }
 
   /**
@@ -99,7 +108,7 @@ export class WritingDrawingPage {
   }
 
   async submitDrawing(): Promise<void> {
-    await this.submit();
+    await this.submit('submit-drawing');
   }
 
   /** A default single deterministic stroke used to drive drawing turns. */
@@ -118,13 +127,13 @@ export class WritingDrawingPage {
     const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
     if (await curatedRadio.isVisible().catch(() => false)) {
       await curatedRadio.check();
-      await this.submit();
+      await this.submit('submit-curated');
       return true;
     }
     const phraseInput = this.page.getByLabel('Your phrase');
     if (await phraseInput.isVisible().catch(() => false)) {
       await phraseInput.fill(phrase);
-      await this.submit();
+      await this.submit('submit-text');
       return true;
     }
     // Only a genuine drawing TURN (identified by the easel hint) — never the
@@ -141,7 +150,13 @@ export class WritingDrawingPage {
     return false;
   }
 
-  private async submit(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Present your contribution' }).click();
+  /**
+   * Click the current turn's submit, targeted by its turn-scoped
+   * `data-testid` and filtered to the enabled state, so a mid-action
+   * re-render can never rebind the click to a different turn's
+   * (permanently-disabled) submit (see class doc).
+   */
+  private async submit(testId: 'submit-curated' | 'submit-text' | 'submit-drawing'): Promise<void> {
+    await this.page.getByTestId(testId).click();
   }
 }

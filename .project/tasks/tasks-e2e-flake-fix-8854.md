@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Kill the ambiguity and bound the action
 
-- [ ] T001 In `e2e/pages/writingDrawing.ts` `playIfMyTurn` (~lines 118–146),
+- [x] T001 In `e2e/pages/writingDrawing.ts` `playIfMyTurn` (~lines 118–146),
   make the submit interaction target only the **current turn's enabled
   submit**, so Playwright's auto-retry can never re-resolve the ambiguous
   "Present your contribution" accessible name to the drawing turn's

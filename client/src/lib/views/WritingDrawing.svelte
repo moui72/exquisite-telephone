@@ -370,6 +370,7 @@
 
           <button
             type="submit"
+            data-testid="submit-curated"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!curatedContent}
           >
@@ -408,6 +409,7 @@
           </label>
           <button
             type="submit"
+            data-testid="submit-text"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)]"
           >
             <span class="inline-flex items-center gap-1.5">
@@ -480,6 +482,7 @@
           {/if}
           <button
             type="button"
+            data-testid="submit-drawing"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={drawnOps.length === 0}
             on:click={handleSubmitDrawing}
