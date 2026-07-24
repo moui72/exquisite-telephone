@@ -9,8 +9,10 @@ import App from './App.svelte';
 
 afterEach(() => cleanup());
 
-function makeFakeSession(initial: SessionState): SessionStore {
-  const store = writable<SessionState>(initial);
+function makeFakeSession(
+  initial: Omit<SessionState, 'testTraffic'> & { testTraffic?: boolean },
+): SessionStore {
+  const store = writable<SessionState>({ testTraffic: false, ...initial });
   return {
     subscribe: store.subscribe,
     createRoom: vi.fn(async () => {}),

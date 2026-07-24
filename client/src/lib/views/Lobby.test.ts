@@ -7,10 +7,12 @@ import type { Room } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
 import Lobby from './Lobby.svelte';
 
-function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore & {
+function makeFakeSession(
+  initial: Omit<SessionState, 'reconnecting' | 'testTraffic'> & { testTraffic?: boolean },
+): SessionStore & {
   setState: (s: SessionState) => void;
 } {
-  const store = writable<SessionState>({ reconnecting: false, ...initial });
+  const store = writable<SessionState>({ reconnecting: false, testTraffic: false, ...initial });
   return {
     subscribe: store.subscribe,
     setState: store.set,
@@ -57,6 +59,7 @@ function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionSt
         },
         error: null,
         reconnecting: false,
+        testTraffic: false,
       });
     }),
     joinRoom: vi.fn(async () => {}),

@@ -15,8 +15,10 @@ const roomId = 'ABCDE';
 const ada = { id: 'ada', roomId, name: 'Ada', connected: true, sessionToken: 't1', kicked: false };
 const grace = { id: 'grace', roomId, name: 'Grace', connected: true, sessionToken: 't2', kicked: false };
 
-function makeFakeSession(initial: Omit<SessionState, 'reconnecting'>): SessionStore {
-  const store = writable<SessionState>({ reconnecting: false, ...initial });
+function makeFakeSession(
+  initial: Omit<SessionState, 'reconnecting' | 'testTraffic'> & { testTraffic?: boolean },
+): SessionStore {
+  const store = writable<SessionState>({ reconnecting: false, testTraffic: false, ...initial });
   return {
     subscribe: store.subscribe,
     createRoom: vi.fn(async () => {}),

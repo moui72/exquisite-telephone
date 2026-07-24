@@ -59,7 +59,7 @@ status: in-progress
 
 ## Phase 4: Test-only client grace seam
 
-- [ ] T006 Add a **test-only client-side seam** that shrinks the 30s
+- [x] T006 Add a **test-only client-side seam** that shrinks the 30s
   `GRACE_MS` per-turn wait for test traffic only (the existing server-side
   turn-timer seam does not reach the client grace), gated with the same
   discipline as the existing E2E seams (inert and un-triggerable in normal
