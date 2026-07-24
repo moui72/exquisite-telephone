@@ -108,6 +108,42 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(ops[0].points[1]).toEqual({ x: 120, y: 90 });
   });
 
+  it('maps pointer coordinates correctly when the canvas is rendered LARGER than its bitmap (focus mode — T002)', async () => {
+    // Focus mode (ui.md — "Focus mode (larger viewports)", plan T001)
+    // stretches the 320×240 canvas to a larger CSS-rendered size. This is
+    // the inverse of the shrink case above: the canvas is rendered at
+    // 640×480 (double its bitmap on both axes), so a pointer at (100, 50)
+    // in page coordinates must be recorded at (50, 25) in bitmap space.
+    // No new scaling code — the existing rect-ratio math already handles
+    // any rendered size; this pins that accuracy at the expanded size.
+    const onOpsChange = vi.fn();
+    const { container } = render(DrawingCanvas, { props: { ops: [], onOpsChange } });
+    const canvas = container.querySelector('canvas')!;
+
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      right: 640,
+      bottom: 480,
+      width: 640,
+      height: 480,
+      x: 0,
+      y: 0,
+      toJSON() {},
+    });
+
+    firePointer(canvas, 'pointerdown', 100, 50);
+    firePointer(canvas, 'pointermove', 200, 100);
+    firePointer(canvas, 'pointerup', 200, 100);
+
+    expect(onOpsChange).toHaveBeenCalledTimes(1);
+    const ops = onOpsChange.mock.calls[0][0];
+    expect(ops[0].points[0]).toEqual({ x: 50, y: 25 });
+    expect(ops[0].points[1]).toEqual({ x: 100, y: 50 });
+
+    vi.restoreAllMocks();
+  });
+
   it('uses the clicked palette color for the next drawn stroke', async () => {
     const onOpsChange = vi.fn();
     const { container, getByLabelText } = render(DrawingCanvas, {
