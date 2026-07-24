@@ -95,6 +95,8 @@ export interface SessionStore extends Readable<SessionState> {
   /** Client-local only: clears the stored session token and resets local state. No server event. */
   leaveGame(): void;
   voteToPlayAgain(): Promise<void>;
+  /** Reveal-only: retract this player's encore vote (F005 toggle). */
+  withdrawVoteToPlayAgain(): Promise<void>;
   playAgain(): Promise<void>;
   /**
    * Reveal-only: report this player's per-book modal state (datamodel.md
@@ -320,6 +322,13 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     voteToPlayAgain() {
       const state = get(store);
       return emitWithAck('voteToPlayAgain', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+      });
+    },
+    withdrawVoteToPlayAgain() {
+      const state = get(store);
+      return emitWithAck('withdrawVoteToPlayAgain', {
         roomId: state.room?.id,
         playerId: state.player?.id,
       });

@@ -38,6 +38,7 @@ function makeFakeSession(
     endGame: vi.fn(async () => {}),
     leaveGame: vi.fn(),
     voteToPlayAgain: vi.fn(async () => {}),
+    withdrawVoteToPlayAgain: vi.fn(async () => {}),
     playAgain: vi.fn(async () => {}),
     setReadingBook: vi.fn(async () => {}),
     kickPlayer: vi.fn(async () => {}),
@@ -151,6 +152,30 @@ describe('Reveal view — end-of-game controls', () => {
     expect(screen.queryByText(/1 of 2 guests ready for an encore/i)).not.toBeInTheDocument();
   });
 
+  it('shows a not-yet-voted non-host the "Vote for an Encore" button (F005)', () => {
+    const room = makeRoom({ playAgainVotes: [] });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(Reveal, { props: { session } });
+
+    expect(screen.getByRole('button', { name: /vote for an encore/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /withdraw encore vote/i })).not.toBeInTheDocument();
+  });
+
+  it('shows a non-host who has voted the "Withdraw encore vote" button, which retracts the vote (F005)', async () => {
+    const room = makeRoom({ playAgainVotes: [grace.id] });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(Reveal, { props: { session } });
+
+    expect(screen.queryByRole('button', { name: /vote for an encore/i })).not.toBeInTheDocument();
+    const withdrawButton = screen.getByRole('button', { name: /withdraw encore vote/i });
+
+    await fireEvent.click(withdrawButton);
+    expect(session.withdrawVoteToPlayAgain).toHaveBeenCalled();
+    expect(session.voteToPlayAgain).not.toHaveBeenCalled();
+  });
+
   it('excludes kicked players from the readiness-count denominator', () => {
     const mallory = { id: 'mallory', roomId, name: 'Mallory', connected: false, sessionToken: 't3', kicked: true };
     // 3 player records but only 2 active (Mallory was kicked); the count
@@ -250,6 +275,26 @@ describe('Reveal view — read badges from shared state', () => {
 
     expect(screen.getByText(/^Read by Grace$/)).toBeInTheDocument();
     expect(screen.getByText(/^Being read by Grace$/)).toBeInTheDocument();
+  });
+
+  it('gives the attribution notes a self-backgrounded badge surface so they stay legible (F004)', () => {
+    const room = makeRoom({
+      books: twoBookBooks(),
+      bookReads: { 'book-a': [grace.id] },
+      currentlyReading: { [grace.id]: 'book-b' },
+    });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+
+    // Each attribution note must carry its own surface (a `bg-*` badge)
+    // rather than floating bare over the reveal background.
+    const readBy = screen.getByText(/^Read by Grace$/);
+    const beingRead = screen.getByText(/^Being read by Grace$/);
+    expect(readBy).toHaveAttribute('data-attribution-badge');
+    expect(beingRead).toHaveAttribute('data-attribution-badge');
+    expect(readBy.className).toMatch(/\bbg-/);
+    expect(beingRead.className).toMatch(/\bbg-/);
   });
 });
 

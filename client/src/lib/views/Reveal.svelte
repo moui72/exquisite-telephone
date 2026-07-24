@@ -147,6 +147,17 @@
     await session.voteToPlayAgain();
   }
 
+  async function handleWithdrawVoteToPlayAgain() {
+    await session.withdrawVoteToPlayAgain();
+  }
+
+  // Whether this (non-host) player has an encore vote registered — drives
+  // the vote/withdraw toggle so the voter gets post-vote confirmation and a
+  // retract path (F005 — ui.md End-of-game controls). Retracting is allowed
+  // throughout reveal: the vote is only a readiness signal to the host, who
+  // stages the encore manually — there is no auto-trigger threshold to lock.
+  $: hasVotedEncore = !!(state.player && room?.playAgainVotes.includes(state.player.id));
+
   // Host unread-books warning (ui.md Reveal View — F003). A client-side,
   // per-book confirm before "End game" / "Play again": no server change,
   // and a force-through path emits the action anyway (the small-game
@@ -252,16 +263,29 @@
             Depart the Salon
           </span>
         </button>
-        <button
-          type="button"
-          class="rounded-md bg-emerald px-4 py-2 text-sm font-medium text-white"
-          on:click={handleVoteToPlayAgain}
-        >
-          <span class="inline-flex items-center gap-1.5">
-            <Repeat size={16} aria-hidden="true" />
-            Vote for an Encore
-          </span>
-        </button>
+        {#if hasVotedEncore}
+          <button
+            type="button"
+            class="rounded-md border border-gold/60 bg-champagne px-4 py-2 text-sm font-medium text-ink"
+            on:click={handleWithdrawVoteToPlayAgain}
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <Repeat size={16} aria-hidden="true" />
+              Withdraw encore vote
+            </span>
+          </button>
+        {:else}
+          <button
+            type="button"
+            class="rounded-md bg-emerald px-4 py-2 text-sm font-medium text-white"
+            on:click={handleVoteToPlayAgain}
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <Repeat size={16} aria-hidden="true" />
+              Vote for an Encore
+            </span>
+          </button>
+        {/if}
       {/if}
     </div>
 
@@ -317,14 +341,23 @@
             <p class="font-mono text-xs text-ink/80">{exhibitCaption(book, index)}</p>
           </button>
 
-          <div class="flex flex-col gap-1">
+          <!-- Attribution notes ride their own badge surface (F004): a
+               self-backgrounded chip so they stay legible against the reveal
+               background instead of floating bare over it. -->
+          <div class="flex flex-col items-start gap-1">
             {#if beingRead.length > 0}
-              <p class="text-xs text-emerald">
+              <p
+                data-attribution-badge
+                class="rounded-full bg-champagne px-2.5 py-0.5 text-xs font-medium text-emerald shadow-sm"
+              >
                 Being read by {beingRead.join(', ')}
               </p>
             {/if}
             {#if readers.length > 0}
-              <p class="text-xs text-ink/60">
+              <p
+                data-attribution-badge
+                class="rounded-full bg-champagne px-2.5 py-0.5 text-xs text-ink/70 shadow-sm"
+              >
                 Read by {readers.join(', ')}
               </p>
             {/if}

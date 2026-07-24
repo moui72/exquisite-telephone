@@ -27,6 +27,7 @@ import {
   onSubmitCover,
   onSubmitEntry,
   onVoteToPlayAgain,
+  onWithdrawVoteToPlayAgain,
   type CastTimeoutVoteAck,
   type CastTimeoutVoteInput,
   type CreateRoomAck,
@@ -238,6 +239,13 @@ export function createSocketServer(
       'voteToPlayAgain',
       (input: VoteToPlayAgainInput, ack: (response: VoteToPlayAgainAck) => void) => {
         onVoteToPlayAgain(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'withdrawVoteToPlayAgain',
+      (input: VoteToPlayAgainInput, ack: (response: VoteToPlayAgainAck) => void) => {
+        onWithdrawVoteToPlayAgain(socket, store, input, ack);
       },
     );
 
