@@ -343,7 +343,11 @@ client-local draft until finalized. When the round advances and this
 player's next turn is ready while they are mid-decoration, a **30-second
 grace countdown** appears before the turn view takes over (client-side
 only — it does not extend the turn-timer deadline; see [[datamodel]]
-Normalization Rules — Cover decoration).
+Normalization Rules — Cover decoration). The countdown carries a **skip
+control** ("Go to my easel now"): the player may end it early to go
+straight to their turn view, identical in effect to letting it expire —
+still client-side only, with no effect on the turn-timer deadline and no
+server round-trip.
 
 When `Room.turnTimerMinutes` is set, each still-working player sees a
 countdown to their individual deadline (`Room.roundStartedAt` +
@@ -381,7 +385,8 @@ The canvas appears in **two contexts**, both editing the same draft cover:
 - **While waiting during `writing`** (see Writing / Drawing View) — the
   round-gated waiting state surfaces the canvas so idle time is play. When
   the player's next turn is ready mid-decoration, a **30-second grace
-  countdown** precedes the turn view taking over (client-side only).
+  countdown** precedes the turn view taking over (client-side only, and
+  the player may skip it to go straight to their turn — see Turn view).
 - **The decoration window (`Room.status === 'decorating'`)** — after the
   last entry completes the game, a dedicated full-view decoration screen
   opens with a docent-voice heading, the cover canvas, and a **shared
