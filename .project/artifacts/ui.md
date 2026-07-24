@@ -1,7 +1,7 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-23
+last_updated: 2026-07-24
 diagram_status: current
 diagram_type: graph TD
 render_section: UI
@@ -409,8 +409,12 @@ if any — see [[datamodel]] and Cover Decoration below), and **falls back**
 to the deterministically-generated abstract cover art (a colorful design
 seeded from the book's `originAuthorId` so it's stable across re-renders
 rather than reshuffling every time) when `Book.cover` is `null`. Either
-way the face sits under a mock-formal exhibit plaque (e.g. "Exhibit No. 3
-— Untitled, Mixed Media, Anonymous"). A card the local viewer has already opened renders
+way the face sits under a mock-formal exhibit plaque naming the origin
+author's real display name (`exhibitCaption()` — e.g. "Exhibit No. 3
+— Untitled, Mixed Media, ${playerName(book.originAuthorId)}", the same on
+both card and modal): the reveal is the unmasking, so the plaque credits
+the book's originator by name rather than showing *Anonymous*. A card the
+local viewer has already opened renders
 dimmed (viewed/dirty dimming), so a browsing player can see at a glance
 which works they've been to. Clicking a card opens that book's modal.
 
