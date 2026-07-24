@@ -1,11 +1,20 @@
-import { expect, type Page } from '@playwright/test';
+import { errors, expect, type Page } from '@playwright/test';
 import type { DrawOps } from '@exquisite-telephone/shared';
 
 /**
  * Page object for the Writing/Drawing surface
- * (client/src/lib/views/WritingDrawing.svelte). Text and drawing turns
- * share one "Present your contribution" submit; the drawing canvas is
- * targeted by its existing `role="img"` / `aria-label="Drawing canvas"`.
+ * (client/src/lib/views/WritingDrawing.svelte). All three turn shapes
+ * label their submit "Present your contribution", so they are targeted by
+ * a turn-scoped `data-testid` (`submit-curated` / `submit-text` /
+ * `submit-drawing`) rather than that shared accessible name: only one turn
+ * renders at a time, so the unscoped name looks unambiguous in strict mode,
+ * but across a server-broadcast re-render Playwright's auto-retry would
+ * silently rebind the name from the just-clicked (enabled) submit to the
+ * NEXT turn's permanently-disabled one and spin until the test timeout
+ * (research-webkit-e2e-flakes-2026-07-24.md). A turn-specific testid can
+ * never rebind: once the turn advances, that testid's element is gone. The
+ * drawing canvas is targeted by its existing `role="img"` /
+ * `aria-label="Drawing canvas"`.
  */
 export class WritingDrawingPage {
   constructor(private readonly page: Page) {}
@@ -35,19 +44,19 @@ export class WritingDrawingPage {
   /** Submit a free-form / blind-guess text turn. */
   async submitText(phrase: string): Promise<void> {
     await this.page.getByLabel('Your phrase').fill(phrase);
-    await this.submit();
+    await this.submit('submit-text');
   }
 
   /** Pick a dealt curated phrase (or write one in) on the opening turn. */
   async chooseCuratedPrompt(phrase: string): Promise<void> {
     await this.page.getByRole('radio', { name: phrase }).check();
-    await this.submit();
+    await this.submit('submit-curated');
   }
 
   async writeInCuratedPrompt(phrase: string): Promise<void> {
     await this.page.getByRole('radio', { name: 'Write my own instead' }).check();
     await this.page.getByLabel('Your own phrase').fill(phrase);
-    await this.submit();
+    await this.submit('submit-curated');
   }
 
   /**
@@ -99,7 +108,7 @@ export class WritingDrawingPage {
   }
 
   async submitDrawing(): Promise<void> {
-    await this.submit();
+    await this.submit('submit-drawing');
   }
 
   /** A default single deterministic stroke used to drive drawing turns. */
@@ -113,35 +122,59 @@ export class WritingDrawingPage {
    * opening (pick the first dealt phrase), a free-form/blind text turn, and
    * a drawing turn (a default deterministic stroke) — so a flow driver can
    * simply poll every player until the game reaches reveal.
+   *
+   * Tolerant of a mid-action re-render: a `roomUpdated` broadcast can detach
+   * the very control this method is acting on (the round advanced under it),
+   * wedging the action until the bounded `actionTimeout` (T002) fires. That
+   * is not a test failure — it is the check-then-act window inherent to a
+   * poll driver. A `TimeoutError` is therefore swallowed and reported as
+   * "did not complete this pass" (false), so `driveToReveal` re-inspects
+   * authoritative state and re-acts. The DOM click is never trusted as proof
+   * of progress — `driveToReveal` confirms that against the observer
+   * snapshot (research-webkit-e2e-flakes-2026-07-24.md).
    */
   async playIfMyTurn(phrase = 'a phrase worth drawing'): Promise<boolean> {
-    const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
-    if (await curatedRadio.isVisible().catch(() => false)) {
-      await curatedRadio.check();
-      await this.submit();
-      return true;
+    try {
+      const curatedRadio = this.page.locator('input[name="curated-prompt"]').first();
+      if (await curatedRadio.isVisible().catch(() => false)) {
+        await curatedRadio.check();
+        await this.submit('submit-curated');
+        return true;
+      }
+      const phraseInput = this.page.getByLabel('Your phrase');
+      if (await phraseInput.isVisible().catch(() => false)) {
+        await phraseInput.fill(phrase);
+        await this.submit('submit-text');
+        return true;
+      }
+      // Only a genuine drawing TURN (identified by the easel hint) — never the
+      // cover-decoration canvas shown during the round-gated wait / 30s grace.
+      if (await this.page.getByText(this.drawTurnHint).isVisible().catch(() => false)) {
+        await this.drawStrokes(WritingDrawingPage.DEFAULT_STROKE);
+        // Rate the opening-phrase draw turn when the control is present
+        // (position 1 only); optional and never gates the submit.
+        const thumbsUp = this.page.getByRole('button', { name: 'Thumbs up — fun to draw' });
+        if (await thumbsUp.isVisible().catch(() => false)) await thumbsUp.click();
+        await this.submitDrawing();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      // A re-render wedged the action past actionTimeout — return to the
+      // poll loop and let it re-inspect state. Any other error is a real
+      // failure and must surface.
+      if (error instanceof errors.TimeoutError) return false;
+      throw error;
     }
-    const phraseInput = this.page.getByLabel('Your phrase');
-    if (await phraseInput.isVisible().catch(() => false)) {
-      await phraseInput.fill(phrase);
-      await this.submit();
-      return true;
-    }
-    // Only a genuine drawing TURN (identified by the easel hint) — never the
-    // cover-decoration canvas shown during the round-gated wait / 30s grace.
-    if (await this.page.getByText(this.drawTurnHint).isVisible().catch(() => false)) {
-      await this.drawStrokes(WritingDrawingPage.DEFAULT_STROKE);
-      // Rate the opening-phrase draw turn when the control is present
-      // (position 1 only); optional and never gates the submit.
-      const thumbsUp = this.page.getByRole('button', { name: 'Thumbs up — fun to draw' });
-      if (await thumbsUp.isVisible().catch(() => false)) await thumbsUp.click();
-      await this.submitDrawing();
-      return true;
-    }
-    return false;
   }
 
-  private async submit(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Present your contribution' }).click();
+  /**
+   * Click the current turn's submit, targeted by its turn-scoped
+   * `data-testid` and filtered to the enabled state, so a mid-action
+   * re-render can never rebind the click to a different turn's
+   * (permanently-disabled) submit (see class doc).
+   */
+  private async submit(testId: 'submit-curated' | 'submit-text' | 'submit-drawing'): Promise<void> {
+    await this.page.getByTestId(testId).click();
   }
 }

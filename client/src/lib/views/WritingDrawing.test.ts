@@ -11,9 +11,13 @@ import WritingDrawing from './WritingDrawing.svelte';
 afterEach(() => cleanup());
 
 function makeFakeSession(
-  initial: Omit<SessionState, 'reconnecting'>,
+  initial: Omit<SessionState, 'reconnecting' | 'testTraffic'> & { testTraffic?: boolean },
 ): SessionStore & { store: Writable<SessionState> } {
-  const store = writable<SessionState>({ reconnecting: false, ...initial });
+  const store = writable<SessionState>({
+    reconnecting: false,
+    testTraffic: false,
+    ...initial,
+  });
   return {
     store,
     subscribe: store.subscribe,
@@ -650,7 +654,7 @@ describe('Writing/Drawing view', () => {
       ],
     };
     const newRoom = makeRoom([linBook, adaBookAfterSubmit], [ada, grace, lin]);
-    session.store.set({ reconnecting: false, room: newRoom, player: grace, error: null });
+    session.store.set({ reconnecting: false, testTraffic: false, room: newRoom, player: grace, error: null });
 
     await Promise.resolve();
 
@@ -1109,7 +1113,7 @@ describe('cover decoration during writing (T013/T014)', () => {
     const { queryByRole, getByTestId } = render(WritingDrawing, { props: { session } });
 
     // Now Ada's turn becomes ready while she was decorating.
-    session.store.set({ reconnecting: false, room: adaTurnReadyRoom(), player: ada, error: null });
+    session.store.set({ reconnecting: false, testTraffic: false, room: adaTurnReadyRoom(), player: ada, error: null });
     await tick();
 
     // A 30-second grace countdown precedes the turn view taking over.
@@ -1132,6 +1136,7 @@ describe('cover decoration during writing (T013/T014)', () => {
 
     session.store.set({
       reconnecting: false,
+      testTraffic: false,
       room: adaTurnReadyRoom({ turnTimerMinutes: 15, roundStartedAt }),
       player: ada,
       error: null,

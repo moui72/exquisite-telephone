@@ -1,14 +1,14 @@
 ---
 plan: plan-e2e-flake-fix-2026-07-24-0428.md
 generated: 2026-07-24
-status: ready
+status: completed
 ---
 
 # Tasks
 
 ## Phase 1: Kill the ambiguity and bound the action
 
-- [ ] T001 In `e2e/pages/writingDrawing.ts` `playIfMyTurn` (~lines 118–146),
+- [x] T001 In `e2e/pages/writingDrawing.ts` `playIfMyTurn` (~lines 118–146),
   make the submit interaction target only the **current turn's enabled
   submit**, so Playwright's auto-retry can never re-resolve the ambiguous
   "Present your contribution" accessible name to the drawing turn's
@@ -22,7 +22,7 @@ status: ready
   and lint + typecheck pass; if browsers are available locally, a chromium
   run of `flow.spec.ts` still passes.
 
-- [ ] T002 [parallel] Add a global `actionTimeout` (~15–20s) to
+- [x] T002 [parallel] Add a global `actionTimeout` (~15–20s) to
   `playwright.config.ts` so a wedged action fails fast with a legible error
   instead of burning the 240s test timeout (~4 min). Pick a value
   comfortably above real live-beta interaction latency but far below the
@@ -31,7 +31,7 @@ status: ready
 
 ## Phase 2: Progress-verified turn play
 
-- [ ] T003 In `e2e/pages/writingDrawing.ts` `playIfMyTurn`, make turn-play
+- [x] T003 In `e2e/pages/writingDrawing.ts` `playIfMyTurn`, make turn-play
   **tolerant of an action timeout**: after attempting the submit, confirm
   the round actually advanced by consulting the observer's authoritative
   room snapshot (`e2e/helpers/observer.ts`) rather than trusting the single
@@ -41,13 +41,13 @@ status: ready
 
 ## Phase 3: Re-evaluate retries; parallelize the engines
 
-- [ ] T004 Now that the root cause is fixed (Phases 1–2), tighten the CI
+- [x] T004 Now that the root cause is fixed (Phases 1–2), tighten the CI
   `retries` policy so a genuine flake fails loudly instead of being silently
   retried — decide `retries: 0` in CI vs. keeping `1` but treating flaky as
   failure — and apply the decision in `playwright.config.ts` (and/or the CI
   invocation). Document the rationale in a comment.
 
-- [ ] T005 Restructure the `Cross-browser e2e (beta)` job in
+- [x] T005 Restructure the `Cross-browser e2e (beta)` job in
   `.github/workflows/ci.yml` from the current mixed 4-shard fan-out to a
   **per-engine matrix** (chromium/firefox/webkit/msedge), so the slow
   engines run in parallel rather than serializing behind a shared shard.
@@ -59,7 +59,7 @@ status: ready
 
 ## Phase 4: Test-only client grace seam
 
-- [ ] T006 Add a **test-only client-side seam** that shrinks the 30s
+- [x] T006 Add a **test-only client-side seam** that shrinks the 30s
   `GRACE_MS` per-turn wait for test traffic only (the existing server-side
   turn-timer seam does not reach the client grace), gated with the same
   discipline as the existing E2E seams (inert and un-triggerable in normal

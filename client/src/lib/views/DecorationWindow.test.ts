@@ -8,9 +8,9 @@ import DecorationWindow from './DecorationWindow.svelte';
 afterEach(() => cleanup());
 
 function makeFakeSession(
-  initial: Omit<SessionState, 'reconnecting'>,
+  initial: Omit<SessionState, 'reconnecting' | 'testTraffic'> & { testTraffic?: boolean },
 ): SessionStore & { store: Writable<SessionState> } {
-  const store = writable<SessionState>({ reconnecting: false, ...initial });
+  const store = writable<SessionState>({ reconnecting: false, testTraffic: false, ...initial });
   return {
     store,
     subscribe: store.subscribe,

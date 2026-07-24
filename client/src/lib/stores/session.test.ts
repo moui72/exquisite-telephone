@@ -72,7 +72,21 @@ describe('session store (client single source of state)', () => {
       player: null,
       error: null,
       reconnecting: false,
+      testTraffic: false,
     });
+  });
+
+  it('latches testTraffic only when the server echoes the test-only seam (T006)', () => {
+    const { socket, trigger } = makeFakeSocket();
+    const session = createSessionStore(socket);
+
+    // No echo in normal runtime — the flag stays false, so views keep the
+    // full 30s decoration grace.
+    expect(get(session).testTraffic).toBe(false);
+
+    // The server emits this ONLY to a gate-confirmed test connection.
+    trigger('testSeamActive', undefined);
+    expect(get(session).testTraffic).toBe(true);
   });
 
   it('createRoom emits createRoom and stores the returned room/player on success', async () => {
@@ -348,6 +362,7 @@ describe('session store (client single source of state)', () => {
       player: null,
       error: null,
       reconnecting: false,
+      testTraffic: false,
     });
     expect(fake.getLastEmit()?.event).toBe('createRoom');
   });

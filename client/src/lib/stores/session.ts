@@ -17,6 +17,14 @@ export interface SessionState {
    * in flight — distinct from a hard error state (ui.md States).
    */
   reconnecting: boolean;
+  /**
+   * True only when the server has echoed the test-only seam
+   * (`testSeamActive`), which fires strictly under the E2E seam gate (seam
+   * enabled AND the `x-e2e-test-signal` secret matches — see
+   * infrastructure.md End-to-End Test Gate). Views read it to shorten the
+   * decoration grace (T006); always false in normal runtime.
+   */
+  testTraffic: boolean;
 }
 
 interface RoomAck {
@@ -99,8 +107,16 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     player: null,
     error: null,
     reconnecting: false,
+    testTraffic: false,
   });
   const { subscribe, update } = store;
+
+  // The server echoes this ONLY to a connection it has gate-confirmed as
+  // test traffic (T006). Latch it so views can shorten the decoration
+  // grace; inert in normal runtime, where it never fires.
+  socket.on('testSeamActive', () => {
+    update((state) => ({ ...state, testTraffic: true }));
+  });
 
   socket.on('roomUpdated', (payload) => {
     const { room } = payload as { room: Room };
@@ -129,6 +145,7 @@ export function createSessionStore(socket: GameSocket): SessionStore {
       player: ack.player ?? state.player,
       error: null,
       reconnecting,
+      testTraffic: state.testTraffic,
     }));
   }
 
@@ -272,7 +289,15 @@ export function createSessionStore(socket: GameSocket): SessionStore {
     },
     leaveGame() {
       clearStoredToken();
-      update(() => ({ room: null, player: null, error: null, reconnecting: false }));
+      // Keep testTraffic: the socket is still the same gate-confirmed test
+      // connection after leaving a room.
+      update((state) => ({
+        room: null,
+        player: null,
+        error: null,
+        reconnecting: false,
+        testTraffic: state.testTraffic,
+      }));
     },
     voteToPlayAgain() {
       const state = get(store);

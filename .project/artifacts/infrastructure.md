@@ -535,17 +535,23 @@ cross-check that the deployed artifact is the sha the run believes it is.
 stored artifact — and how promote.yml handles a sha with no recorded run
 yet (block vs. allow-with-warning) — decide at implementation time.]`
 
-**Parallelism and isolation — arbitrary sharding.** Each test creates its
-own unique room and drives only players in that room; the authoritative
+**Parallelism and isolation — a per-engine CI matrix.** Each test creates
+its own unique room and drives only players in that room; the authoritative
 in-memory room store (Realtime Sync above; [[datamodel]]) scopes every
 broadcast per room, so per-test rooms against the one shared beta server
 never collide. The suite is therefore `fullyParallel` and Playwright
-`--shard=i/n`-safe for arbitrary N, letting CI fan out as many shards as it
-likes. Each player is a separate **browser context** (a shared context's
-`localStorage` session token would collide across players). The
-four-browsers-in-one-test "summit" spec (one context per engine, one player
-each) is itself heavy, so it is one flagship case; the bulk of the suite
-runs the conventional per-browser project matrix, which shards freely.
+`--shard=i/n`-safe for arbitrary N. CI runs **one matrix leg per browser
+engine** (`chromium` / `firefox` / `webkit` / `msedge`, via
+`--project=<engine>`) rather than a mixed shard fan-out: the slow engines
+(WebKit and the branded Edge binary) each get their own runner and run in
+parallel, so the job's wall time is the slowest *single* engine instead of
+whichever shard the slow engines serialized behind. `fail-fast: false`
+keeps one engine's failure from cancelling the others. Each player is a
+separate **browser context** (a shared context's `localStorage` session
+token would collide across players). The four-browsers-in-one-test "summit"
+spec (one context per engine, one player each) is itself heavy, so it is
+one flagship case; the bulk of the suite runs the conventional per-browser
+project matrix, which the per-engine legs split cleanly along.
 
 **Parametrized lobby settings.** The single flow test is run across a
 curated, typed matrix of lobby-setting combinations (turn timer, laps per
@@ -581,6 +587,21 @@ may add `data-testid`s, and it may add a **test-only turn-timer seam** so
 long-timer combinations aren't stuck at the 15-minute production floor. Any
 such seam is inert in normal runtime and exists solely to make the flow
 testable in a fast gate.
+
+**Test-only client grace seam.** All the seams above are server-side, but
+the 30s cover-decoration grace (`GRACE_MS`) at each round transition is a
+*client* constant the server-side seams cannot reach — and it is paid on
+every flow ×5 combos ×4 engines. A small **server → client echo** shrinks
+it for test traffic only: on connection, a socket the existing gate has
+already flagged as test traffic (seam enabled **and** the
+`x-e2e-test-signal` header matching the secret — the identical discipline
+as the curation-write and turn-timer seams) is sent a `testSeamActive`
+event; the client latches it and selects a short grace instead of the full
+30s (`client/src/lib/views/grace.ts`). It rides the exact same gate, so it
+is inert and un-triggerable in normal runtime and structurally impossible
+on prod (where the seam is disabled). The e2e player contexts already send
+the header on every request (for curation-write isolation), so they
+activate this seam with no extra wiring.
 
 The Docker build is multi-stage: install and build
 `shared`/`server`/`client` via pnpm workspaces, then a slim runtime

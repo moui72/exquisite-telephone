@@ -108,6 +108,14 @@ export function createSocketServer(
       const presented = socket.handshake.headers[TEST_SIGNAL_HEADER];
       if (typeof presented === 'string' && presented === testSeam.secret) {
         socket.data.isTestTraffic = true;
+        // Echo the test-only CLIENT grace seam (T006). GRACE_MS is a client
+        // constant the server-side seams cannot reach, so we tell this
+        // (already gate-confirmed) test connection it may shorten the 30s
+        // decoration grace. Fires ONLY here — under the same seam-enabled +
+        // matching-secret gate as every other seam — so it is inert and
+        // un-triggerable in normal runtime and structurally impossible on
+        // prod (where the seam is disabled).
+        socket.emit('testSeamActive');
       }
     }
 

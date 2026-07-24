@@ -33,11 +33,39 @@ export default defineConfig({
   // safe.
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // No retries, in CI or locally. CI previously retried once, which turned
+  // a genuinely flaky test green (Playwright exits 0 when a test passes on
+  // retry) and hid the webkit/msedge race for as long as it did
+  // (research-webkit-e2e-flakes-2026-07-24.md). Now that the root cause is
+  // fixed (T001–T003), a residual flake must fail LOUDLY rather than be
+  // silently absorbed — so any first-attempt failure is a hard failure.
+  // "keep retries: 1 but treat flaky as failure" was rejected: Playwright
+  // has no built-in flag for it (it would need report post-processing),
+  // which is more surface for no additional signal. The tradeoff is that a
+  // real live-beta transient (network blip against the shared beta server)
+  // now reds the run — which is the intended contract: investigate it,
+  // don't paper over it.
+  retries: 0,
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: {
     baseURL,
-    trace: 'on-first-retry',
+    // Paired with `retries: 0` below: 'on-first-retry' would never capture
+    // anything (there is no retry), leaving a genuine flake loud but
+    // undiagnosable. 'retain-on-failure' records every test and keeps the
+    // trace only when it fails — the diagnostics T004's fail-loud policy
+    // needs. The overhead is acceptable for this CI-only slow suite.
+    trace: 'retain-on-failure',
+    // Bound every individual action (click/fill/check/…). Without this a
+    // wedged action — e.g. a locator that can never resolve because a
+    // server-broadcast re-render swapped the turn out — retries only
+    // against the 240s TEST timeout, burning the whole budget and
+    // surfacing as an opaque "Target page … has been closed" after
+    // fixture teardown (research-webkit-e2e-flakes-2026-07-24.md). 15s is
+    // comfortably above real live-beta interaction latency (green actions
+    // resolve in well under a second) yet far below the test timeout, so a
+    // genuinely stuck action fails fast with a legible TimeoutError that
+    // driveToReveal can catch and re-poll (T003).
+    actionTimeout: 15_000,
   },
   // Four binaries, three engines, stated honestly (infrastructure.md):
   // Playwright's "Safari" is its bundled WebKit build, and Edge/Chrome are

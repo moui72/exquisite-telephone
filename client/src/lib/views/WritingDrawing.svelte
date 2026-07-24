@@ -11,6 +11,7 @@
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
   import { coverDraft, draftFor } from '../stores/coverDraft.js';
+  import { graceMsFor } from './grace.js';
   import { Send, ThumbsDown, ThumbsUp, Timer } from '@lucide/svelte';
   import DrawingCanvas from '../components/DrawingCanvas.svelte';
   import CoverDecorationCanvas from '../components/CoverDecorationCanvas.svelte';
@@ -22,9 +23,6 @@
 
   let textValue = '';
   let drawnOps: DrawOps = [];
-
-  /** Client-side grace before a ready turn takes over from decoration. */
-  const GRACE_MS = 30_000;
 
   // Ticks the countdown (ui.md Writing/Drawing View) once a second.
   // Registered/cleaned up across the component lifecycle (constitution
@@ -76,7 +74,11 @@
   // Cover decoration): when a new turn becomes ready while the player is
   // mid-decoration, a countdown precedes the turn view taking over. It is a
   // view-transition courtesy ONLY — it never touches the server-side
-  // turn-timer deadline or the force-empty flow.
+  // turn-timer deadline or the force-empty flow. Its duration is the full
+  // GRACE_MS in normal runtime and a short window only for server-confirmed
+  // e2e test traffic (T006 — grace.ts / infrastructure.md End-to-End Test
+  // Gate); state.testTraffic is always false outside that gated seam.
+  $: graceMs = graceMsFor(state.testTraffic);
   let wasDecorating = false;
   let graceDeadline: number | null = null;
   $: isWaitingDecoration = !myTurn && waitingForRoundToFinish;
@@ -86,7 +88,7 @@
       wasDecorating = true;
     } else if (myTurn && wasDecorating && graceDeadline === null) {
       // A turn became ready while decorating: hold the turn view back.
-      graceDeadline = Date.now() + GRACE_MS;
+      graceDeadline = Date.now() + graceMs;
       wasDecorating = false;
     } else if (myTurn && graceDeadline === null) {
       wasDecorating = false;
@@ -99,7 +101,7 @@
   $: graceActive = graceDeadline !== null && now < graceDeadline;
   $: graceSecondsLeft =
     graceDeadline !== null
-      ? Math.min(GRACE_MS / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
+      ? Math.min(graceMs / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
       : null;
 
   // The shared client-local draft for this player's own book (ui.md Cover
@@ -370,6 +372,7 @@
 
           <button
             type="submit"
+            data-testid="submit-curated"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!curatedContent}
           >
@@ -408,6 +411,7 @@
           </label>
           <button
             type="submit"
+            data-testid="submit-text"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)]"
           >
             <span class="inline-flex items-center gap-1.5">
@@ -480,6 +484,7 @@
           {/if}
           <button
             type="button"
+            data-testid="submit-drawing"
             class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)] disabled:cursor-not-allowed disabled:opacity-50"
             disabled={drawnOps.length === 0}
             on:click={handleSubmitDrawing}
