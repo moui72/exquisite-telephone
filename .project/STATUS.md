@@ -1,5 +1,19 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**v0.4.0 shipped to prod; new reconsider-feedback opened.**
+Cut the prod release: promote workflow ran green (e2e gate → minor bump →
+fast-forward `release` → fly deploy `exquisite-telephone`), version **0.3.0 →
+0.4.0**, tagged `v0.4.0`, `release` and `main` in sync at `a6e29d3`. Diagrams
+had been regenerated to `current` beforehand. **One new open feedback item**
+(`feedback-monochrome-as-palette-option-e4ce.md`, **Reconsidered**): F001 —
+fold monochrome into the palette-preset control as a single palette-mode option
+instead of the separate `Room.monochromeOnly` boolean + force-monochrome
+toggle just shipped in `host-drawing-tool-controls` (v0.4.0). This reverses a
+freshly recorded decision, so the next `/ardd-plan` must confirm the override
+and bring datamodel/ui/infrastructure back in line (retire `monochromeOnly` /
+`onSetMonochrome` in favor of a `monochrome` palette-mode value). No code
+touched yet. Next: `/ardd-plan feedback-monochrome-as-palette-option-e4ce.md`.)_
+
 _Updated: 2026-07-24 (**Round-gating/reveal plan merged; F003 closed as
 verified-no-bug. Both batches now landed on `main`.** The second delegated
 worktree finished and its branch `worktree-agent-aa3f3e3ffa5b33e7a` merged into
