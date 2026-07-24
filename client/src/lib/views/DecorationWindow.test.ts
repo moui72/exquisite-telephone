@@ -51,6 +51,8 @@ function decoratingRoom(overrides: Partial<Room> = {}): Room {
     books: [adaBook, graceBook],
     createdAt: Date.now(),
     monochromeOnly: false,
+    palettePreset: 'standard',
+    allowFillTool: true,
     turnTimerMinutes: null,
     lapsPerBook: null,
     roundStartedAt: null,

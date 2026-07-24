@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Host-control data and transport
 
-- [ ] T001 [artifacts: datamodel] Add `palettePreset` (`'primary' | 'standard' | 'extended'`, default `'standard'`) and `allowFillTool` (`boolean`, default `true`) to the `Room` interface in `shared/src/types.ts`, and set both defaults wherever a `Room` is created on the server (room-creation handler). Write a failing test first (shared/server) asserting a newly created room has `palettePreset === 'standard'` and `allowFillTool === true`, then implement. Feature: host-drawing-tool-controls.
+- [x] T001 [artifacts: datamodel] Add `palettePreset` (`'primary' | 'standard' | 'extended'`, default `'standard'`) and `allowFillTool` (`boolean`, default `true`) to the `Room` interface in `shared/src/types.ts`, and set both defaults wherever a `Room` is created on the server (room-creation handler). Write a failing test first (shared/server) asserting a newly created room has `palettePreset === 'standard'` and `allowFillTool === true`, then implement. Feature: host-drawing-tool-controls.
 
 - [ ] T002 [artifacts: infrastructure] Add host-only, lobby-only Socket.IO handlers `onSetPalettePreset` and `onSetFillTool` in the server, mirroring `onSetMonochrome`: validate the enum / boolean payload, reject when caller is not host or when `Room.status` has left `'lobby'`, and broadcast the updated room. Register both in the handler wiring. Write failing `server/src/index.test.ts` cases first (accepts valid value in lobby from host; rejects non-host; rejects after game start), then implement. Feature: host-drawing-tool-controls.
 

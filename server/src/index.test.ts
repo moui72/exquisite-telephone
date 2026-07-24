@@ -54,6 +54,8 @@ describe('startTimerSweep (30s background sweep)', () => {
       books: [bookA],
       createdAt: Date.now(),
       monochromeOnly: false,
+      palettePreset: 'standard',
+      allowFillTool: true,
       turnTimerMinutes: 15,
       lapsPerBook: null,
       roundStartedAt: Date.now() - 60 * 60_000,

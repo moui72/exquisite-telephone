@@ -64,6 +64,8 @@ function makeRoom(books: Book[], players = [ada, grace], overrides: Partial<Room
     books,
     createdAt: Date.now(),
     monochromeOnly: false,
+    palettePreset: 'standard',
+    allowFillTool: true,
     turnTimerMinutes: null,
     lapsPerBook: null,
     roundStartedAt: null,
