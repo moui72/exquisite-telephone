@@ -153,12 +153,15 @@ erDiagram
         enum status "lobby|writing|decorating|reveal|ended"
         enum promptMode "free-form|curated"
         boolean monochromeOnly
+        enum palettePreset "primary|standard|extended"
+        boolean allowFillTool
         int turnTimerMinutes "nullable"
         int lapsPerBook "nullable, 1-3"
         boolean nonContinuable
         timestamp roundStartedAt
         json bookReads "reveal: Book.id -> reader Player.id[]"
         json currentlyReading "reveal: Player.id -> open Book.id"
+        json playAgainVotes "reveal: encore readiness Player.id[]"
         timestamp decorationWindowStartedAt "nullable, decorating window"
         json coverSubmissions "playerIds finalized in decorating"
     }
@@ -258,7 +261,7 @@ graph TD
   Confirm["ConfirmDialog<br/>(shared confirm)"]
   Lobby["Lobby / Foyer<br/>(create · join · host settings)"]
   WD["Writing / Drawing view"]
-  Canvas["Drawing canvas"]
+  Canvas["Drawing canvas<br/>(palette preset · fill tool)"]
   Cover["Cover Decoration"]
   Reveal["Reveal view"]
   Grid["Book card grid"]
@@ -277,6 +280,7 @@ graph TD
   Footer -->|"gavel (host)"| Mod
   Mod -->|"End · Restart · Kick guards"| Confirm
   WD --> Canvas
+  Cover -->|"reuses DrawingCanvas"| Canvas
   Reveal --> Grid
   Reveal --> Reader
   Reveal -->|"unread-books warning"| Confirm
