@@ -284,7 +284,10 @@ human-approved additions ever reach the committed `CURATED_PHRASE_BANK`.
   `computeNextEntry` and `computeNextEntries` both defer to, measures
   completion against the **active** (non-kicked) roster times the
   resolved laps value, so a kicked player's slot never strands the book. Author rotation
-  (`(originIndex + position) % players.length`) and entry-type
+  runs over that same active roster (`active = activePlayers(room)`,
+  `originIndex = active.findIndex(...)`,
+  `authorIndex = (originIndex + position) % activeCount`,
+  `author = active[authorIndex]`) and entry-type
   alternation (`position % 2` → text/drawing) are unchanged and
   continue correctly across multiple laps with no special-casing —
   `position` simply keeps counting up past one full rotation. While
