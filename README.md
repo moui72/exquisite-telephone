@@ -224,82 +224,64 @@ erDiagram
 
 ```mermaid
 graph TD
-    subgraph client[Browser - Svelte SPA]
-        UI[Client app - build-time app version baked in]
-        PNG[PNG export - client-side rasterize, branded/divided strip]
-    end
+  Browser["Player browser<br/>(Svelte SPA client)"]
+  Server["Node server process<br/>(one instance: Socket.IO + serves client build)"]
+  Rooms["In-memory Room / Game store<br/>(single source of state)"]
+  Sessions["Session store<br/>(reconnect tokens, in-memory)"]
+  Sweep["Server-wide sweep<br/>(30s: turn timers, cover window)"]
+  Curation["Curation Store<br/>(append-only JSON events)"]
+  Volume[("Fly volume<br/>(one per channel)")]
+  Pipe["Aggregation Pipe CLI<br/>(scheduled)"]
+  Snapshot["Curation snapshot"]
+  Ingest["Ingestion skill<br/>(Claude Code, recommend-only)"]
 
-    subgraph proc[Single Node process - one port]
-        SIO[Socket.IO realtime layer]
-        STATIC[Serves built client dist/]
-        STATE[In-memory game state - Rooms/Books/Entries]
-        SESS[Session store - token to player, short TTL]
-        SWEEP[Turn timer sweep - 30s setInterval]
-        CUR[Curation store - append-only JSON events]
-    end
-
-    VOL[(Fly volume - events, snapshot, ledger, archive)]
-    FLY[Fly.io - beta from main, prod from release tag]
-
-    subgraph maint[Maintainer tooling - NOT app runtime]
-        PIPE[Aggregation pipe - node dist/curation/cli.js: fold, sanitize, archive]
-        SKILL[curation-review skill - read-only, recommends deck edits]
-    end
-    GHA[GitHub Actions - weekly cron aggregate + restart; versioned deploys]
-
-    UI -->|"socket events (submit entry, submit cover)"| SIO
-    STATIC -->|serves build| UI
-    SIO --> STATE
-    SIO --> SESS
-    SWEEP -->|advances stalled rounds| STATE
-    SWEEP -->|closes expired decorating window| STATE
-    SIO -->|"rating rides onSubmitEntry"| CUR
-    CUR -->|one file per event| VOL
-    UI --> PNG
-    proc -->|deployed as one app| FLY
-
-    VOL -->|reads events| PIPE
-    PIPE -->|snapshot + archive folded events| VOL
-    PIPE -.->|read-only snapshot| SKILL
-    GHA -->|fly ssh: run pipe, then restart| PIPE
-    GHA -->|deploy w/ version build-args| FLY
+  Browser <-->|"Socket.IO events / room broadcasts"| Server
+  Server -->|"serves built dist/"| Browser
+  Server -->|"read / write authoritative state"| Rooms
+  Server -->|"token to seat on reconnect"| Sessions
+  Sweep -->|"advance stalled rounds / close windows"| Rooms
+  Server -->|"append rating event"| Curation
+  Curation -. stored on .- Volume
+  Pipe -->|"fold + archive events"| Curation
+  Pipe -->|"write snapshot"| Snapshot
+  Snapshot -->|"read-only fetch"| Ingest
 ```
 
 ## UI
 
 ```mermaid
 graph TD
-    App[App.svelte - routes by Room.status]
-    App --> SalonFooter[SalonFooter - always present; muted app-version stamp]
-    App --> Lobby[Lobby View]
-    App --> WD[Writing / Drawing View]
-    App --> Decorate[DecorationWindow - status decorating, 2-min gated]
-    App --> Reveal[Reveal View - self-guided]
-    App --> States[Terminal states - ended / kicked / error]
+  App["App root"]
+  Footer["Salon Footer<br/>(every view)"]
+  Rules["Rules Overview Panel<br/>(Rules / About tabs)"]
+  Mod["Moderation Panel<br/>(host-only)"]
+  Confirm["ConfirmDialog<br/>(shared confirm)"]
+  Lobby["Lobby / Foyer<br/>(create · join · host settings)"]
+  WD["Writing / Drawing view"]
+  Canvas["Drawing canvas"]
+  Cover["Cover Decoration"]
+  Reveal["Reveal view"]
+  Grid["Book card grid"]
+  Reader["Per-book reader modal"]
+  States["Terminal states<br/>(Ended · removed · error)"]
+  Gilt["Gilt Frame<br/>(shared framing)"]
 
-    SalonFooter -->|host gavel opens| ModPanel[ModerationPanel]
-    SalonFooter -->|? opens| Rules[RulesOverview panel - tabbed, gilt placards]
-    Rules --> RulesTab[Rules tab - default]
-    Rules --> AboutTab[About tab - credits, repo/sponsor links, app version]
-
-    Lobby --> InfoTip[InfoTooltip - per host setting]
-    Lobby -->|derives from activePlayers| Rules
-
-    WD --> Canvas[DrawingCanvas - draw ops]
-    WD --> TurnStatus[TurnStatus - whose turn]
-    WD --> InfoTip
-    WD -->|waiting-state decoration + 30s grace| CoverCanvas
-
-    Decorate --> CoverCanvas[CoverDecorationCanvas - reuses DrawingCanvas]
-    CoverCanvas --> TemplatePicker[Template picker - 9 backgrounds]
-    CoverCanvas -->|book-id-keyed draft| CoverDraft[coverDraft store]
-
-    Reveal --> CardGrid[Card grid - drawn cover or generateCoverArt, read badges]
-    CardGrid --> BookModal[Per-book modal - manual paging, save-to-PNG]
-
-    Lobby --> Gilt[GiltFrame]
-    WD --> Gilt
-    Decorate --> Gilt
-    States --> Gilt
+  App --> Footer
+  App -->|"by Room.status"| Lobby
+  App -->|"by Room.status"| WD
+  App -->|"by Room.status"| Cover
+  App -->|"by Room.status"| Reveal
+  App -->|"by Room.status"| States
+  Footer -->|"version string"| App
+  Footer -->|"? button"| Rules
+  Footer -->|"gavel (host)"| Mod
+  Mod -->|"End · Restart · Kick guards"| Confirm
+  WD --> Canvas
+  Reveal --> Grid
+  Reveal --> Reader
+  Reveal -->|"unread-books warning"| Confirm
+  Lobby -. uses .- Gilt
+  Reveal -. uses .- Gilt
+  Mod -. uses .- Gilt
 ```
 
