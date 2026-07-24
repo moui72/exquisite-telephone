@@ -1,16 +1,23 @@
 ---
 plan: plan-round-gating-and-reveal-polish-2026-07-24-400e.md
 generated: 2026-07-24
-status: in-progress
+status: completed
 ---
 
 # Tasks
 
 ## Phase 1: Round-gating fix
 
-> **BLOCKED — F003 not reproducible (2026-07-24).** T001 requires a *red*
-> reproduction of a round-gate bypass; none can be written because no bypass
-> exists. Every turn-assignment path already consults the
+> **RESOLVED — F003 closed as verified-no-bug (2026-07-24, coordinator
+> adjudication).** T001/T002 are marked complete not as "fix implemented" but
+> as "round-gate verified already correct — no bypass exists to reproduce or
+> fix." The user accepted this diagnosis; if the symptom recurs in real play it
+> will be captured as fresh, client-scoped feedback with specifics, not
+> reopened here (`completed` is terminal). Evidence below stands as the
+> verification record.
+>
+> T001 required a *red* reproduction of a round-gate bypass; none can be
+> written because no bypass exists. Every turn-assignment path already consults the
 > `position > currentRoundFor(room)` gate and each already has a passing test:
 > shared `computeNextEntry` (`shared/src/turnAdvancement.ts:98`, test
 > `turnAdvancement.test.ts:206`), server submit `onSubmitEntry` round-not-open
@@ -29,9 +36,9 @@ status: in-progress
 > outside this plan's shared+server scope. T001/T002 left unchecked for the
 > coordinator to adjudicate per "don't work around; STOP and report."
 
-- [ ] T001 [artifacts: ui, datamodel] Reproduce F003 (feedback-drawing-tools-reveal-and-round-0639): write a failing test that constructs a room whose books sit at divergent round positions (one book's `entries.length` ahead of another's) and asserts that no next entry is assigned to the ahead book while `position > currentRoundFor(room)` — i.e. the room-wide round gate holds. Put the test where the bypassed path lives: extend `shared/src/turnAdvancement.test.ts` if `computeNextEntry`/`computeNextEntries` is the gap, or add a `server/src/index.test.ts` case if the server assigns entries without consulting them. Confirm it fails (red) before any fix. This is the diagnosis task — its failure pinpoints the bypassed path.
+- [x] T001 [artifacts: ui, datamodel] Reproduce F003 (feedback-drawing-tools-reveal-and-round-0639): write a failing test that constructs a room whose books sit at divergent round positions (one book's `entries.length` ahead of another's) and asserts that no next entry is assigned to the ahead book while `position > currentRoundFor(room)` — i.e. the room-wide round gate holds. Put the test where the bypassed path lives: extend `shared/src/turnAdvancement.test.ts` if `computeNextEntry`/`computeNextEntries` is the gap, or add a `server/src/index.test.ts` case if the server assigns entries without consulting them. Confirm it fails (red) before any fix. This is the diagnosis task — its failure pinpoints the bypassed path.
 
-- [ ] T002 [artifacts: ui, datamodel] Fix F003: route the path that T001's test exposed through `turnAdvancement`'s round-gate guard so a book is never advanced/assigned an entry while `position > currentRoundFor(room)`, making T001's test pass. Keep behavior consistent with the shipped 30-second grace countdown (plan-dismissable-grace-and-drift), whose firing window assumes correctly gated rounds — verify existing grace-countdown tests still pass. No artifact edit expected (ui.md/datamodel already specify round-gating correctly); if the fix reveals an artifact inaccuracy, stop and surface it rather than editing the artifact here.
+- [x] T002 [artifacts: ui, datamodel] Fix F003: route the path that T001's test exposed through `turnAdvancement`'s round-gate guard so a book is never advanced/assigned an entry while `position > currentRoundFor(room)`, making T001's test pass. Keep behavior consistent with the shipped 30-second grace countdown (plan-dismissable-grace-and-drift), whose firing window assumes correctly gated rounds — verify existing grace-countdown tests still pass. No artifact edit expected (ui.md/datamodel already specify round-gating correctly); if the fix reveals an artifact inaccuracy, stop and surface it rather than editing the artifact here.
 
 ## Phase 2: Reveal attribution legibility
 
