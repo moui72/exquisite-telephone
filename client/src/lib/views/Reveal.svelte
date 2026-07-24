@@ -317,14 +317,23 @@
             <p class="font-mono text-xs text-ink/80">{exhibitCaption(book, index)}</p>
           </button>
 
-          <div class="flex flex-col gap-1">
+          <!-- Attribution notes ride their own badge surface (F004): a
+               self-backgrounded chip so they stay legible against the reveal
+               background instead of floating bare over it. -->
+          <div class="flex flex-col items-start gap-1">
             {#if beingRead.length > 0}
-              <p class="text-xs text-emerald">
+              <p
+                data-attribution-badge
+                class="rounded-full bg-champagne px-2.5 py-0.5 text-xs font-medium text-emerald shadow-sm"
+              >
                 Being read by {beingRead.join(', ')}
               </p>
             {/if}
             {#if readers.length > 0}
-              <p class="text-xs text-ink/60">
+              <p
+                data-attribution-badge
+                class="rounded-full bg-champagne px-2.5 py-0.5 text-xs text-ink/70 shadow-sm"
+              >
                 Read by {readers.join(', ')}
               </p>
             {/if}

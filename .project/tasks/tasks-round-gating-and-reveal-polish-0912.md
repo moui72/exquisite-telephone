@@ -35,7 +35,7 @@ status: in-progress
 
 ## Phase 2: Reveal attribution legibility
 
-- [ ] T003 [artifacts: ui] Fix F004 (feedback-drawing-tools-reveal-and-round-0639): in `client/src/lib/views/Reveal.svelte`, render the "read by" and "being read by" attribution notes on the book card surface (or as self-backgrounded badges) so they stay legible against the reveal background instead of floating over it. Write a failing `Reveal.test.ts` assertion first (the attribution nodes carry the card/badge surface treatment, not bare-on-background), then implement.
+- [x] T003 [artifacts: ui] Fix F004 (feedback-drawing-tools-reveal-and-round-0639): in `client/src/lib/views/Reveal.svelte`, render the "read by" and "being read by" attribution notes on the book card surface (or as self-backgrounded badges) so they stay legible against the reveal background instead of floating over it. Write a failing `Reveal.test.ts` assertion first (the attribution nodes carry the card/badge surface treatment, not bare-on-background), then implement.
 
 ## Phase 3: Encore-vote confirmation
 

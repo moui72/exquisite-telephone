@@ -247,6 +247,26 @@ describe('Reveal view — read badges from shared state', () => {
     expect(screen.getByText(/^Read by Grace$/)).toBeInTheDocument();
     expect(screen.getByText(/^Being read by Grace$/)).toBeInTheDocument();
   });
+
+  it('gives the attribution notes a self-backgrounded badge surface so they stay legible (F004)', () => {
+    const room = makeRoom({
+      books: twoBookBooks(),
+      bookReads: { 'book-a': [grace.id] },
+      currentlyReading: { [grace.id]: 'book-b' },
+    });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+
+    // Each attribution note must carry its own surface (a `bg-*` badge)
+    // rather than floating bare over the reveal background.
+    const readBy = screen.getByText(/^Read by Grace$/);
+    const beingRead = screen.getByText(/^Being read by Grace$/);
+    expect(readBy).toHaveAttribute('data-attribution-badge');
+    expect(beingRead).toHaveAttribute('data-attribution-badge');
+    expect(readBy.className).toMatch(/\bbg-/);
+    expect(beingRead.className).toMatch(/\bbg-/);
+  });
 });
 
 describe('Reveal view — paging (click + keyboard) and kept-place', () => {
