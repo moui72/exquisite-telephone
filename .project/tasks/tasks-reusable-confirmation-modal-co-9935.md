@@ -1,7 +1,7 @@
 ---
 plan: plan-reusable-confirmation-modal-co-2026-07-23-029e.md
 generated: 2026-07-23
-status: in-progress
+status: completed
 ---
 
 # Tasks

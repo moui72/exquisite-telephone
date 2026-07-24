@@ -1,6 +1,6 @@
 ---
 slug: host-control-confirmation-guar
-status: tasked
+status: implemented
 logged: 2026-07-23
 plan: plan-reusable-confirmation-modal-co-2026-07-23-029e.md
 tasks: tasks-reusable-confirmation-modal-co-9935.md
