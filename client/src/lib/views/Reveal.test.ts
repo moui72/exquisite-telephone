@@ -146,6 +146,19 @@ describe('Reveal view — end-of-game controls', () => {
     render(Reveal, { props: { session: nonHostSession } });
     expect(screen.queryByText(/1 of 2 guests ready for an encore/i)).not.toBeInTheDocument();
   });
+
+  // Red commit: xfail marker; removed in the implementation commit (T006).
+  it.fails('excludes kicked players from the readiness-count denominator', () => {
+    const mallory = { id: 'mallory', roomId, name: 'Mallory', connected: false, sessionToken: 't3', kicked: true };
+    // 3 player records but only 2 active (Mallory was kicked); the count
+    // must read "of 2", using activePlayers, not "of 3" (players.length).
+    const room = makeRoom({ players: [ada, grace, mallory], playAgainVotes: [grace.id] });
+
+    const hostSession = makeFakeSession({ room, player: ada, error: null });
+    render(Reveal, { props: { session: hostSession } });
+    expect(screen.getByText(/1 of 2 guests ready for an encore/i)).toBeInTheDocument();
+    expect(screen.queryByText(/1 of 3 guests ready for an encore/i)).not.toBeInTheDocument();
+  });
 });
 
 describe('Reveal view — self-guided card grid + per-book modal', () => {
