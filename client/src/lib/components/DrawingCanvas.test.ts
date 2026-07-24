@@ -313,6 +313,28 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
   });
 
+  it('includes brown and pink skin-tone swatches in the standard preset', () => {
+    const { getByLabelText } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByLabelText('Color #8d5524')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffc1a6')).toBeInTheDocument();
+  });
+
+  it('includes brown and pink skin-tone swatches in the extended preset', () => {
+    const { getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'extended' },
+    });
+    expect(getByLabelText('Color #8d5524')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffc1a6')).toBeInTheDocument();
+  });
+
+  it('omits the skin-tone swatches from the primary preset', () => {
+    const { queryByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'primary' },
+    });
+    expect(queryByLabelText('Color #8d5524')).not.toBeInTheDocument();
+    expect(queryByLabelText('Color #ffc1a6')).not.toBeInTheDocument();
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;

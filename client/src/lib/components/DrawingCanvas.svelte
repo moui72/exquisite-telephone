@@ -10,8 +10,12 @@
    * Palette-preset swatch sets (ui.md Writing/Drawing View), keyed by
    * `Room.palettePreset`. `primary` is the primary colors plus black and
    * white; `standard` is the default palette; `extended` is a larger set.
-   * Every preset includes black and white (erase-by-overpaint).
+   * Every preset includes black and white (erase-by-overpaint); the
+   * `standard` and `extended` presets also carry a brown and a pink
+   * skin-tone swatch so players can draw people (skin-tone-palette-colors).
    */
+  const SKIN_BROWN = '#8d5524';
+  const SKIN_PINK = '#ffc1a6';
   const PALETTE_PRESETS: Record<'primary' | 'standard' | 'extended', string[]> = {
     primary: ['#000000', '#ef4444', '#eab308', '#3b82f6', '#ffffff'],
     standard: [
@@ -23,6 +27,8 @@
       '#22c55e',
       '#3b82f6',
       '#8b5cf6',
+      SKIN_BROWN,
+      SKIN_PINK,
       '#ffffff',
     ],
     extended: [
@@ -39,6 +45,8 @@
       '#a855f7',
       '#ec4899',
       '#78716c',
+      SKIN_BROWN,
+      SKIN_PINK,
       '#ffffff',
     ],
   };
