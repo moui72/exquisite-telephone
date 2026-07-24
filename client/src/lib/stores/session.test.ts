@@ -234,6 +234,38 @@ describe('session store (client single source of state)', () => {
     expect(get(session).room?.lapsPerBook).toBe(3);
   });
 
+  it('setPalettePreset emits set_palette_preset with roomId/playerId/palettePreset', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, palettePreset: 'extended' } });
+    await session.setPalettePreset('extended');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_palette_preset',
+      payload: { roomId: 'ABCDE', playerId: 'p1', palettePreset: 'extended' },
+    });
+    expect(get(session).room?.palettePreset).toBe('extended');
+  });
+
+  it('setFillTool emits set_fill_tool with roomId/playerId/allowFillTool', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, allowFillTool: false } });
+    await session.setFillTool(false);
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_fill_tool',
+      payload: { roomId: 'ABCDE', playerId: 'p1', allowFillTool: false },
+    });
+    expect(get(session).room?.allowFillTool).toBe(false);
+  });
+
   it('setPromptMode emits set_prompt_mode with roomId/playerId/promptMode', async () => {
     const fake = makeFakeSocket();
     fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });

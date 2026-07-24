@@ -20,6 +20,8 @@ function makeFakeSession(
     submitEntry: vi.fn(async () => {}),
     submitCover: vi.fn(async () => {}),
     setMonochrome: vi.fn(async () => {}),
+    setPalettePreset: vi.fn(async () => {}),
+    setFillTool: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
     setLapsPerBook: vi.fn(async () => {}),
     setPromptMode: vi.fn(async () => {}),

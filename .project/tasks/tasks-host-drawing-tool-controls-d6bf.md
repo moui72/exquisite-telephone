@@ -12,7 +12,7 @@ status: in-progress
 
 - [x] T002 [artifacts: infrastructure] Add host-only, lobby-only Socket.IO handlers `onSetPalettePreset` and `onSetFillTool` in the server, mirroring `onSetMonochrome`: validate the enum / boolean payload, reject when caller is not host or when `Room.status` has left `'lobby'`, and broadcast the updated room. Register both in the handler wiring. Write failing `server/src/index.test.ts` cases first (accepts valid value in lobby from host; rejects non-host; rejects after game start), then implement. Feature: host-drawing-tool-controls.
 
-- [ ] T003 [artifacts: infrastructure] Add `setPalettePreset(preset)` and `setFillTool(allow)` emitter methods to the client session store (`client/src/lib/stores/session.ts`), mirroring `setMonochrome` (event name following the existing set-setting convention). Write a failing store test first asserting each emits the correct event with `roomId`/`playerId`/value, then implement. Feature: host-drawing-tool-controls.
+- [x] T003 [artifacts: infrastructure] Add `setPalettePreset(preset)` and `setFillTool(allow)` emitter methods to the client session store (`client/src/lib/stores/session.ts`), mirroring `setMonochrome` (event name following the existing set-setting convention). Write a failing store test first asserting each emits the correct event with `roomId`/`playerId`/value, then implement. Feature: host-drawing-tool-controls.
 
 ## Phase 2: Palette presets, skin tones, and lobby controls
 
