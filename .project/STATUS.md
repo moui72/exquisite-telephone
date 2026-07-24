@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Canvas focus mode merged & implemented.** The delegated
+worktree completed both tasks; branch `worktree-agent-a0dfb820203ce694c` merged
+into `main` (clean) and reaped. Full suite green: **shared 70 · server 258 ·
+client 269 · root 6 = 603 passing**, svelte-check clean. Feature
+`focus-canvas-for-larger-drawin` → **implemented**. Shipped: a client-local
+focus/expand toggle on the turn drawing canvas — at the `lg:` breakpoint
+(≥1024px, desktop-only) it widens `max-w-md → lg:max-w-4xl` and stretches the
+reused `DrawingCanvas` via a scoped CSS rule (the canvas carries a fixed
+`width="320"`, so container-only widening would have been a no-op); hidden
+below `lg:`, cover canvas unchanged, factored so extending it later is cheap.
+Existing pointer-scaling keeps strokes accurate (T002 pins a 2× render case).
+`main` unpushed (many commits ahead; prod on v0.4.0). **Still plannable:**
+`room-code-copy-and-join-link` (backlogged) + `feedback-monochrome-as-palette-option-e4ce.md`
+(open reconsider). ui diagram **stale** from the focus-mode paragraph. Next:
+plan room-code or monochrome, or push/promote.)_
+
 _Updated: 2026-07-24 (**Planned + tasked canvas focus mode.** Slate defrag over
 the 2-feature backlog put both in a parallel set (disjoint footprints); planned
 `focus-canvas-for-larger-drawin` first. Approved plan
