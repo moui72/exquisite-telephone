@@ -99,6 +99,13 @@
     graceDeadline = null;
   }
   $: graceActive = graceDeadline !== null && now < graceDeadline;
+  // Skip: end the grace on demand for this player, identical in effect to
+  // letting it expire — the turn view takes over immediately. It is purely
+  // client-side: it never touches the server-side turn-timer deadline and
+  // emits no server round-trip (ui.md Cover Decoration).
+  function skipGrace(): void {
+    graceDeadline = null;
+  }
   $: graceSecondsLeft =
     graceDeadline !== null
       ? Math.min(graceMs / 1000, Math.max(0, Math.ceil((graceDeadline - now) / 1000)))
@@ -285,6 +292,16 @@
     <p data-testid="grace-countdown" class="plaque px-5 py-4 text-center text-lg text-ink/80">
       Your next commission is ready — presenting your easel in {graceSecondsLeft}s…
     </p>
+    <div class="text-center">
+      <button
+        type="button"
+        data-testid="grace-skip"
+        class="chamfer-frame bg-sapphire px-4 py-2 text-base text-white [--chamfer-color:theme(colors.champagne)]"
+        on:click={skipGrace}
+      >
+        Go to my easel now
+      </button>
+    </div>
     {#if myOwnBook && state.player}
       <CoverDecorationCanvas
         username={state.player.name}

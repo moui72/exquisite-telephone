@@ -1151,4 +1151,43 @@ describe('cover decoration during writing (T013/T014)', () => {
     // The grace is a view courtesy, not a submission: nothing is emitted.
     expect(session.submitEntry).not.toHaveBeenCalled();
   });
+
+  it('lets the player skip the grace to go straight to the turn view, without touching the timer or emitting', async () => {
+    const { tick } = await import('svelte');
+    const roundStartedAt = Date.now();
+    const session = makeFakeSession({
+      room: waitingRoom({ turnTimerMinutes: 15, roundStartedAt }),
+      player: ada,
+      error: null,
+    });
+    const { getByTestId, queryByTestId, queryByRole } = render(WritingDrawing, {
+      props: { session },
+    });
+
+    // Ada's turn becomes ready while she was decorating: the grace holds
+    // the turn view back and offers a skip control.
+    session.store.set({
+      reconnecting: false,
+      testTraffic: false,
+      room: adaTurnReadyRoom({ turnTimerMinutes: 15, roundStartedAt }),
+      player: ada,
+      error: null,
+    });
+    await tick();
+    expect(getByTestId('grace-countdown')).toBeInTheDocument();
+    expect(queryByRole('button', { name: /present your contribution/i })).not.toBeInTheDocument();
+
+    // Skipping ends the grace immediately for this player.
+    await fireEvent.click(getByTestId('grace-skip'));
+    await tick();
+
+    // The grace is gone and the turn view has taken over — same end state as
+    // letting the countdown expire.
+    expect(queryByTestId('grace-countdown')).not.toBeInTheDocument();
+    expect(queryByRole('button', { name: /present your contribution/i })).toBeInTheDocument();
+    // The turn-timer deadline is untouched (still purely room-driven) and no
+    // server round-trip was emitted.
+    expect(getByTestId('turn-timer-countdown')).toBeInTheDocument();
+    expect(session.submitEntry).not.toHaveBeenCalled();
+  });
 });
