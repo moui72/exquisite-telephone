@@ -16,7 +16,7 @@ status: in-progress
 
 ## Phase 2: Palette presets, skin tones, and lobby controls
 
-- [ ] T004 [artifacts: ui, datamodel] In `client/src/lib/components/DrawingCanvas.svelte`, replace the hard-coded `PALETTE_COLORS` constant with a preset map keyed by `'primary' | 'standard' | 'extended'`; render the palette from the room's `palettePreset` (passed as a prop like `monochromeOnly`), and hide the fill control entirely when `allowFillTool` is `false`. Write failing `DrawingCanvas.test.ts` cases first (each preset renders its swatch set; fill control absent when `allowFillTool={false}`; palette still hidden when `monochromeOnly`), then implement. Feature: host-drawing-tool-controls.
+- [x] T004 [artifacts: ui, datamodel] In `client/src/lib/components/DrawingCanvas.svelte`, replace the hard-coded `PALETTE_COLORS` constant with a preset map keyed by `'primary' | 'standard' | 'extended'`; render the palette from the room's `palettePreset` (passed as a prop like `monochromeOnly`), and hide the fill control entirely when `allowFillTool` is `false`. Write failing `DrawingCanvas.test.ts` cases first (each preset renders its swatch set; fill control absent when `allowFillTool={false}`; palette still hidden when `monochromeOnly`), then implement. Feature: host-drawing-tool-controls.
 
 - [ ] T005 [artifacts: ui] Add a brown and a pink skin-tone swatch to the `standard` and `extended` presets defined in T004 (choose hues that read as skin tones per the plan's open question; leave `primary` unchanged). Extend the `DrawingCanvas.test.ts` preset assertions to require both swatches present in `standard` and `extended` and absent from `primary`. Feature: skin-tone-palette-colors.
 

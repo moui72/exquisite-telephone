@@ -6,18 +6,42 @@
   const DEFAULT_COLOR = '#1e293b';
   const DEFAULT_WIDTH = 3;
 
-  /** 8-color preset palette (ui.md Writing/Drawing View), including black. */
-  const PALETTE_COLORS = [
-    '#000000',
-    '#1e293b',
-    '#ef4444',
-    '#f97316',
-    '#eab308',
-    '#22c55e',
-    '#3b82f6',
-    '#8b5cf6',
-    '#ffffff',
-  ];
+  /**
+   * Palette-preset swatch sets (ui.md Writing/Drawing View), keyed by
+   * `Room.palettePreset`. `primary` is the primary colors plus black and
+   * white; `standard` is the default palette; `extended` is a larger set.
+   * Every preset includes black and white (erase-by-overpaint).
+   */
+  const PALETTE_PRESETS: Record<'primary' | 'standard' | 'extended', string[]> = {
+    primary: ['#000000', '#ef4444', '#eab308', '#3b82f6', '#ffffff'],
+    standard: [
+      '#000000',
+      '#1e293b',
+      '#ef4444',
+      '#f97316',
+      '#eab308',
+      '#22c55e',
+      '#3b82f6',
+      '#8b5cf6',
+      '#ffffff',
+    ],
+    extended: [
+      '#000000',
+      '#1e293b',
+      '#ef4444',
+      '#f97316',
+      '#eab308',
+      '#22c55e',
+      '#3b82f6',
+      '#8b5cf6',
+      '#0ea5e9',
+      '#14b8a6',
+      '#a855f7',
+      '#ec4899',
+      '#78716c',
+      '#ffffff',
+    ],
+  };
 
   /** 3 line-width presets (thin/medium/thick), in canvas pixels. */
   const WIDTH_PRESETS: { label: string; width: number }[] = [
@@ -51,6 +75,18 @@
    */
   export let monochromeOnly = false;
   /**
+   * Which palette-preset swatch set to render (Room.palettePreset,
+   * host-configured lobby setting — ui.md Writing/Drawing View). Ignored
+   * while `monochromeOnly` hides the palette entirely.
+   */
+  export let palettePreset: 'primary' | 'standard' | 'extended' = 'standard';
+  /**
+   * When false (Room.allowFillTool off, host-configured lobby setting),
+   * the fill (bucket) control is removed from the toolbar for the whole
+   * game, leaving only freehand strokes (ui.md Writing/Drawing View).
+   */
+  export let allowFillTool = true;
+  /**
    * When true, the canvas element has no opaque white background, so a
    * template background rendered behind it (cover decoration — ui.md) shows
    * through where there is no ink. Default false keeps the opaque white
@@ -66,6 +102,7 @@
   let tool: 'stroke' | 'fill' = 'stroke';
 
   $: effectiveColor = monochromeOnly ? DEFAULT_COLOR : activeColor;
+  $: paletteColors = PALETTE_PRESETS[palettePreset] ?? PALETTE_PRESETS.standard;
 
   function toPoint(event: PointerEvent | MouseEvent): Point {
     const rect = canvasEl.getBoundingClientRect();
@@ -195,7 +232,7 @@
   <div class="mb-2 flex flex-wrap items-center gap-3 rounded-md border-2 border-gold/50 bg-champagne/60 p-2 font-body">
     {#if !monochromeOnly}
       <div class="flex gap-1" role="group" aria-label="Stroke color">
-        {#each PALETTE_COLORS as color (color)}
+        {#each paletteColors as color (color)}
           <button
             type="button"
             class="h-6 w-6 rounded-full border-2 {activeColor === color
@@ -228,17 +265,19 @@
       {/each}
     </div>
 
-    <button
-      type="button"
-      class="rounded-md border border-gold/60 px-2 py-1 text-xs font-medium"
-      class:bg-wine={tool === 'fill'}
-      class:text-champagne={tool === 'fill'}
-      class:text-ink={tool !== 'fill'}
-      aria-pressed={tool === 'fill'}
-      on:click={toggleFillTool}
-    >
-      Fill tool
-    </button>
+    {#if allowFillTool}
+      <button
+        type="button"
+        class="rounded-md border border-gold/60 px-2 py-1 text-xs font-medium"
+        class:bg-wine={tool === 'fill'}
+        class:text-champagne={tool === 'fill'}
+        class:text-ink={tool !== 'fill'}
+        aria-pressed={tool === 'fill'}
+        on:click={toggleFillTool}
+      >
+        Fill tool
+      </button>
+    {/if}
   </div>
 {/if}
 

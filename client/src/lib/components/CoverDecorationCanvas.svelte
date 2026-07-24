@@ -19,6 +19,8 @@
   export let ops: DrawOps = [];
   export let onOpsChange: (next: DrawOps) => void = () => {};
   export let monochromeOnly = false;
+  export let palettePreset: 'primary' | 'standard' | 'extended' = 'standard';
+  export let allowFillTool = true;
   export let coverTemplate: string | null = null;
   export let onTemplateChange: (id: string | null) => void = () => {};
 
@@ -56,7 +58,14 @@
           style="background: {templateBackground};"
         ></div>
       {/if}
-      <DrawingCanvas {ops} {onOpsChange} {monochromeOnly} transparent={templateBackground !== ''} />
+      <DrawingCanvas
+        {ops}
+        {onOpsChange}
+        {monochromeOnly}
+        {palettePreset}
+        {allowFillTool}
+        transparent={templateBackground !== ''}
+      />
     </div>
   </div>
 </GiltFrame>

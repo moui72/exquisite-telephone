@@ -266,6 +266,53 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(ops[ops.length - 1].color).toBe('#ffffff');
   });
 
+  it('renders the standard preset by default (includes orange #f97316)', () => {
+    const { getByLabelText } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByLabelText('Color #f97316')).toBeInTheDocument();
+  });
+
+  it('renders only the primary preset swatches when palettePreset is primary', () => {
+    const { getByLabelText, queryByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'primary' },
+    });
+    // Primary = primary colors plus black and white.
+    expect(getByLabelText('Color #3b82f6')).toBeInTheDocument();
+    expect(getByLabelText('Color #000000')).toBeInTheDocument();
+    expect(getByLabelText('Color #ffffff')).toBeInTheDocument();
+    // Non-primary standard swatches are absent.
+    expect(queryByLabelText('Color #f97316')).not.toBeInTheDocument();
+    expect(queryByLabelText('Color #8b5cf6')).not.toBeInTheDocument();
+  });
+
+  it('renders the extended preset swatch set when palettePreset is extended', () => {
+    const { getByLabelText } = render(DrawingCanvas, {
+      props: { ops: [], palettePreset: 'extended' },
+    });
+    // Extended is a superset of standard, plus extended-only swatches.
+    expect(getByLabelText('Color #f97316')).toBeInTheDocument();
+    expect(getByLabelText('Color #0ea5e9')).toBeInTheDocument();
+  });
+
+  it('hides the fill control entirely when allowFillTool is false', () => {
+    const { queryByText } = render(DrawingCanvas, {
+      props: { ops: [], allowFillTool: false },
+    });
+    expect(queryByText('Fill tool')).not.toBeInTheDocument();
+  });
+
+  it('shows the fill control when allowFillTool is true (default)', () => {
+    const { getByText } = render(DrawingCanvas, { props: { ops: [] } });
+    expect(getByText('Fill tool')).toBeInTheDocument();
+  });
+
+  it('still hides the whole palette when monochromeOnly even with a non-default preset', () => {
+    const { queryByLabelText, queryByRole } = render(DrawingCanvas, {
+      props: { ops: [], monochromeOnly: true, palettePreset: 'extended' },
+    });
+    expect(queryByLabelText('Color #0ea5e9')).not.toBeInTheDocument();
+    expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
+  });
+
   it('removes its pointer listeners on unmount without throwing', () => {
     const { container, unmount } = render(DrawingCanvas, { props: { ops: [] } });
     const canvas = container.querySelector('canvas')!;
