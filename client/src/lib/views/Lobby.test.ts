@@ -1398,3 +1398,45 @@ describe('Lobby room-code copy affordances', () => {
     expect(screen.queryByRole('button', { name: /copy join link/i })).not.toBeInTheDocument();
   });
 });
+
+/**
+ * Foyer join-link pre-fill from a `?room=` query parameter
+ * (room-code-copy-and-join-link, ui.md Lobby View / Foyer).
+ */
+describe('Foyer ?room= join-link pre-fill', () => {
+  afterEach(() => {
+    history.replaceState({}, '', '/');
+  });
+
+  it('selects the join tab and pre-fills the room code when ?room= is present', async () => {
+    history.replaceState({}, '', '/?room=WXYZ');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    const input = (await screen.findByLabelText(/room code/i)) as HTMLInputElement;
+    expect(input.value).toBe('WXYZ');
+    expect(screen.getByRole('tab', { name: /join room/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('strips the room param from the address bar after seeding, without auto-joining', async () => {
+    history.replaceState({}, '', '/?room=WXYZ');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    await screen.findByLabelText(/room code/i);
+    expect(window.location.search).toBe('');
+    expect(session.joinRoom).not.toHaveBeenCalled();
+  });
+
+  it('leaves the Foyer on the create tab when no room param is present', () => {
+    history.replaceState({}, '', '/');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.getByRole('tab', { name: /create room/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.queryByLabelText(/room code/i)).not.toBeInTheDocument();
+  });
+});

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { activePlayers, defaultLapsPerBook } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
@@ -111,6 +111,24 @@
   onDestroy(() => {
     clearTimeout(copiedResetTimer);
     clearTimeout(longPressTimer);
+  });
+
+  // Foyer join-link pre-fill (ui.md Lobby View / Foyer). When the app is
+  // opened with a `?room=` query parameter — the shareable link produced by
+  // "copy join link" — select the join tab and seed the room-code field.
+  // Purely client-side convenience: it never auto-joins. The param is then
+  // stripped from the address bar so a later manual share of the current URL
+  // does not leak a stale code (URL-param-hygiene open question resolved to
+  // strip).
+  onMount(() => {
+    const room = new URLSearchParams(window.location.search).get('room');
+    if (room) {
+      roomCodeInput = room;
+      mode = 'join';
+      const url = new URL(window.location.href);
+      url.searchParams.delete('room');
+      history.replaceState(history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    }
   });
 
   /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
