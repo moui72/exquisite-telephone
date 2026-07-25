@@ -1,5 +1,22 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-25 (**Shipped v0.5.0 to prod; ArDD updated; all clear.** The
+prod deploy of everything since v0.4.0 (reveal F004/F005, canvas focus mode,
+room-code copy/join-link, monochrome→paletteMode reversal) initially failed the
+cross-browser e2e gate — a real regression the mocked unit suite couldn't see:
+the room-code click-to-copy cue was an `opacity-0` span *inside* the
+`data-testid="room-code"` element, so `innerText` read "<CODE>\nCopied" and
+guests joined a garbled code (host saw 1 player). Root-caused by a headless
+local repro, fixed (moved the test-id to an inner span, commit `06a1113`), e2e
+went green on all four browsers, and prod promoted to **v0.5.0** (`release` ==
+`main` at `bfa6aee`). Then updated the ArDD install on the beta channel:
+`9bc9b38` (v1.1.1-beta.3) → `541b283` (v1.2.1-beta.5), no pending migrations,
+all four workflow fields already set. **State: fully clear** — 28 features
+implemented (1 subsumed), no backlog, no open feedback, no ready/in-flight
+tasks, all three diagrams current, ArDD up-to-date. DEFECTS.md holds 2
+cosmetic doc-drift entries (last verified 2026-07-24, already surfaced). Nothing
+pending; safe to plan/implement whenever new work arrives.)_
+
 _Updated: 2026-07-24 (**Monochrome→palette-mode reversal merged & implemented;
 queue drained.** The delegated worktree completed all 4 tasks; branch merged
 into `main` (clean, net −220 lines) and reaped. `Room.monochromeOnly`,
