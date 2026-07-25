@@ -260,7 +260,7 @@ graph TD
   Confirm["ConfirmDialog<br/>(shared confirm)"]
   Lobby["Lobby / Foyer<br/>(create · join · host settings)"]
   WD["Writing / Drawing view"]
-  Canvas["Drawing canvas<br/>(palette preset · fill tool)"]
+  Canvas["Drawing canvas<br/>(palette mode · fill tool)"]
   Cover["Cover Decoration"]
   Reveal["Reveal view"]
   Grid["Book card grid"]

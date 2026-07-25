@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Monochrome→palette-mode reversal merged & implemented;
+queue drained.** The delegated worktree completed all 4 tasks; branch merged
+into `main` (clean, net −220 lines) and reaped. `Room.monochromeOnly`,
+`onSetMonochrome`, `setMonochrome`, and `palettePreset` are gone — grep over
+code/tests/e2e is clean (Constitution IV); `Room.paletteMode`
+(`monochrome | primary | standard | extended`, default `standard`) is the
+single host lever, with one Lobby palette-mode selector (monochrome listed
+first). Full suite green: **shared 70 · server 255 · client 282 · root 6 = 613
+passing**, svelte-check clean. Artifacts (datamodel/ui/infrastructure), README
+datamodel diagram, and e2e page objects all realigned by the worker. Feedback
+file `planned`. **Final-pass housekeeping done:** all three diagrams back to
+`current` (fixed the README Canvas-node label to "palette mode"). **Backlog and
+feedback are empty — nothing left to plan or implement.** Remaining: push `main`
+and cut a prod promote (this reversal + the earlier features are unreleased —
+prod is still on v0.4.0).)_
+
 _Updated: 2026-07-24 (**Planned + tasked the monochrome→palette-mode reversal
 (user-confirmed override).** F001 of `feedback-monochrome-as-palette-option-e4ce.md`
 was confirmed as a decision reversal of the v0.4.0 palette design; feedback file
