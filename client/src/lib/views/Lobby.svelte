@@ -336,7 +336,6 @@
         <p class="text-sm text-ink/75">Room code</p>
         <button
           type="button"
-          data-testid="room-code"
           title="Click to copy — right-click or long-press to copy a join link"
           class="inline-flex items-baseline gap-2 text-left text-3xl font-bold tracking-widest text-ink"
           on:click={() => handleRoomCodeClick(state.room?.id ?? '')}
@@ -346,7 +345,7 @@
           on:touchmove={cancelLongPress}
           on:touchcancel={cancelLongPress}
         >
-          {state.room.id}<span
+          <span data-testid="room-code">{state.room.id}</span><span
             class="text-xs font-medium tracking-normal text-gold transition-opacity {copied
               ? 'opacity-100'
               : 'opacity-0'}"
