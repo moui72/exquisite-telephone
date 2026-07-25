@@ -60,19 +60,20 @@ and joining still goes through the normal join path; no new server
 route or `Room`/[[datamodel]] state is involved. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
 state. The host also
-sees a "force monochrome" toggle (default off) that sets
-`Room.monochromeOnly`, hiding the color palette for everyone's drawing
-tool for the whole game (see Writing / Drawing View below) — not
-visible or editable once the game has started. Alongside it, two more
-drawing-tool controls (also lobby-only, host-only): a **palette-preset**
-picker setting `Room.palettePreset` (`primary` / `standard` / `extended`
-— see Writing / Drawing View), shown but inert while force-monochrome is
-on (a hidden palette has no preset to pick); and an **allow-fill** toggle
-(default on) setting `Room.allowFillTool`, which when off removes the fill
-tool from every drawing toolbar for the whole game. An info affordance next
-to the toggle explains what it does before the host picks a value (see
+sees a single **palette-mode** selector (lobby-only, host-only) that sets
+`Room.paletteMode` (`monochrome` / `primary` / `standard` / `extended`,
+default `standard` — see Writing / Drawing View below). Choosing
+`monochrome` hides the color palette for everyone's drawing tool for the
+whole game and forces the default ink color; the other three modes each
+pick which preset the palette draws from. This one control replaces the
+former force-monochrome toggle plus separate palette-preset picker — not
+visible or editable once the game has started. Alongside it, an
+**allow-fill** toggle (also lobby-only, host-only; default on) setting
+`Room.allowFillTool`, which when off removes the fill tool from every
+drawing toolbar for the whole game. An info affordance next to each
+control explains what it does before the host picks a value (see
 Rules Overview Panel below for the info-affordance convention shared by
-all four host settings here).
+the host settings here).
 
 The host sees player-count guidance ("recommend 4+ players, minimum
 3") next to the player list. Below 3 *active* (non-kicked) players, an
@@ -198,8 +199,7 @@ the source link.
 The same lightweight info-affordance pattern (a small `(?)` control
 that reveals a short explanation on tap/click, docent voice, no
 separate modal) is reused for every host-configurable setting in the
-Lobby View above — the force-monochrome toggle, the palette-preset
-picker, the allow-fill toggle, the turn timer
+Lobby View above — the palette-mode selector, the allow-fill toggle, the turn timer
 selector, the laps-per-book control, the prompt-mode control, the
 phrases-per-player selector, the write-in toggle, and the small-game
 acknowledgement — so a host understands a setting's consequence before
@@ -321,11 +321,12 @@ regardless of how the canvas is laid out (e.g. stretched to fill a flex
 container).
 
 The drawing canvas has a small toolbar: a preset color palette (hidden
-entirely when `Room.monochromeOnly` is `true`, in which case all
+entirely when `Room.paletteMode` is `monochrome`, in which case all
 strokes use the default ink color), 3 line-width presets (thin / medium
 / thick), and a fill tool (present only when `Room.allowFillTool` is
 `true` — the host's allow-fill setting removes it entirely otherwise).
-Which colors the palette offers is `Room.palettePreset`: `primary`
+Which colors the palette offers is the non-`monochrome` value of
+`Room.paletteMode`: `primary`
 (primary colors plus black and white), `standard` (the default 8-swatch
 palette), or `extended` (a larger set); all presets include white (for
 erase-by-overpaint, below), and the `standard` and `extended` presets
@@ -410,7 +411,7 @@ started — `Book.originAuthorId`) on a drawing canvas **pre-stamped
 "<username>'s book"** in the plaque lettering, framed as the easel's
 GiltFrame like the writing/drawing surface. The canvas reuses the same
 `DrawingCanvas` component and toolbar as a turn drawing — color palette
-(honoring `Room.monochromeOnly` and `Room.palettePreset`), line widths,
+(honoring `Room.paletteMode`), line widths,
 and fill (present only when `Room.allowFillTool`) — since a cover
 is just draw ops (`Book.cover`, see [[datamodel]]). Ink is client-local
 draft until the player finalizes; finalizing sends `onSubmitCover`
