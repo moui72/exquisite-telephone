@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned + tasked room-code copy / join link.** Approved
+`plan-room-code-copy-and-join-link-2026-07-24-f5be.md` with ready tasks
+`tasks-room-code-copy-and-join-link-259a.md` (**ready**, 0/4): P1 click-to-copy
+the Lobby room code with an inline "copied" cue (+ a reusable clipboard helper);
+P2 a custom right-click/long-press context menu with "copy join link"
+(`<origin>/?room=<code>`); P3 Foyer reads a `room` URL param on load →
+selects join tab + pre-fills the code (default: strip the param after seeding).
+UI-only: ui.md Lobby/Foyer gained the click-to-copy + join-link + URL-param
+paragraphs; no datamodel/infra/server change (join uses existing
+`session.joinRoom()`). Feature `backlogged → tasked`; ui diagram **stale**.
+Sequencing note: this and the still-open monochrome feedback both touch
+`Lobby.svelte`/`ui.md`, so implementing sequentially (room-code first, then
+plan+implement monochrome on updated code) avoids conflicts. Still open:
+`feedback-monochrome-as-palette-option-e4ce.md`. Next: `/ardd-implement` the
+room-code tasks.)_
+
 _Updated: 2026-07-24 (**Canvas focus mode merged & implemented.** The delegated
 worktree completed both tasks; branch `worktree-agent-a0dfb820203ce694c` merged
 into `main` (clean) and reaped. Full suite green: **shared 70 · server 258 ·

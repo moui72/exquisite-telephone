@@ -1,7 +1,9 @@
 ---
 slug: room-code-copy-and-join-link
-status: backlogged
+status: tasked
 logged: 2026-07-24
+plan: plan-room-code-copy-and-join-link-2026-07-24-f5be.md
+tasks: tasks-room-code-copy-and-join-link-259a.md
 ---
 
 Clicking the displayed room code copies the bare code to the clipboard, and a context menu (right-click / long-press) adds a "copy join link" option that copies a shareable URL which pre-fills the room when opened.

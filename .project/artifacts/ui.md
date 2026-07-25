@@ -33,12 +33,31 @@ bare utility form. The Salon Footer (see below) is already present
 here, so its "?" button is a new player's first chance to understand
 the game before committing to a room.
 
+When the app is opened with a `room` URL query parameter present (the
+shareable join link produced by another player's "copy join link" — see
+below), the Foyer selects the join tab and pre-fills the room-code field
+with that value, leaving only the display name to enter. Purely
+client-side convenience: the param is read from the URL on load and
+seeds the existing join form; it never auto-joins, and joining still
+goes through the normal join path.
+
 Once a room exists, it's framed as an RSVP/guest-list card (see Visual
 Identity below) — the room code and player list read like names
 checked in at the door of a salon. Host creates a room (gets a
 shareable room code); other players join by entering the code and a
 display name. Shows connected players and a "start game" control
-visible only to the host. Reflects
+visible only to the host.
+
+The displayed room code is **click-to-copy**: clicking or tapping it
+copies the bare code to the clipboard and shows a brief "copied"
+confirmation, so a host never has to read it out or retype it. A
+**context menu** on the room code (right-click on pointer devices,
+long-press on touch) adds a **"copy join link"** option that copies a
+shareable URL of the form `<app-origin>/?room=<code>` — opening that
+link lands a guest in the Foyer with the code already filled in (see
+below). This is entirely client-side: the link points at the same SPA
+and joining still goes through the normal join path; no new server
+route or `Room`/[[datamodel]] state is involved. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
 state. The host also
 sees a "force monochrome" toggle (default off) that sets
