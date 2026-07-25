@@ -1,7 +1,7 @@
 ---
 plan: plan-room-code-copy-and-join-link-2026-07-24-f5be.md
 generated: 2026-07-24
-status: in-progress
+status: completed
 ---
 
 # Tasks

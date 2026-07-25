@@ -1,6 +1,6 @@
 ---
 slug: room-code-copy-and-join-link
-status: tasked
+status: implemented
 logged: 2026-07-24
 plan: plan-room-code-copy-and-join-link-2026-07-24-f5be.md
 tasks: tasks-room-code-copy-and-join-link-259a.md
