@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Room } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
 import Lobby from './Lobby.svelte';
@@ -1269,5 +1269,91 @@ describe('Lobby host-setting info affordances', () => {
     expect(
       screen.queryByRole('checkbox', { name: /aware this salon is intimately attended/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Click-to-copy room code + copy-join-link context menu
+ * (room-code-copy-and-join-link, ui.md Lobby View).
+ */
+describe('Lobby room-code copy affordances', () => {
+  function makeLobbyRoom(): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      palettePreset: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  function stubClipboard(writeText = vi.fn().mockResolvedValue(undefined)) {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+      writable: true,
+    });
+    return writeText;
+  }
+
+  afterEach(() => {
+    // Remove the clipboard stub so an absent-API test elsewhere is honest.
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'clipboard');
+  });
+
+  it('copies the bare room code to the clipboard when the code is clicked', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    const code = screen.getByTestId('room-code');
+    await fireEvent.click(code);
+
+    expect(writeText).toHaveBeenCalledWith('ABCDE');
+  });
+
+  it('surfaces a brief "copied" confirmation cue after a successful copy', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByTestId('room-code'));
+
+    expect(await screen.findByText(/copied/i)).toBeInTheDocument();
+  });
+
+  it('leaves the plain code text matchable (cue lives in a child element)', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByTestId('room-code'));
+    await screen.findByText(/copied/i);
+
+    // Existing tests rely on getByText('ABCDE'); the cue must not fold into
+    // the code element's own text node.
+    expect(screen.getByText('ABCDE')).toBeInTheDocument();
   });
 });

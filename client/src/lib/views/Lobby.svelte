@@ -5,6 +5,7 @@
   import { Crown, Sparkles } from '@lucide/svelte';
   import GiltFrame from '../components/GiltFrame.svelte';
   import InfoTooltip from '../components/InfoTooltip.svelte';
+  import { copyToClipboard } from '../clipboard.js';
 
   export let session: SessionStore = defaultSession;
 
@@ -12,6 +13,21 @@
   let displayName = '';
   let roomCodeInput = '';
   let acknowledgeSmallGame = false;
+
+  // Click-to-copy the room code (ui.md Lobby View). The confirmation is a
+  // brief inline cue rendered in a child <span>, not a toast — no toast
+  // system exists, and keeping it a child element keeps the code element's
+  // own text node equal to the bare code for callers/tests that match it.
+  let copied = false;
+  let copiedResetTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function handleCopyCode(code: string) {
+    if (await copyToClipboard(code)) {
+      copied = true;
+      clearTimeout(copiedResetTimer);
+      copiedResetTimer = setTimeout(() => (copied = false), 2000);
+    }
+  }
 
   /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
   const MINIMUM_RECOMMENDED_PLAYERS = 3;
@@ -218,9 +234,20 @@
     <div class="flex flex-col gap-4">
       <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
         <p class="text-sm text-ink/75">Room code</p>
-        <p data-testid="room-code" class="text-3xl font-bold tracking-widest text-ink">
-          {state.room.id}
-        </p>
+        <button
+          type="button"
+          data-testid="room-code"
+          title="Click to copy — right-click or long-press to copy a join link"
+          class="inline-flex items-baseline gap-2 text-left text-3xl font-bold tracking-widest text-ink"
+          on:click={() => handleCopyCode(state.room?.id ?? '')}
+        >
+          {state.room.id}<span
+            class="text-xs font-medium tracking-normal text-gold transition-opacity {copied
+              ? 'opacity-100'
+              : 'opacity-0'}"
+            aria-live="polite">Copied</span
+          >
+        </button>
 
         <ul class="flex flex-col gap-2">
           {#each activePlayers(state.room) as player (player.id)}
