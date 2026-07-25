@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { render, screen, fireEvent } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Room } from '@exquisite-telephone/shared';
 import type { SessionState, SessionStore } from '../stores/session.js';
 import Lobby from './Lobby.svelte';
@@ -1269,5 +1269,179 @@ describe('Lobby host-setting info affordances', () => {
     expect(
       screen.queryByRole('checkbox', { name: /aware this salon is intimately attended/i }),
     ).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Click-to-copy room code + copy-join-link context menu
+ * (room-code-copy-and-join-link, ui.md Lobby View).
+ */
+describe('Lobby room-code copy affordances', () => {
+  function makeLobbyRoom(): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      monochromeOnly: false,
+      palettePreset: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  function stubClipboard(writeText = vi.fn().mockResolvedValue(undefined)) {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+      writable: true,
+    });
+    return writeText;
+  }
+
+  afterEach(() => {
+    // Remove the clipboard stub so an absent-API test elsewhere is honest.
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'clipboard');
+  });
+
+  it('copies the bare room code to the clipboard when the code is clicked', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    const code = screen.getByTestId('room-code');
+    await fireEvent.click(code);
+
+    expect(writeText).toHaveBeenCalledWith('ABCDE');
+  });
+
+  it('surfaces a brief "copied" confirmation cue after a successful copy', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    // The cue element is present but hidden (opacity-0) until a copy lands,
+    // so assert the state transition rather than mere presence.
+    const cue = screen.getByText(/copied/i);
+    expect(cue).toHaveClass('opacity-0');
+
+    await fireEvent.click(screen.getByTestId('room-code'));
+
+    await vi.waitFor(() => expect(cue).toHaveClass('opacity-100'));
+  });
+
+  it('leaves the plain code text matchable (cue lives in a child element)', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByTestId('room-code'));
+    await screen.findByText(/copied/i);
+
+    // Existing tests rely on getByText('ABCDE'); the cue must not fold into
+    // the code element's own text node.
+    expect(screen.getByText('ABCDE')).toBeInTheDocument();
+  });
+
+  it('right-click opens a context menu with a "copy join link" action, without copying the bare code', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('selecting "copy join link" copies an origin-based URL with the room code', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    await fireEvent.click(screen.getByRole('button', { name: /copy join link/i }));
+
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/?room=ABCDE`);
+  });
+
+  it('dismisses the context menu on outside click and on Escape', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    await fireEvent.click(document.body);
+    expect(screen.queryByRole('button', { name: /copy join link/i })).not.toBeInTheDocument();
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    await fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: /copy join link/i })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Foyer join-link pre-fill from a `?room=` query parameter
+ * (room-code-copy-and-join-link, ui.md Lobby View / Foyer).
+ */
+describe('Foyer ?room= join-link pre-fill', () => {
+  afterEach(() => {
+    history.replaceState({}, '', '/');
+  });
+
+  it('selects the join tab and pre-fills the room code when ?room= is present', async () => {
+    history.replaceState({}, '', '/?room=WXYZ');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    const input = (await screen.findByLabelText(/room code/i)) as HTMLInputElement;
+    expect(input.value).toBe('WXYZ');
+    expect(screen.getByRole('tab', { name: /join room/i })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('strips the room param from the address bar after seeding, without auto-joining', async () => {
+    history.replaceState({}, '', '/?room=WXYZ');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    await screen.findByLabelText(/room code/i);
+    expect(window.location.search).toBe('');
+    expect(session.joinRoom).not.toHaveBeenCalled();
+  });
+
+  it('leaves the Foyer on the create tab when no room param is present', () => {
+    history.replaceState({}, '', '/');
+    const session = makeFakeSession({ room: null, player: null, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.getByRole('tab', { name: /create room/i })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    expect(screen.queryByLabelText(/room code/i)).not.toBeInTheDocument();
   });
 });
