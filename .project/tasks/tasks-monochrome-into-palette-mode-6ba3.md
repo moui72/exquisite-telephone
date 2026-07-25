@@ -12,7 +12,7 @@ status: in-progress
 
 - [x] T002 [artifacts: ui] Rewrite the affected `ui.md` sections for the single-control design (F001): Lobby View — replace the "force monochrome" toggle and the separate palette-preset picker with ONE **palette-mode** selector setting `Room.paletteMode` (`monochrome | primary | standard | extended`), removing the "palette-preset picker is shown but inert while force-monochrome is on" interaction; keep a single info affordance for it. Writing/Drawing View drawing-toolbar and Cover Decoration sections — describe monochrome as the `monochrome` value of `paletteMode` (palette hidden / default ink) rather than a separate `monochromeOnly` boolean. Remove remaining `monochromeOnly` references. Docs-only.
 
-- [ ] T003 [artifacts: infrastructure] Rewrite `infrastructure.md` (F001): remove `onSetMonochrome` from the Socket.IO handler list; the palette-mode setter (`onSetPaletteMode`, renamed from `onSetPalettePreset`) is the single host lever for palette/monochrome. Remove other `onSetMonochrome`/`monochromeOnly` references. Docs-only.
+- [x] T003 [artifacts: infrastructure] Rewrite `infrastructure.md` (F001): remove `onSetMonochrome` from the Socket.IO handler list; the palette-mode setter (`onSetPaletteMode`, renamed from `onSetPalettePreset`) is the single host lever for palette/monochrome. Remove other `onSetMonochrome`/`monochromeOnly` references. Docs-only.
 
 ## Phase 2: Code consolidation (single atomic change)
 
