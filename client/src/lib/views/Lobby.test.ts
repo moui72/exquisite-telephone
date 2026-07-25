@@ -1338,9 +1338,14 @@ describe('Lobby room-code copy affordances', () => {
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session } });
 
+    // The cue element is present but hidden (opacity-0) until a copy lands,
+    // so assert the state transition rather than mere presence.
+    const cue = screen.getByText(/copied/i);
+    expect(cue).toHaveClass('opacity-0');
+
     await fireEvent.click(screen.getByTestId('room-code'));
 
-    expect(await screen.findByText(/copied/i)).toBeInTheDocument();
+    await vi.waitFor(() => expect(cue).toHaveClass('opacity-100'));
   });
 
   it('leaves the plain code text matchable (cue lives in a child element)', async () => {
