@@ -1,5 +1,21 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Room-code copy / join link merged & implemented.** The
+delegated worktree completed all 4 tasks; branch merged into `main` (clean) and
+reaped. Full suite green: **shared 70 · server 258 · client 281 · root 6 = 615
+passing**, svelte-check clean. Feature `room-code-copy-and-join-link` →
+**implemented**. Shipped: Lobby room-code click-to-copy with a 2s inline
+"copied" cue (new `client/src/lib/clipboard.ts`), a custom right-click / 500ms
+long-press context menu with "copy join link" (`<origin>/?room=<code>`), and
+Foyer URL-param pre-fill that seeds the join form and strips the param via
+`history.replaceState`. Footer left unchanged (Lobby-only). Added a **Production
+Annotation** to ui.md: the clipboard helper is secure-context-only (no
+`execCommand` fallback) — harmless on HTTPS prod/beta. **Only remaining
+plannable:** `feedback-monochrome-as-palette-option-e4ce.md` (open
+reconsider — fold monochrome into the palette-preset control). ui diagram
+**stale**. `main` unpushed. Next: plan + implement the monochrome fold, then a
+final push + diagram-regen + prod-promote pass.)_
+
 _Updated: 2026-07-24 (**Planned + tasked room-code copy / join link.** Approved
 `plan-room-code-copy-and-join-link-2026-07-24-f5be.md` with ready tasks
 `tasks-room-code-copy-and-join-link-259a.md` (**ready**, 0/4): P1 click-to-copy

@@ -706,7 +706,14 @@ neutral system tone).
 
 ## Production Annotations
 
-_(none)_
+- **Clipboard copy — secure-context only.** The room-code click-to-copy and
+  the "copy join link" context-menu action (`client/src/lib/clipboard.ts`)
+  use the async Clipboard API with no `execCommand` fallback. On an insecure
+  (non-HTTPS) origin `navigator.clipboard` is absent, the helper returns
+  `false`, and the "copied" cue silently does not show. Harmless in
+  production — beta and prod are HTTPS on Fly — but there is no fallback for
+  insecure/legacy contexts by design; a fallback copy path would close that
+  gap if it ever matters.
 
 The former **exact-match flood fill** annotation is resolved: the fill
 tool's scanline algorithm now fills contiguous pixels within a
