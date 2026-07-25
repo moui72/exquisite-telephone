@@ -687,7 +687,7 @@ describe('onPlayAgain', () => {
     const graceId = joinAck.player!.id;
 
     // Put the room into 'reveal' directly — bypassing the full game flow,
-    // matching how onEndGame/onSetMonochrome tests set up preconditions.
+    // matching how onEndGame/onSetPaletteMode tests set up preconditions.
     store.getRoom(oldRoomId)!.status = 'reveal';
 
     const roomChangedPromise = waitForEvent<{

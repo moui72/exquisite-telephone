@@ -50,18 +50,17 @@ import {
   onWithdrawVoteToPlayAgain,
   type CreateRoomAck,
   type JoinRoomAck,
-  type SetMonochromeAck,
-  type SetPalettePresetAck,
+  type SetPaletteModeAck,
   type SetFillToolAck,
   type StartGameAck,
 } from './handlers.js';
 
 /**
- * onSetMonochrome: host-only, lobby-only toggle of Room.monochromeOnly
- * (datamodel.md), mirroring onStartGame's host-only/status guard shape
- * (server.test.ts).
+ * onSetPaletteMode: host-only, lobby-only setter for Room.paletteMode
+ * (datamodel.md) — the single host lever for palette and monochrome,
+ * mirroring onStartGame's host-only/status guard shape (server.test.ts).
  */
-describe('onSetMonochrome', () => {
+describe('onSetPaletteMode', () => {
   let httpServer: HttpServer;
   let store: RoomStore;
   let clientA: ClientSocket;
@@ -82,7 +81,7 @@ describe('onSetMonochrome', () => {
     await new Promise<void>((resolve) => httpServer.close(() => resolve()));
   });
 
-  it('lets the host set Room.monochromeOnly and broadcasts the updated room', async () => {
+  it('lets the host set Room.paletteMode and broadcasts the updated room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
     await waitForEvent(clientA, 'connect');
     const createAck = (await clientA
@@ -95,24 +94,65 @@ describe('onSetMonochrome', () => {
     await waitForEvent(clientB, 'connect');
     await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
 
-    const roomUpdatePromise = waitForEvent<{ room: SetMonochromeAck['room'] }>(
+    const roomUpdatePromise = waitForEvent<{ room: SetPaletteModeAck['room'] }>(
       clientB,
       'roomUpdated',
     );
 
     const ack = (await clientA
       .timeout(5000)
-      .emitWithAck('set_monochrome', {
+      .emitWithAck('set_palette_mode', {
         roomId,
         playerId: hostId,
-        monochromeOnly: true,
-      })) as SetMonochromeAck;
+        paletteMode: 'extended',
+      })) as SetPaletteModeAck;
 
     expect(ack.error).toBeUndefined();
-    expect(ack.room?.monochromeOnly).toBe(true);
+    expect(ack.room?.paletteMode).toBe('extended');
 
     const broadcast = await roomUpdatePromise;
-    expect(broadcast.room?.monochromeOnly).toBe(true);
+    expect(broadcast.room?.paletteMode).toBe('extended');
+  });
+
+  it('accepts monochrome as a palette mode', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_palette_mode', {
+        roomId,
+        playerId: hostId,
+        paletteMode: 'monochrome',
+      })) as SetPaletteModeAck;
+
+    expect(ack.error).toBeUndefined();
+    expect(ack.room?.paletteMode).toBe('monochrome');
+  });
+
+  it('rejects an invalid palette mode value', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const hostId = createAck.room!.hostPlayerId;
+
+    const ack = (await clientA
+      .timeout(5000)
+      .emitWithAck('set_palette_mode', {
+        roomId,
+        playerId: hostId,
+        paletteMode: 'rainbow',
+      })) as SetPaletteModeAck;
+
+    expect(ack.error).toBe('invalid-palette-mode');
   });
 
   it('rejects a non-host caller', async () => {
@@ -131,11 +171,11 @@ describe('onSetMonochrome', () => {
 
     const ack = (await clientB
       .timeout(5000)
-      .emitWithAck('set_monochrome', {
+      .emitWithAck('set_palette_mode', {
         roomId,
         playerId: joinAck.player!.id,
-        monochromeOnly: true,
-      })) as SetMonochromeAck;
+        paletteMode: 'extended',
+      })) as SetPaletteModeAck;
 
     expect(ack.error).toBe('not-host');
   });
@@ -159,143 +199,11 @@ describe('onSetMonochrome', () => {
 
     const ack = (await clientA
       .timeout(5000)
-      .emitWithAck('set_monochrome', {
+      .emitWithAck('set_palette_mode', {
         roomId,
         playerId: hostId,
-        monochromeOnly: true,
-      })) as SetMonochromeAck;
-
-    expect(ack.error).toBe('room-not-in-lobby');
-  });
-});
-
-/**
- * onSetPalettePreset: host-only, lobby-only setter for Room.palettePreset
- * (datamodel.md), mirroring onSetMonochrome's guard shape.
- */
-describe('onSetPalettePreset', () => {
-  let httpServer: HttpServer;
-  let store: RoomStore;
-  let clientA: ClientSocket;
-  let clientB: ClientSocket;
-  let port: number;
-
-  beforeEach(async () => {
-    store = createRoomStore();
-    httpServer = createServer();
-    createSocketServer(httpServer, store);
-    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
-    port = (httpServer.address() as AddressInfo).port;
-  });
-
-  afterEach(async () => {
-    clientA?.close();
-    clientB?.close();
-    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
-  });
-
-  it('lets the host set Room.palettePreset and broadcasts the updated room', async () => {
-    clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
-    const createAck = (await clientA
-      .timeout(5000)
-      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
-    const roomId = createAck.room!.id;
-    const hostId = createAck.room!.hostPlayerId;
-
-    clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
-    await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
-
-    const roomUpdatePromise = waitForEvent<{ room: SetPalettePresetAck['room'] }>(
-      clientB,
-      'roomUpdated',
-    );
-
-    const ack = (await clientA
-      .timeout(5000)
-      .emitWithAck('set_palette_preset', {
-        roomId,
-        playerId: hostId,
-        palettePreset: 'extended',
-      })) as SetPalettePresetAck;
-
-    expect(ack.error).toBeUndefined();
-    expect(ack.room?.palettePreset).toBe('extended');
-
-    const broadcast = await roomUpdatePromise;
-    expect(broadcast.room?.palettePreset).toBe('extended');
-  });
-
-  it('rejects an invalid preset value', async () => {
-    clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
-    const createAck = (await clientA
-      .timeout(5000)
-      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
-    const roomId = createAck.room!.id;
-    const hostId = createAck.room!.hostPlayerId;
-
-    const ack = (await clientA
-      .timeout(5000)
-      .emitWithAck('set_palette_preset', {
-        roomId,
-        playerId: hostId,
-        palettePreset: 'rainbow',
-      })) as SetPalettePresetAck;
-
-    expect(ack.error).toBe('invalid-palette-preset');
-  });
-
-  it('rejects a non-host caller', async () => {
-    clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
-    const createAck = (await clientA
-      .timeout(5000)
-      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
-    const roomId = createAck.room!.id;
-
-    clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
-    const joinAck = (await clientB
-      .timeout(5000)
-      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
-
-    const ack = (await clientB
-      .timeout(5000)
-      .emitWithAck('set_palette_preset', {
-        roomId,
-        playerId: joinAck.player!.id,
-        palettePreset: 'extended',
-      })) as SetPalettePresetAck;
-
-    expect(ack.error).toBe('not-host');
-  });
-
-  it('rejects once the room has left the lobby', async () => {
-    clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
-    const createAck = (await clientA
-      .timeout(5000)
-      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
-    const roomId = createAck.room!.id;
-    const hostId = createAck.room!.hostPlayerId;
-
-    (await clientA
-      .timeout(5000)
-      .emitWithAck('startGame', {
-        roomId,
-        playerId: hostId,
-        acknowledgeSmallGame: true,
-      })) as StartGameAck;
-
-    const ack = (await clientA
-      .timeout(5000)
-      .emitWithAck('set_palette_preset', {
-        roomId,
-        playerId: hostId,
-        palettePreset: 'extended',
-      })) as SetPalettePresetAck;
+        paletteMode: 'extended',
+      })) as SetPaletteModeAck;
 
     expect(ack.error).toBe('room-not-in-lobby');
   });
@@ -303,7 +211,7 @@ describe('onSetPalettePreset', () => {
 
 /**
  * onSetFillTool: host-only, lobby-only setter for Room.allowFillTool
- * (datamodel.md), mirroring onSetMonochrome's guard shape.
+ * (datamodel.md), mirroring onSetPaletteMode's guard shape.
  */
 describe('onSetFillTool', () => {
   let httpServer: HttpServer;

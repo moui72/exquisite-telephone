@@ -101,8 +101,7 @@
       username={player.name}
       ops={draft.ops}
       onOpsChange={handleOpsChange}
-      monochromeOnly={room?.monochromeOnly ?? false}
-      palettePreset={room?.palettePreset ?? 'standard'}
+      paletteMode={room?.paletteMode ?? 'standard'}
       allowFillTool={room?.allowFillTool ?? true}
       coverTemplate={draft.template}
       onTemplateChange={handleTemplateChange}

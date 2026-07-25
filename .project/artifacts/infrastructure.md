@@ -42,7 +42,7 @@ which directly serves the reconnect-tolerance requirement below.
 Each `Room` (see [[datamodel]]) maps to a Socket.IO room. Server-side
 event handling is decomposed by concern (Principle VIII): one named
 handler per event type (`onCreateRoom`, `onJoinRoom`, `onStartGame`,
-`onEndGame`, `onSetMonochrome`, `onSetPalettePreset`, `onSetFillTool`,
+`onEndGame`, `onSetPaletteMode`, `onSetFillTool`,
 `onSetTurnTimer`, `onSetLapsPerBook`,
 `onSetPromptMode`, `onSetCuratedPromptCount`,
 `onSetAllowPromptWriteIn`, `onSetReadingBook`, `onSubmitEntry`, `onSubmitCover`, `onCastTimeoutVote`, `onVoteToPlayAgain`, `onPlayAgain`,

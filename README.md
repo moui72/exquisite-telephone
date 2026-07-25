@@ -152,8 +152,7 @@ erDiagram
         string hostPlayerId FK
         enum status "lobby|writing|decorating|reveal|ended"
         enum promptMode "free-form|curated"
-        boolean monochromeOnly
-        enum palettePreset "primary|standard|extended"
+        enum paletteMode "monochrome|primary|standard|extended"
         boolean allowFillTool
         int turnTimerMinutes "nullable"
         int lapsPerBook "nullable, 1-3"

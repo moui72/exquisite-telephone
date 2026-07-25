@@ -8,7 +8,7 @@
    * The cover-decoration canvas (ui.md Cover Decoration): the origin
    * author decorates their OWN book's cover on the same DrawingCanvas and
    * toolbar as a turn drawing, framed as the easel's GiltFrame and
-   * pre-stamped "<username>'s book". Honors Room.monochromeOnly. A picker
+   * pre-stamped "<username>'s book". Honors Room.paletteMode. A picker
    * above the canvas offers the nine named background templates plus blank;
    * the chosen template renders as a low-opacity background BENEATH the ink
    * (the canvas is transparent so it shows through), switchable without
@@ -18,8 +18,7 @@
   export let username: string;
   export let ops: DrawOps = [];
   export let onOpsChange: (next: DrawOps) => void = () => {};
-  export let monochromeOnly = false;
-  export let palettePreset: 'primary' | 'standard' | 'extended' = 'standard';
+  export let paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended' = 'standard';
   export let allowFillTool = true;
   export let coverTemplate: string | null = null;
   export let onTemplateChange: (id: string | null) => void = () => {};
@@ -63,8 +62,7 @@
       <DrawingCanvas
         {ops}
         {onOpsChange}
-        {monochromeOnly}
-        {palettePreset}
+        {paletteMode}
         {allowFillTool}
         transparent={templateBackground !== ''}
       />

@@ -297,68 +297,30 @@ export function onSetLapsPerBook(
   ack({ room });
 }
 
-export interface SetMonochromeInput {
+export interface SetPaletteModeInput {
   roomId: string;
   playerId: string;
-  monochromeOnly: boolean;
+  paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended';
 }
 
-export interface SetMonochromeAck {
+export interface SetPaletteModeAck {
   room?: Room;
   error?: string;
 }
 
 /**
- * Host-only, lobby-only toggle of Room.monochromeOnly (datamodel.md),
- * mirroring onStartGame's host-only/status guard shape.
+ * Host-only, lobby-only setter for Room.paletteMode (datamodel.md),
+ * mirroring onStartGame's host-only/status guard shape. This is the single
+ * host lever for palette and monochrome: `'monochrome'` hides the color
+ * palette and forces the default ink; `'primary' | 'standard' | 'extended'`
+ * select the color preset. Anything else is rejected with
+ * `invalid-palette-mode`.
  */
-export function onSetMonochrome(
+export function onSetPaletteMode(
   socket: Socket,
   store: RoomStore,
-  input: SetMonochromeInput,
-  ack: (response: SetMonochromeAck) => void,
-): void {
-  const room = store.getRoom(input.roomId);
-  if (!room) {
-    ack({ error: 'room-not-found' });
-    return;
-  }
-  if (room.hostPlayerId !== input.playerId) {
-    ack({ error: 'not-host' });
-    return;
-  }
-  if (room.status !== 'lobby') {
-    ack({ error: 'room-not-in-lobby' });
-    return;
-  }
-
-  room.monochromeOnly = input.monochromeOnly;
-  socket.to(input.roomId).emit('roomUpdated', { room });
-  ack({ room });
-}
-
-export interface SetPalettePresetInput {
-  roomId: string;
-  playerId: string;
-  palettePreset: 'primary' | 'standard' | 'extended';
-}
-
-export interface SetPalettePresetAck {
-  room?: Room;
-  error?: string;
-}
-
-/**
- * Host-only, lobby-only setter for Room.palettePreset (datamodel.md),
- * mirroring onSetMonochrome's guard shape. Only `'primary' | 'standard' |
- * 'extended'` are accepted; anything else is rejected with
- * `invalid-palette-preset`.
- */
-export function onSetPalettePreset(
-  socket: Socket,
-  store: RoomStore,
-  input: SetPalettePresetInput,
-  ack: (response: SetPalettePresetAck) => void,
+  input: SetPaletteModeInput,
+  ack: (response: SetPaletteModeAck) => void,
 ): void {
   const room = store.getRoom(input.roomId);
   if (!room) {
@@ -374,15 +336,16 @@ export function onSetPalettePreset(
     return;
   }
   if (
-    input.palettePreset !== 'primary' &&
-    input.palettePreset !== 'standard' &&
-    input.palettePreset !== 'extended'
+    input.paletteMode !== 'monochrome' &&
+    input.paletteMode !== 'primary' &&
+    input.paletteMode !== 'standard' &&
+    input.paletteMode !== 'extended'
   ) {
-    ack({ error: 'invalid-palette-preset' });
+    ack({ error: 'invalid-palette-mode' });
     return;
   }
 
-  room.palettePreset = input.palettePreset;
+  room.paletteMode = input.paletteMode;
   socket.to(input.roomId).emit('roomUpdated', { room });
   ack({ room });
 }
@@ -400,7 +363,7 @@ export interface SetFillToolAck {
 
 /**
  * Host-only, lobby-only setter for Room.allowFillTool (datamodel.md),
- * mirroring onSetMonochrome's boolean-toggle guard shape.
+ * following the standard host-only/lobby-only boolean-toggle guard shape.
  */
 export function onSetFillTool(
   socket: Socket,
@@ -1393,7 +1356,7 @@ export interface SetAllowPromptWriteInAck {
 
 /**
  * Host-only, lobby-only control for `Room.allowPromptWriteIn` (ui.md Lobby
- * View), mirroring onSetMonochrome's boolean-toggle shape.
+ * View), following the standard boolean-toggle guard shape.
  */
 export function onSetAllowPromptWriteIn(
   socket: Socket,

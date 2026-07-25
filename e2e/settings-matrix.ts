@@ -43,7 +43,7 @@ export const SETTINGS_MATRIX: SettingsCombo[] = [
       'Exercises the curated opening-phrase selection (a radio hand instead of free text) together with monochrome drawing (palette hidden) — two orthogonal settings that both change turn UI.',
     apply: async (lobby) => {
       await lobby.setLapsPerBook(1);
-      await lobby.setMonochrome(true);
+      await lobby.setPaletteMode('monochrome');
       await lobby.setPromptMode('curated');
       await lobby.setCuratedPromptCount(2);
     },

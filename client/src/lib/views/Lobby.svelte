@@ -185,17 +185,13 @@
     await session.setTurnTimer(turnTimerMinutes);
   }
 
-  async function handleToggleMonochrome(event: Event) {
-    const checked = (event.currentTarget as HTMLInputElement).checked;
-    await session.setMonochrome(checked);
-  }
-
-  async function handlePalettePresetChange(event: Event) {
-    const preset = (event.target as HTMLSelectElement).value as
+  async function handlePaletteModeChange(event: Event) {
+    const mode = (event.target as HTMLSelectElement).value as
+      | 'monochrome'
       | 'primary'
       | 'standard'
       | 'extended';
-    await session.setPalettePreset(preset);
+    await session.setPaletteMode(mode);
   }
 
   async function handleToggleFillTool(event: Event) {
@@ -419,40 +415,22 @@
         <!-- Host settings framed as a champagne placard so the labels read
              on parchment rather than the bordeaux damask wall (redesign). -->
         <div class="plaque flex flex-col gap-4 p-5">
-        <InfoTooltip
-          label="About force monochrome"
-          explanation="Hides the color palette from everyone's drawing tool, for the whole game."
-        >
-          <label
-            for="monochrome-toggle"
-            class="flex items-center gap-2 text-sm font-medium text-ink/90"
-          >
-            <input
-              id="monochrome-toggle"
-              type="checkbox"
-              checked={state.room.monochromeOnly}
-              on:change={handleToggleMonochrome}
-            />
-            Enforce a Monochrome Decree
-          </label>
-        </InfoTooltip>
-
         <div class="flex flex-col gap-1">
           <InfoTooltip
-            label="About the color palette"
-            explanation="Chooses which set of colors everyone's drawing tool offers: a small primary set, the standard palette, or an extended one. Ignored while a Monochrome Decree is in force."
+            label="About the palette mode"
+            explanation="Sets everyone's drawing palette for the whole game: Monochrome hides the palette entirely and forces the default ink, or pick a color set — a small primary set, the standard palette, or an extended one."
           >
-            <label for="palette-preset-select" class="text-sm font-medium text-ink/90">
-              Color Palette
+            <label for="palette-mode-select" class="text-sm font-medium text-ink/90">
+              Palette Mode
             </label>
           </InfoTooltip>
           <select
-            id="palette-preset-select"
-            class="rounded-md border border-gold/30 px-3 py-2 text-base disabled:opacity-50"
-            value={state.room.palettePreset}
-            disabled={state.room.monochromeOnly}
-            on:change={handlePalettePresetChange}
+            id="palette-mode-select"
+            class="rounded-md border border-gold/30 px-3 py-2 text-base"
+            value={state.room.paletteMode}
+            on:change={handlePaletteModeChange}
           >
+            <option value="monochrome">Monochrome — no palette, default ink only</option>
             <option value="primary">Primary — primary colors, black and white</option>
             <option value="standard">Standard — the default palette</option>
             <option value="extended">Extended — a larger palette</option>

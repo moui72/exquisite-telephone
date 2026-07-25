@@ -34,8 +34,7 @@ function makeFakeSession(
           status: 'lobby',
           books: [],
           createdAt: Date.now(),
-          monochromeOnly: false,
-          palettePreset: 'standard',
+          paletteMode: 'standard',
           allowFillTool: true,
           turnTimerMinutes: null,
           lapsPerBook: null,
@@ -68,8 +67,7 @@ function makeFakeSession(
     startGame: vi.fn(async () => {}),
     submitEntry: vi.fn(async () => {}),
     submitCover: vi.fn(async () => {}),
-    setMonochrome: vi.fn(async () => {}),
-    setPalettePreset: vi.fn(async () => {}),
+    setPaletteMode: vi.fn(async () => {}),
     setFillTool: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
     setLapsPerBook: vi.fn(async () => {}),
@@ -118,8 +116,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -170,8 +167,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -238,8 +234,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -279,8 +274,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -346,8 +340,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -406,8 +399,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: 30,
       lapsPerBook: null,
@@ -450,8 +442,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -517,8 +508,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -561,8 +551,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: 3,
@@ -598,7 +587,7 @@ describe('Lobby view', () => {
     expect(session.joinRoom).toHaveBeenCalledWith('ABCDE', 'Grace');
   });
 
-  it('shows the force-monochrome toggle only to the host, reflecting Room.monochromeOnly', () => {
+  it('shows the palette-mode selector only to the host, reflecting Room.paletteMode', () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
@@ -623,8 +612,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: true,
-      palettePreset: 'standard',
+      paletteMode: 'monochrome',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -643,18 +631,16 @@ describe('Lobby view', () => {
 
     const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session: hostSession } });
-    const toggle = screen.getByRole('checkbox', { name: /enforce a monochrome decree/i });
-    expect(toggle).toBeInTheDocument();
-    expect(toggle).toBeChecked();
+    const selector = screen.getByLabelText(/^palette mode$/i) as HTMLSelectElement;
+    expect(selector).toBeInTheDocument();
+    expect(selector.value).toBe('monochrome');
 
     const guestSession = makeFakeSession({ room, player: room.players[1]!, error: null });
     render(Lobby, { props: { session: guestSession } });
-    expect(
-      screen.queryAllByRole('checkbox', { name: /enforce a monochrome decree/i }),
-    ).toHaveLength(1); // still just the host's
+    expect(screen.queryAllByLabelText(/^palette mode$/i)).toHaveLength(1); // still just the host's
   });
 
-  it('emits set_monochrome with the new value when the host toggles it', async () => {
+  it('emits setPaletteMode with monochrome when the host picks it', async () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',
@@ -671,8 +657,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -692,12 +677,13 @@ describe('Lobby view', () => {
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session } });
 
-    await fireEvent.click(screen.getByRole('checkbox', { name: /enforce a monochrome decree/i }));
+    const selector = screen.getByLabelText(/^palette mode$/i);
+    await fireEvent.change(selector, { target: { value: 'monochrome' } });
 
-    expect(session.setMonochrome).toHaveBeenCalledWith(true);
+    expect(session.setPaletteMode).toHaveBeenCalledWith('monochrome');
   });
 
-  describe('palette-preset and allow-fill host controls (host-drawing-tool-controls)', () => {
+  describe('palette-mode and allow-fill host controls (host-drawing-tool-controls)', () => {
     function makeHostRoom(overrides: Partial<Room> = {}): Room {
       return {
         id: 'ABCDE',
@@ -708,8 +694,7 @@ describe('Lobby view', () => {
         status: 'lobby',
         books: [],
         createdAt: Date.now(),
-        monochromeOnly: false,
-        palettePreset: 'standard',
+        paletteMode: 'standard',
         allowFillTool: true,
         turnTimerMinutes: null,
         lapsPerBook: null,
@@ -728,15 +713,15 @@ describe('Lobby view', () => {
       };
     }
 
-    it('emits set_palette_preset when the host changes the palette picker', async () => {
+    it('emits setPaletteMode when the host changes the palette-mode selector', async () => {
       const room = makeHostRoom();
       const session = makeFakeSession({ room, player: room.players[0]!, error: null });
       render(Lobby, { props: { session } });
 
-      const picker = screen.getByLabelText(/^colou?r palette$/i);
+      const picker = screen.getByLabelText(/^palette mode$/i);
       await fireEvent.change(picker, { target: { value: 'extended' } });
 
-      expect(session.setPalettePreset).toHaveBeenCalledWith('extended');
+      expect(session.setPaletteMode).toHaveBeenCalledWith('extended');
     });
 
     it('emits set_fill_tool when the host toggles the allow-fill control', async () => {
@@ -749,14 +734,16 @@ describe('Lobby view', () => {
       expect(session.setFillTool).toHaveBeenCalledWith(false);
     });
 
-    it('shows the palette picker but disables it while force-monochrome is on', () => {
-      const room = makeHostRoom({ monochromeOnly: true });
+    it('offers monochrome as a selectable palette mode', () => {
+      const room = makeHostRoom({ paletteMode: 'monochrome' });
       const session = makeFakeSession({ room, player: room.players[0]!, error: null });
       render(Lobby, { props: { session } });
 
-      const picker = screen.getByLabelText(/^colou?r palette$/i) as HTMLSelectElement;
+      const picker = screen.getByLabelText(/^palette mode$/i) as HTMLSelectElement;
       expect(picker).toBeInTheDocument();
-      expect(picker).toBeDisabled();
+      expect(picker.value).toBe('monochrome');
+      const values = Array.from(picker.options).map((o) => o.value);
+      expect(values).toContain('monochrome');
     });
   });
 
@@ -817,8 +804,7 @@ describe('Lobby view', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -835,14 +821,14 @@ describe('Lobby view', () => {
       dealtPrompts: {},
     };
 
-    it('reveals an explanation for force monochrome, turn timer, and laps per book', async () => {
+    it('reveals an explanation for palette mode, turn timer, and laps per book', async () => {
       const session = makeFakeSession({ room, player: room.players[0]!, error: null });
       render(Lobby, { props: { session } });
 
       await fireEvent.click(
-        screen.getByRole('button', { name: /force monochrome|monochrome decree/i }),
+        screen.getByRole('button', { name: /palette mode/i }),
       );
-      expect(screen.getByText(/hides the color palette/i)).toBeInTheDocument();
+      expect(screen.getByText(/hides the palette/i)).toBeInTheDocument();
 
       await fireEvent.click(
         screen.getByRole('button', { name: /turn timer|contemplation period/i }),
@@ -886,8 +872,7 @@ describe('Lobby prompt-mode host controls', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -997,8 +982,7 @@ describe('Lobby prompt-mode info affordance', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -1061,8 +1045,7 @@ describe('Lobby host-setting info affordances', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -1130,10 +1113,11 @@ describe('Lobby host-setting info affordances', () => {
     const { container } = renderAllHostControls();
 
     const inputs = Array.from(container.querySelectorAll<HTMLElement>('input, select'));
-    // Sanity: all nine host settings must actually be on screen, or this
-    // assertion is vacuous (added the palette-preset picker and allow-fill
-    // toggle — host-drawing-tool-controls).
-    expect(inputs.length).toBe(9);
+    // Sanity: all eight host settings must actually be on screen, or this
+    // assertion is vacuous. The former force-monochrome toggle and separate
+    // palette-preset picker are now one palette-mode selector
+    // (monochrome-into-palette-mode).
+    expect(inputs.length).toBe(8);
 
     const uncovered = inputs.filter((input) => {
       // Walk up only while the enclosing block still describes THIS setting
@@ -1164,8 +1148,7 @@ describe('Lobby host-setting info affordances', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -1210,8 +1193,7 @@ describe('Lobby host-setting info affordances', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
@@ -1287,8 +1269,7 @@ describe('Lobby room-code copy affordances', () => {
       status: 'lobby',
       books: [],
       createdAt: Date.now(),
-      monochromeOnly: false,
-      palettePreset: 'standard',
+      paletteMode: 'standard',
       allowFillTool: true,
       turnTimerMinutes: null,
       lapsPerBook: null,
