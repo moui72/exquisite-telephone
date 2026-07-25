@@ -14,7 +14,7 @@ status: in-progress
 
 ## Phase 2: Copy-join-link context menu
 
-- [ ] T003 [artifacts: ui] Add a context menu on the Lobby room-code element with a single "copy join link" action that copies `\`${window.location.origin}/?room=${code}\`` using the T001 clipboard helper. Open the menu via the native `contextmenu` event on pointer devices and a long-press timer on touch (pin a long-press threshold, e.g. ~500ms, that doesn't interfere with tap-to-copy from T001). Implement it as a minimal custom overlay (one action) — dismiss on outside click / Escape. Write failing `Lobby.test.ts` cases first (right-click opens the menu; selecting "copy join link" copies the origin-based URL with the room code; outside-click/Escape dismisses), then implement. Feature: room-code-copy-and-join-link.
+- [x] T003 [artifacts: ui] Add a context menu on the Lobby room-code element with a single "copy join link" action that copies `\`${window.location.origin}/?room=${code}\`` using the T001 clipboard helper. Open the menu via the native `contextmenu` event on pointer devices and a long-press timer on touch (pin a long-press threshold, e.g. ~500ms, that doesn't interfere with tap-to-copy from T001). Implement it as a minimal custom overlay (one action) — dismiss on outside click / Escape. Write failing `Lobby.test.ts` cases first (right-click opens the menu; selecting "copy join link" copies the origin-based URL with the room code; outside-click/Escape dismisses), then implement. Feature: room-code-copy-and-join-link.
 
 ## Phase 3: Foyer join-link pre-fill
 

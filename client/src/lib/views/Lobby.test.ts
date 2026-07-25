@@ -1356,4 +1356,45 @@ describe('Lobby room-code copy affordances', () => {
     // the code element's own text node.
     expect(screen.getByText('ABCDE')).toBeInTheDocument();
   });
+
+  it('right-click opens a context menu with a "copy join link" action, without copying the bare code', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    expect(writeText).not.toHaveBeenCalled();
+  });
+
+  it('selecting "copy join link" copies an origin-based URL with the room code', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    await fireEvent.click(screen.getByRole('button', { name: /copy join link/i }));
+
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/?room=ABCDE`);
+  });
+
+  it('dismisses the context menu on outside click and on Escape', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    await fireEvent.click(document.body);
+    expect(screen.queryByRole('button', { name: /copy join link/i })).not.toBeInTheDocument();
+
+    await fireEvent.contextMenu(screen.getByTestId('room-code'));
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+    await fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: /copy join link/i })).not.toBeInTheDocument();
+  });
 });

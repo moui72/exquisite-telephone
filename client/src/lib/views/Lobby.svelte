@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { activePlayers, defaultLapsPerBook } from '@exquisite-telephone/shared';
   import { session as defaultSession } from '../stores/index.js';
   import type { SessionStore } from '../stores/session.js';
@@ -28,6 +29,89 @@
       copiedResetTimer = setTimeout(() => (copied = false), 2000);
     }
   }
+
+  // Copy-join-link context menu (ui.md Lobby View). Opened by the native
+  // contextmenu event on pointer devices and by a long-press on touch; a
+  // minimal custom overlay with a single action, dismissed on outside
+  // click / Escape. The join link points at this same SPA — see the Foyer
+  // ?room= pre-fill — so no server route is involved.
+  let contextMenuOpen = false;
+  let contextMenuX = 0;
+  let contextMenuY = 0;
+
+  // Long-press tuning for touch. 500ms is the pinned threshold: long enough
+  // that a normal tap (which should copy the bare code, T001) never trips
+  // it, short enough to feel deliberate. `suppressNextClick` swallows the
+  // click the browser synthesises after a touch long-press so it does not
+  // also fire tap-to-copy.
+  const LONG_PRESS_MS = 500;
+  let longPressTimer: ReturnType<typeof setTimeout> | undefined;
+  let suppressNextClick = false;
+
+  function openContextMenuAt(x: number, y: number) {
+    contextMenuX = x;
+    contextMenuY = y;
+    contextMenuOpen = true;
+  }
+
+  function handleContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    openContextMenuAt(event.clientX, event.clientY);
+  }
+
+  function handleRoomCodeClick(code: string) {
+    // A click synthesised right after a touch long-press is swallowed here
+    // (the flag is consumed later by the window handler) so it never
+    // tap-copies.
+    if (suppressNextClick) return;
+    void handleCopyCode(code);
+  }
+
+  function handleTouchStart(event: TouchEvent) {
+    clearTimeout(longPressTimer);
+    const touch = event.touches[0];
+    const x = touch?.clientX ?? 0;
+    const y = touch?.clientY ?? 0;
+    longPressTimer = setTimeout(() => {
+      suppressNextClick = true;
+      openContextMenuAt(x, y);
+    }, LONG_PRESS_MS);
+  }
+
+  function cancelLongPress() {
+    clearTimeout(longPressTimer);
+  }
+
+  function closeContextMenu() {
+    contextMenuOpen = false;
+  }
+
+  async function handleCopyJoinLink(code: string) {
+    closeContextMenu();
+    await handleCopyCode(`${window.location.origin}/?room=${code}`);
+  }
+
+  function handleWindowKeydown(event: KeyboardEvent) {
+    if (contextMenuOpen && event.key === 'Escape') closeContextMenu();
+  }
+
+  let contextMenuEl: HTMLElement | undefined;
+
+  function handleWindowClick(event: MouseEvent) {
+    // Consume the suppressed post-long-press click without dismissing.
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
+    if (!contextMenuOpen) return;
+    if (contextMenuEl && contextMenuEl.contains(event.target as Node)) return;
+    closeContextMenu();
+  }
+
+  onDestroy(() => {
+    clearTimeout(copiedResetTimer);
+    clearTimeout(longPressTimer);
+  });
 
   /** Below this many players, starting requires an explicit host override (datamodel.md Normalization Rules). */
   const MINIMUM_RECOMMENDED_PLAYERS = 3;
@@ -145,6 +229,8 @@
   }
 </script>
 
+<svelte:window on:keydown={handleWindowKeydown} on:click={handleWindowClick} />
+
 <div class="mx-auto flex min-h-screen w-full max-w-xl flex-col justify-center gap-6 p-4 sm:p-6">
   {#if !state.room}
     <div class="flex flex-col items-center gap-1 text-center">
@@ -239,7 +325,12 @@
           data-testid="room-code"
           title="Click to copy — right-click or long-press to copy a join link"
           class="inline-flex items-baseline gap-2 text-left text-3xl font-bold tracking-widest text-ink"
-          on:click={() => handleCopyCode(state.room?.id ?? '')}
+          on:click={() => handleRoomCodeClick(state.room?.id ?? '')}
+          on:contextmenu={handleContextMenu}
+          on:touchstart={handleTouchStart}
+          on:touchend={cancelLongPress}
+          on:touchmove={cancelLongPress}
+          on:touchcancel={cancelLongPress}
         >
           {state.room.id}<span
             class="text-xs font-medium tracking-normal text-gold transition-opacity {copied
@@ -248,6 +339,23 @@
             aria-live="polite">Copied</span
           >
         </button>
+
+        {#if contextMenuOpen}
+          <div
+            bind:this={contextMenuEl}
+            role="menu"
+            class="fixed z-50 min-w-[12rem] rounded-md border border-gold/40 bg-champagne p-1 shadow-lg"
+            style="left: {contextMenuX}px; top: {contextMenuY}px;"
+          >
+            <button
+              type="button"
+              class="w-full rounded px-3 py-2 text-left text-sm text-ink hover:bg-gold/15"
+              on:click={() => handleCopyJoinLink(state.room?.id ?? '')}
+            >
+              Copy join link
+            </button>
+          </div>
+        {/if}
 
         <ul class="flex flex-col gap-2">
           {#each activePlayers(state.room) as player (player.id)}
