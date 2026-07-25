@@ -1,13 +1,13 @@
 ---
-status: open      # open -> planned
+status: planned      # open -> planned
 created: 2026-07-24
-plan: null        # set to the consuming plan's filename once planned
+plan: plan-monochrome-into-palette-mode-2026-07-24-9207.md
 ---
 
 # Feedback
 
 ## Reconsidered
-- [ ] F001 Monochrome should be folded into the color-palette preset control
+- [x] F001 Monochrome should be folded into the color-palette preset control
   as one option (e.g. a `monochrome` mode alongside `primary` / `standard` /
   `extended`) instead of remaining its own separate host setting. This
   reconsiders the design just shipped in the `host-drawing-tool-controls`

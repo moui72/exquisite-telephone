@@ -1,5 +1,22 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-24 (**Planned + tasked the monochrome→palette-mode reversal
+(user-confirmed override).** F001 of `feedback-monochrome-as-palette-option-e4ce.md`
+was confirmed as a decision reversal of the v0.4.0 palette design; feedback file
+now **planned**. Approved `plan-monochrome-into-palette-mode-2026-07-24-9207.md`
+with ready tasks `tasks-monochrome-into-palette-mode-6ba3.md` (**ready**, 0/4):
+retire `Room.monochromeOnly` + `onSetMonochrome` + `setMonochrome`, rename
+`palettePreset` → `paletteMode` and add a `monochrome` value
+(`monochrome | primary | standard | extended`), and collapse the two Lobby
+controls into one palette-mode selector — Constitution IV (no dead
+architecture), so the old symbols are deleted, not left. Phasing: P1 rewrites
+datamodel/ui/infrastructure (docs); P2–P4 fold into ONE atomic code task (T004)
+because the field rename ripples across shared+server+client and the pre-commit
+hook gates the full suite, so an incremental rename would break typecheck at a
+commit boundary. No persistence migration (rooms in-memory). Backlog + feedback
+now empty — this is the last queued work. Next: `/ardd-implement`, then the
+final push + diagram-regen + prod-promote pass.)_
+
 _Updated: 2026-07-24 (**Room-code copy / join link merged & implemented.** The
 delegated worktree completed all 4 tasks; branch merged into `main` (clean) and
 reaped. Full suite green: **shared 70 · server 258 · client 281 · root 6 = 615
