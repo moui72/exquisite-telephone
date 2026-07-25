@@ -323,8 +323,7 @@
         username={state.player.name}
         ops={coverDraft_.ops}
         onOpsChange={handleCoverOpsChange}
-        monochromeOnly={state.room?.monochromeOnly ?? false}
-          palettePreset={state.room?.palettePreset ?? 'standard'}
+        paletteMode={state.room?.paletteMode ?? 'standard'}
           allowFillTool={state.room?.allowFillTool ?? true}
           coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
@@ -340,8 +339,7 @@
           username={state.player.name}
           ops={coverDraft_.ops}
           onOpsChange={handleCoverOpsChange}
-          monochromeOnly={state.room?.monochromeOnly ?? false}
-          palettePreset={state.room?.palettePreset ?? 'standard'}
+          paletteMode={state.room?.paletteMode ?? 'standard'}
           allowFillTool={state.room?.allowFillTool ?? true}
           coverTemplate={coverDraft_.template}
           onTemplateChange={handleCoverTemplateChange}
@@ -479,8 +477,7 @@
             <DrawingCanvas
               ops={drawnOps}
               onOpsChange={handleOpsChange}
-              monochromeOnly={state.room?.monochromeOnly ?? false}
-              palettePreset={state.room?.palettePreset ?? 'standard'}
+              paletteMode={state.room?.paletteMode ?? 'standard'}
               allowFillTool={state.room?.allowFillTool ?? true}
             />
           </div>

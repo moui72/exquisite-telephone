@@ -42,8 +42,7 @@ const sampleRoom: Room = {
   status: 'lobby',
   books: [],
   createdAt: Date.now(),
-  monochromeOnly: false,
-  palettePreset: 'standard',
+  paletteMode: 'standard',
   allowFillTool: true,
   turnTimerMinutes: null,
   lapsPerBook: null,
@@ -202,7 +201,7 @@ describe('session store (client single source of state)', () => {
     expect(localStorage.getItem(SESSION_TOKEN_STORAGE_KEY)).toBe('tok');
   });
 
-  it('endGame emits endGame with roomId/playerId, mirroring setMonochrome shape', async () => {
+  it('endGame emits endGame with roomId/playerId, mirroring setPaletteMode shape', async () => {
     const fake = makeFakeSocket();
     fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
     const session = createSessionStore(fake.socket);
@@ -234,20 +233,36 @@ describe('session store (client single source of state)', () => {
     expect(get(session).room?.lapsPerBook).toBe(3);
   });
 
-  it('setPalettePreset emits set_palette_preset with roomId/playerId/palettePreset', async () => {
+  it('setPaletteMode emits set_palette_mode with roomId/playerId/paletteMode', async () => {
     const fake = makeFakeSocket();
     fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
     const session = createSessionStore(fake.socket);
     await session.createRoom('Ada');
 
-    fake.setNextAck({ room: { ...sampleRoom, palettePreset: 'extended' } });
-    await session.setPalettePreset('extended');
+    fake.setNextAck({ room: { ...sampleRoom, paletteMode: 'extended' } });
+    await session.setPaletteMode('extended');
 
     expect(fake.getLastEmit()).toEqual({
-      event: 'set_palette_preset',
-      payload: { roomId: 'ABCDE', playerId: 'p1', palettePreset: 'extended' },
+      event: 'set_palette_mode',
+      payload: { roomId: 'ABCDE', playerId: 'p1', paletteMode: 'extended' },
     });
-    expect(get(session).room?.palettePreset).toBe('extended');
+    expect(get(session).room?.paletteMode).toBe('extended');
+  });
+
+  it('setPaletteMode accepts monochrome', async () => {
+    const fake = makeFakeSocket();
+    fake.setNextAck({ room: sampleRoom, player: sampleRoom.players[0] });
+    const session = createSessionStore(fake.socket);
+    await session.createRoom('Ada');
+
+    fake.setNextAck({ room: { ...sampleRoom, paletteMode: 'monochrome' } });
+    await session.setPaletteMode('monochrome');
+
+    expect(fake.getLastEmit()).toEqual({
+      event: 'set_palette_mode',
+      payload: { roomId: 'ABCDE', playerId: 'p1', paletteMode: 'monochrome' },
+    });
+    expect(get(session).room?.paletteMode).toBe('monochrome');
   });
 
   it('setFillTool emits set_fill_tool with roomId/playerId/allowFillTool', async () => {

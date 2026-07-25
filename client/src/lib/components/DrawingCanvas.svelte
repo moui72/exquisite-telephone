@@ -8,7 +8,7 @@
 
   /**
    * Palette-preset swatch sets (ui.md Writing/Drawing View), keyed by
-   * `Room.palettePreset`. `primary` is the primary colors plus black and
+   * the non-`monochrome` values of `Room.paletteMode`. `primary` is the primary colors plus black and
    * white; `standard` is the default palette; `extended` is a larger set.
    * Every preset includes black and white (erase-by-overpaint); the
    * `standard` and `extended` presets also carry a brown and a pink
@@ -76,18 +76,13 @@
   export let readOnly = false;
   export let onOpsChange: (ops: DrawOps) => void = () => {};
   /**
-   * When true (Room.monochromeOnly, host-configured lobby setting), the
-   * color palette is hidden and every new stroke uses the default ink
-   * color, regardless of any prior palette selection (ui.md Writing/
-   * Drawing View).
+   * The room's palette mode (Room.paletteMode, host-configured lobby
+   * setting — ui.md Writing/Drawing View). `'monochrome'` hides the color
+   * palette and forces every new stroke to the default ink color,
+   * regardless of any prior palette selection; `'primary' | 'standard' |
+   * 'extended'` select which preset swatch set the palette renders.
    */
-  export let monochromeOnly = false;
-  /**
-   * Which palette-preset swatch set to render (Room.palettePreset,
-   * host-configured lobby setting — ui.md Writing/Drawing View). Ignored
-   * while `monochromeOnly` hides the palette entirely.
-   */
-  export let palettePreset: 'primary' | 'standard' | 'extended' = 'standard';
+  export let paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended' = 'standard';
   /**
    * When false (Room.allowFillTool off, host-configured lobby setting),
    * the fill (bucket) control is removed from the toolbar for the whole
@@ -114,8 +109,12 @@
   let strokeColor = DEFAULT_COLOR;
   let strokeWidth = DEFAULT_WIDTH;
 
-  $: effectiveColor = monochromeOnly ? DEFAULT_COLOR : activeColor;
-  $: paletteColors = PALETTE_PRESETS[palettePreset] ?? PALETTE_PRESETS.standard;
+  $: monochrome = paletteMode === 'monochrome';
+  $: effectiveColor = monochrome ? DEFAULT_COLOR : activeColor;
+  $: paletteColors =
+    paletteMode === 'monochrome'
+      ? PALETTE_PRESETS.standard
+      : (PALETTE_PRESETS[paletteMode] ?? PALETTE_PRESETS.standard);
 
   function toPoint(event: PointerEvent | MouseEvent): Point {
     const rect = canvasEl.getBoundingClientRect();
@@ -256,7 +255,7 @@
 
 {#if !readOnly}
   <div class="mb-2 flex flex-wrap items-center gap-3 rounded-md border-2 border-gold/50 bg-champagne/60 p-2 font-body">
-    {#if !monochromeOnly}
+    {#if !monochrome}
       <div class="flex gap-1" role="group" aria-label="Stroke color">
         {#each paletteColors as color (color)}
           <button

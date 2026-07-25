@@ -12,7 +12,7 @@ function firePointer(canvas: Element, type: string, x: number, y: number) {
 
 /**
  * T009/T010 — the cover-decoration canvas (ui.md Cover Decoration). Reuses
- * DrawingCanvas, pre-stamped "<username>'s book", honors monochromeOnly,
+ * DrawingCanvas, pre-stamped "<username>'s book", honors paletteMode,
  * and edits a client-local draft (draw ops) via onOpsChange without any
  * per-stroke socket emit (covers finalize once, via onSubmitCover).
  */
@@ -45,9 +45,9 @@ describe('CoverDecorationCanvas', () => {
     expect(next[0].type).toBe('stroke');
   });
 
-  it('honors monochromeOnly by hiding the color palette (passed through to DrawingCanvas)', () => {
+  it('honors monochrome paletteMode by hiding the color palette (passed through to DrawingCanvas)', () => {
     const { container, queryByRole } = render(CoverDecorationCanvas, {
-      props: { username: 'Ada', ops: [], monochromeOnly: true },
+      props: { username: 'Ada', ops: [], paletteMode: 'monochrome' },
     });
 
     // The canvas is still present...
@@ -56,9 +56,9 @@ describe('CoverDecorationCanvas', () => {
     expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
   });
 
-  it('shows the color palette when monochromeOnly is false', () => {
+  it('shows the color palette when paletteMode is a color mode', () => {
     const { queryByRole } = render(CoverDecorationCanvas, {
-      props: { username: 'Ada', ops: [], monochromeOnly: false },
+      props: { username: 'Ada', ops: [], paletteMode: 'standard' },
     });
 
     expect(queryByRole('group', { name: /stroke color/i })).toBeInTheDocument();

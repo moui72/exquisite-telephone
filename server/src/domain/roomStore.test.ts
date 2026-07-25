@@ -28,8 +28,7 @@ function makeRoomWithPlayers(players: Player[]): Room {
     status: 'writing',
     books: [],
     createdAt: Date.now(),
-    monochromeOnly: false,
-    palettePreset: 'standard',
+    paletteMode: 'standard',
     allowFillTool: true,
     turnTimerMinutes: null,
     lapsPerBook: null,
@@ -66,16 +65,10 @@ describe('room store (in-memory, datamodel.md Room/Player)', () => {
     expect(roomA.books).toEqual([]);
   });
 
-  it('create room defaults monochromeOnly to false', () => {
+  it('create room defaults paletteMode to standard and allowFillTool to true', () => {
     const room = createRoom(store, { hostName: 'Ada' });
 
-    expect(room.monochromeOnly).toBe(false);
-  });
-
-  it('create room defaults palettePreset to standard and allowFillTool to true', () => {
-    const room = createRoom(store, { hostName: 'Ada' });
-
-    expect(room.palettePreset).toBe('standard');
+    expect(room.paletteMode).toBe('standard');
     expect(room.allowFillTool).toBe(true);
   });
 
@@ -147,7 +140,7 @@ describe('replayRoom (host-only "Play again" — datamodel.md Normalization Rule
     expect(room.id).not.toBe(oldRoomWithGrace.id);
     expect(room.status).toBe('lobby');
     expect(room.playAgainVotes).toEqual([]);
-    expect(room.monochromeOnly).toBe(false);
+    expect(room.paletteMode).toBe('standard');
     expect(room.turnTimerMinutes).toBeNull();
     expect(room.roundStartedAt).toBeNull();
     expect(room.timerExtensions).toEqual({});

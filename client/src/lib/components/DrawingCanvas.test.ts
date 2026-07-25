@@ -219,10 +219,10 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     vi.restoreAllMocks();
   });
 
-  it('hides the color palette and forces the default ink color when monochromeOnly is true', async () => {
+  it('hides the color palette and forces the default ink color when paletteMode is monochrome', async () => {
     const onOpsChange = vi.fn();
     const { container, queryByLabelText, queryByRole } = render(DrawingCanvas, {
-      props: { ops: [], onOpsChange, monochromeOnly: true },
+      props: { ops: [], onOpsChange, paletteMode: 'monochrome' },
     });
     const canvas = container.querySelector('canvas')!;
 
@@ -307,9 +307,9 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(getByLabelText('Color #f97316')).toBeInTheDocument();
   });
 
-  it('renders only the primary preset swatches when palettePreset is primary', () => {
+  it('renders only the primary preset swatches when paletteMode is primary', () => {
     const { getByLabelText, queryByLabelText } = render(DrawingCanvas, {
-      props: { ops: [], palettePreset: 'primary' },
+      props: { ops: [], paletteMode: 'primary' },
     });
     // Primary = primary colors plus black and white.
     expect(getByLabelText('Color #3b82f6')).toBeInTheDocument();
@@ -320,9 +320,9 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(queryByLabelText('Color #8b5cf6')).not.toBeInTheDocument();
   });
 
-  it('renders the extended preset swatch set when palettePreset is extended', () => {
+  it('renders the extended preset swatch set when paletteMode is extended', () => {
     const { getByLabelText } = render(DrawingCanvas, {
-      props: { ops: [], palettePreset: 'extended' },
+      props: { ops: [], paletteMode: 'extended' },
     });
     // Extended is a superset of standard, plus extended-only swatches.
     expect(getByLabelText('Color #f97316')).toBeInTheDocument();
@@ -343,9 +343,9 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     expect(getByRole('radio', { name: /bucket/i })).toBeInTheDocument();
   });
 
-  it('still hides the whole palette when monochromeOnly even with a non-default preset', () => {
+  it('hides the whole palette in monochrome mode, including extended-only swatches', () => {
     const { queryByLabelText, queryByRole } = render(DrawingCanvas, {
-      props: { ops: [], monochromeOnly: true, palettePreset: 'extended' },
+      props: { ops: [], paletteMode: 'monochrome' },
     });
     expect(queryByLabelText('Color #0ea5e9')).not.toBeInTheDocument();
     expect(queryByRole('group', { name: /stroke color/i })).not.toBeInTheDocument();
@@ -359,7 +359,7 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
 
   it('includes brown and pink skin-tone swatches in the extended preset', () => {
     const { getByLabelText } = render(DrawingCanvas, {
-      props: { ops: [], palettePreset: 'extended' },
+      props: { ops: [], paletteMode: 'extended' },
     });
     expect(getByLabelText('Color #8d5524')).toBeInTheDocument();
     expect(getByLabelText('Color #ffc1a6')).toBeInTheDocument();
@@ -367,7 +367,7 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
 
   it('omits the skin-tone swatches from the primary preset', () => {
     const { queryByLabelText } = render(DrawingCanvas, {
-      props: { ops: [], palettePreset: 'primary' },
+      props: { ops: [], paletteMode: 'primary' },
     });
     expect(queryByLabelText('Color #8d5524')).not.toBeInTheDocument();
     expect(queryByLabelText('Color #ffc1a6')).not.toBeInTheDocument();

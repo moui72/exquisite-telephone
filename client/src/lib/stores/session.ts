@@ -77,8 +77,7 @@ export interface SessionStore extends Readable<SessionState> {
    * on this call, never per stroke.
    */
   submitCover(bookId: string, cover: DrawOps, coverTemplate: string | null): Promise<void>;
-  setMonochrome(monochromeOnly: boolean): Promise<void>;
-  setPalettePreset(palettePreset: 'primary' | 'standard' | 'extended'): Promise<void>;
+  setPaletteMode(paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended'): Promise<void>;
   setFillTool(allowFillTool: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
@@ -213,20 +212,12 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         coverTemplate,
       });
     },
-    setMonochrome(monochromeOnly: boolean) {
+    setPaletteMode(paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended') {
       const state = get(store);
-      return emitWithAck('set_monochrome', {
+      return emitWithAck('set_palette_mode', {
         roomId: state.room?.id,
         playerId: state.player?.id,
-        monochromeOnly,
-      });
-    },
-    setPalettePreset(palettePreset: 'primary' | 'standard' | 'extended') {
-      const state = get(store);
-      return emitWithAck('set_palette_preset', {
-        roomId: state.room?.id,
-        playerId: state.player?.id,
-        palettePreset,
+        paletteMode,
       });
     },
     setFillTool(allowFillTool: boolean) {

@@ -41,9 +41,8 @@ export class LobbyPage {
     await expect(this.page.getByRole('listitem')).toHaveCount(count);
   }
 
-  async setMonochrome(on: boolean): Promise<void> {
-    const box = this.page.locator('#monochrome-toggle');
-    if ((await box.isChecked()) !== on) await box.click();
+  async setPaletteMode(mode: 'monochrome' | 'primary' | 'standard' | 'extended'): Promise<void> {
+    await this.page.locator('#palette-mode-select').selectOption(mode);
   }
 
   async setTurnTimerMinutes(value: 15 | 30 | 60 | 240 | 720 | null): Promise<void> {

@@ -120,18 +120,14 @@ export interface Room {
   createdAt: number;
   /**
    * Host-configurable, set before `status` leaves `lobby`; defaults
-   * `false`. When `true`, the drawing tool's color palette is hidden and
-   * all strokes render in the default ink color.
+   * `'standard'`. A single palette *mode*, not merely a color preset.
+   * `'monochrome'` hides the drawing tool's color palette entirely and
+   * renders all strokes in the default ink color (the sole monochrome
+   * control — there is no separate boolean). `'primary'` is a minimal
+   * primary-colors set, `'standard'` the default palette (including
+   * skin-tone swatches), `'extended'` a larger palette.
    */
-  monochromeOnly: boolean;
-  /**
-   * Host-configurable, set before `status` leaves `lobby`; defaults
-   * `'standard'`. Selects which swatch set the drawing tool's color
-   * palette renders. `'primary'` is a minimal primary-colors set,
-   * `'standard'` the default palette (including skin-tone swatches),
-   * `'extended'` a larger palette.
-   */
-  palettePreset: 'primary' | 'standard' | 'extended';
+  paletteMode: 'monochrome' | 'primary' | 'standard' | 'extended';
   /**
    * Host-configurable, set before `status` leaves `lobby`; defaults
    * `true`. When `false`, the drawing tool's fill (bucket) control is
