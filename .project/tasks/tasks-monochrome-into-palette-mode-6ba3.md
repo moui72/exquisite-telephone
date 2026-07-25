@@ -1,7 +1,7 @@
 ---
 plan: plan-monochrome-into-palette-mode-2026-07-24-9207.md
 generated: 2026-07-24
-status: ready
+status: in-progress
 ---
 
 # Tasks
