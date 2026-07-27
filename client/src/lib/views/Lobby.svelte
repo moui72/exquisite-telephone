@@ -15,6 +15,24 @@
   let roomCodeInput = '';
   let acknowledgeSmallGame = false;
 
+  // Inline self-rename in the guest roster (F002, ui.md Lobby View): a player
+  // clicks their own entry to edit their display name while in the lobby.
+  // Empty/whitespace-only submissions are ignored client-side, matching the
+  // server's trimmed-non-empty rule (datamodel.md — Display-name rename).
+  let editingName = false;
+  let nameDraft = '';
+
+  function startEditingName(currentName: string) {
+    nameDraft = currentName;
+    editingName = true;
+  }
+
+  async function handleRenameSubmit() {
+    const trimmed = nameDraft.trim();
+    editingName = false;
+    if (trimmed) await session.setDisplayName(trimmed);
+  }
+
   // Click-to-copy the room code (ui.md Lobby View). The confirmation is a
   // brief inline cue rendered in a child <span>, not a toast — no toast
   // system exists, and keeping it a child element keeps the code element's
@@ -439,15 +457,44 @@
           <ul class="mt-2 flex flex-col gap-2">
             {#each activePlayers(state.room) as player (player.id)}
               <li class="rounded-md border border-gold/30 px-3 py-2 text-base">
-                {player.name}
-                {#if player.id === state.player?.id}
-                  <span class="text-xs text-ink/60">(you)</span>
-                {/if}
-                {#if player.id === state.room.hostPlayerId}
-                  <span class="inline-flex items-center gap-1 text-xs text-ink/60">
-                    <Crown size={12} class="text-gold" aria-hidden="true" />
-                    (host)
-                  </span>
+                {#if player.id === state.player?.id && editingName}
+                  <form
+                    class="inline-flex items-center gap-2"
+                    on:submit|preventDefault={handleRenameSubmit}
+                  >
+                    <input
+                      class="rounded border border-gold/40 px-2 py-1 text-base"
+                      type="text"
+                      aria-label="Display name"
+                      bind:value={nameDraft}
+                      autocomplete="name"
+                    />
+                    <button
+                      type="submit"
+                      class="chamfer-frame chamfer-slim bg-sapphire px-3 py-1 text-sm font-medium text-white [--chamfer-color:theme(colors.gold)]"
+                    >
+                      Save
+                    </button>
+                  </form>
+                {:else}
+                  {player.name}
+                  {#if player.id === state.player?.id}
+                    <span class="text-xs text-ink/60">(you)</span>
+                    <button
+                      type="button"
+                      class="text-xs text-gold underline hover:text-gold/80"
+                      aria-label="Edit your display name"
+                      on:click={() => startEditingName(player.name)}
+                    >
+                      edit
+                    </button>
+                  {/if}
+                  {#if player.id === state.room.hostPlayerId}
+                    <span class="inline-flex items-center gap-1 text-xs text-ink/60">
+                      <Crown size={12} class="text-gold" aria-hidden="true" />
+                      (host)
+                    </span>
+                  {/if}
                 {/if}
               </li>
             {/each}

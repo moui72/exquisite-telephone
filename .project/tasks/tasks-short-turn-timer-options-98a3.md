@@ -1,7 +1,7 @@
 ---
 plan: plan-short-turn-timer-options-2026-07-27-1cf1.md
 generated: 2026-07-27
-status: in-progress
+status: completed
 ---
 
 # Tasks
@@ -23,5 +23,5 @@ status: in-progress
 - [x] T008 [artifacts: datamodel, infrastructure] Test-first: add a FAILING server test (Vitest `.fails`) for an `onSetDisplayName` socket handler — a lobby player renaming their own seat to a trimmed non-empty name updates `Player.name` and broadcasts the updated room; a rename that isn't the caller's own seat, that targets a non-lobby room, or whose trimmed name is empty is rejected with no mutation. Model it on the existing lobby-setter handler tests. Confirm red first.
 - [x] T009 [artifacts: datamodel, infrastructure] Implement to turn T008 green (remove `.fails`): add the `onSetDisplayName` server socket handler (own-seat-only, lobby-only, trimmed-non-empty validation, then mutate `Player.name` and broadcast the room) mirroring the existing lobby setters, plus a `session.setDisplayName(name)` client emitter in the session store. Verify the full suite.
 - [x] T010 [artifacts: ui] Test-first: add a FAILING case to `Lobby.test.ts` (marked `.fails`) asserting that clicking the current player's own roster entry reveals an inline edit affordance whose submission calls `session.setDisplayName` with the new (trimmed) value. Confirm red first.
-- [ ] T011 [artifacts: ui] Implement to turn T010 green (remove `.fails`): make the current player's Lobby roster entry an inline click-to-edit affordance that calls `session.setDisplayName` on submit, rejecting an empty/whitespace-only value client-side to match the server rule. Verify the full suite + svelte-check.
+- [x] T011 [artifacts: ui] Implement to turn T010 green (remove `.fails`): make the current player's Lobby roster entry an inline click-to-edit affordance that calls `session.setDisplayName` on submit, rejecting an empty/whitespace-only value client-side to match the server rule. Verify the full suite + svelte-check.
 </content>

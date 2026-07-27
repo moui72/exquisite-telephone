@@ -1,6 +1,6 @@
 ---
 slug: short-turn-timer-options
-status: tasked
+status: implemented
 logged: 2026-07-27
 plan: plan-short-turn-timer-options-2026-07-27-1cf1.md
 tasks: tasks-short-turn-timer-options-98a3.md

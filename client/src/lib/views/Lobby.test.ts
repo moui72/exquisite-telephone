@@ -1511,7 +1511,7 @@ describe('Lobby self-rename (F002)', () => {
     };
   }
 
-  it.fails('reveals an inline editor on the own entry and emits setDisplayName with the trimmed value', async () => {
+  it('reveals an inline editor on the own entry and emits setDisplayName with the trimmed value', async () => {
     const room = makeSoloRoom();
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session } });
@@ -1524,7 +1524,7 @@ describe('Lobby self-rename (F002)', () => {
     expect(session.setDisplayName).toHaveBeenCalledWith('Adah');
   });
 
-  it.fails('does not emit setDisplayName for an empty/whitespace-only name', async () => {
+  it('does not emit setDisplayName for an empty/whitespace-only name', async () => {
     const room = makeSoloRoom();
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
     render(Lobby, { props: { session } });
