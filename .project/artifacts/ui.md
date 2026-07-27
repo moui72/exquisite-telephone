@@ -48,6 +48,18 @@ shareable room code); other players join by entering the code and a
 display name. Shows connected players and a "start game" control
 visible only to the host.
 
+In the guest roster, the viewer's own entry is marked **"(you)"** — a
+tag parallel to the existing **"(host)"** tag, shown to every player
+including non-hosts, so a guest can always tell which name in the list
+is theirs. That own entry is also an **inline rename** affordance: while
+`Room.status === 'lobby'`, clicking it lets the player edit their own
+display name (the name is otherwise fixed at join time), and the change
+broadcasts to the room. A player may rename only their *own* seat, only
+in the lobby; the name is trimmed and an empty result is rejected (see
+[[datamodel]] Normalization Rules — Display-name rename, and
+[[infrastructure]] for the `onSetDisplayName` handler). Both tags may
+appear together on the host's own entry ("(you)" and "(host)").
+
 The displayed room code is **click-to-copy**: clicking or tapping it
 copies the bare code to the clipboard and shows a brief "copied"
 confirmation, so a host never has to read it out or retype it.
