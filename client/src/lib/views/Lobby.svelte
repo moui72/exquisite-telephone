@@ -440,6 +440,9 @@
             {#each activePlayers(state.room) as player (player.id)}
               <li class="rounded-md border border-gold/30 px-3 py-2 text-base">
                 {player.name}
+                {#if player.id === state.player?.id}
+                  <span class="text-xs text-ink/60">(you)</span>
+                {/if}
                 {#if player.id === state.room.hostPlayerId}
                   <span class="inline-flex items-center gap-1 text-xs text-ink/60">
                     <Crown size={12} class="text-gold" aria-hidden="true" />

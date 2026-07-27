@@ -17,7 +17,7 @@ status: in-progress
 
 ## Phase 3: F001 self-identity marker (code)
 - [x] T006 [artifacts: ui] Test-first: add a FAILING case to `Lobby.test.ts` (marked `.fails`) asserting that, rendered as a non-host player, that player's own entry in the roster shows a "(you)" marker while other entries do not. Confirm red first.
-- [ ] T007 [artifacts: ui] Implement to turn T006 green (remove `.fails`): in `Lobby.svelte`, add a "(you)" tag to the roster entry whose `player.id === state.player?.id`, mirroring the existing "(host)" tag markup; both tags may co-appear on the host's own entry. Verify suite + svelte-check.
+- [x] T007 [artifacts: ui] Implement to turn T006 green (remove `.fails`): in `Lobby.svelte`, add a "(you)" tag to the roster entry whose `player.id === state.player?.id`, mirroring the existing "(host)" tag markup; both tags may co-appear on the host's own entry. Verify suite + svelte-check.
 
 ## Phase 4: F002 self-rename (code)
 - [ ] T008 [artifacts: datamodel, infrastructure] Test-first: add a FAILING server test (Vitest `.fails`) for an `onSetDisplayName` socket handler — a lobby player renaming their own seat to a trimmed non-empty name updates `Player.name` and broadcasts the updated room; a rename that isn't the caller's own seat, that targets a non-lobby room, or whose trimmed name is empty is rejected with no mutation. Model it on the existing lobby-setter handler tests. Confirm red first.

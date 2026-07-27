@@ -1463,7 +1463,7 @@ describe('Lobby self-identity "(you)" marker (F001)', () => {
     };
   }
 
-  it.fails('marks the non-host viewer\'s own roster entry with "(you)" and not the others', () => {
+  it('marks the non-host viewer\'s own roster entry with "(you)" and not the others', () => {
     const room = makeTwoPlayerRoom();
     // View as the non-host guest Grace (p2).
     const session = makeFakeSession({ room, player: room.players[1]!, error: null });
