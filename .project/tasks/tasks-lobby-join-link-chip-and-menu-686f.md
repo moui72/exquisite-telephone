@@ -1,7 +1,7 @@
 ---
 plan: plan-lobby-join-link-chip-and-menu-2026-07-27-ba69.md
 generated: 2026-07-27
-status: ready
+status: in-progress
 ---
 
 # Tasks
