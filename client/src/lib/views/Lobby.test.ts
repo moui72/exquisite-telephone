@@ -1478,6 +1478,67 @@ describe('Lobby self-identity "(you)" marker (F001)', () => {
 });
 
 /**
+ * Lobby self-rename (F002, feedback-lobby-self-identity-and-rename-ff4b.md):
+ * a player edits their own display name inline while in the lobby. `.fails`
+ * is the TDD red state, removed by the paired implementation task.
+ */
+describe('Lobby self-rename (F002)', () => {
+  function makeSoloRoom(): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      paletteMode: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it.fails('reveals an inline editor on the own entry and emits setDisplayName with the trimmed value', async () => {
+    const room = makeSoloRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByRole('button', { name: /edit.*(display )?name|rename/i }));
+    const input = screen.getByRole('textbox', { name: /display name/i }) as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: '  Adah  ' } });
+    await fireEvent.submit(input.closest('form')!);
+
+    expect(session.setDisplayName).toHaveBeenCalledWith('Adah');
+  });
+
+  it.fails('does not emit setDisplayName for an empty/whitespace-only name', async () => {
+    const room = makeSoloRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.click(screen.getByRole('button', { name: /edit.*(display )?name|rename/i }));
+    const input = screen.getByRole('textbox', { name: /display name/i }) as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: '   ' } });
+    await fireEvent.submit(input.closest('form')!);
+
+    expect(session.setDisplayName).not.toHaveBeenCalled();
+  });
+});
+
+/**
  * Join-link chip + widget-wide two-item context menu
  * (lobby-join-link-chip-and-menu, ui.md Lobby View, F001/F002). The chip
  * surfaces the join link directly under the room code; the context menu is
