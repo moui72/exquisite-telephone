@@ -1,5 +1,46 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-27 (**Planned + tasked the Lobby join-link chip + guest-list
+context menu (both reconsider overrides confirmed).** F001/F002 of
+`feedback-lobby-join-link-chip-and-menu-601c.md` were confirmed as reversals of
+recorded ui.md Lobby View decisions (join link was context-menu-only; the menu
+was room-code-anchored with a single item); feedback file now **planned**.
+Approved `plan-lobby-join-link-chip-and-menu-2026-07-27-ba69.md` with ready
+tasks `tasks-lobby-join-link-chip-and-menu-686f.md` (**ready**, 0/3): P1 revises
+ui.md's copy/context-menu paragraph (join link → its own click-to-copy chip
+under the room code; context menu → whole Guest List widget, two items "copy
+room code" + "copy join link"); P2 implements in `Lobby.svelte` test-first —
+a failing `Lobby.test.ts` case for the chip and the widget-wide two-item menu
+(incl. a guard that the `data-testid="room-code"` text stays the bare code, the
+v0.5.0 regression), then the implementation. UI-only: no
+datamodel/infra/server change, reuses the existing `clipboard.ts` helper and
+Foyer `?room=` pre-fill; no new production shortcut. **Work Queue:** one ready
+file, no other ready or in-flight work — nothing to parallelize. Backlog +
+feedback now empty; register unchanged (28 implemented · 1 subsumed). Diagrams
+current, ArDD up-to-date. DEFECTS.md holds 2 cosmetic doc-drift entries
+(verified 2026-07-24). Next: `/ardd-implement`. *(next_step_prompt: auto —
+auto-running `/ardd-implement`.)*)_
+
+_Updated: 2026-07-27 (**+1 open feedback: Lobby join-link chip + guest-list
+context menu (2 reconsider items).** New feedback file
+`feedback-lobby-join-link-chip-and-menu-601c.md` (**open**, 2 items, both
+*Reconsidered* [artifacts: ui]): **F001** — show the join link as its own
+click-to-copy chip in smaller text under the room code, not only via the
+context menu (reverses ui.md's decision that the join link is exposed *only*
+through a "copy join link" context-menu item); **F002** — make the copy
+context menu available on the whole Guest List widget via right-click (not just
+the room-code element) and have it offer 'copy room code' and 'copy join link'
+as two separate items (reverses ui.md's decision that the menu is anchored to
+the room code with a single "copy join link" item). Both touch
+`client/src/lib/views/Lobby.svelte` (room-code button + context-menu overlay)
+and ui.md's Lobby View copy/context-menu paragraph — so `/ardd-plan` will
+carry artifact-revision tasks alongside the code change. State otherwise
+unchanged: 28 features implemented (1 subsumed), no backlog, no ready/in-flight
+tasks, all four artifacts stable, all three diagrams current, ArDD up-to-date.
+DEFECTS.md holds 2 cosmetic doc-drift entries (verified 2026-07-24). Next:
+`/ardd-plan` to sweep this feedback file. *(next_step_prompt: auto — auto-running
+`/ardd-plan feedback-lobby-join-link-chip-and-menu-601c.md`.)*)_
+
 _Updated: 2026-07-25 (**Shipped v0.5.0 to prod; ArDD updated; all clear.** The
 prod deploy of everything since v0.4.0 (reveal F004/F005, canvas focus mode,
 room-code copy/join-link, monochrome→paletteMode reversal) initially failed the
