@@ -1,7 +1,7 @@
 ---
 name: ui
 status: stable
-last_updated: 2026-07-24
+last_updated: 2026-07-27
 diagram_status: current
 diagram_type: graph TD
 render_section: UI
@@ -50,14 +50,20 @@ visible only to the host.
 
 The displayed room code is **click-to-copy**: clicking or tapping it
 copies the bare code to the clipboard and shows a brief "copied"
-confirmation, so a host never has to read it out or retype it. A
-**context menu** on the room code (right-click on pointer devices,
-long-press on touch) adds a **"copy join link"** option that copies a
-shareable URL of the form `<app-origin>/?room=<code>` — opening that
-link lands a guest in the Foyer with the code already filled in (see
-below). This is entirely client-side: the link points at the same SPA
-and joining still goes through the normal join path; no new server
-route or `Room`/[[datamodel]] state is involved. Reflects
+confirmation, so a host never has to read it out or retype it.
+Directly beneath the room code sits a separate **join-link chip** —
+smaller, visually secondary text — that is itself click-to-copy: it
+copies a shareable URL of the form `<app-origin>/?room=<code>`, so the
+join link is discoverable at a glance rather than hidden behind a menu.
+In addition, a **context menu** available on the whole guest-list
+widget (right-click on pointer devices, long-press on touch — not just
+on the room code) offers **"copy room code"** and **"copy join link"**
+as two separate options, copying the bare code and the shareable URL
+respectively. Opening a join link lands a guest in the Foyer with the
+code already filled in (see below). This is entirely client-side: the
+link points at the same SPA and joining still goes through the normal
+join path; no new server route or `Room`/[[datamodel]] state is
+involved. Reflects
 `Room.status == 'lobby'` and the live `players` list from server
 state. The host also
 sees a single **palette-mode** selector (lobby-only, host-only) that sets
