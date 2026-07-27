@@ -1386,6 +1386,115 @@ describe('Lobby room-code copy affordances', () => {
 });
 
 /**
+ * Join-link chip + widget-wide two-item context menu
+ * (lobby-join-link-chip-and-menu, ui.md Lobby View, F001/F002). The chip
+ * surfaces the join link directly under the room code; the context menu is
+ * available on the whole Guest List widget and offers "copy room code" and
+ * "copy join link" as two separate items.
+ *
+ * The `.fails` markers below are the TDD red state for this plan — they are
+ * removed in the paired implementation task once Lobby.svelte grows the chip
+ * and widget-wide menu.
+ */
+describe('Lobby join-link chip + widget-wide context menu (F001/F002)', () => {
+  function makeLobbyRoom(): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      paletteMode: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  function stubClipboard(writeText = vi.fn().mockResolvedValue(undefined)) {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText },
+      configurable: true,
+      writable: true,
+    });
+    return writeText;
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(navigator as unknown as Record<string, unknown>, 'clipboard');
+  });
+
+  // F001: a distinct click-to-copy chip under the room code copies the join URL.
+  it.fails('shows a join-link chip that copies the origin-based join URL when clicked', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    const chip = screen.getByTestId('join-link-chip');
+    await fireEvent.click(chip);
+
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/?room=ABCDE`);
+  });
+
+  // F002: the context menu opens from anywhere on the Guest List widget, not
+  // only the room code, and exposes both copy actions as separate items.
+  it.fails('opens a two-item context menu from a right-click anywhere on the guest-list widget', async () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('guest-list'));
+
+    expect(screen.getByRole('button', { name: /copy room code/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copy join link/i })).toBeInTheDocument();
+  });
+
+  // F002: the two menu items copy the bare code and the join URL respectively.
+  it.fails('copies the bare code from "copy room code" and the URL from "copy join link"', async () => {
+    const writeText = stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    await fireEvent.contextMenu(screen.getByTestId('guest-list'));
+    await fireEvent.click(screen.getByRole('button', { name: /copy room code/i }));
+    expect(writeText).toHaveBeenLastCalledWith('ABCDE');
+
+    await fireEvent.contextMenu(screen.getByTestId('guest-list'));
+    await fireEvent.click(screen.getByRole('button', { name: /copy join link/i }));
+    expect(writeText).toHaveBeenLastCalledWith(`${window.location.origin}/?room=ABCDE`);
+  });
+
+  // Regression guard (green now and after): the room-code element's own text
+  // node must stay exactly the bare code even with the chip alongside it —
+  // this is the v0.5.0 garbled-join-code regression.
+  it('keeps the room-code element text node equal to the bare code', () => {
+    stubClipboard();
+    const room = makeLobbyRoom();
+    const session = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session } });
+
+    expect(screen.getByTestId('room-code').textContent).toBe('ABCDE');
+  });
+});
+
+/**
  * Foyer join-link pre-fill from a `?room=` query parameter
  * (room-code-copy-and-join-link, ui.md Lobby View / Foyer).
  */
