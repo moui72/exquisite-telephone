@@ -16,7 +16,7 @@ status: in-progress
 - [x] T005 [artifacts: datamodel, ui] Implement to turn T004 green (remove the `.fails` marker): extend the `turnTimerMinutes` union in `shared/src/types.ts` to `0.5 | 1 | 1.5 | 2 | 15 | 30 | 60 | 240 | 720 | null`; add the four short options (30s/60s/90s/2m → 0.5/1/1.5/2) to `TURN_TIMER_OPTIONS` and the label map in `Lobby.svelte`, ordered before the 15m option; widen the `handleTurnTimerChange` numeric cast accordingly. The `turnTimerMinutes * 60000` deadline math is unchanged (see datamodel). Verify the full suite + svelte-check pass, and sanity-check that a 30s timer doesn't collide awkwardly with the timeout-vote / 30s cover-grace flow (verification only — no redesign).
 
 ## Phase 3: F001 self-identity marker (code)
-- [ ] T006 [artifacts: ui] Test-first: add a FAILING case to `Lobby.test.ts` (marked `.fails`) asserting that, rendered as a non-host player, that player's own entry in the roster shows a "(you)" marker while other entries do not. Confirm red first.
+- [x] T006 [artifacts: ui] Test-first: add a FAILING case to `Lobby.test.ts` (marked `.fails`) asserting that, rendered as a non-host player, that player's own entry in the roster shows a "(you)" marker while other entries do not. Confirm red first.
 - [ ] T007 [artifacts: ui] Implement to turn T006 green (remove `.fails`): in `Lobby.svelte`, add a "(you)" tag to the roster entry whose `player.id === state.player?.id`, mirroring the existing "(host)" tag markup; both tags may co-appear on the host's own entry. Verify suite + svelte-check.
 
 ## Phase 4: F002 self-rename (code)

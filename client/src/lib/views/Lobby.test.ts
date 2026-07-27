@@ -1428,6 +1428,55 @@ describe('Lobby room-code copy affordances', () => {
 });
 
 /**
+ * Lobby self-identity marker (F001,
+ * feedback-lobby-self-identity-and-rename-ff4b.md): the viewer's own roster
+ * entry is marked "(you)", visible to non-hosts. `.fails` is the TDD red
+ * state, removed by the paired implementation task.
+ */
+describe('Lobby self-identity "(you)" marker (F001)', () => {
+  function makeTwoPlayerRoom(): Room {
+    return {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+        { id: 'p2', roomId: 'ABCDE', name: 'Grace', connected: true, sessionToken: 't2', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      paletteMode: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  it.fails('marks the non-host viewer\'s own roster entry with "(you)" and not the others', () => {
+    const room = makeTwoPlayerRoom();
+    // View as the non-host guest Grace (p2).
+    const session = makeFakeSession({ room, player: room.players[1]!, error: null });
+    render(Lobby, { props: { session } });
+
+    const graceRow = screen.getByText('Grace').closest('li');
+    const adaRow = screen.getByText('Ada').closest('li');
+    expect(graceRow?.textContent).toMatch(/\(you\)/i);
+    expect(adaRow?.textContent).not.toMatch(/\(you\)/i);
+  });
+});
+
+/**
  * Join-link chip + widget-wide two-item context menu
  * (lobby-join-link-chip-and-menu, ui.md Lobby View, F001/F002). The chip
  * surfaces the join link directly under the room code; the context menu is
