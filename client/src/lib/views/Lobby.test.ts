@@ -430,7 +430,7 @@ describe('Lobby view', () => {
   // short-turn-timer-options: the selector offers 30s/60s/90s/2m stored as
   // fractional minutes (0.5/1/1.5/2). `.fails` is the TDD red state, removed
   // in the paired implementation task.
-  it.fails('offers the short turn-timer options and emits fractional-minute values', async () => {
+  it('offers the short turn-timer options and emits fractional-minute values', async () => {
     const room: Room = {
       id: 'ABCDE',
       hostPlayerId: 'p1',

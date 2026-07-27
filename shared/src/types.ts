@@ -139,7 +139,10 @@ export interface Room {
    * `null` (no timer — the room waits indefinitely for the current
    * round). One of 15|30|60|240|720 minutes when set.
    */
-  turnTimerMinutes: 15 | 30 | 60 | 240 | 720 | null;
+  // Values below 1 are fractional minutes for the short/rapid-fire options
+  // (0.5 = 30s, 1 = 60s, 1.5 = 90s, 2 = 2m). The deadline math multiplies
+  // minutes by 60000, so a fraction yields the correct sub-minute deadline.
+  turnTimerMinutes: 0.5 | 1 | 1.5 | 2 | 15 | 30 | 60 | 240 | 720 | null;
   /**
    * Host-configurable, set before `status` leaves `lobby`; `null` means
    * the host hasn't explicitly chosen a value yet — the Lobby derives

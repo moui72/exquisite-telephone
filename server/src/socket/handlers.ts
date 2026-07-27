@@ -192,7 +192,20 @@ export interface SetTurnTimerInput {
 }
 
 /** The production-allowed turn-timer options (datamodel.md Room.turnTimerMinutes). */
-const PRODUCTION_TURN_TIMER_OPTIONS: readonly (number | null)[] = [null, 15, 30, 60, 240, 720];
+const PRODUCTION_TURN_TIMER_OPTIONS: readonly (number | null)[] = [
+  null,
+  // Short/rapid-fire options as fractional minutes (0.5 = 30s, 1 = 60s,
+  // 1.5 = 90s, 2 = 2m — datamodel.md Room.turnTimerMinutes).
+  0.5,
+  1,
+  1.5,
+  2,
+  15,
+  30,
+  60,
+  240,
+  720,
+];
 
 export interface SetTurnTimerAck {
   room?: Room;

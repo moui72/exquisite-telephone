@@ -184,8 +184,18 @@
     await session.startGame(belowMinimumPlayers ? acknowledgeSmallGame : undefined);
   }
 
-  const TURN_TIMER_OPTIONS: { value: 15 | 30 | 60 | 240 | 720 | null; label: string }[] = [
+  // The short options (0.5/1/1.5/2) are fractional minutes for a rapid-fire
+  // pace — labeled in seconds/minutes so the fraction is never shown (see
+  // shared Room.turnTimerMinutes and ui.md Lobby View).
+  const TURN_TIMER_OPTIONS: {
+    value: 0.5 | 1 | 1.5 | 2 | 15 | 30 | 60 | 240 | 720 | null;
+    label: string;
+  }[] = [
     { value: null, label: 'Off' },
+    { value: 0.5, label: '30 seconds' },
+    { value: 1, label: '60 seconds' },
+    { value: 1.5, label: '90 seconds' },
+    { value: 2, label: '2 minutes' },
     { value: 15, label: '15 minutes' },
     { value: 30, label: '30 minutes' },
     { value: 60, label: '1 hour' },
@@ -195,7 +205,8 @@
 
   async function handleTurnTimerChange(event: Event) {
     const raw = (event.target as HTMLSelectElement).value;
-    const turnTimerMinutes = raw === '' ? null : (Number(raw) as 15 | 30 | 60 | 240 | 720);
+    const turnTimerMinutes =
+      raw === '' ? null : (Number(raw) as 0.5 | 1 | 1.5 | 2 | 15 | 30 | 60 | 240 | 720);
     await session.setTurnTimer(turnTimerMinutes);
   }
 
