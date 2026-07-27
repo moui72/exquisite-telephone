@@ -39,6 +39,7 @@ import {
   onRestartGame,
   onSetAllowPromptWriteIn,
   onSetCuratedPromptCount,
+  onSetDisplayName,
   onSetLapsPerBook,
   onSetPromptMode,
   onSetReadingBook,
@@ -334,6 +335,64 @@ function makeFakeSocket(): Socket {
     to: vi.fn().mockReturnValue({ emit: vi.fn() }),
   } as unknown as Socket;
 }
+
+// F002 self-rename (feedback-lobby-self-identity-and-rename-ff4b.md). The
+// `.fails` markers are the TDD red state against the T008 stub; T009 fills
+// the handler and removes them.
+describe('onSetDisplayName', () => {
+  it.fails('renames the caller\'s own seat in lobby, trimming the name, and broadcasts', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    joinRoom(store, { roomId: room.id, playerName: 'Grace' });
+    const graceId = room.players[1]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetDisplayName(socket, store, { roomId: room.id, playerId: graceId, name: '  Gracie  ' }, ack);
+
+    expect(room.players[1]!.name).toBe('Gracie');
+    expect(ack).toHaveBeenCalledWith(expect.objectContaining({ room: expect.any(Object) }));
+    expect(socket.to).toHaveBeenCalledWith(room.id);
+  });
+
+  it.fails('rejects a trimmed-empty name with invalid-name and no mutation', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetDisplayName(socket, store, { roomId: room.id, playerId: adaId, name: '   ' }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'invalid-name' });
+    expect(room.players[0]!.name).toBe('Ada');
+  });
+
+  it.fails('rejects a rename once the room has left lobby', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+    const adaId = room.players[0]!.id;
+    room.status = 'writing';
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetDisplayName(socket, store, { roomId: room.id, playerId: adaId, name: 'Adah' }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'room-not-in-lobby' });
+    expect(room.players[0]!.name).toBe('Ada');
+  });
+
+  it.fails('rejects an unknown playerId with player-not-found', () => {
+    const store = createRoomStore();
+    const room = createRoom(store, { hostName: 'Ada' });
+
+    const socket = makeFakeSocket();
+    const ack = vi.fn();
+    onSetDisplayName(socket, store, { roomId: room.id, playerId: 'nobody', name: 'Ghost' }, ack);
+
+    expect(ack).toHaveBeenCalledWith({ error: 'player-not-found' });
+  });
+});
 
 describe('onSubmitEntry round-gating', () => {
   it('returns round-not-open (distinct from book-complete) when the book is ahead of the room-wide current round', () => {

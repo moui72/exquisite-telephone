@@ -310,6 +310,37 @@ export function onSetLapsPerBook(
   ack({ room });
 }
 
+export interface SetDisplayNameInput {
+  roomId: string;
+  playerId: string;
+  name: string;
+}
+
+export interface SetDisplayNameAck {
+  room?: Room;
+  error?: string;
+}
+
+/**
+ * Self-rename: a player changes their *own* display name while the room is
+ * in `lobby` (datamodel.md Normalization Rules — Display-name rename; ui.md
+ * Lobby View). Unlike the host-only setters, any seated player may call it —
+ * for the seat identified by `input.playerId`, which is the caller's own
+ * seat under the same input-trust model the other lobby setters use. The
+ * name is trimmed and a trimmed-empty result is rejected; there is no
+ * uniqueness constraint. Rejected once the room has left `lobby`.
+ *
+ * T008 stub — filled in by T009.
+ */
+export function onSetDisplayName(
+  _socket: Socket,
+  _store: RoomStore,
+  _input: SetDisplayNameInput,
+  ack: (response: SetDisplayNameAck) => void,
+): void {
+  ack({ error: 'not-implemented' });
+}
+
 export interface SetPaletteModeInput {
   roomId: string;
   playerId: string;
