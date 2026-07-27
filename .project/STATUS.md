@@ -1,5 +1,37 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-27 (**Short turn-timer options + Lobby self-identity/self-rename
+SHIPPED (11/11), implemented inline.** `tasks-short-turn-timer-options-98a3.md`
+→ **completed**; feature `short-turn-timer-options` → **implemented** (register
+now **29 implemented · 1 subsumed**, 0 backlogged, 0 open feedback). Delegation
+stayed broken (the Agent-worktree base still carries the injected badge-sync
+commit that diverges from main), so all 11 tasks ran inline on `main`, commits
+`21c08c2`→`86065a6`. Delivered: **P1** artifact revisions (ui "(you)" marker +
+self-rename, datamodel Player.name lobby-mutability rule, infrastructure
+`onSetDisplayName` in the handler list); **P2** short turn-timer options —
+`turnTimerMinutes` union extended to `0.5|1|1.5|2|…` (fractional minutes for
+30s/60s/90s/2m), Lobby selector + labels, and the server
+`PRODUCTION_TURN_TIMER_OPTIONS` whitelist widened (else real traffic would be
+rejected); **P3** F001 "(you)" roster marker; **P4** F002 self-rename —
+`onSetDisplayName` server handler (own-seat/lobby-only, trimmed-non-empty
+validation, broadcast) + `session.setDisplayName` emitter + inline click-to-edit
+on the current player's roster entry. All test-first (TDD `.fails`/expected-fail
+markers on red commits). Final suite green (**shared 70 · server 259 · client
+290 · root 6**), typecheck + svelte-check 0/0. **Two caveats:** (1) the flaky
+server socket integration tests (`waitForEvent … connect`, `onPlayAgain`)
+tripped the pre-commit hook several times and passed on retry — pre-existing
+load flake, not this work, but worth a `/ardd-feedback` if it keeps costing
+retries. (2) The **Turn Timer Sweep runs every 30s** (infrastructure), so the
+new 30s option sits exactly at the sweep granularity — a 30s turn may be noticed
+up to ~30s late; acceptable for rapid-fire but a known coarseness. **Diagrams:**
+datamodel + ui now **stale** (run `/ardd-diagram datamodel` and `/ardd-diagram
+ui`); infrastructure current. DEFECTS.md holds 2 cosmetic doc-drift entries
+(2026-07-24). **Nothing left to plan or implement.** Remaining housekeeping:
+regenerate the two stale diagrams; `main` is unpushed (a push deploys beta), and
+prod is still on v0.5.0 — both are deploy decisions for you. Not auto-chaining:
+the only next step is diagram regen (two separate `/ardd-diagram` calls) plus
+optional deploy, none a single runnable step.)_
+
 _Updated: 2026-07-27 (**Planned + tasked short turn-timer options + Lobby
 self-identity/self-rename (bundled via `--slate`).** A `/ardd-plan --slate` over
 the plannable surface (1 backlogged feature + 1 open feedback file) found both
