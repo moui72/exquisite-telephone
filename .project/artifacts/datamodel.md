@@ -1,8 +1,8 @@
 ---
 name: datamodel
 status: stable
-last_updated: 2026-07-24
-diagram_status: current
+last_updated: 2026-07-27
+diagram_status: stale
 diagram_type: erDiagram
 render_section: Datamodel
 render_hint: |
@@ -44,7 +44,7 @@ They are deliberately the only shapes here that outlive a process.
 | createdAt | timestamp | |
 | paletteMode | enum | Host-configurable, set before `status` leaves `lobby`; `monochrome` \| `primary` \| `standard` \| `extended`, defaults `standard`. A single palette *mode*, not merely a color preset: `monochrome` hides the drawing tool's color palette entirely and renders all strokes in the default ink color (the sole monochrome control — there is no separate boolean); `primary` (primary colors plus black and white), `standard` (the default 8-swatch palette, which includes brown and pink skin-tone swatches — see [[ui]] Writing/Drawing View), and `extended` (a larger palette) each select which preset the color palette draws from. See [[ui]] Writing/Drawing View. |
 | allowFillTool | boolean | Host-configurable, set before `status` leaves `lobby`; defaults `true`. When `false`, the fill (flood-fill) tool is forbidden — hidden from both the turn drawing toolbar and the cover-decoration toolbar (see [[ui]] Writing/Drawing View and Reveal/cover decoration), leaving only stroke drawing. Independent of `paletteMode`: a room may forbid fill while still allowing color, or vice versa. |
-| turnTimerMinutes | number \| null | Host-configurable, set before `status` leaves `lobby`; defaults `null` (no timer — the room waits indefinitely for the current round, per Normalization Rules). One of `15 \| 30 \| 60 \| 240 \| 720` when set. |
+| turnTimerMinutes | number \| null | Host-configurable, set before `status` leaves `lobby`; defaults `null` (no timer — the room waits indefinitely for the current round, per Normalization Rules). One of `0.5 \| 1 \| 1.5 \| 2 \| 15 \| 30 \| 60 \| 240 \| 720` when set. Values below 1 are **fractional minutes** representing the short/rapid-fire durations (`0.5` = 30s, `1` = 60s, `1.5` = 90s, `2` = 2m); the deadline math (`* 60000`, below) is unchanged since it already multiplies minutes to milliseconds, so a fractional minute yields the correct sub-minute deadline. The [[ui]] selector labels these in seconds/minutes; the field itself always stores minutes. |
 | roundStartedAt | timestamp \| null | Epoch ms marking when the current round began; `null` while `status === 'lobby'`. Reset whenever the room-wide current round advances (see Normalization Rules). Only meaningful when `turnTimerMinutes` is set. |
 | timerExtensions | Record\<playerId, number\> | Per-player extra milliseconds granted this round via a timeout vote (see Normalization Rules); **added to** the base turn duration rather than replacing it, so a granted extension lengthens the turn. Cleared whenever the round advances. |
 | pendingTimeoutVote | TimeoutVote \| null | Set by the server when a round's timer expires with players still short of their deadline; `null` otherwise. See `TimeoutVote` below. |

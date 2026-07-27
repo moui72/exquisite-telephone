@@ -2,7 +2,7 @@
 name: ui
 status: stable
 last_updated: 2026-07-27
-diagram_status: current
+diagram_status: stale
 diagram_type: graph TD
 render_section: UI
 render_hint: |
@@ -90,11 +90,15 @@ shown and "start game" behaves as today. A lobby kick lowers the active
 count, so kicking below 3 reveals the checkbox. (Wording aligned to the
 already-landed code and [[datamodel]] behavior, not new drift.)
 
-The host also sees a per-turn timer selector (off / 15m / 30m / 1hr /
-4hr / 12hr — off by default) that sets `Room.turnTimerMinutes`. Off
-means the room waits indefinitely for the current round (see Writing /
-Drawing View); a duration means the room can advance a stalled round
-via the timeout-vote flow described there. An info affordance next to
+The host also sees a per-turn timer selector (off / 30s / 60s / 90s /
+2m / 15m / 30m / 1hr / 4hr / 12hr — off by default) that sets
+`Room.turnTimerMinutes`. The short options (30s / 60s / 90s / 2m) enable
+a rapid-fire game pace and are stored as fractional minutes (`0.5` / `1`
+/ `1.5` / `2` — see [[datamodel]] Room), labeled in seconds/minutes here
+so the fraction is never shown to the host. Off means the room waits
+indefinitely for the current round (see Writing / Drawing View); a
+duration means the room can advance a stalled round via the timeout-vote
+flow described there. An info affordance next to
 the selector explains the timeout-vote consequence of picking a
 duration.
 
