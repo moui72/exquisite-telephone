@@ -427,6 +427,48 @@ describe('Lobby view', () => {
     expect(hostSession.setTurnTimer).toHaveBeenCalledWith(60);
   });
 
+  // short-turn-timer-options: the selector offers 30s/60s/90s/2m stored as
+  // fractional minutes (0.5/1/1.5/2). `.fails` is the TDD red state, removed
+  // in the paired implementation task.
+  it.fails('offers the short turn-timer options and emits fractional-minute values', async () => {
+    const room: Room = {
+      id: 'ABCDE',
+      hostPlayerId: 'p1',
+      players: [
+        { id: 'p1', roomId: 'ABCDE', name: 'Ada', connected: true, sessionToken: 't1', kicked: false },
+      ],
+      status: 'lobby',
+      books: [],
+      createdAt: Date.now(),
+      paletteMode: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: null,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+    const hostSession = makeFakeSession({ room, player: room.players[0]!, error: null });
+    render(Lobby, { props: { session: hostSession } });
+
+    const select = screen.getByLabelText(/allotted contemplation period/i) as HTMLSelectElement;
+    const labels = Array.from(select.options).map((o) => o.label);
+    expect(labels).toEqual(expect.arrayContaining(['30 seconds', '60 seconds', '90 seconds', '2 minutes']));
+
+    await fireEvent.change(select, { target: { value: '0.5' } });
+    expect(hostSession.setTurnTimer).toHaveBeenLastCalledWith(0.5);
+    await fireEvent.change(select, { target: { value: '1.5' } });
+    expect(hostSession.setTurnTimer).toHaveBeenLastCalledWith(1.5);
+  });
+
   it('shows the live default laps-per-book value when Room.lapsPerBook is null, tracking player count', async () => {
     const makeRoom = (playerCount: number): Room => ({
       id: 'ABCDE',
