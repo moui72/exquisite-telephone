@@ -66,7 +66,7 @@ They are deliberately the only shapes here that outlive a process.
 |-------|------|-------|
 | id | string | Ephemeral session identity — no account, no persistent user record |
 | roomId | string | FK -> Room.id |
-| name | string | Display name chosen at join time |
+| name | string | Display name chosen at join time. Mutable *by that player* while `Room.status === 'lobby'` via a self-rename action (see Normalization Rules — Display-name rename); fixed once the game leaves the lobby. |
 | connected | boolean | Drives reconnect-tolerance UI state |
 | sessionToken | string | Opaque token used to resume the same Player.id after a dropped connection. TTL and rejoin-after-end behavior are defined in [[infrastructure]]'s Session Store section. |
 | kicked | boolean | Host-set via moderation "kick player" (see Normalization Rules); defaults `false`. A kicked player stays in `Room.players` (matches the existing non-cleanup pattern for disconnected/departed players); excluded from the regenerated `books` on the next "restart game," and from `eligibleVoterIds`/`stalledPlayerIds` on any *subsequent* timeout vote (a vote already open at kick time is unaffected — it resolves or expires as already computed). |
@@ -213,6 +213,17 @@ human-approved additions ever reach the committed `CURATED_PHRASE_BANK`.
   gaps, since it directly drives turn order and reveal order.
 - `Player.id` persists only for the lifetime of a room; it is not reused
   across rooms or sessions.
+- **Display-name rename.** While `Room.status === 'lobby'`, a player may
+  change their *own* `Player.name` (identified by the caller's own
+  `Player.id`/session — never another seat's) via a self-rename action;
+  the server updates `Player.name` and broadcasts the room so every
+  guest sees the new name. The submitted name is trimmed and a
+  trimmed-empty result is rejected (no mutation); there is **no
+  uniqueness constraint** — `Player.id`, not name, is the identity key,
+  and duplicate display names are already possible from join. Rejected
+  outside `lobby` (identity is fixed once the game begins) and for any
+  attempt to rename a seat other than the caller's own. See [[ui]] Lobby
+  View and [[infrastructure]]'s `onSetDisplayName` handler.
 - **Turns are round-gated, not asynchronous.** A room has a derived
   *current round* = `min(entries.length)` across all of `Room.books` —
   not a persisted field, purely computed from existing state (Principle

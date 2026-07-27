@@ -8,7 +8,7 @@ status: in-progress
 
 ## Phase 1: Artifact revisions (docs)
 - [x] T001 [artifacts: ui] [parallel] Revise `ui.md` Lobby View roster description: the current player's entry is marked "(you)" (visible to non-hosts too, mirroring the existing "(host)" tag), and a player may click their own roster entry to rename themselves while `Room.status === 'lobby'` (F001, F002 of `feedback-lobby-self-identity-and-rename-ff4b.md`). Stamp `last_updated 2026-07-27`; `diagram_status` is already `stale` from this run's feature edit — leave it.
-- [ ] T002 [artifacts: datamodel] [parallel] Revise `datamodel.md`: add a Normalization Rule that `Player.name` is mutable while `Room.status === 'lobby'` via a self-rename action — a player may change only their own seat's name, lobby-only, the name is trimmed and must be non-empty, and there is no uniqueness constraint (`Player.id` is the key; duplicate names already possible at join) (F002). Stamp `last_updated 2026-07-27`.
+- [x] T002 [artifacts: datamodel] [parallel] Revise `datamodel.md`: add a Normalization Rule that `Player.name` is mutable while `Room.status === 'lobby'` via a self-rename action — a player may change only their own seat's name, lobby-only, the name is trimmed and must be non-empty, and there is no uniqueness constraint (`Player.id` is the key; duplicate names already possible at join) (F002). Stamp `last_updated 2026-07-27`.
 - [ ] T003 [artifacts: infrastructure] [parallel] Revise `infrastructure.md`: add the `onSetDisplayName` socket handler to the handler list, alongside the other lobby setters (`onSetTurnTimer` etc.) (F002). Stamp `last_updated 2026-07-27`.
 
 ## Phase 2: Short turn-timer options (code)
