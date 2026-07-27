@@ -1,7 +1,7 @@
 ---
 plan: plan-short-turn-timer-options-2026-07-27-1cf1.md
 generated: 2026-07-27
-status: ready
+status: in-progress
 ---
 
 # Tasks
