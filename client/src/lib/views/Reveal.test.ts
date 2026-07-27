@@ -30,6 +30,7 @@ function makeFakeSession(
     setFillTool: vi.fn(async () => {}),
     setTurnTimer: vi.fn(async () => {}),
     setLapsPerBook: vi.fn(async () => {}),
+    setDisplayName: vi.fn(async () => {}),
     setPromptMode: vi.fn(async () => {}),
     setCuratedPromptCount: vi.fn(async () => {}),
     setAllowPromptWriteIn: vi.fn(async () => {}),

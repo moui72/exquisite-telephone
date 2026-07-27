@@ -16,6 +16,7 @@ import {
   onRestartGame,
   onSetAllowPromptWriteIn,
   onSetCuratedPromptCount,
+  onSetDisplayName,
   onSetFillTool,
   onSetLapsPerBook,
   onSetPaletteMode,
@@ -59,6 +60,8 @@ import {
   type SetReadingBookInput,
   type SetTurnTimerAck,
   type SetTurnTimerInput,
+  type SetDisplayNameAck,
+  type SetDisplayNameInput,
   type StartGameAck,
   type StartGameInput,
   type SubmitCoverAck,
@@ -175,6 +178,13 @@ export function createSocketServer(
       'set_laps_per_book',
       (input: SetLapsPerBookInput, ack: (response: SetLapsPerBookAck) => void) => {
         onSetLapsPerBook(socket, store, input, ack);
+      },
+    );
+
+    socket.on(
+      'set_display_name',
+      (input: SetDisplayNameInput, ack: (response: SetDisplayNameAck) => void) => {
+        onSetDisplayName(socket, store, input, ack);
       },
     );
 

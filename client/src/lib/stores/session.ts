@@ -81,6 +81,8 @@ export interface SessionStore extends Readable<SessionState> {
   setFillTool(allowFillTool: boolean): Promise<void>;
   setTurnTimer(turnTimerMinutes: 0.5 | 1 | 1.5 | 2 | 15 | 30 | 60 | 240 | 720 | null): Promise<void>;
   setLapsPerBook(lapsPerBook: 1 | 2 | 3): Promise<void>;
+  /** Self-rename: change the current player's own display name (lobby-only). */
+  setDisplayName(name: string): Promise<void>;
   /** Host-only, lobby-only curated-prompt settings (ui.md Lobby View). */
   setPromptMode(promptMode: 'free-form' | 'curated'): Promise<void>;
   setCuratedPromptCount(curatedPromptCount: 2 | 3 | 4 | 5): Promise<void>;
@@ -242,6 +244,14 @@ export function createSessionStore(socket: GameSocket): SessionStore {
         roomId: state.room?.id,
         playerId: state.player?.id,
         lapsPerBook,
+      });
+    },
+    setDisplayName(name: string) {
+      const state = get(store);
+      return emitWithAck('set_display_name', {
+        roomId: state.room?.id,
+        playerId: state.player?.id,
+        name,
       });
     },
     setPromptMode(promptMode: 'free-form' | 'curated') {

@@ -329,16 +329,36 @@ export interface SetDisplayNameAck {
  * seat under the same input-trust model the other lobby setters use. The
  * name is trimmed and a trimmed-empty result is rejected; there is no
  * uniqueness constraint. Rejected once the room has left `lobby`.
- *
- * T008 stub — filled in by T009.
  */
 export function onSetDisplayName(
-  _socket: Socket,
-  _store: RoomStore,
-  _input: SetDisplayNameInput,
+  socket: Socket,
+  store: RoomStore,
+  input: SetDisplayNameInput,
   ack: (response: SetDisplayNameAck) => void,
 ): void {
-  ack({ error: 'not-implemented' });
+  const room = store.getRoom(input.roomId);
+  if (!room) {
+    ack({ error: 'room-not-found' });
+    return;
+  }
+  if (room.status !== 'lobby') {
+    ack({ error: 'room-not-in-lobby' });
+    return;
+  }
+  const player = room.players.find((p) => p.id === input.playerId);
+  if (!player) {
+    ack({ error: 'player-not-found' });
+    return;
+  }
+  const trimmed = input.name.trim();
+  if (trimmed.length === 0) {
+    ack({ error: 'invalid-name' });
+    return;
+  }
+
+  player.name = trimmed;
+  socket.to(input.roomId).emit('roomUpdated', { room });
+  ack({ room });
 }
 
 export interface SetPaletteModeInput {

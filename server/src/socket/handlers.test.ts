@@ -340,7 +340,7 @@ function makeFakeSocket(): Socket {
 // `.fails` markers are the TDD red state against the T008 stub; T009 fills
 // the handler and removes them.
 describe('onSetDisplayName', () => {
-  it.fails('renames the caller\'s own seat in lobby, trimming the name, and broadcasts', () => {
+  it('renames the caller\'s own seat in lobby, trimming the name, and broadcasts', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     joinRoom(store, { roomId: room.id, playerName: 'Grace' });
@@ -355,7 +355,7 @@ describe('onSetDisplayName', () => {
     expect(socket.to).toHaveBeenCalledWith(room.id);
   });
 
-  it.fails('rejects a trimmed-empty name with invalid-name and no mutation', () => {
+  it('rejects a trimmed-empty name with invalid-name and no mutation', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const adaId = room.players[0]!.id;
@@ -368,7 +368,7 @@ describe('onSetDisplayName', () => {
     expect(room.players[0]!.name).toBe('Ada');
   });
 
-  it.fails('rejects a rename once the room has left lobby', () => {
+  it('rejects a rename once the room has left lobby', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
     const adaId = room.players[0]!.id;
@@ -382,7 +382,7 @@ describe('onSetDisplayName', () => {
     expect(room.players[0]!.name).toBe('Ada');
   });
 
-  it.fails('rejects an unknown playerId with player-not-found', () => {
+  it('rejects an unknown playerId with player-not-found', () => {
     const store = createRoomStore();
     const room = createRoom(store, { hostName: 'Ada' });
 
