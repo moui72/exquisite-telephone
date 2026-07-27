@@ -1,5 +1,49 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-27 (**Lobby join-link chip + guest-list context menu SHIPPED
+(3/3), implemented inline.** `tasks-lobby-join-link-chip-and-menu-686f.md` →
+**completed**; the delegated worktree was abandoned first (its harness base
+carried an injected `1bebc6b` "sync ArDD version badge" commit → `worktree-align.sh`
+reported `aligned=false reason=diverged`), so execution fell back to inline on
+`main`. Delivered: **T001** ui.md Lobby View revised (join link → its own
+click-to-copy chip under the room code; context menu → whole Guest List widget
+with two items); **T002** TDD red `Lobby.test.ts` cases (`.fails`, incl. the
+room-code-stays-bare v0.5.0 guard); **T003** `Lobby.svelte` — a `join-link-chip`
+click-to-copy control showing `<origin>/?room=<code>`, and the contextmenu/
+long-press handlers moved onto the `guest-list` widget wrapper with "Copy room
+code" + "Copy join link" items (reusing `clipboard.ts`/`handleCopyJoinLink`; a
+justified `svelte-ignore a11y_no_static_element_interactions` on the wrapper).
+Full suite green (**client 286**, incl. 3 previously-`.fails` now passing),
+svelte-check 0/0. UI-only — no datamodel/infra/server change; ui diagram left
+`current` (structure unchanged). Commits `50e6060`→`7ab4c34` on `main`. The
+plan's `features:` was empty, so no register flip. Note a **flaky server socket
+test** (`waitForEvent … "connect"` 2000ms) reappeared once on a pre-commit run
+and passed on retry — pre-existing load flake, not this change. **Register:**
+28 implemented · 1 backlogged (`short-turn-timer-options`) · 1 subsumed.
+**1 open feedback** (`feedback-lobby-self-identity-and-rename-ff4b.md`, from a
+concurrent session — still untracked on disk). Plannable now: that feedback
+file + the backlogged feature. **Concurrency caveat:** a parallel session has
+been writing `.project/` this turn (its feedback file + this STATUS.md were
+uncommitted when I wrote), so I'm NOT auto-running `/ardd-plan` — coordinate
+first. Diagrams current, ArDD up-to-date. Next: `/ardd-plan --slate` to group
+the open feedback + backlogged feature, or plan either directly.)_
+
+_Updated: 2026-07-27 (**+1 open feedback: Lobby self-identity + rename-by-click
+(2 UX items).** New feedback file
+`feedback-lobby-self-identity-and-rename-ff4b.md` (**open**, 2 items, both
+*UX* [artifacts: ui]): **F001** — Lobby View doesn't mark which players-list
+entry is "you" when viewing as a non-host; **F002** — a non-host should be able
+to change their display name by clicking their own name in the Lobby (currently
+fixed at join time). Next `/ardd-plan` picks it up. All four artifacts stable,
+0 open questions, diagrams current, ArDD up-to-date (commit 541b283, beta
+channel). DEFECTS.md still holds 2 cosmetic doc-drift entries (verified
+2026-07-24). Register: 28 implemented · 1 backlogged
+(`short-turn-timer-options`) · 1 subsumed. **In flight:**
+`tasks-lobby-join-link-chip-and-menu-686f.md` is **in-progress**, 1/3, on the
+primary checkout (no sibling worktree). No `ready` tasks file → no Work Queue.
+Next: finish the in-flight join-link tasks (`/ardd-implement`), then
+`/ardd-plan` to sweep the open feedback + backlogged feature.)_
+
 _Updated: 2026-07-27 (**Planned + tasked the Lobby join-link chip + guest-list
 context menu (both reconsider overrides confirmed).** F001/F002 of
 `feedback-lobby-join-link-chip-and-menu-601c.md` were confirmed as reversals of
