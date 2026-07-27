@@ -86,9 +86,23 @@
     contextMenuOpen = false;
   }
 
+  // The shareable join link for a room code — an `<origin>/?room=<code>` URL
+  // pointing at this same SPA (see the Foyer ?room= pre-fill). Used both by
+  // the visible click-to-copy chip and the context menu's "copy join link".
+  function joinLinkFor(code: string): string {
+    return `${window.location.origin}/?room=${code}`;
+  }
+
   async function handleCopyJoinLink(code: string) {
     closeContextMenu();
-    await handleCopyCode(`${window.location.origin}/?room=${code}`);
+    await handleCopyCode(joinLinkFor(code));
+  }
+
+  // Context-menu "copy room code" — copies the bare code, mirroring the
+  // room-code tap-to-copy so the action is discoverable from the menu too.
+  async function handleCopyRoomCodeFromMenu(code: string) {
+    closeContextMenu();
+    await handleCopyCode(code);
   }
 
   function handleWindowKeydown(event: KeyboardEvent) {
@@ -333,56 +347,98 @@
   {:else}
     <div class="flex flex-col gap-4">
       <GiltFrame caption={`Guest List — Salon No. ${state.room.id}`}>
-        <p class="text-sm text-ink/75">Room code</p>
-        <button
-          type="button"
-          title="Click to copy — right-click or long-press to copy a join link"
-          class="inline-flex items-baseline gap-2 text-left text-3xl font-bold tracking-widest text-ink"
-          on:click={() => handleRoomCodeClick(state.room?.id ?? '')}
+        <!--
+          The whole guest-list widget is the context-menu / long-press target
+          (ui.md Lobby View, F002): a right-click or touch long-press anywhere
+          on it opens the copy menu, not just on the room code. The handlers
+          live on this wrapping div so the room code, the join-link chip, and
+          the player roster all share one trigger.
+
+          The contextmenu/long-press handlers are a pointer- and touch-only
+          convenience: keyboard and AT users already reach every copy action
+          through the real room-code button and the join-link chip below, so
+          this wrapper is not itself an interactive control and carries no
+          ARIA role.
+        -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+          data-testid="guest-list"
           on:contextmenu={handleContextMenu}
           on:touchstart={handleTouchStart}
           on:touchend={cancelLongPress}
           on:touchmove={cancelLongPress}
           on:touchcancel={cancelLongPress}
         >
-          <span data-testid="room-code">{state.room.id}</span><span
-            class="text-xs font-medium tracking-normal text-gold transition-opacity {copied
-              ? 'opacity-100'
-              : 'opacity-0'}"
-            aria-live="polite">Copied</span
+          <p class="text-sm text-ink/75">Room code</p>
+          <button
+            type="button"
+            title="Click to copy the room code — right-click or long-press for more"
+            class="inline-flex items-baseline gap-2 text-left text-3xl font-bold tracking-widest text-ink"
+            on:click={() => handleRoomCodeClick(state.room?.id ?? '')}
           >
-        </button>
-
-        {#if contextMenuOpen}
-          <div
-            bind:this={contextMenuEl}
-            role="menu"
-            class="fixed z-50 min-w-[12rem] rounded-md border border-gold/40 bg-champagne p-1 shadow-lg"
-            style="left: {contextMenuX}px; top: {contextMenuY}px;"
-          >
-            <button
-              type="button"
-              class="w-full rounded px-3 py-2 text-left text-sm text-ink hover:bg-gold/15"
-              on:click={() => handleCopyJoinLink(state.room?.id ?? '')}
+            <span data-testid="room-code">{state.room.id}</span><span
+              class="text-xs font-medium tracking-normal text-gold transition-opacity {copied
+                ? 'opacity-100'
+                : 'opacity-0'}"
+              aria-live="polite">Copied</span
             >
-              Copy join link
-            </button>
-          </div>
-        {/if}
+          </button>
 
-        <ul class="flex flex-col gap-2">
-          {#each activePlayers(state.room) as player (player.id)}
-            <li class="rounded-md border border-gold/30 px-3 py-2 text-base">
-              {player.name}
-              {#if player.id === state.room.hostPlayerId}
-                <span class="inline-flex items-center gap-1 text-xs text-ink/60">
-                  <Crown size={12} class="text-gold" aria-hidden="true" />
-                  (host)
-                </span>
-              {/if}
-            </li>
-          {/each}
-        </ul>
+          <!--
+            Join-link chip (F001): the shareable link shown in smaller,
+            secondary text directly under the room code, click-to-copy, so it
+            is discoverable at a glance rather than hidden behind the menu.
+            A separate element from the room-code span, so the room code's own
+            text node stays the bare code (v0.5.0 garbled-code guard).
+          -->
+          <button
+            type="button"
+            data-testid="join-link-chip"
+            title="Click to copy the join link"
+            class="mt-1 block max-w-full truncate text-left text-xs font-medium text-ink/55 hover:text-ink/80"
+            on:click={() => handleCopyJoinLink(state.room?.id ?? '')}
+          >
+            {joinLinkFor(state.room.id)}
+          </button>
+
+          {#if contextMenuOpen}
+            <div
+              bind:this={contextMenuEl}
+              role="menu"
+              class="fixed z-50 min-w-[12rem] rounded-md border border-gold/40 bg-champagne p-1 shadow-lg"
+              style="left: {contextMenuX}px; top: {contextMenuY}px;"
+            >
+              <button
+                type="button"
+                class="w-full rounded px-3 py-2 text-left text-sm text-ink hover:bg-gold/15"
+                on:click={() => handleCopyRoomCodeFromMenu(state.room?.id ?? '')}
+              >
+                Copy room code
+              </button>
+              <button
+                type="button"
+                class="w-full rounded px-3 py-2 text-left text-sm text-ink hover:bg-gold/15"
+                on:click={() => handleCopyJoinLink(state.room?.id ?? '')}
+              >
+                Copy join link
+              </button>
+            </div>
+          {/if}
+
+          <ul class="mt-2 flex flex-col gap-2">
+            {#each activePlayers(state.room) as player (player.id)}
+              <li class="rounded-md border border-gold/30 px-3 py-2 text-base">
+                {player.name}
+                {#if player.id === state.room.hostPlayerId}
+                  <span class="inline-flex items-center gap-1 text-xs text-ink/60">
+                    <Crown size={12} class="text-gold" aria-hidden="true" />
+                    (host)
+                  </span>
+                {/if}
+              </li>
+            {/each}
+          </ul>
+        </div>
       </GiltFrame>
 
       {#if isHost}

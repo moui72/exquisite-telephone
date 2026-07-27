@@ -1439,7 +1439,7 @@ describe('Lobby join-link chip + widget-wide context menu (F001/F002)', () => {
   });
 
   // F001: a distinct click-to-copy chip under the room code copies the join URL.
-  it.fails('shows a join-link chip that copies the origin-based join URL when clicked', async () => {
+  it('shows a join-link chip that copies the origin-based join URL when clicked', async () => {
     const writeText = stubClipboard();
     const room = makeLobbyRoom();
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -1453,7 +1453,7 @@ describe('Lobby join-link chip + widget-wide context menu (F001/F002)', () => {
 
   // F002: the context menu opens from anywhere on the Guest List widget, not
   // only the room code, and exposes both copy actions as separate items.
-  it.fails('opens a two-item context menu from a right-click anywhere on the guest-list widget', async () => {
+  it('opens a two-item context menu from a right-click anywhere on the guest-list widget', async () => {
     stubClipboard();
     const room = makeLobbyRoom();
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
@@ -1466,7 +1466,7 @@ describe('Lobby join-link chip + widget-wide context menu (F001/F002)', () => {
   });
 
   // F002: the two menu items copy the bare code and the join URL respectively.
-  it.fails('copies the bare code from "copy room code" and the URL from "copy join link"', async () => {
+  it('copies the bare code from "copy room code" and the URL from "copy join link"', async () => {
     const writeText = stubClipboard();
     const room = makeLobbyRoom();
     const session = makeFakeSession({ room, player: room.players[0]!, error: null });
