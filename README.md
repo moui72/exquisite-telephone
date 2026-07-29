@@ -154,7 +154,7 @@ erDiagram
         enum promptMode "free-form|curated"
         enum paletteMode "monochrome|primary|standard|extended"
         boolean allowFillTool
-        int turnTimerMinutes "nullable"
+        number turnTimerMinutes "nullable; fractional min (0.5=30s .. 720)"
         int lapsPerBook "nullable, 1-3"
         boolean nonContinuable
         timestamp roundStartedAt
@@ -167,7 +167,7 @@ erDiagram
     PLAYER {
         string id "ephemeral, no account"
         string roomId FK
-        string name
+        string name "self-editable in lobby"
         boolean connected
         string sessionToken
         boolean kicked
@@ -258,7 +258,7 @@ graph TD
   Rules["Rules Overview Panel<br/>(Rules / About tabs)"]
   Mod["Moderation Panel<br/>(host-only)"]
   Confirm["ConfirmDialog<br/>(shared confirm)"]
-  Lobby["Lobby / Foyer<br/>(create · join · host settings)"]
+  Lobby["Lobby / Foyer<br/>(create · join · host settings · roster: you-marker + self-rename)"]
   WD["Writing / Drawing view"]
   Canvas["Drawing canvas<br/>(palette mode · fill tool)"]
   Cover["Cover Decoration"]
