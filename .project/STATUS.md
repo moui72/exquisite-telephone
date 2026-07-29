@@ -1,5 +1,18 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-29 (**Diagrams regenerated — all three current again.**
+`/ardd-diagram datamodel` + `/ardd-diagram ui` re-rendered the README Mermaid
+after the short-turn-timer + lobby self-identity/rename work: datamodel now
+shows `turnTimerMinutes` as fractional-capable and `Player.name` as
+self-editable-in-lobby; the ui component diagram notes the roster you-marker +
+self-rename on the Lobby node (structure otherwise unchanged — no new
+component). Committed `e4dfa18` (flaky server socket test tripped the hook once
+and passed on retry, as before). **State fully clear:** 29 features implemented
+· 1 subsumed, 0 backlogged, 0 open feedback, no ready/in-flight tasks, all three
+diagrams current. DEFECTS.md holds 2 cosmetic doc-drift entries (2026-07-24).
+`main` remains unpushed (a push deploys beta); prod still on v0.5.0 — deploy is
+your call. Nothing pending.)_
+
 _Updated: 2026-07-27 (**Short turn-timer options + Lobby self-identity/self-rename
 SHIPPED (11/11), implemented inline.** `tasks-short-turn-timer-options-98a3.md`
 → **completed**; feature `short-turn-timer-options` → **implemented** (register
