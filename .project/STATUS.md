@@ -1,5 +1,20 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: turn-ordering fixed rotation (2 open
+total).** New file `feedback-turn-ordering-fixed-rotation-f1a4.md` (**open**,
+1 Bug [artifacts: datamodel]): books look like they aren't passing in a fixed
+seat-to-seat order. Grounded on inspection — the *intended* design already is a
+fixed left-passing round-robin (`authorIndex = (originIndex + position) %
+activeCount` over `activePlayers`, in `computeNextEntry`,
+`shared/src/turnAdvancement.ts`), so the formula isn't the likely culprit; the
+item points the plan at whether `Room.players` seat order is disturbed mid-game
+(reconnect/`onRejoin` re-appending a player is the prime suspect), to be
+confirmed against a multi-player + reconnect repro. **Open feedback now: 2** —
+this plus `feedback-flaky-server-socket-tests-b13d.md`. Otherwise unchanged: 29
+implemented · 1 subsumed, 0 backlogged, diagrams current, DEFECTS.md 2 cosmetic
+entries. `main` unpushed; prod v0.5.0. Next: `/ardd-plan --slate` to group the
+two open feedback files, or plan either directly.)_
+
 _Updated: 2026-07-30 (**+1 open feedback: flaky server socket tests.** New file
 `feedback-flaky-server-socket-tests-b13d.md` (**open**, 1 Bug): the real-socket
 integration tests in `server/src/socket/server.test.ts` (`a dropped connection
