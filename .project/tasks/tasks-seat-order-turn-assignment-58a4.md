@@ -43,7 +43,15 @@ status: in-progress
 
 ## Phase 2: Fix the implicated layer
 
-- [ ] T005 [artifacts: datamodel, ui] Apply the minimal fix the RED Phase-1 test demands, at the layer it implicates: if server-side, repair/preserve `room.players` seat order on the implicated path (without altering the rotation formula in `shared/src/turnAdvancement.ts`); if client-side, correct the `myTurn`/`myBook`/`previousEntry` derivation in `client/src/lib/views/WritingDrawing.svelte` so it always resolves against the authoritative current room and never displays a prompt from the wrong book. Make the Phase-1 failing test GREEN; keep all other turn-assignment tests passing. (feedback f1a4, feedback 88f2)
+- [x] T005 [artifacts: datamodel, ui] Apply the minimal fix the RED Phase-1 test demands, at the layer it implicates: if server-side, repair/preserve `room.players` seat order on the implicated path (without altering the rotation formula in `shared/src/turnAdvancement.ts`); if client-side, correct the `myTurn`/`myBook`/`previousEntry` derivation in `client/src/lib/views/WritingDrawing.svelte` so it always resolves against the authoritative current room and never displays a prompt from the wrong book. Make the Phase-1 failing test GREEN; keep all other turn-assignment tests passing. (feedback f1a4, feedback 88f2)
+
+  > **SKIPPED — NO FIX (cannot reproduce, per T004 gate).** There is no RED
+  > Phase-1 test, so there is nothing to make green and no layer to repair.
+  > The rotation formula in `shared/src/turnAdvancement.ts` and the client
+  > derivation in `WritingDrawing.svelte` are both left unchanged — no
+  > production code was touched by this plan. Git history confirms `onRejoin`
+  > has never re-appended a player (the guessed cause was never present), so
+  > this is "cannot reproduce," not "already fixed."
 
 ## Phase 3: Regression guard, verify, reconcile feedback
 
