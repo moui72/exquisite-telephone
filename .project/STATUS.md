@@ -1,5 +1,20 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: drawing stroke invisible until release
+(3 open total).** New file
+`feedback-drawing-stroke-invisible-until-release-5da8.md` (**open**, 1 Bug
+[artifacts: ui]): while drawing, the stroke isn't visible until the pointer is
+released — no live feedback mid-stroke. `handlePointerMove` does draw each
+segment (`DrawingCanvas.svelte`), so the attributed hypothesis is a reactive
+`redrawAll()` firing on each `currentStroke` change and repainting only
+committed `strokes`, wiping in-progress segments until commit; fix direction is
+to include the in-progress `currentStroke` in the live render. **Open feedback
+now: 3** — this, `feedback-turn-ordering-fixed-rotation-f1a4.md`, and
+`feedback-flaky-server-socket-tests-b13d.md`. Otherwise unchanged: 29
+implemented · 1 subsumed, 0 backlogged, diagrams current, DEFECTS.md 2 cosmetic
+entries. `main` unpushed; prod v0.5.0. Next: `/ardd-plan --slate` to group the
+three open feedback files, or plan any directly.)_
+
 _Updated: 2026-07-30 (**+1 open feedback: turn-ordering fixed rotation (2 open
 total).** New file `feedback-turn-ordering-fixed-rotation-f1a4.md` (**open**,
 1 Bug [artifacts: datamodel]): books look like they aren't passing in a fixed
