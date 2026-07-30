@@ -11,7 +11,35 @@ status: in-progress
 - [x] T001 [artifacts: datamodel] Add a deterministic pure-function reproduction test against `shared/src/turnAdvancement.ts`: build a Room with ≥3 seated players and books whose `originAuthorId` matches each seat, then drive `computeNextEntries`/`computeNextEntry` through the opening text round (position 0) into the first drawing round (position 1). Assert every player's assigned `bookId`/`position` matches the fixed seat-to-seat rotation `authorIndex = (originIndex + position) % activeCount` — in particular that each player's first drawing turn (position 1) is the *previous* seat's book. This establishes the correct-rotation baseline; expect it to PASS on current code (the formula is sound). (feedback f1a4, feedback 88f2)
 - [x] T002 [artifacts: datamodel] Add a real-socket server integration test (in the `server/src/socket/*.test.ts` harness style) that plays a ≥3-player game through the opening text round and into the first drawing round, then drops one player's connection and reconnects them via `onRejoin` (token-based) mid-game. After the reconnect, assert `room.players` seat order is unchanged and each player's next assigned turn still matches the fixed rotation. This directly tests the feedback's stated prime suspect (`onRejoin` re-appending); if the server preserves seat order as the code read suggests, this test PASSES and clears the server layer.
 - [x] T003 [artifacts: ui] Add a `WritingDrawing.svelte` derivation/component test exercising the reactive `myTurn` / `myBook` / `previousEntry` chain (`WritingDrawing.svelte:42–48`) under adversarial sync conditions: a `state.room` update that lands mid-turn, and a stale/partial room, checking whether the displayed `previousEntry` (the prompt to illustrate) can resolve against the wrong `myBook`. Drive it toward reproducing the reported "first drawing turn shows a prompt from a different book" symptom. (feedback 88f2)
-- [ ] T004 [artifacts: datamodel, ui] Review the outcomes of T001–T003 and ensure at least one test is RED on current code, precisely naming the faulty layer (server seat-order vs. client derivation). If none reproduce, tighten the scenario (e.g. two concurrent reconnects, a kick interleaved with a reconnect, or an out-of-order `roomUpdated`) until one fails or the investigation concludes "cannot reproduce" — recording that conclusion in the tasks notes as the gate decision for Phase 2. This is the Phase-2 gate. (feedback f1a4, feedback 88f2)
+- [x] T004 [artifacts: datamodel, ui] Review the outcomes of T001–T003 and ensure at least one test is RED on current code, precisely naming the faulty layer (server seat-order vs. client derivation). If none reproduce, tighten the scenario (e.g. two concurrent reconnects, a kick interleaved with a reconnect, or an out-of-order `roomUpdated`) until one fails or the investigation concludes "cannot reproduce" — recording that conclusion in the tasks notes as the gate decision for Phase 2. This is the Phase-2 gate. (feedback f1a4, feedback 88f2)
+
+  > **GATE DECISION (T004): CANNOT REPRODUCE.** No test goes RED on current
+  > code. Every faithful scenario preserves the correct fixed rotation:
+  > - T001 (shared, pure): the `authorIndex = (originIndex + position) %
+  >   activeCount` rotation is sound; each first drawing turn is the previous
+  >   seat's book. PASS.
+  > - T002 (server, real-socket): a single mid-game token reconnect leaves
+  >   `room.players` seat order byte-for-byte unchanged and the rotation
+  >   fixed. `onRejoin` finds the player in place and flips `connected` — it
+  >   never re-appends. PASS. **This empirically disproves both feedbacks'
+  >   stated prime suspect (`onRejoin` re-appending).**
+  > - T003 (client, component): `myTurn`/`myBook`/`previousEntry` all derive
+  >   from one `state.room` snapshot, so the displayed prompt is always the
+  >   assigned book's or none — never a foreign book's — even under an
+  >   out-of-order/stale broadcast or a torn/partial room. PASS.
+  > - Tightened scenarios (in T002's block): two concurrent reconnects and a
+  >   kick interleaved with a reconnect both preserve seat order (a kick sets
+  >   `kicked = true` in place; nothing splices/reorders `room.players`
+  >   mid-game). PASS.
+  >
+  > Grep confirms no mid-game path mutates `room.players` order (only
+  > `find`/`filter`; `push` is lobby-join only). Conclusion: the reported
+  > symptoms are not reproducible under the server or client as they stand.
+  > **Phase-2 consequence:** there is no RED test, so T005 has no fix to make
+  > (skip-with-note). T006–T008 complete what genuinely applies: the T001–T003
+  > tests stand as the permanent regression guard (T006), and T008's citation
+  > correction is warranted because T002 disproved the `onRejoin`-re-append
+  > hypothesis.
 
 ## Phase 2: Fix the implicated layer
 

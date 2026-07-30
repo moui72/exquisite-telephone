@@ -899,4 +899,147 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     })) as SubmitEntryAck;
     expect(linDrawAck.error).toBeUndefined();
   });
+
+  // T004 tightened scenarios: the gate asked for harder repro attempts
+  // (two concurrent reconnects; a kick interleaved with a reconnect) before
+  // concluding "cannot reproduce". Both still preserve seat order — no path
+  // mutates room.players order mid-game.
+  it('two players dropping and reconnecting concurrently keeps seat order and rotation', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const adaId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const joinB = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
+    const graceId = joinB.player!.id;
+    const graceToken = joinB.player!.sessionToken;
+
+    clientC = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientC, 'connect');
+    const joinC = (await clientC
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
+    const linId = joinC.player!.id;
+    const linToken = joinC.player!.sessionToken;
+
+    store.getRoom(roomId)!.lapsPerBook = 1;
+    const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: adaId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
+    const openBooks = startAck.room!.books;
+    const bookOf = (id: string) => openBooks.find((b) => b.originAuthorId === id)!.id;
+
+    // Play the opening text round (position 0) so the game is genuinely
+    // mid-game — the first drawing round (position 1) is what the seat
+    // rotation is asserted against below.
+    await clientA
+      .timeout(5000)
+      .emitWithAck('submitEntry', { roomId, playerId: adaId, bookId: bookOf(adaId), content: 'a' });
+    await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: bookOf(graceId),
+      content: 'g',
+    });
+    await clientC
+      .timeout(5000)
+      .emitWithAck('submitEntry', { roomId, playerId: linId, bookId: bookOf(linId), content: 'l' });
+
+    // Drop Grace and Lin at the same time.
+    clientB.close();
+    clientC.close();
+    await waitFor(
+      () =>
+        store.getRoom(roomId)?.players.find((p) => p.id === graceId)?.connected === false &&
+        store.getRoom(roomId)?.players.find((p) => p.id === linId)?.connected === false,
+      { description: 'both Grace and Lin to be marked disconnected' },
+    );
+
+    // Reconnect both concurrently.
+    clientB = ioClient(`http://localhost:${port}`);
+    clientC = ioClient(`http://localhost:${port}`);
+    await Promise.all([waitForEvent(clientB, 'connect'), waitForEvent(clientC, 'connect')]);
+    const [rejoinB, rejoinC] = (await Promise.all([
+      clientB.timeout(5000).emitWithAck('rejoin', { token: graceToken }),
+      clientC.timeout(5000).emitWithAck('rejoin', { token: linToken }),
+    ])) as [RejoinAck, RejoinAck];
+    expect(rejoinB.error).toBeUndefined();
+    expect(rejoinC.error).toBeUndefined();
+
+    const room = store.getRoom(roomId)!;
+    expect(room.players.map((p) => p.id)).toEqual([adaId, graceId, linId]);
+    const turns = computeNextEntries(room);
+    const byBook = Object.fromEntries(turns.map((t) => [t.bookId, t.authorId]));
+    const bookFor = (id: string) => room.books.find((b) => b.originAuthorId === id)!.id;
+    expect(byBook[bookFor(adaId)]).toBe(graceId);
+    expect(byBook[bookFor(graceId)]).toBe(linId);
+    expect(byBook[bookFor(linId)]).toBe(adaId);
+  });
+
+  it('a kick interleaved with a reconnect leaves the surviving seats in their original order', async () => {
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const adaId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const joinB = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
+    const graceId = joinB.player!.id;
+    const graceToken = joinB.player!.sessionToken;
+
+    clientC = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientC, 'connect');
+    const joinC = (await clientC
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
+    const linId = joinC.player!.id;
+
+    store.getRoom(roomId)!.lapsPerBook = 1;
+    await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: adaId,
+      acknowledgeSmallGame: true,
+    });
+
+    // Grace drops; while she is away, the host kicks Lin; then Grace rejoins.
+    clientB.close();
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === graceId)?.connected === false,
+      { description: 'Grace to be marked disconnected' },
+    );
+    await clientA.timeout(5000).emitWithAck('kickPlayer', {
+      roomId,
+      playerId: adaId,
+      targetPlayerId: linId,
+    });
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const rejoinB = (await clientB
+      .timeout(5000)
+      .emitWithAck('rejoin', { token: graceToken })) as RejoinAck;
+    expect(rejoinB.error).toBeUndefined();
+
+    // Every seat keeps its slot: Lin is marked kicked in place (not spliced),
+    // so the array order is still [ada, grace, lin] and the active roster is
+    // [ada, grace] in that order.
+    const room = store.getRoom(roomId)!;
+    expect(room.players.map((p) => p.id)).toEqual([adaId, graceId, linId]);
+    expect(room.players.find((p) => p.id === linId)?.kicked).toBe(true);
+  });
 });
