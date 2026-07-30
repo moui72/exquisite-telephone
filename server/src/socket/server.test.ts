@@ -2,6 +2,7 @@ import { createServer, type Server as HttpServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { computeNextEntries } from '@exquisite-telephone/shared';
 import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
 import { waitFor, waitForEvent } from '../test-support/waitFor.js';
@@ -760,5 +761,142 @@ describe('onPlayAgain', () => {
       .emitWithAck('playAgain', { roomId: oldRoomId, playerId: hostId })) as PlayAgainAck;
 
     expect(ack.error).toBe('room-not-in-reveal');
+  });
+});
+
+// T002 — real-socket reconnect-mid-game seat-order guard (reproduction
+// for feedback f1a4 / 88f2). Plays a 3-player game through the opening
+// text round, drops and token-reconnects one player mid-game, then
+// asserts (a) room.players seat order (id sequence) is unchanged and
+// (b) the fixed left-passing rotation still holds into the first drawing
+// round. This directly tests the feedback's stated prime suspect —
+// `onRejoin` re-appending / reordering a seat. If the server preserves
+// seat order (as the code read of onRejoin suggests: it finds the player
+// in place and flips `connected`, never re-appends), this test PASSES and
+// clears the server layer.
+describe('T002 reconnect mid-game preserves seat order and fixed rotation', () => {
+  let httpServer: HttpServer;
+  let store: RoomStore;
+  let clientA: ClientSocket;
+  let clientB: ClientSocket;
+  let clientC: ClientSocket;
+  let port: number;
+
+  beforeEach(async () => {
+    store = createRoomStore();
+    httpServer = createServer();
+    createSocketServer(httpServer, store);
+    await new Promise<void>((resolve) => httpServer.listen(0, () => resolve()));
+    port = (httpServer.address() as AddressInfo).port;
+  });
+
+  afterEach(async () => {
+    clientA?.close();
+    clientB?.close();
+    clientC?.close();
+    await new Promise<void>((resolve) => httpServer.close(() => resolve()));
+  });
+
+  it('keeps room.players id-order unchanged and the rotation fixed after a mid-game token reconnect', async () => {
+    // Seat three players: Ada (host, seat 0), Grace (seat 1), Lin (seat 2).
+    clientA = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientA, 'connect');
+    const createAck = (await clientA
+      .timeout(5000)
+      .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
+    const roomId = createAck.room!.id;
+    const adaId = createAck.room!.hostPlayerId;
+
+    clientB = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientB, 'connect');
+    const joinB = (await clientB
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
+    const graceId = joinB.player!.id;
+
+    clientC = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientC, 'connect');
+    const joinC = (await clientC
+      .timeout(5000)
+      .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
+    const linId = joinC.player!.id;
+    const linToken = joinC.player!.sessionToken;
+
+    // Pin to a single lap so the game is a clean two-round rotation.
+    store.getRoom(roomId)!.lapsPerBook = 1;
+
+    const startAck = (await clientA.timeout(5000).emitWithAck('startGame', {
+      roomId,
+      playerId: adaId,
+      acknowledgeSmallGame: true,
+    })) as StartGameAck;
+
+    const seatOrderAtStart = startAck.room!.players.map((p) => p.id);
+    expect(seatOrderAtStart).toEqual([adaId, graceId, linId]);
+
+    const books = startAck.room!.books;
+    const adaBook = books.find((b) => b.originAuthorId === adaId)!;
+    const graceBook = books.find((b) => b.originAuthorId === graceId)!;
+    const linBook = books.find((b) => b.originAuthorId === linId)!;
+
+    // Opening text round (position 0): each origin writes their own book.
+    await clientA.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: adaId,
+      bookId: adaBook.id,
+      content: 'ada opening',
+    });
+    await clientB.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: graceId,
+      bookId: graceBook.id,
+      content: 'grace opening',
+    });
+    await clientC.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: linId,
+      bookId: linBook.id,
+      content: 'lin opening',
+    });
+
+    // Drop Lin mid-game (between the opening round and the first drawing
+    // round) and wait for the server to actually mark the seat
+    // disconnected, then reconnect Lin with the session token.
+    clientC.close();
+    await waitFor(
+      () => store.getRoom(roomId)?.players.find((p) => p.id === linId)?.connected === false,
+      { description: `player ${linId} to be marked disconnected` },
+    );
+
+    clientC = ioClient(`http://localhost:${port}`);
+    await waitForEvent(clientC, 'connect');
+    const rejoinAck = (await clientC
+      .timeout(5000)
+      .emitWithAck('rejoin', { token: linToken })) as RejoinAck;
+    expect(rejoinAck.error).toBeUndefined();
+
+    // (a) Seat order is byte-for-byte unchanged after the reconnect — the
+    // prime suspect (onRejoin re-appending) would have moved Lin to the end.
+    const room = store.getRoom(roomId)!;
+    expect(room.players.map((p) => p.id)).toEqual([adaId, graceId, linId]);
+
+    // (b) The first drawing round (position 1) still follows the fixed
+    // left-passing rotation: each book is handed to the NEXT seat.
+    const drawingTurns = computeNextEntries(room);
+    const byBook = Object.fromEntries(drawingTurns.map((t) => [t.bookId, t]));
+    expect(byBook[adaBook.id]).toMatchObject({ authorId: graceId, position: 1, type: 'drawing' });
+    expect(byBook[graceBook.id]).toMatchObject({ authorId: linId, position: 1, type: 'drawing' });
+    expect(byBook[linBook.id]).toMatchObject({ authorId: adaId, position: 1, type: 'drawing' });
+
+    // And the assignment is actually honored end-to-end: the reconnected
+    // player (Lin) can submit the drawing turn their seat is due (graceBook),
+    // proving the reconnect did not shift whose turn it is.
+    const linDrawAck = (await clientC.timeout(5000).emitWithAck('submitEntry', {
+      roomId,
+      playerId: linId,
+      bookId: graceBook.id,
+      content: 'lin draws grace book',
+    })) as SubmitEntryAck;
+    expect(linDrawAck.error).toBeUndefined();
   });
 });
