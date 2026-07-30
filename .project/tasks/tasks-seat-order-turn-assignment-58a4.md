@@ -85,4 +85,4 @@ status: in-progress
   > order drifts. No separate browser `/run` playthrough was performed — the
   > symptom is provably unproducible at the state layer that drives the UI, so
   > a manual playthrough would add no signal beyond the scripted runs.
-- [ ] T008 [artifacts: datamodel, ui] If Phase 1 (T002) disproved the `onRejoin`-re-append hypothesis, correct that specific citation in `feedback-turn-ordering-fixed-rotation-f1a4.md` and `feedback-wrong-book-prompt-first-drawing-turn-88f2.md` in place — factual-correction exemption only (reviewer guide `templates/dot-project-readme.md`): fix the cited cause, never change the decision or item content. If the hypothesis held, skip with a note.
+- [x] T008 [artifacts: datamodel, ui] If Phase 1 (T002) disproved the `onRejoin`-re-append hypothesis, correct that specific citation in `feedback-turn-ordering-fixed-rotation-f1a4.md` and `feedback-wrong-book-prompt-first-drawing-turn-88f2.md` in place — factual-correction exemption only (reviewer guide `templates/dot-project-readme.md`): fix the cited cause, never change the decision or item content. If the hypothesis held, skip with a note.
