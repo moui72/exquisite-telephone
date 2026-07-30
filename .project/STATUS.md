@@ -1,5 +1,18 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: flaky server socket tests.** New file
+`feedback-flaky-server-socket-tests-b13d.md` (**open**, 1 Bug): the real-socket
+integration tests in `server/src/socket/server.test.ts` (`a dropped connection
+can resume the same seat…` and `onPlayAgain gives the host a new room/player…`)
+flake under load and repeatedly tripped the pre-commit hook this and the prior
+session, passing on retry — timing-sensitivity, not a product bug; the 2000ms
+`waitForEvent` budget (`server/src/test-support/waitFor.ts`) is too tight when
+the full suite runs in parallel. Untagged (test-infra, no artifact decision);
+the next `/ardd-plan` picks it up. Otherwise unchanged: 29 implemented · 1
+subsumed, 0 backlogged, all three diagrams current. DEFECTS.md holds 2 cosmetic
+doc-drift entries (2026-07-24). `main` unpushed; prod on v0.5.0. Next:
+`/ardd-plan feedback-flaky-server-socket-tests-b13d.md` when you want it fixed.)_
+
 _Updated: 2026-07-29 (**Diagrams regenerated — all three current again.**
 `/ardd-diagram datamodel` + `/ardd-diagram ui` re-rendered the README Mermaid
 after the short-turn-timer + lobby self-identity/rename work: datamodel now
