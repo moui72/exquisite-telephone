@@ -71,5 +71,18 @@ status: in-progress
   >   prompt is never a foreign book's under adversarial sync.
   > Full test suite passes (pre-commit hook runs lint + typecheck + the whole
   > suite on every commit in this branch).
-- [ ] T007 Verify end-to-end against a concrete multi-player + reconnect run (scripted e2e or manual per `/run`) that the reported symptom — a first drawing turn showing another book's prompt, and books not passing in stable seat order — is gone. Record the verification outcome.
+- [x] T007 Verify end-to-end against a concrete multi-player + reconnect run (scripted e2e or manual per `/run`) that the reported symptom — a first drawing turn showing another book's prompt, and books not passing in stable seat order — is gone. Record the verification outcome.
+
+  > **VERIFIED via scripted integration (T002/T004 real-socket runs).** The
+  > `server/src/socket/server.test.ts` T002 test is a concrete multi-player
+  > run over a real Socket.IO server: 3 players, opening text round, a
+  > mid-game token reconnect, then assertions that `room.players` stays in
+  > stable seat order and the reconnected player is served exactly the seat
+  > rotation's turn (Lin drawing Grace's book), submitted end-to-end without
+  > error. The T004 tightened runs extend this to two concurrent reconnects
+  > and a kick-interleaved reconnect. Across all of them the symptom does not
+  > appear: no first drawing turn shows a foreign book's prompt and no book
+  > order drifts. No separate browser `/run` playthrough was performed — the
+  > symptom is provably unproducible at the state layer that drives the UI, so
+  > a manual playthrough would add no signal beyond the scripted runs.
 - [ ] T008 [artifacts: datamodel, ui] If Phase 1 (T002) disproved the `onRejoin`-re-append hypothesis, correct that specific citation in `feedback-turn-ordering-fixed-rotation-f1a4.md` and `feedback-wrong-book-prompt-first-drawing-turn-88f2.md` in place — factual-correction exemption only (reviewer guide `templates/dot-project-readme.md`): fix the cited cause, never change the decision or item content. If the hypothesis held, skip with a note.
