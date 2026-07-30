@@ -1,5 +1,25 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: cover-template clip regression
+(6 open total).** New file
+`feedback-cover-template-not-clipped-to-canvas-regression-f6d0.md` (**open**,
+1 Bug [artifacts: ui]): cover background templates still aren't constrained to
+the canvas — a **regression/incomplete fix** of the earlier
+`feedback-cover-decoration-background-ca-4113.md` F001 (shipped under
+`plan-host-drawing-tool-controls-2026-07-24-590b.md`). The `overflow-hidden`
+clip wrapper in `CoverDecorationCanvas.svelte` wraps the whole `DrawingCanvas`
+(toolbar + canvas), so the `inset-0` template layer bleeds behind the toolbar
+instead of clipping to the canvas rectangle; fix scopes the template+clip to the
+`<canvas>` bounds only. **Open feedback now: 6, all Bugs** — a full play-test
+sweep: (1) `…wrong-book-prompt…-88f2` + `…turn-ordering…-f1a4` = *same root
+(rotation/reconnect), bundle*; (2) `…cover-template…-f6d0` (ui/CoverDecoration);
+(3) `…reveal-page-turn…-d607` (ui/Reveal); (4) `…drawing-stroke-invisible…-5da8`
+(ui/DrawingCanvas); (5) `…flaky-server-socket-tests-b13d` (test-support).
+Footprints mostly disjoint → likely 1 bundle + 4 solo fan-outs. Otherwise
+unchanged: 29 implemented · 1 subsumed, 0 backlogged, diagrams current. `main`
+unpushed; prod v0.5.0. **Recommend `/ardd-plan --slate` now** to get the grouping
+before this queue grows further.)_
+
 _Updated: 2026-07-30 (**+1 open feedback: wrong-book prompt on first drawing turn
 (5 open total).** New file `feedback-wrong-book-prompt-first-drawing-turn-88f2.md`
 (**open**, 1 Bug [artifacts: ui, datamodel]): a player's first drawing turn
