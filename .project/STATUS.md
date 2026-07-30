@@ -1,5 +1,22 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: wrong-book prompt on first drawing turn
+(5 open total).** New file `feedback-wrong-book-prompt-first-drawing-turn-88f2.md`
+(**open**, 1 Bug [artifacts: ui, datamodel]): a player's first drawing turn
+showed a prompt from a *different* book. The prompt comes straight from the
+server-assigned `myTurn.bookId` (`WritingDrawing.svelte` `previousEntry`), so
+this is an *assignment* fault — **very likely the same root cause** as
+`feedback-turn-ordering-fixed-rotation-f1a4.md` (disturbed seat order in
+`computeNextEntry` → wrong book/position; reconnect/`onRejoin` prime suspect).
+The two should be planned together. **Open feedback now: 5 (all Bugs):** wrong-book
+prompt (88f2) + turn-ordering (f1a4) — *same root, bundle*; Reveal page-turn
+cross-viewer (d607); drawing stroke invisible until release (5da8); flaky server
+socket tests (b13d). Footprints: 88f2+f1a4 share turnAdvancement/reconnect;
+d607 = Reveal; 5da8 = DrawingCanvas; b13d = test-support — so likely one bundle
++ three solo fan-outs. Otherwise unchanged: 29 implemented · 1 subsumed, 0
+backlogged, diagrams current. `main` unpushed; prod v0.5.0. Next: `/ardd-plan
+--slate` to confirm grouping across all five.)_
+
 _Updated: 2026-07-30 (**+1 open feedback: Reveal page-turn cross-viewer state
 (4 open total).** New file
 `feedback-reveal-page-turn-cross-viewer-state-d607.md` (**open**, 1 Bug
