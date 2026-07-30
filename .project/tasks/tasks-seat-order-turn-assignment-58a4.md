@@ -55,6 +55,21 @@ status: in-progress
 
 ## Phase 3: Regression guard, verify, reconcile feedback
 
-- [ ] T006 [artifacts: datamodel, ui] Promote the Phase-1 reproduction to a permanent regression test with a focused assertion for the exact wrong-assignment signature fixed in T005 (wrong `bookId` at position 1 / seat-order drift after reconnect), so the defect cannot silently return. Confirm the full test suite passes.
+- [x] T006 [artifacts: datamodel, ui] Promote the Phase-1 reproduction to a permanent regression test with a focused assertion for the exact wrong-assignment signature fixed in T005 (wrong `bookId` at position 1 / seat-order drift after reconnect), so the defect cannot silently return. Confirm the full test suite passes.
+
+  > **DONE — the guard is the T001–T003 tests, now permanent.** With no fix
+  > in T005, there is no new "regression test for the fix" to write; the
+  > repro tests themselves are the standing guard against the exact
+  > wrong-assignment signature the feedback described:
+  > - `shared/src/turnAdvancement.test.ts` (T001): first drawing turn
+  >   (position 1) is the previous seat's book, and `previousEntry` resolves
+  >   within that same book — the "wrong `bookId` at position 1" signature.
+  > - `server/src/socket/server.test.ts` (T002/T004): `room.players` id-order
+  >   is unchanged after a mid-game reconnect (single, concurrent, and
+  >   kick-interleaved) — the "seat-order drift after reconnect" signature.
+  > - `client/src/lib/views/WritingDrawing.test.ts` (T003): the displayed
+  >   prompt is never a foreign book's under adversarial sync.
+  > Full test suite passes (pre-commit hook runs lint + typecheck + the whole
+  > suite on every commit in this branch).
 - [ ] T007 Verify end-to-end against a concrete multi-player + reconnect run (scripted e2e or manual per `/run`) that the reported symptom — a first drawing turn showing another book's prompt, and books not passing in stable seat order — is gone. Record the verification outcome.
 - [ ] T008 [artifacts: datamodel, ui] If Phase 1 (T002) disproved the `onRejoin`-re-append hypothesis, correct that specific citation in `feedback-turn-ordering-fixed-rotation-f1a4.md` and `feedback-wrong-book-prompt-first-drawing-turn-88f2.md` in place — factual-correction exemption only (reviewer guide `templates/dot-project-readme.md`): fix the cited cause, never change the decision or item content. If the hypothesis held, skip with a note.
