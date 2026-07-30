@@ -626,3 +626,103 @@ describe('computeNextEntry over active players (restart after a kick)', () => {
     expect(computeNextEntry(room, fourEntries)).not.toBeNull();
   });
 });
+
+// T001 — fixed seat-to-seat rotation baseline (reproduction for
+// feedback f1a4 / 88f2). Establishes the *correct* left-passing
+// round-robin: every player's first drawing turn (position 1) must land
+// on the PREVIOUS seat's book. Expected to PASS on current code — the
+// formula in computeNextEntry is sound; this is the characterization
+// baseline the two feedbacks' symptoms are measured against.
+describe('T001 fixed seat-to-seat rotation (opening text into first drawing)', () => {
+  const roomId = 'ROOM1';
+  const ada = makePlayer('ada', roomId);
+  const grace = makePlayer('grace', roomId);
+  const lin = makePlayer('lin', roomId);
+  const seatOrder = [ada, grace, lin];
+
+  function makeRoom(books: Book[]): Room {
+    return {
+      id: roomId,
+      hostPlayerId: ada.id,
+      players: seatOrder,
+      status: 'writing',
+      books,
+      createdAt: Date.now(),
+      paletteMode: 'standard',
+      allowFillTool: true,
+      turnTimerMinutes: null,
+      lapsPerBook: 1,
+      roundStartedAt: null,
+      timerExtensions: {},
+      pendingTimeoutVote: null,
+      playAgainVotes: [],
+      nonContinuable: false,
+      bookReads: {},
+      currentlyReading: {},
+      promptMode: 'free-form',
+      curatedPromptCount: null,
+      allowPromptWriteIn: true,
+      dealtPrompts: {},
+    };
+  }
+
+  // One book per seat, each authored (position 0) by its own seat.
+  function seatBooks(): Book[] {
+    return seatOrder.map((p) => ({
+      id: `book-${p.id}`,
+      roomId,
+      originAuthorId: p.id,
+      entries: [] as Entry[],
+    }));
+  }
+
+  // Apply one full round: assign every due entry and append it in place.
+  function playRound(room: Room): void {
+    for (const next of computeNextEntries(room)) {
+      const book = room.books.find((b) => b.id === next.bookId)!;
+      book.entries.push(makeEntry(book.id, next.authorId, next.position));
+    }
+  }
+
+  it('assigns each seat its own book for the opening text round (position 0)', () => {
+    const room = makeRoom(seatBooks());
+
+    const opening = computeNextEntries(room);
+
+    // Every book's opening text is written by its own origin seat.
+    expect(opening).toEqual([
+      { bookId: 'book-ada', authorId: ada.id, type: 'text', position: 0 },
+      { bookId: 'book-grace', authorId: grace.id, type: 'text', position: 0 },
+      { bookId: 'book-lin', authorId: lin.id, type: 'text', position: 0 },
+    ]);
+  });
+
+  it("hands each player the PREVIOUS seat's book on the first drawing turn (position 1)", () => {
+    const room = makeRoom(seatBooks());
+    playRound(room); // opening text round (position 0)
+
+    const drawing = computeNextEntries(room);
+
+    // Left-passing rotation: seat i draws for seat (i-1)'s book, i.e.
+    // authorIndex = (originIndex + 1) % 3.
+    //   book-ada   (origin seat 0) -> grace (seat 1)
+    //   book-grace (origin seat 1) -> lin   (seat 2)
+    //   book-lin   (origin seat 2) -> ada   (seat 0)
+    expect(drawing).toEqual([
+      { bookId: 'book-ada', authorId: grace.id, type: 'drawing', position: 1 },
+      { bookId: 'book-grace', authorId: lin.id, type: 'drawing', position: 1 },
+      { bookId: 'book-lin', authorId: ada.id, type: 'drawing', position: 1 },
+    ]);
+
+    // And the prompt each player illustrates is the position-0 text of
+    // exactly that previous seat's book (the "previousEntry" the client
+    // shows). Verify no cross-book bleed: the entry index resolves within
+    // the assigned book.
+    for (const turn of drawing) {
+      const book = room.books.find((b) => b.id === turn.bookId)!;
+      const previousEntry = book.entries[turn.position - 1];
+      expect(previousEntry.bookId).toBe(turn.bookId);
+      expect(previousEntry.position).toBe(0);
+    }
+  });
+});
