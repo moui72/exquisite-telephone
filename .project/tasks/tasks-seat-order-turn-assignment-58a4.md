@@ -1,7 +1,7 @@
 ---
 plan: plan-seat-order-turn-assignment-2026-07-30-69ea.md
 generated: 2026-07-30
-status: in-progress
+status: completed
 ---
 
 # Tasks
