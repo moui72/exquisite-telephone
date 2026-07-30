@@ -1,5 +1,24 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-30 (**+1 open feedback: Reveal page-turn cross-viewer state
+(4 open total).** New file
+`feedback-reveal-page-turn-cross-viewer-state-d607.md` (**open**, 1 Bug
+[artifacts: ui, datamodel]): suspected cross-viewer state leak — one viewer's
+page turn in a book's reader may affect another viewer's book state. Intended
+design keeps page position client-local (`pageByBook` in `Reveal.svelte`), with
+only book-open (`currentlyReading`) and read-completion (`bookReads`) shared —
+so the plan should confirm with two concurrent viewers whether a page turn is
+touching/deriving from shared `Room` state, and keep navigation strictly local.
+**Open feedback now: 4 (all Bugs):**
+`feedback-reveal-page-turn-cross-viewer-state-d607.md` (reveal, ui+datamodel),
+`feedback-drawing-stroke-invisible-until-release-5da8.md` (drawing, ui),
+`feedback-turn-ordering-fixed-rotation-f1a4.md` (rotation, datamodel — reconnect
+suspect), `feedback-flaky-server-socket-tests-b13d.md` (test infra). A play-test
+bug sweep — mostly independent footprints (DrawingCanvas / Reveal / turn-rotation
++ reconnect / test-support), so a `--slate` fan-out is likely. Otherwise
+unchanged: 29 implemented · 1 subsumed, 0 backlogged, diagrams current. `main`
+unpushed; prod v0.5.0. Next: `/ardd-plan --slate` to group/sequence the four.)_
+
 _Updated: 2026-07-30 (**+1 open feedback: drawing stroke invisible until release
 (3 open total).** New file
 `feedback-drawing-stroke-invisible-until-release-5da8.md` (**open**, 1 Bug
