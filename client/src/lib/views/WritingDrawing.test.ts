@@ -666,6 +666,132 @@ describe('Writing/Drawing view', () => {
   });
 });
 
+/**
+ * T003 — reproduction attempt for feedback 88f2 ("first drawing turn shows
+ * a prompt from a different book"). The displayed prompt is
+ *   previousEntry = myBook.entries[myTurn.position - 1]
+ * where myBook is resolved from the SAME room snapshot by myTurn.bookId
+ * (WritingDrawing.svelte:42–48). The discriminating question: can any
+ * adversarial store sequence — an out-of-order/stale `state.room`, or a
+ * partial room — make the shown prompt belong to a book OTHER than the one
+ * the player is assigned? Because myTurn, myBook and previousEntry all
+ * derive from one `state.room`, they cannot disagree within a snapshot;
+ * these tests drive the adversarial cases and confirm the symptom does not
+ * reproduce on the client (the prompt is always the assigned book's, or
+ * none). Expected to PASS on current code.
+ */
+describe('T003 first-drawing-turn prompt resolves against the assigned book (88f2)', () => {
+  // 3-player room with every opening phrase (position 0) in, so the first
+  // drawing round (position 1) is live. Distinct phrases per book let a
+  // cross-book bleed be detected by content.
+  function firstDrawingRoundBooks(): Book[] {
+    const opening = (bookId: string, authorId: string, content: string): Entry => ({
+      id: `${bookId}-0`,
+      bookId,
+      authorId,
+      position: 0,
+      type: 'text',
+      content,
+    });
+    return [
+      {
+        id: 'book-ada',
+        roomId,
+        originAuthorId: ada.id,
+        entries: [opening('book-ada', ada.id, 'ADA PHRASE')],
+      },
+      {
+        id: 'book-grace',
+        roomId,
+        originAuthorId: grace.id,
+        entries: [opening('book-grace', grace.id, 'GRACE PHRASE')],
+      },
+      {
+        id: 'book-lin',
+        roomId,
+        originAuthorId: lin.id,
+        entries: [opening('book-lin', lin.id, 'LIN PHRASE')],
+      },
+    ];
+  }
+
+  const players = [ada, grace, lin];
+
+  it("shows the PREVIOUS seat's phrase, never another book's, on the first drawing turn", () => {
+    // Grace (seat 1) draws book-ada (seat 0) at position 1 — the left-passing
+    // rotation. Her prompt must be ADA PHRASE and nothing else.
+    const room = makeRoom(firstDrawingRoundBooks(), players, { lapsPerBook: 1 });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+
+    expect(screen.getByText('ADA PHRASE')).toBeInTheDocument();
+    expect(screen.queryByText('GRACE PHRASE')).not.toBeInTheDocument();
+    expect(screen.queryByText('LIN PHRASE')).not.toBeInTheDocument();
+  });
+
+  it('keeps the prompt matched to the assigned book after an out-of-order/stale room broadcast', async () => {
+    const room = makeRoom(firstDrawingRoundBooks(), players, { lapsPerBook: 1 });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+    expect(screen.getByText('ADA PHRASE')).toBeInTheDocument();
+
+    // An unrelated/stale roomUpdated lands mid-turn: a brand-new Room object
+    // (fresh identity, an incidental field changed) whose books are the same
+    // position-0 snapshot. Grace's assignment is unchanged, so the prompt
+    // must remain ADA PHRASE and must never flip to another book's phrase.
+    const staleRoom = makeRoom(firstDrawingRoundBooks(), players, {
+      lapsPerBook: 1,
+      turnTimerMinutes: 30,
+      roundStartedAt: Date.now(),
+    });
+    session.store.set({
+      reconnecting: false,
+      testTraffic: false,
+      room: staleRoom,
+      player: grace,
+      error: null,
+    });
+    await Promise.resolve();
+
+    expect(screen.getByText('ADA PHRASE')).toBeInTheDocument();
+    expect(screen.queryByText('GRACE PHRASE')).not.toBeInTheDocument();
+    expect(screen.queryByText('LIN PHRASE')).not.toBeInTheDocument();
+  });
+
+  it('never surfaces a foreign book’s phrase under a partial room (a book missing its entries)', async () => {
+    const room = makeRoom(firstDrawingRoundBooks(), players, { lapsPerBook: 1 });
+    const session = makeFakeSession({ room, player: grace, error: null });
+
+    render(WritingDrawing, { props: { session } });
+    expect(screen.getByText('ADA PHRASE')).toBeInTheDocument();
+
+    // Partial/torn snapshot: book-ada arrives with its opening entry stripped
+    // (entries: []). The derivation recomputes against this snapshot —
+    // book-ada now has no position-0 text, so Grace is no longer assigned it,
+    // and there is simply no previous entry to show. The one thing that must
+    // NOT happen is Grace seeing a phrase from a book she is not drawing.
+    const torn = firstDrawingRoundBooks();
+    torn.find((b) => b.id === 'book-ada')!.entries = [];
+    const partialRoom = makeRoom(torn, players, { lapsPerBook: 1 });
+    session.store.set({
+      reconnecting: false,
+      testTraffic: false,
+      room: partialRoom,
+      player: grace,
+      error: null,
+    });
+    await Promise.resolve();
+
+    // No cross-book bleed: the prior ADA PHRASE prompt is gone (not replaced
+    // by GRACE/LIN PHRASE). Whatever turn Grace now holds, its prompt is its
+    // own book's or none — never a foreign book's.
+    expect(screen.queryByText('ADA PHRASE')).not.toBeInTheDocument();
+    expect(screen.queryByText('LIN PHRASE')).not.toBeInTheDocument();
+  });
+});
+
 describe('theme regression guard (plan-1449)', () => {
   it('contains no leftover default-Tailwind slate- classes', () => {
     const source = readFileSync(resolve(__dirname, './WritingDrawing.svelte'), 'utf-8');
