@@ -15,7 +15,7 @@ complexity: moderate
 ## Phase 2: Fix
 
 - [x] T003 [artifacts: ui] Constrain the reveal-all content to a bounded scroll region and pin the modal's control/close row (sticky footer or flex layout) inside the modal's `max-h`, so the controls stay reachable and clear of the nav bar regardless of how many pages reveal-all shows, including on small viewports. Make T001 green. (feedback 23ab)
-- [ ] T004 [artifacts: ui, datamodel] Only if T002 confirmed a leak: keep page navigation strictly client-local so no page turn (or reveal-all toggle) mutates or is derived from shared `Room` state (`currentlyReading`/`bookReads`); shared state carries only which book is open and whether a read completed. Make T002 green. If T002 found no leak, skip this task with a note. (feedback d607)
+- [x] T004 [artifacts: ui, datamodel] Only if T002 confirmed a leak: keep page navigation strictly client-local so no page turn (or reveal-all toggle) mutates or is derived from shared `Room` state (`currentlyReading`/`bookReads`); shared state carries only which book is open and whether a read completed. Make T002 green. If T002 found no leak, skip this task with a note. (feedback d607)
 
 ## Phase 3: Verify / reconcile
 
