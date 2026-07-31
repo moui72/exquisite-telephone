@@ -155,6 +155,20 @@
         applyFill(op.point, op.color);
       }
     }
+    // Repaint the in-progress (uncommitted) stroke on top of the committed
+    // ops. `redrawAll` clears the whole canvas, so a redraw fired mid-stroke
+    // — an external state update re-passing `ops`, a DPR/resize repaint —
+    // would otherwise erase the live segments handlePointerMove painted and
+    // leave the stroke invisible until pointerup commits it (5da8). It uses
+    // the style captured at the stroke's first point (F001), not the current
+    // palette selection.
+    if (currentStroke && currentStroke.length >= 2) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      for (let i = 1; i < currentStroke.length; i += 1) {
+        drawSegment(currentStroke[i - 1]!, currentStroke[i]!);
+      }
+    }
   }
 
   function handlePointerDown(event: PointerEvent) {

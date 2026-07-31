@@ -411,9 +411,7 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
   // segments `handlePointerMove` painted, so the stroke vanishes until it is
   // committed on pointerup. Here a prop update mid-stroke stands in for that
   // external redraw; the in-progress stroke must be repainted, not dropped.
-  // RED (it.fails) on current code: the redraw replays only ops and never
-  // repaints `currentStroke`.
-  it.fails('keeps in-progress stroke segments visible across a mid-stroke redraw (5da8)', async () => {
+  it('keeps in-progress stroke segments visible across a mid-stroke redraw (5da8)', async () => {
     const fakeCtx = makeFakeCtx();
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
 
