@@ -400,22 +400,38 @@ describe('Reveal view — page state is per-viewer, client-local (feedback d607,
     expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
   });
 
-  it('mutating shared read-state does not move the displayed page ("derived from" clause)', async () => {
+  it('a real shared read-state update does not move the displayed page ("derived from" clause)', async () => {
+    // Drive an actual store emission (not an in-place mutation), so the
+    // component genuinely re-renders on the new Room — the only way this
+    // test can catch a page derived from currentlyReading/bookReads.
     const room = makeRoom({ books: [threeEntryBook()] });
-    const session = makeFakeSession({ room, player: ada, error: null });
+    const store = writable<SessionState>({
+      reconnecting: false,
+      testTraffic: false,
+      room,
+      player: ada,
+      error: null,
+    });
+    const session = { ...makeFakeSession({ room, player: ada, error: null }), subscribe: store.subscribe };
 
-    const { rerender } = render(Reveal, { props: { session } });
+    render(Reveal, { props: { session } });
     await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
     await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
     expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
 
-    // Another viewer's read activity arrives via shared Room state.
-    room.currentlyReading = { [grace.id]: 'book-a' };
-    room.bookReads = { 'book-a': [grace.id] };
-    await rerender({ session });
+    // Another viewer's read activity arrives as a fresh Room via the store.
+    store.set({
+      reconnecting: false,
+      testTraffic: false,
+      room: { ...room, currentlyReading: { [grace.id]: 'book-a' }, bookReads: { 'book-a': [grace.id] } },
+      player: ada,
+      error: null,
+    });
     await tick();
 
-    // The local page position is unchanged — it is not derived from Room state.
+    // The re-render actually happened (the badge reflects the new state)...
+    expect(screen.getByText(/being read by grace/i)).toBeInTheDocument();
+    // ...yet the local page position is unchanged — not derived from Room.
     expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
   });
 });
@@ -635,6 +651,13 @@ describe('Reveal view — reveal-all control reachability (feedback 23ab, T001/T
     // stays reachable regardless of how far the content scrolls.
     expect(controls, 'expected a pinned control row [data-reveal-controls]').not.toBeNull();
     expect(scroll && controls ? scroll.contains(controls) : true).toBe(false);
+
+    // Close is part of that pinned row (not the scrolling header), so the
+    // exit stays reachable on touch with no Escape key (23ab covers the
+    // "close/control row"; both halves must be pinned).
+    const close = screen.getByRole('button', { name: /close book/i });
+    expect(controls?.contains(close) ?? false).toBe(true);
+    expect(scroll?.contains(close) ?? false).toBe(false);
   });
 });
 
