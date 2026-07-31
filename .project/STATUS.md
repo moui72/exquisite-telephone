@@ -1,5 +1,36 @@
 # Exquisite Telephone — Project Status
 
+_Updated: 2026-07-31 (**v0.6.0 shipped to prod; all 5 remaining feedback items
+fixed via a 3-way parallel fan-out.** **Prod:** promoted main→release as
+**v0.6.0** (tagged, released, prod deployed) — ships the previously-unpushed
+short-turn-timer, lobby self-identity/rename, room-code copy/join-link, and
+seat-order regression guards. The badge bot's `[skip ci]` commit blocked the
+first promote (docs-only HEAD, no e2e status); resolved by carrying the
+app-identical green e2e result from `77ddbd5` onto the badge commit (user-authorized)
+and re-dispatching. **Fan-out:** 3 file-disjoint plans ran in parallel worktrees,
+all merged to local main (`f7489df`), all worktrees reaped, combined tree green
+(lint/typecheck/check:fly + 639 tests):
+(1) `flaky-socket-test-deflake` — connect-budget race; added 5000ms
+`waitForConnect()` in `waitFor.ts`, routed all 43 connect-waits through it, kept
+the tight 2000ms default for real app-signal waits. Verified across 7 runs incl.
+under load.
+(2) `drawingcanvas-cover-and-live-stroke` — 5da8: `redrawAll` cleared + replayed
+only committed `ops`, never the in-progress `currentStroke` (now repainted);
+f6d0: template clip now hugs the `<canvas>` alone via a new `background` slot on
+`DrawingCanvas` (toolbar outside the clip).
+(3) `reveal-modal-sizing-and-cross-viewer` — 23ab: bounded scroll region + pinned
+control row (Close moved in for touch); **d607 cross-viewer leak NOT reproducible**
+(page state is strictly client-local per datamodel.md) — fix skipped, citation
+left as-is (already hedged; classification change isn't a factual-correction
+exemption). **Open feedback: 0.** 29 implemented · 1 subsumed, 0 backlogged, all
+artifacts stable, diagrams current. **Local main is 20 commits ahead of the
+v0.6.0 `origin/main` (unpushed)** — pushing deploys beta and would ship these 3
+bug-fix bundles to beta (and re-trigger the badge bot). Two agent caveats: the
+DrawingCanvas + Reveal fixes rest on component tests, not a live `/run` visual
+check (worth an in-app eyeball); the badge bot pushing to `main` HEAD is the
+recurring friction worth addressing. Next: decide whether to push the 20 commits
+(beta), or leave local until you want a beta refresh.)_
+
 _Updated: 2026-07-31 (**Seat-order/turn-assignment plan COMPLETE — "cannot
 reproduce", no production code changed; also updated ArDD to beta.6.** The
 delegated worktree run finished `tasks-seat-order-turn-assignment-58a4.md`
@@ -85,21 +116,4 @@ Footprints mostly disjoint → likely 1 bundle + 4 solo fan-outs. Otherwise
 unchanged: 29 implemented · 1 subsumed, 0 backlogged, diagrams current. `main`
 unpushed; prod v0.5.0. **Recommend `/ardd-plan --slate` now** to get the grouping
 before this queue grows further.)_
-
-_Updated: 2026-07-30 (**+1 open feedback: wrong-book prompt on first drawing turn
-(5 open total).** New file `feedback-wrong-book-prompt-first-drawing-turn-88f2.md`
-(**open**, 1 Bug [artifacts: ui, datamodel]): a player's first drawing turn
-showed a prompt from a *different* book. The prompt comes straight from the
-server-assigned `myTurn.bookId` (`WritingDrawing.svelte` `previousEntry`), so
-this is an *assignment* fault — **very likely the same root cause** as
-`feedback-turn-ordering-fixed-rotation-f1a4.md` (disturbed seat order in
-`computeNextEntry` → wrong book/position; reconnect/`onRejoin` prime suspect).
-The two should be planned together. **Open feedback now: 5 (all Bugs):** wrong-book
-prompt (88f2) + turn-ordering (f1a4) — *same root, bundle*; Reveal page-turn
-cross-viewer (d607); drawing stroke invisible until release (5da8); flaky server
-socket tests (b13d). Footprints: 88f2+f1a4 share turnAdvancement/reconnect;
-d607 = Reveal; 5da8 = DrawingCanvas; b13d = test-support — so likely one bundle
-+ three solo fan-outs. Otherwise unchanged: 29 implemented · 1 subsumed, 0
-backlogged, diagrams current. `main` unpushed; prod v0.5.0. Next: `/ardd-plan
---slate` to confirm grouping across all five.)_
 
