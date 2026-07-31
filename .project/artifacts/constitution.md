@@ -35,6 +35,7 @@ workflow_mode: solo
 next_step_prompt: auto
 delegation: eager
 merge_policy: auto
+status_history_keep: 5
 ---
 
 # Exquisite Telephone Constitution
