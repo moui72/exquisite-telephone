@@ -19,4 +19,4 @@ complexity: moderate
 
 ## Phase 3: Verify / reconcile
 
-- [ ] T005 [artifacts: ui, datamodel] Verify in-app: reveal-all controls are reachable (small viewport included), and with two concurrent viewers one viewer's paging does not move another's. If T002 established the cross-viewer leak was NOT reproducible, correct that citation in `feedback-reveal-page-turn-cross-viewer-state-d607.md` in place — factual-correction exemption only (reviewer guide), never changing the decision/item content. Confirm the full suite passes.
+- [x] T005 [artifacts: ui, datamodel] Verify in-app: reveal-all controls are reachable (small viewport included), and with two concurrent viewers one viewer's paging does not move another's. If T002 established the cross-viewer leak was NOT reproducible, correct that citation in `feedback-reveal-page-turn-cross-viewer-state-d607.md` in place — factual-correction exemption only (reviewer guide), never changing the decision/item content. Confirm the full suite passes.
