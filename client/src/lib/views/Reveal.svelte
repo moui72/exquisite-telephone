@@ -395,23 +395,19 @@
       aria-modal="true"
       aria-label={`${playerName(openBook.originAuthorId)}'s book`}
     >
-      <div class="flex max-h-full w-full max-w-2xl flex-col gap-4 overflow-y-auto">
+      <!-- The modal column is bounded by the viewport (max-h-full) but does
+           not itself scroll. The book content lives in its own bounded,
+           scrollable region (data-reveal-scroll) so an expanded reveal-all
+           chain scrolls internally, while the control/close row below is a
+           non-scrolling sibling pinned inside the modal's max height — always
+           reachable and clear of the nav bar, however many pages show (23ab). -->
+      <div class="flex max-h-full w-full max-w-2xl flex-col gap-4">
+        <div data-reveal-scroll class="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <GiltFrame caption={exhibitCaption(openBook, room.books.indexOf(openBook))}>
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
             <h2 class="text-sm font-medium text-ink/60">
               {playerName(openBook.originAuthorId)}'s book
             </h2>
-            <button
-              type="button"
-              class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink"
-              aria-label="Close book"
-              on:click={closeModal}
-            >
-              <span class="inline-flex items-center gap-1.5">
-                <X size={14} aria-hidden="true" />
-                Close
-              </span>
-            </button>
           </div>
 
           {#if revealAll}
@@ -459,8 +455,24 @@
             {/key}
           {/if}
         </GiltFrame>
+        </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div data-reveal-controls class="flex flex-wrap items-center gap-3">
+          <!-- Close is pinned in the control row (not the scrolling header)
+               so it stays reachable on touch even with a long reveal-all
+               chain, where the header scrolls out of view and there is no
+               Escape key (23ab, Principle II — mobile-friendly). -->
+          <button
+            type="button"
+            class="rounded-md border border-gold/60 bg-champagne px-3 py-1 text-sm font-medium text-ink"
+            aria-label="Close book"
+            on:click={closeModal}
+          >
+            <span class="inline-flex items-center gap-1.5">
+              <X size={14} aria-hidden="true" />
+              Close
+            </span>
+          </button>
           {#if !revealAll}
             <button
               type="button"

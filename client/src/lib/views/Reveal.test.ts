@@ -349,6 +349,93 @@ describe('Reveal view — paging (click + keyboard) and kept-place', () => {
   });
 });
 
+describe('Reveal view — page state is per-viewer, client-local (feedback d607, T002)', () => {
+  // d607 was reported as a *suspected* cross-viewer page-state leak. A leak
+  // could only travel through the server, i.e. through a session.* call, so
+  // the discriminating evidence is: paging and reveal-all emit NO session
+  // traffic beyond setReadingBook (open/close) and never touch the shared
+  // Room read-state (currentlyReading/bookReads). datamodel.md Normalization
+  // Rules — Reveal read-state: "paging is client-local and untrusted."
+  it('a page turn and reveal-all emit no session call beyond setReadingBook and never mutate shared read-state', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    // Opening emits exactly one setReadingBook(book-a) — the only server channel.
+    expect(session.setReadingBook).toHaveBeenCalledTimes(1);
+    expect(session.setReadingBook).toHaveBeenCalledWith('book-a');
+
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    await fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await fireEvent.click(screen.getByRole('button', { name: /reveal all/i }));
+    await tick();
+
+    // Paging + reveal-all added no further server traffic of any kind.
+    expect(session.setReadingBook).toHaveBeenCalledTimes(1);
+    for (const [name, fn] of Object.entries(session)) {
+      if (name === 'subscribe' || name === 'setReadingBook') continue;
+      expect(fn, `${name} must not be called by paging`).not.toHaveBeenCalled();
+    }
+    // Shared Room read-state is untouched by paging.
+    expect(room.currentlyReading).toEqual({});
+    expect(room.bookReads).toEqual({});
+  });
+
+  it('two viewers page the same book independently — one advancing does not move the other', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+
+    // Viewer A (own component instance + session) advances to page 2.
+    const sessionA = makeFakeSession({ room, player: ada, error: null });
+    render(Reveal, { props: { session: sessionA } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+    cleanup();
+
+    // Viewer B opens the same book on the same shared Room and is on page 1.
+    const sessionB = makeFakeSession({ room, player: grace, error: null });
+    render(Reveal, { props: { session: sessionB } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
+  });
+
+  it('a real shared read-state update does not move the displayed page ("derived from" clause)', async () => {
+    // Drive an actual store emission (not an in-place mutation), so the
+    // component genuinely re-renders on the new Room — the only way this
+    // test can catch a page derived from currentlyReading/bookReads.
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const store = writable<SessionState>({
+      reconnecting: false,
+      testTraffic: false,
+      room,
+      player: ada,
+      error: null,
+    });
+    const session = { ...makeFakeSession({ room, player: ada, error: null }), subscribe: store.subscribe };
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+
+    // Another viewer's read activity arrives as a fresh Room via the store.
+    store.set({
+      reconnecting: false,
+      testTraffic: false,
+      room: { ...room, currentlyReading: { [grace.id]: 'book-a' }, bookReads: { 'book-a': [grace.id] } },
+      player: ada,
+      error: null,
+    });
+    await tick();
+
+    // The re-render actually happened (the badge reflects the new state)...
+    expect(screen.getByText(/being read by grace/i)).toBeInTheDocument();
+    // ...yet the local page position is unchanged — not derived from Room.
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+  });
+});
+
 describe('Reveal view — host unread-books warning (F003)', () => {
   const allRead = { 'book-a': [ada.id], 'book-b': [ada.id] };
 
@@ -521,6 +608,56 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
     // Exactly one abstract cover-art fallback — for the undecorated book only.
     const coverArt = getAllByRole('img', { name: 'cover art' });
     expect(coverArt).toHaveLength(1);
+  });
+});
+
+function manyEntryBook(pages: number): Book {
+  const entries: Book['entries'] = [];
+  for (let i = 0; i < pages; i++) {
+    entries.push(
+      i % 2 === 0
+        ? { id: `me${i}`, bookId: 'book-a', authorId: ada.id, position: i, type: 'text', content: `line ${i}` }
+        : { id: `me${i}`, bookId: 'book-a', authorId: grace.id, position: i, type: 'drawing', content: serializeDrawOps([]) },
+    );
+  }
+  return { id: 'book-a', roomId, originAuthorId: ada.id, entries };
+}
+
+describe('Reveal view — reveal-all control reachability (feedback 23ab, T001/T003)', () => {
+  // jsdom has no layout engine, so pixel-level reachability is verified
+  // in-app (T005). This test guards the *structural signature* of the fix:
+  // with reveal-all showing a long chain, the entry content lives in its
+  // own bounded scroll region (`data-reveal-scroll`, an overflow-y-auto
+  // element) and the control/close row (`data-reveal-controls`) is pinned
+  // OUTSIDE that scroll region — so it can never be pushed below the fold
+  // (or behind the nav bar) no matter how many pages reveal-all renders.
+  it('keeps the control row pinned outside the bounded reveal-all scroll region', async () => {
+    const room = makeRoom({ books: [manyEntryBook(30)] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { container } = render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /reveal all/i }));
+    await tick();
+
+    const scroll = container.querySelector('[data-reveal-scroll]');
+    const controls = container.querySelector('[data-reveal-controls]');
+
+    // A bounded scroll region for the (potentially long) reveal-all content.
+    expect(scroll, 'expected a bounded reveal-all scroll region [data-reveal-scroll]').not.toBeNull();
+    expect(scroll?.className ?? '').toMatch(/overflow-y-auto/);
+
+    // The control row exists and is NOT inside the scrolling content, so it
+    // stays reachable regardless of how far the content scrolls.
+    expect(controls, 'expected a pinned control row [data-reveal-controls]').not.toBeNull();
+    expect(scroll && controls ? scroll.contains(controls) : true).toBe(false);
+
+    // Close is part of that pinned row (not the scrolling header), so the
+    // exit stays reachable on touch with no Escape key (23ab covers the
+    // "close/control row"; both halves must be pinned).
+    const close = screen.getByRole('button', { name: /close book/i });
+    expect(controls?.contains(close) ?? false).toBe(true);
+    expect(scroll?.contains(close) ?? false).toBe(false);
   });
 });
 
