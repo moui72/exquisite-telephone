@@ -47,25 +47,25 @@
     </div>
 
     <!-- The template background sits BENEATH the transparent canvas so the
-         ink stays on top and legible (low opacity). `overflow-hidden`
-         clips the template to the canvas bounds so a chosen background can
-         never overflow the drawing area (cover-F001). -->
-    <div class="relative w-fit overflow-hidden rounded-md">
-      {#if templateBackground}
-        <div
-          data-cover-template={coverTemplate}
-          aria-hidden="true"
-          class="pointer-events-none absolute inset-0 rounded-md opacity-20"
-          style="background: {templateBackground};"
-        ></div>
-      {/if}
-      <DrawingCanvas
-        {ops}
-        {onOpsChange}
-        {paletteMode}
-        {allowFillTool}
-        transparent={templateBackground !== ''}
-      />
-    </div>
+         ink stays on top and legible (low opacity). It is handed to
+         DrawingCanvas as its `background` slot so the overflow-hidden clip
+         hugs the <canvas> element alone — never the toolbar above it — so a
+         chosen background can never bleed behind the tool controls
+         (cover-F001, feedback f6d0). -->
+    <DrawingCanvas
+      {ops}
+      {onOpsChange}
+      {paletteMode}
+      {allowFillTool}
+      transparent={templateBackground !== ''}
+    >
+      <div
+        slot="background"
+        data-cover-template={templateBackground ? coverTemplate : null}
+        aria-hidden="true"
+        class="pointer-events-none absolute inset-0 rounded-md opacity-20"
+        style={templateBackground ? `background: ${templateBackground};` : ''}
+      ></div>
+    </DrawingCanvas>
   </div>
 </GiltFrame>

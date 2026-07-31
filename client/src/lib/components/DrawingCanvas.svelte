@@ -155,6 +155,20 @@
         applyFill(op.point, op.color);
       }
     }
+    // Repaint the in-progress (uncommitted) stroke on top of the committed
+    // ops. `redrawAll` clears the whole canvas, so a redraw fired mid-stroke
+    // — an external state update re-passing `ops`, a DPR/resize repaint —
+    // would otherwise erase the live segments handlePointerMove painted and
+    // leave the stroke invisible until pointerup commits it (5da8). It uses
+    // the style captured at the stroke's first point (F001), not the current
+    // palette selection.
+    if (currentStroke && currentStroke.length >= 2) {
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = strokeWidth;
+      for (let i = 1; i < currentStroke.length; i += 1) {
+        drawSegment(currentStroke[i - 1]!, currentStroke[i]!);
+      }
+    }
   }
 
   function handlePointerDown(event: PointerEvent) {
@@ -326,12 +340,32 @@
 <!-- canvas's native ARIA role is "img" per the HTML-AAM spec; svelte's a11y
      check flags this as a false positive since canvas is nominally interactive. -->
 <!-- svelte-ignore a11y_no_interactive_element_to_noninteractive_role -->
-<canvas
-  bind:this={canvasEl}
-  width="320"
-  height="240"
-  class="touch-none rounded-md border-2 border-gold/70"
-  class:bg-white={!transparent}
-  role="img"
-  aria-label={readOnly ? 'Drawing preview' : 'Drawing canvas'}
-></canvas>
+{#if $$slots.background}
+  <!-- A caller-supplied backing layer (the cover-decoration template — ui.md
+       Cover Decoration) is clipped to the <canvas> rectangle only: the
+       relative/overflow-hidden wrapper hugs the canvas (w-fit) and does NOT
+       enclose the toolbar above, so the background can never bleed behind the
+       tool controls (cover-F001, feedback f6d0). -->
+  <div class="relative w-fit overflow-hidden rounded-md">
+    <slot name="background" />
+    <canvas
+      bind:this={canvasEl}
+      width="320"
+      height="240"
+      class="relative touch-none rounded-md border-2 border-gold/70"
+      class:bg-white={!transparent}
+      role="img"
+      aria-label={readOnly ? 'Drawing preview' : 'Drawing canvas'}
+    ></canvas>
+  </div>
+{:else}
+  <canvas
+    bind:this={canvasEl}
+    width="320"
+    height="240"
+    class="touch-none rounded-md border-2 border-gold/70"
+    class:bg-white={!transparent}
+    role="img"
+    aria-label={readOnly ? 'Drawing preview' : 'Drawing canvas'}
+  ></canvas>
+{/if}
