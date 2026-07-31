@@ -404,6 +404,42 @@ describe('DrawingCanvas (mobile-friendly stroke capture)', () => {
     vi.restoreAllMocks();
   });
 
+  // 5da8: an in-progress stroke must survive a redraw triggered mid-stroke.
+  // `redrawAll()` clears the canvas and replays only committed `ops`; when a
+  // reactive redraw fires while a stroke is still in progress (an external
+  // state update re-passing `ops`, a DPR/resize repaint) it erases the live
+  // segments `handlePointerMove` painted, so the stroke vanishes until it is
+  // committed on pointerup. Here a prop update mid-stroke stands in for that
+  // external redraw; the in-progress stroke must be repainted, not dropped.
+  // RED (it.fails) on current code: the redraw replays only ops and never
+  // repaints `currentStroke`.
+  it.fails('keeps in-progress stroke segments visible across a mid-stroke redraw (5da8)', async () => {
+    const fakeCtx = makeFakeCtx();
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(fakeCtx);
+
+    const { container, rerender } = render(DrawingCanvas, { props: { ops: [] } });
+    const canvas = container.querySelector('canvas')!;
+
+    firePointer(canvas, 'pointerdown', 0, 0);
+    firePointer(canvas, 'pointermove', 10, 10);
+    firePointer(canvas, 'pointermove', 20, 20);
+
+    (fakeCtx.clearRect as unknown as ReturnType<typeof vi.fn>).mockClear();
+    (fakeCtx.lineTo as unknown as ReturnType<typeof vi.fn>).mockClear();
+
+    // A new (empty) ops reference drives the reactive redraw mid-stroke,
+    // exactly as an external state update would in the running app.
+    await rerender({ ops: [] });
+
+    // The redraw ran (canvas was cleared)...
+    expect(fakeCtx.clearRect).toHaveBeenCalled();
+    // ...and it must have repainted the still-in-progress stroke rather than
+    // leaving it erased until pointerup commits it.
+    expect(fakeCtx.lineTo).toHaveBeenCalled();
+
+    vi.restoreAllMocks();
+  });
+
   it('exposes an explicit pen/bucket radio reflecting and switching the active tool (F006)', async () => {
     const { getByRole } = render(DrawingCanvas, { props: { ops: [] } });
 
