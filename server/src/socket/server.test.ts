@@ -1,11 +1,11 @@
 import { createServer, type Server as HttpServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { io as ioClient, type Socket as ClientSocket } from 'socket.io-client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { computeNextEntries } from '@exquisite-telephone/shared';
 import { createRoomStore, type RoomStore } from '../domain/roomStore.js';
 import { createLogger } from '../observability/logger.js';
-import { waitFor, waitForEvent } from '../test-support/waitFor.js';
+import { waitFor, waitForConnect, waitForEvent } from '../test-support/waitFor.js';
 import { createSocketServer } from './server.js';
 import type {
   CreateRoomAck,
@@ -16,6 +16,16 @@ import type {
   StartGameAck,
   SubmitEntryAck,
 } from './handlers.js';
+
+// These are socket integration tests: several cases open two client
+// connections plus a chain of acks inside a single `it`. The transport
+// connect budget (CONNECT_TIMEOUT_MS, 5000ms) is deliberately generous to
+// absorb scheduling latency under parallel-suite load; a test that chains
+// two connects therefore needs wall-clock headroom above Vitest's 5000ms
+// default so a slow-but-live handshake still fails legibly at the connect
+// wait rather than as a generic per-test-timeout hang. Kept well above
+// 2 * CONNECT_TIMEOUT_MS plus ack overhead.
+vi.setConfig({ testTimeout: 20000, hookTimeout: 20000 });
 
 describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
   let httpServer: HttpServer;
@@ -43,7 +53,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onCreateRoom creates a room and returns it to the caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
 
     const ack = (await clientA
       .timeout(5000)
@@ -58,14 +68,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom adds a player to an existing room and both clients are in the socket.io room', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -77,7 +87,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom returns an error for an unknown room code', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
 
     const ack = (await clientA
       .timeout(5000)
@@ -89,7 +99,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onJoinRoom rejects a late join once the game has started (ui.md Error state)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -102,7 +112,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
     });
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -114,7 +124,7 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame lets the host start the game, moving the room out of lobby', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -132,14 +142,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame creates one empty Book per player, one per originAuthor', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     await clientB.timeout(5000).emitWithAck('joinRoom', { roomId, playerName: 'Grace' });
 
     const ack = (await clientA.timeout(5000).emitWithAck('startGame', {
@@ -157,14 +167,14 @@ describe('Socket.IO server bootstrap (onCreateRoom / onJoinRoom)', () => {
 
   it('onStartGame rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const roomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -200,7 +210,7 @@ describe('onSubmitEntry', () => {
 
   async function setUpTwoPlayerGame() {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -208,7 +218,7 @@ describe('onSubmitEntry', () => {
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -322,7 +332,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('a dropped connection can resume the same seat with its session token', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -340,7 +350,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
     );
 
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const rejoinAck = (await clientA.timeout(5000).emitWithAck('rejoin', { token })) as RejoinAck;
 
     expect(rejoinAck.error).toBeUndefined();
@@ -351,7 +361,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('rejects an unknown or expired token as a new join (distinct error)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
 
     const ack = (await clientA
       .timeout(5000)
@@ -363,7 +373,7 @@ describe('reconnect tolerance (onRejoin / disconnect)', () => {
 
   it('marks a disconnected player as not connected without removing their seat', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -403,7 +413,7 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('onEndGame lets the host mark the room ended', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -423,7 +433,7 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('onEndGame succeeds from lobby or writing, not just reveal (host-only-anytime, moderation plan)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -450,7 +460,7 @@ describe('rejoin-after-room-ended rejection', () => {
 
   it('a valid token against an ended room gets a clear "game has ended" response, not a silent no-op', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -471,7 +481,7 @@ describe('rejoin-after-room-ended rejection', () => {
       { description: `player ${playerId} to be marked disconnected` },
     );
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
 
     const rejoinAck = (await clientA.timeout(5000).emitWithAck('rejoin', { token })) as RejoinAck;
 
@@ -511,7 +521,7 @@ describe('observability (structured log events)', () => {
 
   it('logs room creation, join, turn advance, and decoration-window opening with outcome and identifiers', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -519,7 +529,7 @@ describe('observability (structured log events)', () => {
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -586,7 +596,7 @@ describe('observability (structured log events)', () => {
 
   it('logs a failed reconnect with the failure reason', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
 
     await clientA.timeout(5000).emitWithAck('rejoin', { token: 'never-issued' });
 
@@ -602,7 +612,7 @@ describe('observability (structured log events)', () => {
 
   it('logs a successful reconnect and a player leaving (disconnect)', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -617,7 +627,7 @@ describe('observability (structured log events)', () => {
     );
 
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     await clientA.timeout(5000).emitWithAck('rejoin', { token });
 
     const events = parsedEvents();
@@ -673,7 +683,7 @@ describe('onPlayAgain', () => {
 
   it('gives the host a new room/player, pushes the other client its own new roomChanged, and logs room_created with reason play-again', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -681,7 +691,7 @@ describe('onPlayAgain', () => {
     const hostId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId: oldRoomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -725,14 +735,14 @@ describe('onPlayAgain', () => {
 
   it('rejects a non-host caller', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
     const oldRoomId = createAck.room!.id;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinAck = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId: oldRoomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -749,7 +759,7 @@ describe('onPlayAgain', () => {
 
   it('rejects when the room is not in reveal', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -800,7 +810,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
   it('keeps room.players id-order unchanged and the rotation fixed after a mid-game token reconnect', async () => {
     // Seat three players: Ada (host, seat 0), Grace (seat 1), Lin (seat 2).
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -808,14 +818,14 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinB = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
     const graceId = joinB.player!.id;
 
     clientC = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientC, 'connect');
+    await waitForConnect(clientC);
     const joinC = (await clientC
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
@@ -869,7 +879,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     );
 
     clientC = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientC, 'connect');
+    await waitForConnect(clientC);
     const rejoinAck = (await clientC
       .timeout(5000)
       .emitWithAck('rejoin', { token: linToken })) as RejoinAck;
@@ -906,7 +916,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
   // mutates room.players order mid-game.
   it('two players dropping and reconnecting concurrently keeps seat order and rotation', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -914,7 +924,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinB = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -922,7 +932,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     const graceToken = joinB.player!.sessionToken;
 
     clientC = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientC, 'connect');
+    await waitForConnect(clientC);
     const joinC = (await clientC
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
@@ -967,7 +977,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     // Reconnect both concurrently.
     clientB = ioClient(`http://localhost:${port}`);
     clientC = ioClient(`http://localhost:${port}`);
-    await Promise.all([waitForEvent(clientB, 'connect'), waitForEvent(clientC, 'connect')]);
+    await Promise.all([waitForConnect(clientB), waitForConnect(clientC)]);
     const [rejoinB, rejoinC] = (await Promise.all([
       clientB.timeout(5000).emitWithAck('rejoin', { token: graceToken }),
       clientC.timeout(5000).emitWithAck('rejoin', { token: linToken }),
@@ -987,7 +997,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
 
   it('a kick interleaved with a reconnect leaves the surviving seats in their original order', async () => {
     clientA = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientA, 'connect');
+    await waitForConnect(clientA);
     const createAck = (await clientA
       .timeout(5000)
       .emitWithAck('createRoom', { hostName: 'Ada' })) as CreateRoomAck;
@@ -995,7 +1005,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     const adaId = createAck.room!.hostPlayerId;
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const joinB = (await clientB
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Grace' })) as JoinRoomAck;
@@ -1003,7 +1013,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     const graceToken = joinB.player!.sessionToken;
 
     clientC = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientC, 'connect');
+    await waitForConnect(clientC);
     const joinC = (await clientC
       .timeout(5000)
       .emitWithAck('joinRoom', { roomId, playerName: 'Lin' })) as JoinRoomAck;
@@ -1029,7 +1039,7 @@ describe('T002 reconnect mid-game preserves seat order and fixed rotation', () =
     });
 
     clientB = ioClient(`http://localhost:${port}`);
-    await waitForEvent(clientB, 'connect');
+    await waitForConnect(clientB);
     const rejoinB = (await clientB
       .timeout(5000)
       .emitWithAck('rejoin', { token: graceToken })) as RejoinAck;

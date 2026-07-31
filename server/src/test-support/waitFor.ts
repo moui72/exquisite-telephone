@@ -68,3 +68,38 @@ export function waitForEvent<T = void>(
     emitter.once(event, handleEvent);
   });
 }
+
+/**
+ * Connect budget for a Socket.IO client establishing its transport to a
+ * localhost test server — deliberately more generous than the 2000ms
+ * default of `waitForEvent`.
+ *
+ * A `'connect'` wait is unlike a wait on an application signal
+ * (`roomChanged`, an ack): it exercises no product code path, only the
+ * transport handshake, whose latency is dominated by event-loop and CPU
+ * scheduling. When the full suite runs in parallel under load the
+ * handshake can exceed 2000ms, which surfaced as flaky
+ * `waitForEvent: timed out ... waiting for "connect"` failures with no
+ * underlying product bug. Genuine-signal waits keep the tighter 2000ms so
+ * a real broadcast/ack regression still fails fast; only transport
+ * establishment gets this looser budget.
+ *
+ * Kept below Vitest's per-test timeout so a truly dead connection still
+ * fails legibly here ("waiting for connect") rather than as a generic
+ * per-test-timeout hang. Callers that chain two connects in one test
+ * should raise that test's timeout to preserve the headroom (see
+ * server.test.ts).
+ */
+export const CONNECT_TIMEOUT_MS = 5000;
+
+/**
+ * Waits for a Socket.IO client's `'connect'` event using the generous
+ * {@link CONNECT_TIMEOUT_MS} transport budget. Thin wrapper over
+ * `waitForEvent` so every connect wait shares one tunable knob.
+ */
+export function waitForConnect(
+  emitter: MinimalEventTarget,
+  timeoutMs = CONNECT_TIMEOUT_MS,
+): Promise<void> {
+  return waitForEvent<void>(emitter, 'connect', timeoutMs);
+}
