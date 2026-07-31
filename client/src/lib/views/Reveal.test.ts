@@ -524,6 +524,49 @@ describe('Reveal card face — drawn cover with generateCoverArt fallback (T015/
   });
 });
 
+function manyEntryBook(pages: number): Book {
+  const entries: Book['entries'] = [];
+  for (let i = 0; i < pages; i++) {
+    entries.push(
+      i % 2 === 0
+        ? { id: `me${i}`, bookId: 'book-a', authorId: ada.id, position: i, type: 'text', content: `line ${i}` }
+        : { id: `me${i}`, bookId: 'book-a', authorId: grace.id, position: i, type: 'drawing', content: serializeDrawOps([]) },
+    );
+  }
+  return { id: 'book-a', roomId, originAuthorId: ada.id, entries };
+}
+
+describe('Reveal view — reveal-all control reachability (feedback 23ab, T001/T003)', () => {
+  // jsdom has no layout engine, so pixel-level reachability is verified
+  // in-app (T005). This test guards the *structural signature* of the fix:
+  // with reveal-all showing a long chain, the entry content lives in its
+  // own bounded scroll region (`data-reveal-scroll`, an overflow-y-auto
+  // element) and the control/close row (`data-reveal-controls`) is pinned
+  // OUTSIDE that scroll region — so it can never be pushed below the fold
+  // (or behind the nav bar) no matter how many pages reveal-all renders.
+  it.fails('keeps the control row pinned outside the bounded reveal-all scroll region', async () => {
+    const room = makeRoom({ books: [manyEntryBook(30)] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { container } = render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /reveal all/i }));
+    await tick();
+
+    const scroll = container.querySelector('[data-reveal-scroll]');
+    const controls = container.querySelector('[data-reveal-controls]');
+
+    // A bounded scroll region for the (potentially long) reveal-all content.
+    expect(scroll, 'expected a bounded reveal-all scroll region [data-reveal-scroll]').not.toBeNull();
+    expect(scroll?.className ?? '').toMatch(/overflow-y-auto/);
+
+    // The control row exists and is NOT inside the scrolling content, so it
+    // stays reachable regardless of how far the content scrolls.
+    expect(controls, 'expected a pinned control row [data-reveal-controls]').not.toBeNull();
+    expect(scroll && controls ? scroll.contains(controls) : true).toBe(false);
+  });
+});
+
 describe('Reveal card face — template background parity (T019/T020)', () => {
   it('renders the coverTemplate background beneath the ink on the card face', () => {
     const templated: Book = {
