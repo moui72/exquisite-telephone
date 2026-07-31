@@ -130,9 +130,9 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
   // the toolbar+canvas box: the clip container that holds the template and
   // the canvas must NOT also contain the DrawingCanvas toolbar, or the
   // low-opacity background bleeds up behind the tool controls (cover-F001,
-  // feedback f6d0). RED on current code, where the whole DrawingCanvas
-  // (toolbar included) sits inside the single overflow-hidden wrapper.
-  it.fails('scopes the template clip to the canvas, excluding the toolbar (f6d0)', () => {
+  // feedback f6d0). The template is handed to DrawingCanvas as its
+  // `background` slot so the clip hugs the canvas alone, not the toolbar.
+  it('scopes the template clip to the canvas, excluding the toolbar (f6d0)', () => {
     const { container } = render(CoverDecorationCanvas, {
       props: { username: 'Ada', ops: [], coverTemplate: 'star-chart' },
     });

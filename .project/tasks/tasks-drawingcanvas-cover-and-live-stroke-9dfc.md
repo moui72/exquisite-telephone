@@ -14,7 +14,7 @@ complexity: moderate
 
 ## Phase 2: Fix both defects
 
-- [ ] T003 [artifacts: ui] Scope the template background + `overflow-hidden` clip to the `<canvas>` element's bounds only in `CoverDecorationCanvas.svelte` (and `DrawingCanvas.svelte` if the canvas element must be exposed/wrapped): either wrap only the `<canvas>` (not the toolbar) in the relative/overflow-hidden container, or render the template as the canvas's own backing. Match the canvas's `rounded-md`/border geometry so corners don't leak. Make T001 green; keep the ink-on-top / transparent-canvas behavior intact. (feedback f6d0)
+- [x] T003 [artifacts: ui] Scope the template background + `overflow-hidden` clip to the `<canvas>` element's bounds only in `CoverDecorationCanvas.svelte` (and `DrawingCanvas.svelte` if the canvas element must be exposed/wrapped): either wrap only the `<canvas>` (not the toolbar) in the relative/overflow-hidden container, or render the template as the canvas's own backing. Match the canvas's `rounded-md`/border geometry so corners don't leak. Make T001 green; keep the ink-on-top / transparent-canvas behavior intact. (feedback f6d0)
 - [ ] T004 [artifacts: ui] Make in-progress `currentStroke` segments render live in `DrawingCanvas.svelte`: include the in-progress stroke in the live paint (or stop the reactive `redrawAll()` from clobbering mid-stroke segments), preserving the captured-style re-assertion from the earlier mid-stroke-color fix. Make T002 green without breaking committed-stroke rendering or the `ops`-driven redraw. (feedback 5da8)
 
 ## Phase 3: Verify
