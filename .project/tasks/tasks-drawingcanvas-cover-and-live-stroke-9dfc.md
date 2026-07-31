@@ -19,4 +19,4 @@ complexity: moderate
 
 ## Phase 3: Verify
 
-- [ ] T005 [artifacts: ui] Run the app (per /run) and visually confirm both: a non-blank cover template clips to the canvas rectangle (no bleed behind the toolbar), and strokes appear live while drawing (not only after pointer release). Record the verification. Confirm the full suite passes.
+- [x] T005 [artifacts: ui] Run the app (per /run) and visually confirm both: a non-blank cover template clips to the canvas rectangle (no bleed behind the toolbar), and strokes appear live while drawing (not only after pointer release). Record the verification. Confirm the full suite passes.
