@@ -395,7 +395,14 @@
       aria-modal="true"
       aria-label={`${playerName(openBook.originAuthorId)}'s book`}
     >
-      <div class="flex max-h-full w-full max-w-2xl flex-col gap-4 overflow-y-auto">
+      <!-- The modal column is bounded by the viewport (max-h-full) but does
+           not itself scroll. The book content lives in its own bounded,
+           scrollable region (data-reveal-scroll) so an expanded reveal-all
+           chain scrolls internally, while the control/close row below is a
+           non-scrolling sibling pinned inside the modal's max height — always
+           reachable and clear of the nav bar, however many pages show (23ab). -->
+      <div class="flex max-h-full w-full max-w-2xl flex-col gap-4">
+        <div data-reveal-scroll class="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <GiltFrame caption={exhibitCaption(openBook, room.books.indexOf(openBook))}>
           <div class="flex items-center justify-between gap-2">
             <h2 class="text-sm font-medium text-ink/60">
@@ -459,8 +466,9 @@
             {/key}
           {/if}
         </GiltFrame>
+        </div>
 
-        <div class="flex flex-wrap items-center gap-3">
+        <div data-reveal-controls class="flex flex-wrap items-center gap-3">
           {#if !revealAll}
             <button
               type="button"

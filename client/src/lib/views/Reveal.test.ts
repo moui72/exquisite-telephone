@@ -615,7 +615,7 @@ describe('Reveal view — reveal-all control reachability (feedback 23ab, T001/T
   // element) and the control/close row (`data-reveal-controls`) is pinned
   // OUTSIDE that scroll region — so it can never be pushed below the fold
   // (or behind the nav bar) no matter how many pages reveal-all renders.
-  it.fails('keeps the control row pinned outside the bounded reveal-all scroll region', async () => {
+  it('keeps the control row pinned outside the bounded reveal-all scroll region', async () => {
     const room = makeRoom({ books: [manyEntryBook(30)] });
     const session = makeFakeSession({ room, player: ada, error: null });
 
