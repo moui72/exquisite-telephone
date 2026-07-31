@@ -126,6 +126,28 @@ describe('CoverDecorationCanvas — template picker (T017/T018)', () => {
     expect(clip!.querySelector('canvas')).not.toBeNull();
   });
 
+  // The template background must be scoped to the <canvas> rectangle, not
+  // the toolbar+canvas box: the clip container that holds the template and
+  // the canvas must NOT also contain the DrawingCanvas toolbar, or the
+  // low-opacity background bleeds up behind the tool controls (cover-F001,
+  // feedback f6d0). RED on current code, where the whole DrawingCanvas
+  // (toolbar included) sits inside the single overflow-hidden wrapper.
+  it.fails('scopes the template clip to the canvas, excluding the toolbar (f6d0)', () => {
+    const { container } = render(CoverDecorationCanvas, {
+      props: { username: 'Ada', ops: [], coverTemplate: 'star-chart' },
+    });
+
+    const bg = container.querySelector('[data-cover-template="star-chart"]')!;
+    const clip = bg.closest('.overflow-hidden')!;
+    expect(clip).not.toBeNull();
+    // The canvas (the template's true bounds) is inside the clip...
+    expect(clip.querySelector('canvas')).not.toBeNull();
+    // ...but the DrawingCanvas toolbar (its Line width / Drawing tool
+    // controls) must NOT be, so the background can't extend behind it.
+    expect(clip.querySelector('[aria-label="Line width"]')).toBeNull();
+    expect(clip.querySelector('[role="radiogroup"][aria-label="Drawing tool"]')).toBeNull();
+  });
+
   it('switching templates does not clear the ink (onOpsChange is not called)', async () => {
     const onOpsChange = vi.fn();
     const { getByRole } = render(CoverDecorationCanvas, {
