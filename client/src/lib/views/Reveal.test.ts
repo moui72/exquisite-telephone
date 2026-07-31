@@ -349,6 +349,77 @@ describe('Reveal view — paging (click + keyboard) and kept-place', () => {
   });
 });
 
+describe('Reveal view — page state is per-viewer, client-local (feedback d607, T002)', () => {
+  // d607 was reported as a *suspected* cross-viewer page-state leak. A leak
+  // could only travel through the server, i.e. through a session.* call, so
+  // the discriminating evidence is: paging and reveal-all emit NO session
+  // traffic beyond setReadingBook (open/close) and never touch the shared
+  // Room read-state (currentlyReading/bookReads). datamodel.md Normalization
+  // Rules — Reveal read-state: "paging is client-local and untrusted."
+  it('a page turn and reveal-all emit no session call beyond setReadingBook and never mutate shared read-state', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    // Opening emits exactly one setReadingBook(book-a) — the only server channel.
+    expect(session.setReadingBook).toHaveBeenCalledTimes(1);
+    expect(session.setReadingBook).toHaveBeenCalledWith('book-a');
+
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    await fireEvent.keyDown(window, { key: 'ArrowRight' });
+    await fireEvent.click(screen.getByRole('button', { name: /reveal all/i }));
+    await tick();
+
+    // Paging + reveal-all added no further server traffic of any kind.
+    expect(session.setReadingBook).toHaveBeenCalledTimes(1);
+    for (const [name, fn] of Object.entries(session)) {
+      if (name === 'subscribe' || name === 'setReadingBook') continue;
+      expect(fn, `${name} must not be called by paging`).not.toHaveBeenCalled();
+    }
+    // Shared Room read-state is untouched by paging.
+    expect(room.currentlyReading).toEqual({});
+    expect(room.bookReads).toEqual({});
+  });
+
+  it('two viewers page the same book independently — one advancing does not move the other', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+
+    // Viewer A (own component instance + session) advances to page 2.
+    const sessionA = makeFakeSession({ room, player: ada, error: null });
+    render(Reveal, { props: { session: sessionA } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+    cleanup();
+
+    // Viewer B opens the same book on the same shared Room and is on page 1.
+    const sessionB = makeFakeSession({ room, player: grace, error: null });
+    render(Reveal, { props: { session: sessionB } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    expect(screen.getByText(/page 1 of 3/i)).toBeInTheDocument();
+  });
+
+  it('mutating shared read-state does not move the displayed page ("derived from" clause)', async () => {
+    const room = makeRoom({ books: [threeEntryBook()] });
+    const session = makeFakeSession({ room, player: ada, error: null });
+
+    const { rerender } = render(Reveal, { props: { session } });
+    await fireEvent.click(screen.getByRole('button', { name: /open ada's book/i }));
+    await fireEvent.click(screen.getByRole('button', { name: /^next$/i }));
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+
+    // Another viewer's read activity arrives via shared Room state.
+    room.currentlyReading = { [grace.id]: 'book-a' };
+    room.bookReads = { 'book-a': [grace.id] };
+    await rerender({ session });
+    await tick();
+
+    // The local page position is unchanged — it is not derived from Room state.
+    expect(screen.getByText(/page 2 of 3/i)).toBeInTheDocument();
+  });
+});
+
 describe('Reveal view — host unread-books warning (F003)', () => {
   const allRead = { 'book-a': [ada.id], 'book-b': [ada.id] };
 
