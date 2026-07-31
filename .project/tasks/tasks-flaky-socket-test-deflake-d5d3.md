@@ -14,4 +14,4 @@ complexity: simple
 
 ## Phase 2: Confirm determinism
 
-- [ ] T003 Run the affected tests repeatedly (and the full suite via the pre-commit gate) to confirm they now pass deterministically without retry. Record the result; if any residual flake remains, tighten the fix from T002.
+- [x] T003 Run the affected tests repeatedly (and the full suite via the pre-commit gate) to confirm they now pass deterministically without retry. Record the result; if any residual flake remains, tighten the fix from T002.
