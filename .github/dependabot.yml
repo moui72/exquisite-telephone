@@ -4,6 +4,13 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      # Tailwind 4 is a ground-up rewrite (CSS-first config, new PostCSS
+      # plugin, @import replacing @tailwind directives). The major bump can't
+      # ride in as an auto-update — it needs a deliberate migration PR. See
+      # closed #15. Patch/minor v3 bumps still flow through.
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
