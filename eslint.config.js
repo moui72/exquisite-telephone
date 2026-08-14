@@ -26,6 +26,12 @@ export default tseslint.config(
       // more accurately than ESLint can without duplicating tsconfig's
       // "lib" settings here.
       'no-undef': 'off',
+      // Svelte `$:` reactive blocks read module-scoped `let`s across
+      // re-invocations; ESLint's single-pass control-flow analysis can't
+      // see those later reads and flags legitimate reactive assignments as
+      // dead (e.g. WritingDrawing.svelte's wasDecorating/previousTurnKey).
+      // Newly added to eslint:recommended in @eslint/js v10.
+      'no-useless-assignment': 'off',
     },
   },
   {
