@@ -21,7 +21,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.4",
     "@tsconfig/svelte": "^5.0.8",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "autoprefixer": "^10.5.4",
     "jsdom": "^30.0.1",
     "postcss": "^8.5.26",
