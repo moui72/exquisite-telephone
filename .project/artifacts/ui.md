@@ -734,7 +734,7 @@ neutral system tone).
   use the async Clipboard API with no `execCommand` fallback. On an insecure
   (non-HTTPS) origin `navigator.clipboard` is absent, the helper returns
   `false`, and the "copied" cue silently does not show. Harmless in
-  production — beta and prod are HTTPS on Fly — but there is no fallback for
+  production — prod is HTTPS on Railway — but there is no fallback for
   insecure/legacy contexts by design; a fallback copy path would close that
   gap if it ever matters.
 

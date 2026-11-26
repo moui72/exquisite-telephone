@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-07-27
+last_updated: 2026-11-26
 diagram_status: current
 diagram_type: graph TD
 render_section: Infrastructure
@@ -189,7 +189,7 @@ solve a problem `JSON.parse` already solves; Postgres would add a
 network hop and credentials to an app that currently has neither
 (Principle I — the simplest thing that satisfies the requirement).
 Emitting ratings as structured log events (Principle IX) was considered
-and rejected: Fly's log retention is short and there is no aggregation,
+and rejected: the host's log retention is short and there is no aggregation,
 so mining them would need a log drain — more infrastructure, not less.
 
 The "revisit if the app ever runs more than one process" caveat that
@@ -197,7 +197,7 @@ stood here is **resolved, not deferred**: append-only removes the
 question. Distinct writers never touch the same file, because each event
 gets its own uniquely-named file, so concurrent writers are not a
 correctness problem for this store. (They remain one for in-memory game
-state, and the Fly volume still pins the app to one machine — both
+state, and the volume still pins the app to one replica — both
 stated independently under Deployment.)
 
 **Durability.** There is no atomic rewrite and no debounce, because
@@ -217,9 +217,8 @@ rating is not data any player can miss.
 **Location.** `CURATION_DATA_PATH` remains the single configured knob,
 defaulting to a gitignored local path for dev. The event directory is
 **derived from it** — the `curation-events/` directory beside it — so
-the deployment surface stays one environment variable per channel and
-both Fly configs keep the value they already declare. In deployment that
-resolves inside a Fly volume mount (see Deployment), which is what makes
+the deployment surface stays one environment variable. In deployment that
+resolves inside the Railway volume mount (see Deployment), which is what makes
 the events survive the process restart a deploy causes. A missing
 directory is the normal first-run case, not a failure: it is created on
 first write, and a read that finds nothing yields an empty aggregate.
@@ -237,7 +236,7 @@ boot-time fold). It has two invocation forms for one source module
   entrypoint emitted by the server `tsc` build (`tsconfig.build.json`, which
   excludes only `*.test.ts`) and copied into the slim runtime image alongside
   `server/dist/index.js` (WORKDIR `/app`). This is what the scheduled workflow
-  runs via `fly ssh console`. The deployed machine has **no `src/` and no
+  runs via `railway ssh`. The deployed container has **no `src/` and no
   `tsx`**, so the dev form below cannot run there.
 - **dev / local:** `pnpm --filter server curation:aggregate`
   (`tsx src/curation/cli.ts`) — the source-run convenience for a local event
@@ -272,10 +271,9 @@ the existing `aggregateEvents` (no new fold logic), and produces a
   GitHub Actions workflow (`.github/workflows/curation-aggregate.yml`) owns
   this: weekly (a fixed-UTC cron, ~Sunday 02:00 America/New_York with an
   accepted ±1h DST drift) plus manual `workflow_dispatch`, it runs the pipe
-  via `fly ssh console` and then `fly apps restart`s the app so the count
-  re-seeds from the now-smaller directory. It runs per channel — beta and
-  prod each own a separate volume, so each is aggregated and restarted with
-  its own Fly token. No server↔pipe signaling is introduced (Principle I);
+  via `railway ssh` and then `railway restart`s the service so the count
+  re-seeds from the now-smaller directory. It runs against prod only (there
+  is no beta channel today; see Deployment). No server↔pipe signaling is introduced (Principle I);
   the restart is the whole coupling.
 
 ### Ingestion Skill
@@ -285,8 +283,8 @@ A repo-local Claude Code **maintainer tool** (a `.claude/skills/` skill, like
 curation, ships no dependency into the server, and touches no game state, so
 the "no LLM in the app" scope ([[constitution]]) is unchanged. As its first
 step it **offers to fetch** the pipe's snapshot itself, **read-only**, from the
-Fly volume (`fly ssh sftp`/`console` — a read of an already-produced snapshot,
-never a mutating `fly` command; dev reads the local path) rather than requiring
+Railway volume (`railway ssh` running `cat` — a read of an already-produced
+snapshot, never a mutating `railway` command; dev reads the local path) rather than requiring
 a pre-pull, then analyzes the counts,
 and **recommends** deck additions (strong-vote `CandidatePhrase` entries judged
 against `shared/PROMPT_CRITERIA.md`) and removals (down-heavy bank
@@ -297,7 +295,7 @@ Because it is an LLM ingesting untrusted player text, its design is the
 injection boundary the curation `Why:` describes. The defense is
 **architectural, not a string filter**: candidate text is fed as structured
 data (never instruction position), the skill treats candidate text as data
-that is *never* an instruction, it holds **no deck-write and no mutating-`fly`
+that is *never* an instruction, it holds **no deck-write and no mutating-`railway`
 privilege**, and a human approves every change — so a successful injection
 degrades to at worst a rejected recommendation. It keeps a **ledger** of
 logged-but-not-decked candidates (disposition pending/rejected/promoted) and a
@@ -335,385 +333,198 @@ client-side in the same compositing pass (no new data, no server work):
   is self-identifying and doubles as organic promotion for the game. The
   URL is the production custom domain (see Deployment below); it is a
   static string in the exporter, not derived from the running host, so a
-  strip saved from beta still carries the production URL a recipient can
-  visit.
+  strip saved from any non-production host still carries the production URL
+  a recipient can visit.
 
 These are styling concerns entirely inside the client exporter; the
 `Book`/`Entry` data it reads is unchanged.
 
-## Deployment (Fly.io)
+## Deployment (Railway)
 
-**There are TWO Fly apps, not one.** Read this section before touching
-anything deployment-shaped: a change applied to only one channel is the
-single most repeated mistake in this repo's history.
+**There is ONE channel: production, on Railway.** The app moved from
+Fly.io to Railway on 2026-11-26, and the Fly beta channel was dropped at
+the same time rather than rebuilt. Beta can come back later as a second
+Railway environment in the same project; see End-to-End Test Gate below
+for what that restores.
 
-| | Production | Beta |
+| | Production |
+|---|---|
+| Railway project | `exquisite-telephone` (`209036ff-b724-43b0-895d-460fecd64d3d`) |
+| Environment | `production` |
+| Service | `web` |
+| Region | `us-east4-eqdc4a` (Virginia) |
+| Volume | `web-volume`, mounted at `/data` |
+| CI secrets | `RAILWAY_TOKEN` (project token, production env), `RAILWAY_SSH_KEY` |
+| Deploying workflow | `promote.yml` (manual dispatch) |
+| Deploys from branch | `release` |
+| Custom domain | `ex-tel.ty-pe.com` (DNS in Namecheap on `ty-pe.com`) |
+
+**Pushes deploy nothing.** `ci.yml` runs `checks` (lint, type-check,
+test) on every push to `main` and every PR, and that is all it does.
+Production deploys ONLY from the `release` branch, and `release` only
+ever receives a **fast-forward of `main`**: it is never developed on
+directly and never diverges. `ci.yml` does not run on `release`, since
+the identical commits already passed `checks` on their push to `main`.
+The service has **no GitHub autodeploy connected**, on purpose: it would
+open a second prod deploy path that bypasses promotion.
+
+**Service settings live in Railway, not in the repo.** Railway's legacy
+`railway.toml` is deprecated (it stops being read on 2026-12-01) and its
+replacement is a TypeScript IaC SDK, which would add a dependency for a
+handful of settings (Principle I). They are set once with
+`railway environment edit` and recorded here instead:
+
+| Setting | Value | Why |
 |---|---|---|
-| Fly app | `exquisite-telephone` | `exquisite-telephone-beta` |
-| Config | `fly.toml` | `fly.staging.toml` |
-| CI token secret | `FLY_API_TOKEN_PROD` | `FLY_API_TOKEN_BETA` |
-| Deploying workflow | `promote.yml` (manual dispatch) | `ci.yml` job `deploy-beta` (automatic) |
-| Concurrency group | `promote-release` | `deploy-beta` |
-| Deploys from branch | `release` | `main` |
-| Trigger | a human dispatches | any push to `main` that changes code |
-| Volume | `vol_r681m3no1nq5ex14` | `vol_vp2l1gyjj3lw9me4` |
-| Custom domain | `ex-tel.ty-pe.com` | `beta-ex-tel.ty-pe.com` |
+| Builder | `DOCKERFILE`, `Dockerfile` | The repo's multi-stage build |
+| Replicas | **1** | See below |
+| App sleeping | off | Room state lives in this one process's memory; sleeping would drop active games |
+| Healthcheck | `/healthz`, 60s timeout | Railway only switches traffic to a deploy that answers it |
+| Restart policy | `ON_FAILURE`, 10 retries | |
+| `CURATION_DATA_PATH` | `/data/curation.json` | Inside the volume, so the Curation Store survives deploys |
+| `BUILD_CHANNEL` | `prod` | Build-time input for the version string (App Versioning) |
+| `APP_VERSION` | set by `promote.yml` each release | Build-time input for the version string |
 
-Each channel has its own app, its own config, its own API token, and its
-own volume. Nothing is shared between them but the Dockerfile and the
-source tree.
+`PORT` is not set: Railway injects it, and the server reads it.
+`E2E_SEAM_ENABLED` is not set either, so the test-only seam is off.
 
-**Channel semantics.** Every push to `main` **that changes code**
-auto-deploys **beta** — so anything code-affecting merged is live on beta
-within minutes, including any config mistake. A **non-code push**
-(anything touching only `.project/` ArDD state, `README.md`, `CLAUDE.md`,
-`LICENSE.md`, or `.github/` — workflows and badges included, since a CI or
-badge change doesn't alter the running app) **skips the beta deploy** — it
-would only re-ship an identical app. The gate is a `changes` job in
-`ci.yml` that diffs the pushed range and sets an output the `deploy-beta`
-job's `if` consults; `pnpm-lock.yaml`, the Dockerfile, and the fly configs
-live at repo root (not under `.github/`) and are deliberately **not**
-treated as docs, so a change to any of them still deploys. The `checks` job (lint,
-type-check, test, config-lockstep) still runs on **every** push and PR —
-only the *deploy* is gated, so a docs-only PR never stalls waiting on a
-skipped required check. Production deploys ONLY from the `release` branch, and `release`
-only ever receives a **fast-forward of `main`** — it is never developed
-on directly and never diverges. `.github/workflows/ci.yml` does not run
-on `release` at all: it triggers on pushes to `main` and on pull
-requests. Re-running checks there would only test the same tree twice,
-since the identical commits already passed them on their push to `main`.
-(An earlier design ran CI on `release` and skipped the `checks` job with
-a `github.ref` guard; once `release` left the push triggers, that guard
-could never fire and was removed.) Promoting `release` is a dispatchable
-workflow that fast-forwards **and** deploys — not a remembered command,
-and not a push that some other job reacts to — see Release Promotion
-below.
+**Exactly one replica, always.** Room state is in one process's memory
+(Principle VI: single source of state, no shared Socket.IO adapter).
+With two replicas, requests would be load-balanced between them, so a room
+created on one would 404 ("room-not-found") on a join that lands on the
+other. That makes a second replica a correctness bug, not an HA upgrade.
+Railway volumes also attach to a single replica, which enforces the same
+limit from the storage side.
 
-Note the asymmetry this creates, and keep it: beta deploys are automatic
-and prod deploys are an explicit human act. The two channels differ in
-their *config* by exactly one key, but differ in their *trigger* by
-design.
-
-### Config Lockstep — generated, not hand-maintained
-
-The two Fly configs are meant to differ in exactly two keys (`app` and
-`E2E_SEAM_ENABLED`), and for a period they silently differed in more: `fly.staging.toml` lost its
-`[mounts]` block and `CURATION_DATA_PATH`, discarding beta's curation
-data on every deploy. The header comment asserting the files mirror each
-other was documentation, not enforcement, and documentation cannot fail
-a build.
-
-**Both configs are generated from a single source.** One template plus a
-small per-channel values table produces `fly.toml` and
-`fly.staging.toml`; the generated files stay checked in (so `flyctl
-deploy --config` keeps working unchanged, and a reader sees the real
-config in the repo). CI regenerates both and fails if the committed
-files differ from the regenerated output — the check *is* the diff, so a
-hand-edit of a generated file is caught rather than blessed.
-
-Generation was chosen over a lint that merely compares the two files.
-A comparison lint detects drift after someone writes it; generation
-makes drift structurally unexpressible — there is no place to type a
-value into one channel and not the other. The cost is one build step and
-the discipline of editing the template rather than the output, which the
-CI check enforces on any lapse.
-
-**The per-channel values table is the allowlist.** A key belongs there
-only when the two channels genuinely must differ. Today those are `app`
-and `E2E_SEAM_ENABLED` (`false` for prod, `true` for beta — see the
-E2E-seam section); the volume IDs differ in reality but are not named in either
-config, so they don't appear. Adding a key to that table is the explicit
-act of declaring a channel difference — the point is that it can't
-happen by accident.
-
-The check lives in CI's `checks` job, which never runs on `release`
-(above). That is correct rather than a gap: `release` only ever receives
-a fast-forward of `main`, so the identical tree already passed the check
-on `main`.
+**Dockerfile: no BuildKit cache mounts.** Railway rejects a
+`--mount=type=cache` whose `id` lacks its `s/<service-id>-` prefix, and
+adding that prefix would tie the Dockerfile to one Railway service. The
+pnpm installs run uncached instead; the dependency tree is small.
 
 ### Release Promotion
 
 Cutting production is a `workflow_dispatch` in
 `.github/workflows/promote.yml` that fast-forwards `release` from `main`
-**and then deploys prod in the same run**. It replaces both the manual
-`git push origin main:release` a human had to remember and the
-push-triggered deploy job that used to react to it.
+**and then deploys prod in the same run**.
 
 Re-dispatching when `release` is already current is harmless: the push is
 a no-op and the deploy re-ships the same tree.
 
 **The workflow deploys directly; it does not rely on its own push to
 trigger a deploy.** A push authenticated with the default `GITHUB_TOKEN`
-does not trigger further workflow runs — GitHub's recursion guard — so a
-promote workflow that only pushed and expected a separate push-triggered
-job to fire would report success while deploying nothing. Rather than
-reach for a personal access token to defeat that guard, promotion does
-both halves itself: fast-forward `release`, then run `flyctl deploy
---config fly.toml` with `FLY_API_TOKEN_PROD`.
+does not trigger further workflow runs (GitHub's recursion guard), so a
+promote workflow that only pushed would report success while deploying
+nothing. Promotion does both halves itself: it fast-forwards `release`,
+sets `APP_VERSION` on the service, runs `railway up --ci --service web`
+with `RAILWAY_TOKEN`, and then polls `railway deployment list` until the
+deployment reports `SUCCESS`. The run fails if the deployment ends
+`FAILED`/`CRASHED`, or isn't live within 5 minutes. `up --ci` returns
+once the build finishes, before the healthcheck has passed, so its exit
+code alone doesn't show that prod is up.
 
-This keeps the repo free of any hand-created PAT — no expiry to track, no
-token tied to one person's account, no credential outside the two Fly
-tokens the deploy already needs.
+**Promotion is therefore the ONLY path that deploys production.** A
+manual `git push origin main:release` fast-forwards the branch and
+deploys nothing. That means `release` moving is not by itself evidence
+that prod was deployed. The dispatch run is.
 
-**Promotion is therefore the ONLY path that deploys production.**
-`ci.yml` has no push-triggered `deploy-prod` job; a manual `git push
-origin main:release` fast-forwards the branch and deploys nothing. That
-is deliberate — one prod deploy path rather than two that must be kept in
-sync — but it does mean `release` moving is not by itself evidence that
-prod was deployed. The dispatch run is.
-
-**Fast-forward only, never a merge.** The push is a plain
-non-force-`push` of `main` into `release`; if it is rejected as
-non-fast-forward, that means `release` has diverged from `main`, which
-is precisely the invariant the whole dual-channel scheme rests on. The
-workflow fails loudly there rather than merging, forcing a human to
-investigate how `release` acquired a commit `main` doesn't have. A
-workflow that "helpfully" merged would repair the symptom and destroy
-the signal — and would push a tree to production that never passed
-`checks` on `main`, which is the exact assumption letting `release` skip
-them.
+**Fast-forward only, never a merge.** The push is a plain non-force push
+of `main` into `release`. If it is rejected as non-fast-forward, `release`
+has diverged from `main`, and the workflow fails loudly rather than
+merging, forcing a human to find out how `release` got a commit `main`
+doesn't have. A merge would push a tree to production that never passed
+`checks` on `main`, and that assumption is what lets `release` skip them.
 
 Dispatch is manual (a human decides when to cut), and the run record is
-the audit trail the manual push never produced.
+the audit trail.
 
-**Principle I is still satisfied.** The earlier "single Fly.io app"
-phrasing in this section was simply wrong, not a scaling claim that has
-since lapsed: each app runs exactly **one machine, one process**, which
-is what Principle I (no premature scaling) actually asks for. Two
-channels of one machine each is not horizontal scaling — it is a staging
-environment.
+### End-to-End Test Gate (Cross-Browser) — suspended
 
-### End-to-End Test Gate (Cross-Browser)
+A **Playwright** suite exercises the main game flow (lobby → write/draw
+turns → reveal) across **Chromium, Firefox, WebKit, and the `msedge`
+Chromium channel**. Playwright is a devDependency plus browser binaries:
+maintainer tooling, not app runtime ([[constitution]] Project Scope).
 
-Cutting production was historically held on manual sign-off with no
-automated cross-browser confidence. A **Playwright** end-to-end suite
-closes that gap: it exercises the main game flow (lobby → write/draw turns →
-reveal) across **Chromium, Firefox, WebKit, and the `msedge` Chromium
-channel**. Playwright is a **devDependency plus browser binaries —
-maintainer/dev tooling, not app runtime** ([[constitution]] Project Scope:
-it ships no dependency into the server and touches no game state), so the
-"no premature scaling" app-scope constraints don't bind it.
+**What it was.** On Fly, every code push to `main` deployed beta, the
+suite then ran against the live `beta-ex-tel.ty-pe.com` in a per-engine
+CI matrix, and the result was recorded as the `e2e/cross-browser` commit
+status on the deployed sha. `promote.yml` refused to promote a commit
+without a green status.
 
-**Four binaries, three engines — stated honestly.** Playwright's "Safari"
-is its bundled WebKit build (not the real Safari), and Edge/Chrome are both
-Chromium channels. The four-target matrix still catches real
-engine-specific rendering/interaction regressions (WebKit vs. Chromium vs.
-Gecko); it does not certify Apple's Safari or a specific Edge build.
+**What it is now.** With no beta channel there is nothing deployed to
+test before prod, so the CI jobs (`changes`, `deploy-beta`, `e2e`,
+`e2e-result`) and the promote precondition were removed. **Production
+releases currently go out with no automated cross-browser check.** The
+suite itself is unchanged and runs by hand: `pnpm run e2e` builds the app
+and starts a local server when `E2E_BASE_URL` is unset
+(`playwright.config.ts`). The test-only app seam (`E2E_SEAM_ENABLED` plus
+the `E2E_TEST_SIGNAL_SECRET` header) is kept in the server for that
+local use, and stays off in prod.
 
-**When it runs — after each beta deploy, gated by the same code-change
-signal that gates the deploy itself.** The suite runs as a job triggered by
-a successful beta deploy, against the live `beta-ex-tel.ty-pe.com`. Beta
-only deploys on a push to `main` that **changes code** — the existing
-`changes` job in `ci.yml` (see Channel semantics above) treats `.project/`,
-`README.md`, `CLAUDE.md`, `.github/`, and `LICENSE.md` as docs and skips the
-deploy for a docs-only push. The e2e job hangs off that **same gate**: a
-`fix`/`feat` (code) push deploys beta and runs the full suite; a
-`docs`/`chore` push that skips the beta deploy runs no e2e at all — the
-docs-vs-code diff already decides this, so nothing parses commit subjects.
-This is deliberately **NOT** the per-push `checks` gate (lint/type-check/
-test — see CI Enforcement, [[constitution]]), which stays fast and runs on
-every push and PR including docs-only ones; the e2e suite is slow and
-deploy-dependent, so it runs only when there is a fresh beta build to
-exercise.
-
-**It is a post-deploy signal AND the prod-promote precondition.** Beta is
-already live when the suite runs, so a red run does not roll beta back — it
-raises the alarm continuously as code lands. The gate on *production* is
-that **`promote.yml` reads the recorded e2e result for the exact commit it
-is promoting and refuses to promote on a red-or-missing result.** The
-promote gate therefore still exists; it is computed earlier (at beta-deploy
-time) rather than re-run at dispatch.
-
-**Commit pinning — dissolved by the trigger, preserved in the record.**
-Because the run is triggered *by* the beta deploy of a specific commit, it
-inherently tests that commit's tree — the earlier "which beta build am I
-testing?" race is gone. What remains is a bookkeeping requirement: each run
-**records its pass/fail keyed to the deployed commit sha** (a GitHub commit
-status / check on that sha is the natural home), so `promote.yml` can look
-up the result for the commit it is fast-forwarding. The
-`vX.Y.Z-beta+<short-sha>` the bundle bakes in (App Versioning) remains the
-cross-check that the deployed artifact is the sha the run believes it is.
-
-The per-sha result lives as a **GitHub commit status**: `ci.yml`'s
-`e2e-result` job posts the run's pass/fail as the `e2e/cross-browser`
-commit status on the deployed sha, and `promote.yml` reads it back by
-querying that sha's statuses for the `e2e/cross-browser` context. A sha
-with no recorded run yet reads as `missing`, and `promote.yml` **blocks**:
-a missing result and a red result both refuse promotion, so a green
-`e2e/cross-browser` status is a hard precondition for fast-forwarding to
-`release`.
-
-**Parallelism and isolation — a per-engine CI matrix.** Each test creates
-its own unique room and drives only players in that room; the authoritative
-in-memory room store (Realtime Sync above; [[datamodel]]) scopes every
-broadcast per room, so per-test rooms against the one shared beta server
-never collide. The suite is therefore `fullyParallel` and Playwright
-`--shard=i/n`-safe for arbitrary N. CI runs **one matrix leg per browser
-engine** (`chromium` / `firefox` / `webkit` / `msedge`, via
-`--project=<engine>`) rather than a mixed shard fan-out: the slow engines
-(WebKit and the branded Edge binary) each get their own runner and run in
-parallel, so the job's wall time is the slowest *single* engine instead of
-whichever shard the slow engines serialized behind. `fail-fast: false`
-keeps one engine's failure from cancelling the others. Each player is a
-separate **browser context** (a shared context's `localStorage` session
-token would collide across players). The four-browsers-in-one-test "summit"
-spec (one context per engine, one player each) is itself heavy, so it is
-one flagship case; the bulk of the suite runs the conventional per-browser
-project matrix, which the per-engine legs split cleanly along.
-
-**Parametrized lobby settings.** The single flow test is run across a
-curated, typed matrix of lobby-setting combinations (turn timer, laps per
-book, monochrome, min-player override, curated vs. free-form prompt mode) —
-a small set of named combos, not the full combinatorial cross product —
-driven through a fixture that operates the Lobby controls.
-
-**Drawing assertions — the vector model, not pixels.** Drawings are pure
-vector `DrawOps` data end-to-end ([[datamodel]]; Export Pipeline above),
-and the server broadcasts every entry's serialized ops. A test drives
-deterministic strokes via pointer actions, then asserts the **exact
-submitted `DrawOps`** — read by a Node `socket.io-client` joined as an
-extra observer player and parsed with the production parser — rather than
-comparing pixels (which are raster-sensitive across engines). Screenshot
-snapshots are at most one loose smoke check, never the primary assertion.
-
-**Curation-write isolation on live beta (a test-only app seam).** Because
-the gate hits *live* beta, test prompt-ratings would otherwise pollute
-beta's real Curation Store volume (Curation Store above). Rather than
-globally repoint beta's `CURATION_DATA_PATH` — which would break real beta
-curation collection — test traffic is **tagged** (a test-only request
-signal on test-created rooms) and the server discards those ratings,
-leaving real beta curation untouched. The tagging mechanism is an
-**`x-e2e-test-signal` request header**: a socket that presents the header
-matching the configured secret is flagged test traffic, and the connect /
-`onSubmitEntry` handlers in `server/src/socket/` route its ratings to a
-**discard** — they are never written to the Curation Store at all, rather
-than being written to a separate scratch path. This is a deliberate
-**test-only app seam**; any per-channel config it needs goes through the
-generated fly-config template and its allowlist, never a hand-edit
-(Config Lockstep above).
-
-**Minimal, test-only app seams — the boundary.** The suite is otherwise
-new test files driving existing UI; where a stable selector is missing it
-may add `data-testid`s, and it may add a **test-only turn-timer seam** so
-long-timer combinations aren't stuck at the 15-minute production floor. Any
-such seam is inert in normal runtime and exists solely to make the flow
-testable in a fast gate.
-
-**Test-only client grace seam.** All the seams above are server-side, but
-the 30s cover-decoration grace (`GRACE_MS`) at each round transition is a
-*client* constant the server-side seams cannot reach — and it is paid on
-every flow ×5 combos ×4 engines. A small **server → client echo** shrinks
-it for test traffic only: on connection, a socket the existing gate has
-already flagged as test traffic (seam enabled **and** the
-`x-e2e-test-signal` header matching the secret — the identical discipline
-as the curation-write and turn-timer seams) is sent a `testSeamActive`
-event; the client latches it and selects a short grace instead of the full
-30s (`client/src/lib/views/grace.ts`). It rides the exact same gate, so it
-is inert and un-triggerable in normal runtime and structurally impossible
-on prod (where the seam is disabled). The e2e player contexts already send
-the header on every request (for curation-write isolation), so they
-activate this seam with no extra wiring.
-
-The Docker build is multi-stage: install and build
-`shared`/`server`/`client` via pnpm workspaces, then a slim runtime
-image running only the compiled server (which serves the client's
-static build, per the Overview above). The server reads its listen port
-from the `PORT` environment variable (already supported by
-`server/src/config.ts`); Fly injects `PORT` into the container at
-runtime.
-
-A Fly **volume** is mounted for the Curation Store (see above) — the
-only persistent disk this app uses, and **one per channel**, never
-shared. `CURATION_DATA_PATH` (`/data/curation.json`) resolves inside
-that mount. The volume is what carries curation data across the process
-restart every deploy causes; without it, curation data would be
-recreated empty on each release — which is exactly what beta did
-silently until `fly.staging.toml` gained its `[mounts]` block and
-`CURATION_DATA_PATH`. Game state is deliberately *not* moved onto it.
-
-Because the volume pins each app to the one machine that mounts it,
-`fly scale count 1` matters (see the note in `fly.toml`): a second
-machine would neither see that volume nor share its files. This is
-independent of, and additional to, the in-memory-room-state reason for
-running one machine.
+**Restoring it** means adding a `beta` environment to the Railway
+project (its own volume, `E2E_SEAM_ENABLED=true`, the signal secret as a
+variable), deploying it from `ci.yml` on code pushes, and bringing back
+the e2e and commit-status jobs and the gate in `promote.yml` from the
+git history before this change.
 
 ### App Versioning
 
-The app carries its own **semantic version**, distinct from the ArDD tooling
-badge in the README. The single source of truth is the root `package.json`
-`version` field (e.g. a `MAJOR.MINOR.PATCH` string like `0.1.0`; the
-Manifest/Script Hygiene quality standard already treats `package.json` as
-authoritative). It exists so a player's
-feedback can name the release they hit (see [[ui]] Salon Footer).
+The app carries its own **semantic version**, distinct from the ArDD
+tooling badge in the README. The single source of truth is the root
+`package.json` `version` field. It exists so a player's feedback can name
+the release they hit (see [[ui]] Salon Footer).
 
-**Injected at build time, never at runtime.** A Vite `define` bakes a version
-string into the client bundle (no runtime endpoint — Principle I). The value
-is channel-aware, assembled from three build inputs passed to `flyctl deploy`
-as `--build-arg`s (declared as `ARG`s in the Dockerfile and read by the client
-build):
+**Injected at build time, never at runtime.** A Vite `define` bakes a
+version string into the client bundle (no runtime endpoint, Principle I).
+It is assembled from three build inputs declared as `ARG`s in the
+Dockerfile and read by the client build: `APP_VERSION`, `BUILD_CHANNEL`,
+`BUILD_SHA`. Railway passes a service variable to the Dockerfile `ARG`
+of the same name, so `BUILD_CHANNEL=prod` is a standing variable and
+`promote.yml` sets `APP_VERSION` just before each deploy.
 
-- **Prod** shows a clean `vX.Y.Z` — the promoted release.
-- **Beta** shows `vX.Y.Z-beta+<short-sha>`. Beta auto-deploys on *every* code
-  push to `main`, so it runs ahead of the last tagged release; the `X.Y.Z` is
-  that last release (the current `package.json` value) and the `+<short-sha>`
-  identifies exactly which beta build a report came from.
+- **Prod** shows a clean `vX.Y.Z`, the promoted release. No sha is
+  needed; the tag is the referent.
+- A build with no inputs (a plain local `docker build`) falls back to
+  the root `package.json` version with channel `dev`.
+- The beta form, `vX.Y.Z-beta+<short-sha>`, is still supported by the
+  client build for when a beta channel returns.
 
-The channel and sha are supplied by the deploying workflow: `ci.yml`'s
-`deploy-beta` passes `channel=beta` and the pushed commit's short sha;
-`promote.yml` passes `channel=prod` (no sha needed — the tag is the referent).
+**Auto-bump on promotion.** `promote.yml` takes a bump-level dispatch
+input (`patch` | `minor` | `major`). On promotion it bumps `package.json`
+via `npm version <level> --no-git-tag-version`, commits the bump to
+`main` (`chore(release): vX.Y.Z`) and pushes it with the built-in
+`GITHUB_TOKEN` (whose push does not re-trigger workflows), **then**
+fast-forwards `release` from `main`, tags the release commit `vX.Y.Z`,
+creates the GitHub release, and deploys prod. The bump lands on `main` as
+the new source of truth and reaches `release` by the existing
+fast-forward, so there's no new divergence path.
 
-**Auto-bump on promotion.** `promote.yml` gains a bump-level dispatch input
-(`patch` | `minor` | `major`). On promotion it: bumps `package.json` via
-`npm version <level> --no-git-tag-version`, commits the bump to `main`
-(`chore(release): vX.Y.Z`) and pushes it (authenticated with the built-in
-`GITHUB_TOKEN`, whose push does not re-trigger workflows — the same recursion
-property the promotion already relies on), **then** fast-forwards `release`
-from `main` (now carrying the bump), tags the release commit `vX.Y.Z`, creates
-the GitHub release, and deploys prod. So the bump lands on `main` as the new
-source of truth and reaches `release` by the existing fast-forward — no new
-divergence path. (A bump commit touches `package.json`, which is code, so the
-next ordinary push to `main` also rebuilds beta against the new base version.)
+### One-time setup — already done
 
-### One-time MANUAL CLI steps — per app, not per repo
-
-These are **manual**, run by a human with `flyctl`, and are *not*
-performed by CI or by `fly deploy`. They are listed explicitly because
-they are precisely what gets forgotten when a second channel is added:
-CI deploys look healthy, and the omission surfaces later as a machine
-that will not start, or as data that silently goes nowhere.
-
-Run **once per app** — `exquisite-telephone` AND
-`exquisite-telephone-beta`:
+These were run once by hand on 2026-11-26 and are recorded so they can
+be repeated (for example, for a future beta environment):
 
 ```
-fly status -a <app>                       # read the machine's ACTUAL region
-fly volumes create curation_data --app <app> --region <that region> --size 1
-fly scale count 1 -a <app>                # after the first deploy
+railway init --name exquisite-telephone
+railway add --service web
+railway volume add --mount-path /data
+railway variable set CURATION_DATA_PATH=/data/curation.json BUILD_CHANNEL=prod --service web --skip-deploys
+railway environment edit --json   # builder, healthcheck, sleep off, 1 replica in us-east4 (table above)
+railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Namecheap
 ```
 
-**The volume region must match the RUNNING MACHINE's region**, read from
-`fly status`, and not necessarily `primary_region` in the config. A
-volume in a different region is invisible to the machine, which then
-fails to start with **no obviously storage-related error** — the deploy
-reports success right up until nothing comes back up.
+Two pieces need the dashboard or a human:
 
-1GB is Fly's minimum volume size — far beyond what a few hundred rating
-events need, but there is no smaller option and no reason to pick a
-larger one.
+- **`RAILWAY_TOKEN`**: Project Settings → Tokens, scoped to
+  `production`. A CLI login session can't create project tokens.
+- **`RAILWAY_SSH_KEY`**: a dedicated, passphrase-less ed25519 key whose
+  public half is registered on the Railway account (`railway ssh keys
+  add`). `railway ssh`, which the weekly curation aggregate uses,
+  authenticates the shell with a registered SSH key, not with the API
+  token.
 
-**Current state: both volumes already exist and are verified.** No
-`fly volumes create` is outstanding for either channel.
-
-| App | Volume ID | Size | Region | Machine region |
-|---|---|---|---|---|
-| `exquisite-telephone` | `vol_r681m3no1nq5ex14` | 1GB | `iad` | `iad` — matches |
-| `exquisite-telephone-beta` | `vol_vp2l1gyjj3lw9me4` | 1GB | `iad` | `iad` — matches |
-
-**No repo-level manual step exists.** Promotion deliberately introduces
-none: it authenticates its push with the built-in `GITHUB_TOKEN` and its
-deploy with `FLY_API_TOKEN_PROD`, both of which already exist. The
-deployment topology's only manual steps remain the per-app `flyctl` ones
-above, and all of them are done.
+The prod Curation Store data (the whole `/data` tree: `curation.json`,
+`curation-events/`, `curation-events-archive/`, the snapshot) was copied
+from the Fly volume to the Railway volume just before the DNS cutover.
 
 ## Production Annotations
 
@@ -725,7 +536,7 @@ above, and all of them are done.
   in-progress and completed-but-unsaved games — in production, finished
   books worth preserving would be written to a real datastore before
   the room is torn down.
-- **No zero-downtime deploys**: A Fly deploy restarts the single
+- **No zero-downtime deploys**: A deploy restarts the single
   process, dropping all in-progress in-memory games — in production,
   this would need either a durable store to resume from (see above) or
   a maintenance-window/drain strategy before deploying.
@@ -746,7 +557,7 @@ above, and all of them are done.
   the cap has never been approached in practice (one human, every few weeks).
 - **Curation ingestion is recommend-only (human-in-the-loop)**: the ingestion
   skill (see Curation Store — Ingestion Skill) never writes the deck or issues
-  a mutating `fly` command; it emits recommendations a human applies. This is
+  a mutating `railway` command; it emits recommendations a human applies. This is
   the deliberate safety boundary for feeding untrusted player text to an LLM —
   a successful prompt-injection degrades to a rejected recommendation, never a
   compromised deck. In production with higher volume or an automated apply

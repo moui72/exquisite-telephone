@@ -13,10 +13,10 @@ import { snapshotPaths } from './pipe.js';
  * pipe's snapshot and keeps a durable review ledger + a separate
  * offensive-quarantine file. It is READ-ONLY with respect to the deck:
  * nothing here writes `shared/src/phraseBank.ts`, and nothing here issues
- * a `fly` command. It can only ever PROPOSE add/remove changes for a human
+ * a `railway` command. It can only ever PROPOSE add/remove changes for a human
  * to apply — the injection safety boundary the curation design rests on
  * (a successful prompt-injection in candidate text degrades to at worst a
- * rejected recommendation). Do not add a deck-write or a mutating-`fly`
+ * rejected recommendation). Do not add a deck-write or a mutating-`railway`
  * capability to this module or its callers.
  */
 

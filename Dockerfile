@@ -2,7 +2,7 @@
 
 # Multi-stage build for the Exquisite Telephone server, which serves the
 # built Svelte client's static assets itself (see infrastructure.md —
-# single Fly.io app/process, no separate static host). Uses pnpm's own
+# single Railway service/process, no separate static host). Uses pnpm's own
 # multi-stage Docker idiom (corepack + a prod-deps stage that installs
 # with --prod, mirrored from pnpm's documented Docker pattern) rather
 # than a hand-rolled copy-everything approach (constitution Principle V).
@@ -25,15 +25,18 @@ FROM base AS prod-deps
 # --ignore-scripts: the root "prepare" script (husky) is a dev-only git
 # hook installer that isn't present (or needed) once devDependencies are
 # pruned, and would otherwise fail this stage.
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile --ignore-scripts
+#
+# No `--mount=type=cache` on the installs: Railway rejects a cache-mount id
+# that lacks its `s/<service-id>-` prefix, and baking a service id into the
+# Dockerfile would tie the image to one Railway service. The install is
+# small enough that losing the store cache costs little.
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 # Full install (including devDependencies) so the build toolchain
 # (typescript, vite, svelte-check, etc.) is available, then build
 # shared -> server -> client per the root "build" script.
 FROM base AS build
-RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
-    pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 # App version build inputs (infrastructure.md — App Versioning), passed by
 # the deploying workflow as --build-arg and read by the client's Vite build
 # (client/vite.config.ts) to bake the channel-aware version string into the

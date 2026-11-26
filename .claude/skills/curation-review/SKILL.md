@@ -1,6 +1,6 @@
 ---
 name: curation-review
-description: "Review the curation aggregation snapshot and recommend deck additions and removals for a human to apply. Reads the pipe's snapshot read-only, reconciles the review ledger, quarantines offensive candidates, judges borderline additions against PROMPT_CRITERIA.md, and emits a recommendation report. Never edits the deck; never runs a mutating fly command."
+description: "Review the curation aggregation snapshot and recommend deck additions and removals for a human to apply. Reads the pipe's snapshot read-only, reconciles the review ledger, quarantines offensive candidates, judges borderline additions against PROMPT_CRITERIA.md, and emits a recommendation report. Never edits the deck; never runs a mutating railway command."
 ---
 
 # /curation-review
@@ -30,15 +30,16 @@ you across them:**
 
 - **No deck writes.** This skill NEVER edits `shared/src/phraseBank.ts`.
   It only recommends. A human applies approved additions/removals.
-- **No mutating `fly` commands.** Reading the snapshot off the Fly volume
-  is **read-only**: `fly ssh sftp get` or `fly ssh console` to `cat` the
-  file. Never `fly deploy`, `fly ssh console` that writes, `fly secrets`,
-  `fly volumes`, or anything that changes remote state.
+- **No mutating `railway` commands.** Reading the snapshot off the Railway
+  volume is **read-only**: `railway ssh` to `cat` the file. Never
+  `railway up`, `railway ssh` that writes, `railway variable set`,
+  `railway volume`, `railway restart`, or anything that changes remote
+  state.
 - **No auto-promotion.** Nothing reaches the committed deck without a
   human's explicit approval of this report.
 
 These boundaries are the injection safety boundary: because the skill holds
-no deck-write and no mutating-`fly` privilege and a human approves every
+no deck-write and no mutating-`railway` privilege and a human approves every
 change, a successful injection in candidate text degrades to at worst a
 rejected recommendation.
 
@@ -48,21 +49,21 @@ read-only w.r.t. the deck. Do not add a write path to it.
 
 ## Inputs
 
-- **Production** — the snapshot lives read-only on the Fly volume beside
+- **Production** — the snapshot lives read-only on the Railway volume beside
   `CURATION_DATA_PATH`. This skill **offers to fetch it itself** as its
   first step (see Procedure 1) with a read-only command — you do not need
   to pre-pull it:
-  - `fly ssh sftp get <curation-dir>/curation-snapshot.json ./curation-snapshot.json` (read-only), or
-  - `fly ssh console -C 'cat <curation-dir>/curation-snapshot.json'` and save the output.
-  Both are read-only reads of an already-produced snapshot; neither writes
-  remote state, so the no-mutating-`fly` boundary holds. Producing a *fresh*
+  - `railway ssh --service web -- cat <curation-dir>/curation-snapshot.json > ./curation-snapshot.json`
+    (read-only; `<curation-dir>` is `/data` in prod).
+  It is a read-only read of an already-produced snapshot and writes no
+  remote state, so the no-mutating-`railway` boundary holds. Producing a *fresh*
   snapshot is a separate, scheduled concern (the `curation-aggregate.yml`
   workflow — see `infrastructure.md` Aggregation Pipe), **not** part of this
   review. On-machine/prod that aggregate runs the compiled `node
-  server/dist/curation/cli.js` (via `fly ssh console -C`, since the slim
+  server/dist/curation/cli.js` (via `railway ssh`, since the slim
   image has no `src/`/`tsx`); dev is `pnpm --filter server curation:aggregate`.
 - **Dev** — read the local snapshot path directly (default
-  `.curation-data/curation-snapshot.json`). No `fly` at all.
+  `.curation-data/curation-snapshot.json`). No `railway` at all.
 
 The snapshot, the ledger (`curation-ledger.json`), and the quarantine
 (`curation-quarantine.json`) are **gitignored volume artifacts** — never
@@ -73,12 +74,12 @@ committed.
 
 1. **Offer to fetch the snapshot (read-only).** Before anything else, in
    production **offer to pull the snapshot yourself** rather than requiring
-   a pre-pull: propose the read-only `fly ssh sftp get
-   <curation-dir>/curation-snapshot.json ./curation-snapshot.json` (or the
-   `cat` variant) and run it only on the human's go-ahead. It reads an
-   existing snapshot and changes no remote state — the sole `fly` you may
-   run, and never a mutating one. In dev, skip this: read the local
-   snapshot path directly, no `fly` at all.
+   a pre-pull: propose the read-only `railway ssh --service web -- cat
+   /data/curation-snapshot.json > ./curation-snapshot.json` and run it only
+   on the human's go-ahead. It reads an existing snapshot and changes no
+   remote state — the sole `railway` command you may run, and never a
+   mutating one. In dev, skip this: read the local snapshot path directly,
+   no `railway` at all.
 
 2. **Ingest read-only.** Load the snapshot and the prior ledger via the
    helper (`readSnapshot`, `readLedger`). The helper never writes the

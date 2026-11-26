@@ -339,7 +339,7 @@ describe('event accumulation bound', () => {
     await expect(store.settled()).resolves.toBeUndefined();
   });
 
-  it('keeps the default limit well inside the 1GB Fly volume', () => {
+  it('keeps the default limit well inside a 1GB volume', () => {
     // Worst-case event file is bounded by MAX_TEXT_ENTRY_BYTES plus a
     // little metadata; the default must not be able to fill the volume.
     expect(MAX_CURATION_EVENTS * 800).toBeLessThan(1024 * 1024 * 1024);

@@ -73,29 +73,20 @@ convenience that catches the same issues earlier.
 
 ## Deployment
 
-The app deploys to [Fly.io](https://fly.io) as **two separate apps**, one per
-channel:
+The app runs on [Railway](https://railway.com) as a single production
+service at <https://ex-tel.ty-pe.com>. There is no beta channel at the moment.
 
-|              | Production                 | Beta                            |
-| ------------ | -------------------------- | ------------------------------- |
-| URL          | <https://ex-tel.ty-pe.com> | <https://beta-ex-tel.ty-pe.com> |
-| Fly app      | `exquisite-telephone`      | `exquisite-telephone-beta`      |
-| Config       | `fly.toml`                 | `fly.staging.toml`              |
-| Deploys from | `release` branch           | `main` branch                   |
-| Trigger      | manual workflow dispatch   | automatic on every push         |
-
-- **Beta deploys automatically:** every push to `main` deploys beta within
-  minutes (`.github/workflows/ci.yml`), so anything merged is live on beta
-  right away.
+- **Pushes deploy nothing.** CI (`.github/workflows/ci.yml`) runs lint,
+  type-check and tests on every push and pull request.
 - **Production is an explicit human act:** it deploys only via the
-  `promote.yml` workflow (manual dispatch), which fast-forwards `release`
-  from `main` and then runs `flyctl deploy` against `fly.toml`. `release` only
-  ever receives a fast-forward of `main` and is never developed on directly.
+  `promote.yml` workflow (manual dispatch), which bumps the version,
+  fast-forwards `release` from `main`, and deploys with `railway up`.
+  `release` only ever receives a fast-forward of `main` and is never
+  developed on directly.
 
-The two Fly configs are meant to differ in exactly one key (`app`), so they
-are **generated from a single template** rather than hand-maintained — run
-`pnpm gen:fly` to regenerate and `pnpm check:fly` to verify; CI fails if the
-committed files drift from the generated output.
+Service settings (one replica, no sleeping, `/healthz` healthcheck, the
+`/data` volume) are set in Railway rather than in a config file; see
+`.project/artifacts/infrastructure.md` (Deployment).
 
 ## Contributing
 
@@ -232,7 +223,7 @@ graph TD
   Sessions["Session store<br/>(reconnect tokens, in-memory)"]
   Sweep["Server-wide sweep<br/>(30s: turn timers, cover window)"]
   Curation["Curation Store<br/>(append-only JSON events)"]
-  Volume[("Fly volume<br/>(one per channel)")]
+  Volume[("Railway volume<br/>(/data)")]
   Pipe["Aggregation Pipe CLI<br/>(scheduled)"]
   Snapshot["Curation snapshot"]
   Ingest["Ingestion skill<br/>(Claude Code, recommend-only)"]

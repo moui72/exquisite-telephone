@@ -12,7 +12,7 @@ const DEFAULT_CLIENT_DIST_PATH = resolve(HERE, '../../client/dist');
 // Local-dev home for the Curation Store's single JSON file. Gitignored:
 // it holds player-written text and accumulates across runs, and it is
 // machine-local state, not source. In production this points inside the
-// mounted Fly volume via CURATION_DATA_PATH (infrastructure.md).
+// mounted Railway volume via CURATION_DATA_PATH (infrastructure.md).
 const DEFAULT_CURATION_DATA_PATH = resolve(HERE, '../../.curation-data/curation.json');
 
 export interface Config {
@@ -23,8 +23,9 @@ export interface Config {
   /**
    * The test-only app seam (infrastructure.md — End-to-End Test Gate /
    * Curation-write isolation). Both must be present for the seam to
-   * activate: `e2eSeamEnabled` is a per-channel gate wired through the
-   * generated Fly config (beta `true`, prod `false`), and
+   * activate: `e2eSeamEnabled` is a per-channel gate set as a service
+   * variable (prod leaves it unset, i.e. `false`; there is no beta
+   * channel today), and
    * `e2eTestSignalSecret` is the shared secret CI holds and sends as the
    * `x-e2e-test-signal` header. The seam is inert — and structurally
    * un-triggerable on prod — unless BOTH hold, so a leaked secret alone

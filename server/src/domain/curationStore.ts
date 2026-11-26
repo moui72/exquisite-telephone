@@ -41,8 +41,7 @@ export interface CurationStore {
 /**
  * The event directory, derived from the single configured
  * `CURATION_DATA_PATH` knob (infrastructure.md Curation Store —
- * Location) so the deployment surface stays one env var per channel and
- * both Fly configs keep the value they already declare.
+ * Location) so the deployment surface stays one env var.
  */
 export function curationEventsDirFor(dataPath: string): string {
   return join(dirname(dataPath), 'curation-events');
@@ -63,7 +62,9 @@ export function curationEventsDirFor(dataPath: string): string {
  * evidence on a schedule nobody is watching, which is worse than
  * declining to add more.
  *
- * The number: the Fly volume is 1GB. Budgeting 5% of it to curation
+ * The number: sized against a 1GB volume (the Fly.io minimum this
+ * app first ran on; the Railway volume is larger, so the budget only
+ * gets more conservative). Budgeting 5% of it to curation
  * (50 MiB = 52,428,800 bytes) at the ~800-byte worst case gives
  * 52,428,800 / 800 = 65,536 events. The power of two is a coincidence of
  * the arithmetic, not the reason for the choice.

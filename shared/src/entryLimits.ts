@@ -56,8 +56,8 @@ export const MAX_TEXT_ENTRY_BYTES = 610;
  * turn, and admitting it would cost more than it buys. Drawings never
  * reach the Curation Store — only phrases and ratings do — so this cap's
  * only job is protecting in-memory room state (datamodel.md Overview), and
- * that state runs on a 512 MB Fly machine (`[[vm]] memory` in `fly.toml`
- * and `fly.staging.toml`). A room holds players x laps drawing entries at
+ * that state was sized for a 512 MB machine (the Fly.io VM this app first
+ * ran on; keep treating 512 MB as the design ceiling on Railway). A room holds players x laps drawing entries at
  * once, so a cap set generously enough for the extreme case would let a
  * handful of full rooms exhaust the machine. Rejecting the extreme case is
  * therefore deliberate, not an oversight.
