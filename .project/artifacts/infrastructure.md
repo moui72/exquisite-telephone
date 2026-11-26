@@ -512,8 +512,8 @@ railway environment edit --json   # builder, healthcheck, sleep off, 1 replica i
 railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Namecheap
 ```
 
-**Pending (cutover, 2026-11-26):** the two CI secrets below, the data
-copy, and the DNS swap. Update this paragraph once they're done.
+**Pending (cutover, 2026-11-26):** the two CI secrets below and the DNS
+swap. Update this paragraph once they're done.
 
 Two pieces need the dashboard or a human:
 
@@ -525,13 +525,14 @@ Two pieces need the dashboard or a human:
   authenticates the shell with a registered SSH key, not with the API
   token.
 
-**Data migration.** The prod Curation Store data (the whole `/data`
-tree: `curation-events/`, `curation-events-archive/`, the snapshot, the
-ledger) is copied from the Fly volume to the Railway volume before the
-DNS swap, then topped up with a no-overwrite copy once Fly has stopped
-getting traffic. Event files are uniquely named, so the two copies merge
-by union. Restart the service after each copy, because the server seeds
-its event count once at boot.
+**Data migration — done 2026-11-26.** Fly's prod volume held only an
+empty snapshot (`curation-snapshot.json` and its `.summary.txt`, from the
+2026-11-01 aggregate run): no rating events had ever been recorded. Both
+files were copied to `/data` on Railway and the checksum verified. Beta's
+volume was empty as well, so dropping it lost nothing. If ratings land
+on Fly before DNS moves, top up with a no-overwrite copy of
+`curation-events/` (event files are uniquely named, so the copies merge
+by union) and restart, since the server seeds its event count at boot.
 
 ## Production Annotations
 
