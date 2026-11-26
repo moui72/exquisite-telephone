@@ -498,10 +498,10 @@ creates the GitHub release, and deploys prod. The bump lands on `main` as
 the new source of truth and reaches `release` by the existing
 fast-forward, so there's no new divergence path.
 
-### One-time setup — already done
+### One-time setup
 
-These were run once by hand on 2026-11-26 and are recorded so they can
-be repeated (for example, for a future beta environment):
+Run once by hand on 2026-11-26, and recorded so they can be repeated
+(for example, for a future beta environment):
 
 ```
 railway init --name exquisite-telephone
@@ -511,6 +511,9 @@ railway variable set CURATION_DATA_PATH=/data/curation.json BUILD_CHANNEL=prod -
 railway environment edit --json   # builder, healthcheck, sleep off, 1 replica in us-east4 (table above)
 railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Namecheap
 ```
+
+**Pending (cutover, 2026-11-26):** the two CI secrets below, the data
+copy, and the DNS swap. Update this paragraph once they're done.
 
 Two pieces need the dashboard or a human:
 
@@ -522,9 +525,13 @@ Two pieces need the dashboard or a human:
   authenticates the shell with a registered SSH key, not with the API
   token.
 
-The prod Curation Store data (the whole `/data` tree: `curation.json`,
-`curation-events/`, `curation-events-archive/`, the snapshot) was copied
-from the Fly volume to the Railway volume just before the DNS cutover.
+**Data migration.** The prod Curation Store data (the whole `/data`
+tree: `curation-events/`, `curation-events-archive/`, the snapshot, the
+ledger) is copied from the Fly volume to the Railway volume before the
+DNS swap, then topped up with a no-overwrite copy once Fly has stopped
+getting traffic. Event files are uniquely named, so the two copies merge
+by union. Restart the service after each copy, because the server seeds
+its event count once at boot.
 
 ## Production Annotations
 
