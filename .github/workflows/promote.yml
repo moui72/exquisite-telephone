@@ -42,6 +42,9 @@ jobs:
   promote:
     name: Fast-forward release to main, then deploy prod
     runs-on: ubuntu-latest
+    # A normal run is a few minutes; fail a hung deploy instead of holding a
+    # runner for GitHub's 6-hour default.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
         with:

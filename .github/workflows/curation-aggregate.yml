@@ -27,6 +27,9 @@ jobs:
     name: Aggregate + restart prod
     runs-on: ubuntu-latest
     concurrency: curation-aggregate-prod
+    # Each step normally takes seconds; a hung CLI should fail the run,
+    # not hold a runner for GitHub's 6-hour default.
+    timeout-minutes: 15
     env:
       # Project token scoped to the production environment.
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
@@ -44,7 +47,9 @@ jobs:
       - name: Aggregate curation events (prod)
         # The slim runtime image has no `src/` and no `tsx`; run the compiled
         # entrypoint the server `tsc` build emits into `server/dist` (WORKDIR /app).
-        run: railway ssh --service web --identity-file ~/.ssh/id_railway_ci -- node server/dist/curation/cli.js < /dev/null
+        run: timeout 300 railway ssh --service web --identity-file ~/.ssh/id_railway_ci -- node server/dist/curation/cli.js < /dev/null
       # Re-seed the server's cached event count from the now-smaller directory.
+      # `--json` and a closed stdin matter: without them `railway restart`
+      # restarts the service but never exits (seen with CLI 5.71.0).
       - name: Restart to refresh cached count (prod)
-        run: railway restart --service web --yes
+        run: timeout 120 railway restart --service web --yes --json < /dev/null

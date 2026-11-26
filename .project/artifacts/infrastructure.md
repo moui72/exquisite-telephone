@@ -512,8 +512,9 @@ railway environment edit --json   # builder, healthcheck, sleep off, 1 replica i
 railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Namecheap
 ```
 
-**Pending (cutover, 2026-11-26):** the two CI secrets below and the DNS
-swap. Update this paragraph once they're done.
+Both CI secrets below exist (2026-11-26), and every Railway command the
+workflows run was tested with only the project token. **Pending:** the
+DNS swap. Update this paragraph once it's done.
 
 Two pieces need the dashboard or a human:
 
