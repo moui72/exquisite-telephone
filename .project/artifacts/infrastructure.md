@@ -357,7 +357,7 @@ for what that restores.
 | CI secrets | `RAILWAY_TOKEN` (project token, production env), `RAILWAY_SSH_KEY` |
 | Deploying workflow | `promote.yml` (manual dispatch) |
 | Deploys from branch | `release` |
-| Custom domain | `ex-tel.ty-pe.com` (DNS in Namecheap on `ty-pe.com`) |
+| Custom domain | `ex-tel.ty-pe.com` (DNS in Cloudflare, zone `ty-pe.com`; Namecheap is only the registrar) |
 
 **Pushes deploy nothing.** `ci.yml` runs `checks` (lint, type-check,
 test) on every push to `main` and every PR, and that is all it does.
@@ -509,7 +509,7 @@ railway add --service web
 railway volume add --mount-path /data
 railway variable set CURATION_DATA_PATH=/data/curation.json BUILD_CHANNEL=prod --service web --skip-deploys
 railway environment edit --json   # builder, healthcheck, sleep off, 1 replica in us-east4 (table above)
-railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Namecheap
+railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Cloudflare (DNS only, not proxied)
 ```
 
 Both CI secrets below exist (2026-11-26), and every Railway command the
