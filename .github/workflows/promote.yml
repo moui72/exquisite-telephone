@@ -10,21 +10,12 @@ name: Promote main to release
 # a no-op ("Everything up-to-date") and the deploy simply re-ships the
 # same tree.
 on:
+  # No inputs. The version is whatever `package.json` on main says: a
+  # release is cut by first merging a `chore(release): vX.Y.Z` PR that bumps
+  # it (infrastructure.md — App Versioning). This workflow never writes to
+  # main, because the `main` ruleset only accepts changes through a PR and
+  # a personal repo can't let Actions bypass that.
   workflow_dispatch:
-    inputs:
-      # The semantic-version bump this promotion applies before cutting the
-      # release (infrastructure.md — App Versioning, Auto-bump on promotion).
-      # `patch` is the default because most releases are patches; a human
-      # picks minor/major when the change warrants it.
-      bump:
-        description: 'Version bump for this release'
-        type: choice
-        required: true
-        default: patch
-        options:
-          - patch
-          - minor
-          - major
 
 # Two dispatches must not race each other onto the same branch, nor into
 # the same Railway service. This group covers the fast-forward AND the deploy,
@@ -33,8 +24,8 @@ concurrency:
   group: promote-release
   cancel-in-progress: false
 
-# The push below is authenticated with the built-in GITHUB_TOKEN, which
-# needs write access to push to `release`.
+# The built-in GITHUB_TOKEN needs write access to push `release` and the
+# release tag.
 permissions:
   contents: write
 
@@ -59,33 +50,29 @@ jobs:
       # channel was dropped in the move from Fly.io to Railway
       # (infrastructure.md — Deployment). Bring it back with beta.
 
-      # Bump the version on main FIRST, so the bump is the new source of
-      # truth on main and reaches release by the existing fast-forward — no
-      # new divergence path (infrastructure.md — Auto-bump on promotion).
-      # The push is authenticated with the built-in GITHUB_TOKEN, whose push
-      # does not re-trigger workflows (the same recursion property promotion
-      # already relies on), so bumping here does not kick off a beta deploy
-      # race.
-      - name: Bump version on main
-        id: bump
+      # Read the release version from main, and refuse to re-use a version
+      # that was already released from a different commit: that means the
+      # bump PR was forgotten. A tag that already points at main HEAD is a
+      # re-dispatch of the same release, which re-deploys it.
+      - name: Read the release version
+        id: version
         run: |
           set -euo pipefail
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-
-          # --no-git-tag-version updates package.json only (no commit, no
-          # tag); npm prints the new version as `vX.Y.Z`. We make the
-          # release commit ourselves so it carries the Conventional-Commit
-          # subject, then tag the release commit in a later step.
-          tag="$(npm version '${{ inputs.bump }}' --no-git-tag-version)"
-          version="${tag#v}"
+          version="$(node -p "require('./package.json').version")"
+          tag="v${version}"
           echo "tag=${tag}" >> "$GITHUB_OUTPUT"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
-          git commit -am "chore(release): ${tag}"
-          # Fast-forward push of the bump onto main. GITHUB_TOKEN's push does
-          # not re-trigger workflows, so this does not start a second run.
-          git push origin HEAD:main
+          if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+            if [ "$(git rev-list -n 1 "${tag}")" = "$(git rev-parse HEAD)" ]; then
+              echo "${tag} already points at main HEAD; re-deploying it"
+              echo "retag=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "::error::${tag} was already released from another commit. Merge a PR bumping package.json (chore(release): vX.Y.Z) first."
+            exit 1
+          fi
+          echo "retag=true" >> "$GITHUB_OUTPUT"
 
       - name: Push main to release (fast-forward only)
         run: |
@@ -124,16 +111,17 @@ jobs:
           MSG
           exit 1
 
-# The release commit now sits on release (byte-identical to main). Tag it
+      # The release commit now sits on release (byte-identical to main). Tag it
       # and publish a GitHub release so vX.Y.Z has a durable referent — the
       # tag is what prod points at, so it needs no sha (infrastructure.md —
       # App Versioning). Runs only if the fast-forward above succeeded.
       - name: Tag the release and publish a GitHub release
+        if: steps.version.outputs.retag == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          tag='${{ steps.bump.outputs.tag }}'
+          tag='${{ steps.version.outputs.tag }}'
           # Annotated tag on the release commit (== main HEAD, just pushed).
           git tag -a "$tag" -m "Release ${tag}"
           git push origin "$tag"
@@ -170,8 +158,8 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
           set -euo pipefail
-          railway variable set "APP_VERSION=${{ steps.bump.outputs.version }}" --service web --skip-deploys
-          railway up --ci --service web -m "Release ${{ steps.bump.outputs.tag }}"
+          railway variable set "APP_VERSION=${{ steps.version.outputs.version }}" --service web --skip-deploys
+          railway up --ci --service web -m "Release ${{ steps.version.outputs.tag }}"
 
       # `up --ci` returns once the build finishes; the deployment can still
       # fail its /healthz check after that. Don't let the run go green until
