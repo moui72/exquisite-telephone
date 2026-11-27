@@ -122,6 +122,9 @@ jobs:
         run: |
           set -euo pipefail
           tag='${{ steps.version.outputs.tag }}'
+          # An annotated tag records a tagger, so git needs an identity.
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # Annotated tag on the release commit (== main HEAD, just pushed).
           git tag -a "$tag" -m "Release ${tag}"
           git push origin "$tag"
