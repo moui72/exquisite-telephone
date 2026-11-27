@@ -22,7 +22,7 @@ free-form subjects and is not worth rewriting.
 | `refactor` | Behavior-preserving code change                          |
 | `test`     | Adding or correcting tests only                          |
 | `docs`     | Documentation, including `.project/` artifacts and plans |
-| `build`    | Dockerfile, `fly.toml`, deps, workspace config           |
+| `build`    | Dockerfile, deps, workspace config                       |
 | `ci`       | `.github/workflows/`                                     |
 | `chore`    | Anything else with no production effect                  |
 
@@ -55,14 +55,19 @@ commit-message format. This is convention, not a gate. If it starts
 drifting, a `commit-msg` hook is the fix, but that adds a dependency for
 a problem we don't have yet (constitution Principle I).
 
-## Deployment is dual-channel
+## Deployment is prod-only, on Railway
 
-Push to `main` deploys **beta** (`exquisite-telephone-beta`, via
-`fly.staging.toml`). Prod (`exquisite-telephone`, via `fly.toml`) deploys
-only from the `release` branch, which only ever receives a fast-forward
-of `main`.
+Production runs on Railway (project `exquisite-telephone`, service `web`,
+environment `production`). There is **no beta channel** right now; it was
+dropped in the move off Fly.io on 2026-11-26.
 
-Two apps, two configs, two Fly API tokens, two volumes. A change to one
-`fly.toml` almost always needs the same change in the other — they are
-meant to differ only in `app`. See `.project/artifacts/infrastructure.md`
-for the full topology and the one-time manual CLI steps.
+Pushing to `main` deploys nothing. Prod deploys only when someone runs the
+"Promote main to release" workflow (`promote.yml`), which fast-forwards
+`release` from `main` and runs `railway up`. Never connect GitHub
+autodeploy on the Railway service: it would open a second prod deploy path.
+
+Service settings (one replica, sleeping off, `/healthz` healthcheck, the
+`/data` volume) live in Railway, not in a config file. Change them with
+`railway environment edit` and record the change in the Deployment section
+of `.project/artifacts/infrastructure.md`. The service must stay at **one
+replica**: room state is in-memory, so a second replica breaks joins.

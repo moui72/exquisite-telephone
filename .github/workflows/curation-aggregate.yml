@@ -8,8 +8,8 @@
 # re-seeds from the now-smaller directory (replacing the old manual
 # "run in a deploy/restart window" posture).
 #
-# Both channels are aggregated: beta and prod each own a separate Fly
-# volume, so each needs its own aggregate + restart, with its own token.
+# Prod only: there is no beta channel today (infrastructure.md —
+# Deployment), so there is one volume to aggregate.
 name: Curation aggregate
 
 on:
@@ -23,37 +23,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  aggregate-beta:
-    name: Aggregate + restart beta
-    runs-on: ubuntu-latest
-    concurrency: curation-aggregate-beta
-    steps:
-      - uses: superfly/flyctl-actions/setup-flyctl@master
-      - name: Aggregate curation events (beta)
-        # The slim runtime image has no `src/` and no `tsx`; run the compiled
-        # entrypoint the server `tsc` build emits into `server/dist` (WORKDIR /app).
-        run: flyctl ssh console --app exquisite-telephone-beta -C 'node server/dist/curation/cli.js'
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
-      # Re-seed the server's cached event count from the now-smaller directory.
-      - name: Restart to refresh cached count (beta)
-        run: flyctl apps restart exquisite-telephone-beta
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_BETA }}
-
   aggregate-prod:
     name: Aggregate + restart prod
     runs-on: ubuntu-latest
     concurrency: curation-aggregate-prod
+    # Each step normally takes seconds; a hung CLI should fail the run,
+    # not hold a runner for GitHub's 6-hour default.
+    timeout-minutes: 15
+    env:
+      # Project token scoped to the production environment.
+      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
     steps:
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.71.0
+      # `railway ssh` authenticates the shell with an SSH key registered on
+      # the Railway account, not with the API token. RAILWAY_SSH_KEY is a
+      # dedicated, passphrase-less key used only by this job.
+      - name: Install the Railway SSH key
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.RAILWAY_SSH_KEY }}" > ~/.ssh/id_railway_ci
+          chmod 600 ~/.ssh/id_railway_ci
       - name: Aggregate curation events (prod)
         # The slim runtime image has no `src/` and no `tsx`; run the compiled
         # entrypoint the server `tsc` build emits into `server/dist` (WORKDIR /app).
-        run: flyctl ssh console --app exquisite-telephone -C 'node server/dist/curation/cli.js'
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
+        run: timeout 300 railway ssh --service web --identity-file ~/.ssh/id_railway_ci -- node server/dist/curation/cli.js < /dev/null
+      # Re-seed the server's cached event count from the now-smaller directory.
+      # `--json` and a closed stdin matter: without them `railway restart`
+      # restarts the service but never exits (seen with CLI 5.71.0).
       - name: Restart to refresh cached count (prod)
-        run: flyctl apps restart exquisite-telephone
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN_PROD }}
+        run: timeout 120 railway restart --service web --yes --json < /dev/null

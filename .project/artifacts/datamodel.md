@@ -199,7 +199,7 @@ Store — Ingestion Skill) reads and writes them, during curation.
   offensive, kept in a **separate file** out of the normal review flow, never
   auto-promoted.
 
-Both live beside `CURATION_DATA_PATH` on the Fly volume and are **gitignored,
+Both live beside `CURATION_DATA_PATH` on the Railway volume and are **gitignored,
 never committed** — this repo is public, and player-submitted-but-unaccepted
 text (the quarantine especially) must not enter its git history. Only
 human-approved additions ever reach the committed `CURATED_PHRASE_BANK`.
