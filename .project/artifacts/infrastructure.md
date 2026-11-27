@@ -488,15 +488,21 @@ of the same name, so `BUILD_CHANNEL=prod` is a standing variable and
 - The beta form, `vX.Y.Z-beta+<short-sha>`, is still supported by the
   client build for when a beta channel returns.
 
-**Auto-bump on promotion.** `promote.yml` takes a bump-level dispatch
-input (`patch` | `minor` | `major`). On promotion it bumps `package.json`
-via `npm version <level> --no-git-tag-version`, commits the bump to
-`main` (`chore(release): vX.Y.Z`) and pushes it with the built-in
-`GITHUB_TOKEN` (whose push does not re-trigger workflows), **then**
-fast-forwards `release` from `main`, tags the release commit `vX.Y.Z`,
-creates the GitHub release, and deploys prod. The bump lands on `main` as
-the new source of truth and reaches `release` by the existing
-fast-forward, so there's no new divergence path.
+**Bump by PR, then promote.** `main` has a ruleset that only accepts
+changes through a pull request, with no bypass (a personal repo can't
+let GitHub Actions bypass a ruleset). So `promote.yml` never writes to
+`main`. A release starts with a normal PR that bumps the root
+`package.json` `version` (`npm version <level> --no-git-tag-version`,
+subject `chore(release): vX.Y.Z`). Once it is merged, dispatching
+`promote.yml` reads that version, fast-forwards `release` from `main`,
+tags the release commit `vX.Y.Z`, creates the GitHub release, and deploys
+prod.
+
+Promote fails if tag `vX.Y.Z` already exists on a different commit,
+which means the bump PR was skipped. If the tag already points at
+`main` HEAD, the dispatch re-deploys that release without re-tagging.
+(Until 2026-11-27 Promote bumped and pushed to `main` itself; that broke
+when the ruleset was added on 2026-08-14.)
 
 ### One-time setup
 

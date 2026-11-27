@@ -79,8 +79,9 @@ service at <https://ex-tel.ty-pe.com>. There is no beta channel at the moment.
 - **Pushes deploy nothing.** CI (`.github/workflows/ci.yml`) runs lint,
   type-check and tests on every push and pull request.
 - **Production is an explicit human act:** it deploys only via the
-  `promote.yml` workflow (manual dispatch), which bumps the version,
-  fast-forwards `release` from `main`, and deploys with `railway up`.
+  `promote.yml` workflow (manual dispatch), after a PR bumps the version
+  in `package.json`. Promote tags that version, fast-forwards `release`
+  from `main`, and deploys with `railway up`.
   `release` only ever receives a fast-forward of `main` and is never
   developed on directly.
 
