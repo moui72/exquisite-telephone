@@ -1,7 +1,7 @@
 ---
 name: infrastructure
 status: stable
-last_updated: 2026-11-26
+last_updated: 2026-11-27
 diagram_status: current
 diagram_type: graph TD
 render_section: Infrastructure
@@ -518,9 +518,24 @@ railway environment edit --json   # builder, healthcheck, sleep off, 1 replica i
 railway domain ex-tel.ty-pe.com --service web   # then the CNAME/TXT records in Cloudflare (DNS only, not proxied)
 ```
 
-Both CI secrets below exist (2026-11-26), and every Railway command the
-workflows run was tested with only the project token. **Pending:** the
-DNS swap. Update this paragraph once it's done.
+**Cutover — done 2026-11-27.** v0.6.1 was the first release promoted to
+Railway. The `ex-tel` A/AAAA records (Fly) were then replaced in one
+Cloudflare batch call by the CNAME, so the name never went unresolved.
+The `beta-ex-tel` records and the `FLY_API_TOKEN_BETA`,
+`FLY_API_TOKEN_PROD` and `E2E_TEST_SIGNAL_SECRET` GitHub secrets were
+deleted. Nothing in the repo or CI depends on Fly any more, so the Fly
+account can be closed.
+
+**Check the certificate right after a DNS switch.** Railway orders the
+TLS certificate when the domain is added. If DNS still points elsewhere
+then, the order can sit in `VALIDATING_OWNERSHIP` after DNS moves while
+Railway serves its generic `*.up.railway.app` certificate, so browsers
+get a certificate error. That caused about 18 minutes of errors at
+cutover. Right after switching, run `railway domain status <domain>
+--service web --json`. If `certificate.status` isn't issued within a
+minute or two, retry the certificate (Railway MCP
+`retry-domain-certificate`, or the dashboard); here it was issued about
+2 minutes after the retry.
 
 Two pieces need the dashboard or a human:
 
@@ -536,10 +551,9 @@ Two pieces need the dashboard or a human:
 empty snapshot (`curation-snapshot.json` and its `.summary.txt`, from the
 2026-11-01 aggregate run): no rating events had ever been recorded. Both
 files were copied to `/data` on Railway and the checksum verified. Beta's
-volume was empty as well, so dropping it lost nothing. If ratings land
-on Fly before DNS moves, top up with a no-overwrite copy of
-`curation-events/` (event files are uniquely named, so the copies merge
-by union) and restart, since the server seeds its event count at boot.
+volume was empty as well, so dropping it lost nothing. Just before the
+DNS switch, Fly prod's `/data` was checked again: unchanged since
+2026-11-01, so no top-up copy was needed.
 
 ## Production Annotations
 
